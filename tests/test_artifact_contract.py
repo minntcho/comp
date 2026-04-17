@@ -4,7 +4,7 @@ import pytest
 
 pytest.importorskip("lark")
 
-from artifacts import DiagnosticArtifact
+from artifacts import DiagnosticArtifact, diagnostic_codes
 from tests.fixtures.cases import CASES
 from tests.support.builders import run_pipeline_full, run_pipeline_until
 
@@ -23,6 +23,11 @@ def test_frame_diagnostics_are_diagnostic_artifacts():
 
     for frame in result.artifacts.frames:
         assert all(isinstance(d, DiagnosticArtifact) for d in frame.diagnostics)
+
+
+def test_diagnostic_helpers_fail_fast_on_unexpected_types():
+    with pytest.raises(TypeError):
+        diagnostic_codes([{"severity": "warning", "code": "AggregateRow"}], severity="warning")
 
 
 def test_repair_populates_frame_runtime_state():
