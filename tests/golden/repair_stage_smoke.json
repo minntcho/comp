@@ -1,0 +1,13 @@
+{
+  "frames": [
+    {
+      "parser_name": "LineParser",
+      "frame_type": "ActivityObservation",
+      "status": "committed",
+      "diagnostic_codes": []
+    }
+  ],
+  "rows": [],
+  "merge_log": [],
+  "calculations": []
+}
