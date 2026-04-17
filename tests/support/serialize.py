@@ -2,10 +2,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from artifacts import CompileArtifacts
-
-# NOTE(PR0): serializer intentionally tolerates mixed diagnostic shapes.
-# This is temporary and must be removed in PR1.
+from artifacts import CompileArtifacts, DiagnosticArtifact
 
 
 def project_result(result: Any) -> dict[str, Any]:
@@ -19,13 +16,7 @@ def project_artifacts(artifacts: CompileArtifacts) -> dict[str, Any]:
                 "parser_name": f.parser_name,
                 "frame_type": f.frame_type,
                 "status": f.status,
-                "diagnostic_codes": sorted(
-                    [
-                        _diag_get(d, "severity") + ":" + _diag_get(d, "code")
-                        for d in f.diagnostics
-                        if _diag_get(d, "severity") and _diag_get(d, "code")
-                    ]
-                ),
+                "diagnostic_codes": _diagnostic_codes(f.diagnostics),
             }
             for f in artifacts.frames
         ],
@@ -62,9 +53,11 @@ def project_artifacts(artifacts: CompileArtifacts) -> dict[str, Any]:
     }
 
 
-def _diag_get(diag: Any, key: str):
-    # TEMP(PR0): compatibility shim for mixed diagnostics representations.
-    # Remove in PR1 after frame.diagnostics becomes DiagnosticArtifact-only.
-    if isinstance(diag, dict):
-        return diag.get(key)
-    return getattr(diag, key, None)
+def _diagnostic_codes(diagnostics: list[DiagnosticArtifact]) -> list[str]:
+    codes: list[str] = []
+    for diag in diagnostics:
+        if not isinstance(diag, DiagnosticArtifact):
+            raise TypeError("frame.diagnostics must contain DiagnosticArtifact only")
+        if diag.severity and diag.code:
+            codes.append(f"{diag.severity}:{diag.code}")
+    return sorted(codes)
