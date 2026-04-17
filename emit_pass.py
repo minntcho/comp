@@ -11,6 +11,8 @@ from artifacts import (
     LineageEvidenceArtifact,
     PartialFrameArtifact,
     RoleLineageArtifact,
+    error_codes_from_diagnostics,
+    warning_codes_from_diagnostics,
 )
 from runtime_env import RuntimeEnv
 
@@ -91,20 +93,8 @@ class EmitPass:
 
         lineage = self._build_lineage(frame, claims_by_id)
 
-        warning_codes = sorted(
-            {
-                d.get("code")
-                for d in frame.diagnostics
-                if isinstance(d, dict) and d.get("severity") == "warning" and d.get("code")
-            }
-        )
-        error_codes = sorted(
-            {
-                d.get("code")
-                for d in frame.diagnostics
-                if isinstance(d, dict) and d.get("severity") == "error" and d.get("code")
-            }
-        )
+        warning_codes = warning_codes_from_diagnostics(frame.diagnostics)
+        error_codes = error_codes_from_diagnostics(frame.diagnostics)
 
         if self.config.skip_empty_rows:
             all_core_empty = (
@@ -135,7 +125,7 @@ class EmitPass:
             standardized_unit=standardized_unit,
 
             scope_category=scope_category,
-            resolution_score=float(frame.resolution_score),
+            resolution_score=float(frame.runtime.resolution_score),
             lineage=lineage,
 
             source_fragment_ids=list(frame.fragment_ids),
@@ -143,9 +133,9 @@ class EmitPass:
             error_codes=error_codes,
 
             metadata={
-                "iteration_count": frame.iteration_count,
-                "stable_count": frame.stable_count,
-                "termination_reason": frame.termination_reason,
+                "iteration_count": frame.runtime.iteration_count,
+                "stable_count": frame.runtime.stable_count,
+                "termination_reason": frame.runtime.termination_reason,
                 "repair_trace_len": len(frame.metadata.get("repair_trace", [])),
             },
         )

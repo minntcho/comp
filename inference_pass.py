@@ -8,8 +8,11 @@ from typing import Any, Optional
 from artifacts import (
     ClaimArtifact,
     CompileArtifacts,
+    DiagnosticArtifact,
     PartialFrameArtifact,
     RoleSlotArtifact,
+    error_codes_from_diagnostics,
+    warning_codes_from_diagnostics,
 )
 from expr_eval import EvalContext, ExprEvaluator
 from runtime_env import RuntimeEnv, ScopePath
@@ -55,6 +58,7 @@ class InferencePass:
         self.evaluator = evaluator or ExprEvaluator()
         self.config = config or InferencePassConfig()
         self._claim_seq = count(1)
+        self._diag_seq = count(1)
 
     def run(
         self,
@@ -155,12 +159,20 @@ class InferencePass:
 
         frame.frame_type = new_type
         frame.diagnostics.append(
-            {
-                "severity": "info",
-                "code": "FrameTypeInferred",
-                "message": f"frame_type inferred as {new_type}",
-                "rule_target": rule.target_name,
-            }
+            DiagnosticArtifact(
+                diagnostic_id=f"DGN-INF-{next(self._diag_seq):07d}",
+                severity="info",
+                code="FrameTypeInferred",
+                message=f"frame_type inferred as {new_type}",
+                scope_kind="frame",
+                scope_id=frame.frame_id,
+                frame_id=frame.frame_id,
+                fragment_id=frame.fragment_ids[0] if frame.fragment_ids else None,
+                rule_kind="inference",
+                source_key=f"infer:{rule.target_name}",
+                phase="inference",
+                metadata={"rule_target": rule.target_name},
+            )
         )
         return True
 
@@ -392,19 +404,7 @@ class InferencePass:
         return getattr(frag, "scope_path", tuple())
 
     def _frame_warning_codes(self, frame: PartialFrameArtifact) -> set[str]:
-        codes = set()
-        for d in getattr(frame, "diagnostics", []):
-            if isinstance(d, dict) and d.get("severity") == "warning":
-                code = d.get("code")
-                if code:
-                    codes.add(code)
-        return codes
+        return set(warning_codes_from_diagnostics(frame.diagnostics))
 
     def _frame_error_codes(self, frame: PartialFrameArtifact) -> set[str]:
-        codes = set()
-        for d in getattr(frame, "diagnostics", []):
-            if isinstance(d, dict) and d.get("severity") == "error":
-                code = d.get("code")
-                if code:
-                    codes.add(code)
-        return codes
+        return set(error_codes_from_diagnostics(frame.diagnostics))

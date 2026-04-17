@@ -5,7 +5,13 @@ from dataclasses import dataclass
 from itertools import count
 from typing import Any, Optional
 
-from artifacts import ClaimArtifact, CompileArtifacts, PartialFrameArtifact, RoleSlotArtifact
+from artifacts import (
+    ClaimArtifact,
+    CompileArtifacts,
+    PartialFrameArtifact,
+    RoleSlotArtifact,
+    diagnostic_codes,
+)
 from expr_eval import EvalContext, ExprEvaluator
 from runtime_env import RuntimeEnv
 from spec_nodes import ProgramSpec, ResolverPolicy
@@ -115,8 +121,11 @@ class RepairPass:
         state_history: list[tuple] = []
 
         termination_reason = None
+        last_iter_no = 0
 
         for iter_no in range(1, max_iter + 1):
+            last_iter_no = iter_no
+
             # 1) diagnostics snapshot
             warning_codes = self._diag_codes(frame, severity="warning")
             error_codes = self._diag_codes(frame, severity="error")
@@ -217,13 +226,18 @@ class RepairPass:
             prev_score = frame_score
             prev_signature = signature
 
+        if last_iter_no > 0 and termination_reason is None:
+            termination_reason = "max_iter_exhausted"
+
+        final_score = self._frame_score(frame, claims_by_id)
+
         # loop 종료 후 최종 판정
         final_ctx = EvalContext(
             env=env,
             frame=frame,
             claims_by_id=claims_by_id,
             local_vars={
-                "score": self._frame_score(frame, claims_by_id),
+                "score": final_score,
                 "stable": frame_stable,
                 "status": frame.status,
             },
@@ -240,8 +254,14 @@ class RepairPass:
             else:
                 frame.status = "resolving"
 
+        frame.runtime.resolution_score = final_score
+        frame.runtime.iteration_count = last_iter_no
+        frame.runtime.stable_count = frame_stable
+        frame.runtime.termination_reason = termination_reason
+
+        # backward-compatible mirrors; read paths should prefer frame.runtime.
         frame.metadata["termination_reason"] = termination_reason
-        frame.metadata["final_score"] = self._frame_score(frame, claims_by_id)
+        frame.metadata["final_score"] = final_score
 
     # ------------------------------------------------------------------
     # Slot repair
@@ -636,13 +656,7 @@ class RepairPass:
         *,
         severity: str,
     ) -> set[str]:
-        codes = set()
-        for d in frame.diagnostics:
-            if getattr(d, "severity", None) == severity:
-                code = getattr(d, "code", None)
-                if code:
-                    codes.add(code)
-        return codes
+        return set(diagnostic_codes(frame.diagnostics, severity=severity))
 
     def _extract_policy_params(
         self,
