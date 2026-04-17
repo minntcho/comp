@@ -187,7 +187,9 @@ def diagnostic_codes(
 ) -> list[str]:
     codes: set[str] = set()
     for diag in diagnostics:
-        if isinstance(diag, DiagnosticArtifact) and diag.severity == severity and diag.code:
+        if not isinstance(diag, DiagnosticArtifact):
+            raise TypeError("diagnostics must contain DiagnosticArtifact only")
+        if diag.severity == severity and diag.code:
             codes.add(diag.code)
     return sorted(codes)
 
