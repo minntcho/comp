@@ -6,7 +6,6 @@ from datetime import datetime
 from typing import Any, Optional
 
 
-
 @dataclass
 class CalculationArtifact:
     calculation_id: str
@@ -33,6 +32,7 @@ class CalculationArtifact:
     metadata: dict[str, Any] = field(default_factory=dict)
     calculated_at: datetime = field(default_factory=datetime.utcnow)
 
+
 @dataclass
 class GovernanceDecisionArtifact:
     decision_id: str
@@ -50,6 +50,7 @@ class GovernanceDecisionArtifact:
     metadata: dict[str, Any] = field(default_factory=dict)
     created_at: datetime = field(default_factory=datetime.utcnow)
 
+
 @dataclass
 class DiagnosticArtifact:
     diagnostic_id: str
@@ -66,13 +67,14 @@ class DiagnosticArtifact:
     fragment_id: Optional[str] = None
     span: Optional[tuple[int, int]] = None
 
-    rule_kind: Optional[str] = None   # require | forbid | diagnostic
+    rule_kind: Optional[str] = None   # require | forbid | diagnostic | inference
     source_key: Optional[str] = None  # e.g. require:3, warning:AggregateRow
-    phase: Optional[str] = None       # semantic_pre / semantic_post
+    phase: Optional[str] = None       # semantic_pre / semantic_post / inference
 
     metadata: dict[str, Any] = field(default_factory=dict)
     created_at: datetime = field(default_factory=datetime.utcnow)
-    
+
+
 @dataclass
 class TokenOccurrence:
     token_id: str
@@ -137,6 +139,15 @@ class RoleSlotArtifact:
 
     metadata: dict[str, Any] = field(default_factory=dict)
 
+
+@dataclass
+class FrameRuntimeState:
+    resolution_score: float = 0.0
+    iteration_count: int = 0
+    stable_count: int = 0
+    termination_reason: Optional[str] = None
+
+
 @dataclass
 class PartialFrameArtifact:
     frame_id: str
@@ -148,6 +159,7 @@ class PartialFrameArtifact:
 
     diagnostics: list[DiagnosticArtifact] = field(default_factory=list)
     status: str = "resolving"
+    runtime: FrameRuntimeState = field(default_factory=FrameRuntimeState)
 
     metadata: dict[str, Any] = field(default_factory=dict)
     created_at: datetime = field(default_factory=datetime.utcnow)
@@ -166,7 +178,29 @@ class CompileArtifacts:
     event_log: list[Any] = field(default_factory=list)
     commit_log: list[Any] = field(default_factory=list)
     merge_log: list[GovernanceDecisionArtifact] = field(default_factory=list)
-    
+
+
+def diagnostic_codes(
+    diagnostics: list[DiagnosticArtifact],
+    *,
+    severity: str,
+) -> list[str]:
+    codes: set[str] = set()
+    for diag in diagnostics:
+        if not isinstance(diag, DiagnosticArtifact):
+            raise TypeError("diagnostics must contain DiagnosticArtifact only")
+        if diag.severity == severity and diag.code:
+            codes.add(diag.code)
+    return sorted(codes)
+
+
+def warning_codes_from_diagnostics(diagnostics: list[DiagnosticArtifact]) -> list[str]:
+    return diagnostic_codes(diagnostics, severity="warning")
+
+
+def error_codes_from_diagnostics(diagnostics: list[DiagnosticArtifact]) -> list[str]:
+    return diagnostic_codes(diagnostics, severity="error")
+
 
 @dataclass
 class LineageEvidenceArtifact:
