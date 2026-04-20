@@ -22,6 +22,16 @@ class LexEvalError(ValueError):
 
 
 class LexEvaluator:
+    ALLOWED_BUILTINS = {
+        "site_alias",
+        "activity_alias",
+        "unit_symbol",
+        "period_expr",
+        "number",
+        "one_of",
+        "llm.fuzzy_lex",
+    }
+
     def resolve(self, expr: LexExpr | None, ctx: EvalContext) -> list[LexCandidate]:
         if expr is None:
             return []
@@ -71,42 +81,24 @@ class LexEvaluator:
 
     def _call(self, expr: LexBuiltinCall, ctx: EvalContext) -> Any:
         name = expr.name
+        if name not in self.ALLOWED_BUILTINS:
+            raise LexEvalError(f"builtin '{name}' is not allowed in LexEvaluator")
 
-        if name == "missing":
-            role_name = self._raw_identifier(expr.args, index=0, ctx=ctx)
-            fn = self._lookup_builtin(name, ctx)
-            return fn(role_name, ctx.frame)
-
-        if name == "origin":
-            role_name = self._raw_identifier(expr.args, index=0, ctx=ctx)
-            fn = self._lookup_builtin(name, ctx)
-            return fn(role_name, ctx.frame, ctx.claims_by_id)
-
-        if name == "evidence":
-            kind = self._raw_identifier(expr.args, index=0, ctx=ctx)
-            fn = self._lookup_builtin(name, ctx)
-            return fn(kind, ctx.frame, ctx.claims_by_id)
+        fn = self._lookup_builtin(name, ctx)
 
         if name in {"site_alias", "activity_alias", "unit_symbol", "period_expr", "number"}:
-            fn = self._lookup_builtin(name, ctx)
             return fn(ctx.text, ctx.env)
 
         if name == "one_of":
-            fn = self._lookup_builtin(name, ctx)
             choices = [self.eval_value(arg, ctx) for arg in expr.args]
             return fn(ctx.text, *choices, env=ctx.env)
 
         if name == "llm.fuzzy_lex":
-            fn = self._lookup_builtin(name, ctx)
             role_name = self._raw_identifier(expr.args, index=0, ctx=ctx)
             return fn(role_name, ctx.text, ctx.env)
 
-        fn = self._lookup_builtin(name, ctx)
         args = [self.eval_value(arg, ctx) for arg in expr.args]
-
         for pattern in (
-            lambda: fn(*args, env=ctx.env, frame=ctx.frame, claims_by_id=ctx.claims_by_id),
-            lambda: fn(*args, env=ctx.env, frame=ctx.frame),
             lambda: fn(*args, env=ctx.env),
             lambda: fn(*args),
         ):
