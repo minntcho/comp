@@ -3,7 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, Callable
 
-from builtins import (
+from esg_builtins import (
     compatible as builtin_compatible,
     dimension as builtin_dimension,
     evidence as builtin_evidence,

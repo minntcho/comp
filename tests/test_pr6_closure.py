@@ -5,7 +5,7 @@ import unittest
 from artifacts import CanonicalRowArtifact, ClaimArtifact, CompileArtifacts, PartialFrameArtifact, RoleSlotArtifact
 from ast_nodes import BinaryExpr, FunctionCallExpr, NameExpr
 from binder import Binder, BindingError
-from builtins import register_default_builtins
+from esg_builtins import register_default_builtins
 from calculation_pass import CalculationPass
 from emit_pass import EmitPass
 from governance_pass import GovernancePass

@@ -4,19 +4,15 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Optional, Protocol, Sequence
 
-from lark import Lark
-
 from artifacts import CompileArtifacts
-from ast_builder import ASTBuilder
 from binder import Binder
-from builtins import register_default_builtins
+from esg_builtins import register_default_builtins
 from calculation_pass import CalculationPass
 from compiled_spec import CompiledProgramSpec
 from emit_pass import EmitPass
 from governance_pass import GovernancePass
 from inference_pass import InferencePass
 from lex_pass import LexPass
-from lowering import Lowerer
 from parse_pass import ParsePass
 from repair_pass import RepairPass
 from runtime_env import RuntimeEnv, SiteRecord, build_runtime_env
@@ -88,6 +84,10 @@ def load_program_spec_from_dsl(*, grammar_path: str | Path, dsl_path: str | Path
         raise ValueError("one of dsl_text or dsl_path must be provided")
     grammar = Path(grammar_path).read_text(encoding="utf-8")
     source = dsl_text if dsl_text is not None else Path(dsl_path).read_text(encoding="utf-8")
+    from lark import Lark
+    from ast_builder import ASTBuilder
+    from lowering import Lowerer
+
     parser = Lark(grammar, parser="lalr", lexer="contextual", start="start")
     tree = parser.parse(source)
     return Lowerer().lower(ASTBuilder().transform(tree))
