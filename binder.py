@@ -82,6 +82,12 @@ class Binder:
         "evidence",
     }
 
+    FRAME_ONLY_RULE_BUILTINS = {
+        "missing",
+        "origin",
+        "evidence",
+    }
+
     LEXICAL_BUILTINS = {
         "site_alias",
         "activity_alias",
@@ -125,7 +131,7 @@ class Binder:
     def bind(self, spec: ProgramSpec) -> CompiledProgramSpec:
         report = BindingReport()
 
-        compiled = CompiledProgramSpec(
+        return CompiledProgramSpec(
             syntax=spec,
             compiled_constraints=[
                 CompiledConstraintSpec(
@@ -179,7 +185,6 @@ class Binder:
             },
             binding_warnings=report.messages(),
         )
-        return compiled
 
     def _bind_resolver_policy(
         self,
@@ -335,14 +340,10 @@ class Binder:
             )
 
         if isinstance(expr, ColumnRefExpr):
-            raise BindingError(
-                f"column(...) is not allowed in rule host {host.kind}"
-            )
+            raise BindingError(f"column(...) is not allowed in rule host {host.kind}")
 
         if isinstance(expr, RowLabelRefExpr):
-            raise BindingError(
-                f"row_label(...) is not allowed in rule host {host.kind}"
-            )
+            raise BindingError(f"row_label(...) is not allowed in rule host {host.kind}")
 
         raise BindingError(f"unsupported rule expression: {type(expr).__name__}")
 
@@ -410,6 +411,11 @@ class Binder:
 
         if expr.name not in self.RULE_BUILTINS:
             raise BindingError(f"unknown rule builtin: {expr.name}")
+
+        if expr.name in self.FRAME_ONLY_RULE_BUILTINS and host.kind not in {"frame_rule", "resolver"}:
+            raise BindingError(
+                f"frame-only rule builtin '{expr.name}' is not allowed in rule host {host.kind}"
+            )
 
         return RuleBuiltinCall(
             name=expr.name,
