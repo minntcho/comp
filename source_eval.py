@@ -24,6 +24,16 @@ class SourceEvalError(ValueError):
 
 
 class SourceEvaluator:
+    ALLOWED_BUILTINS = {
+        "site_alias",
+        "activity_alias",
+        "unit_symbol",
+        "period_expr",
+        "number",
+        "one_of",
+        "llm.fuzzy_lex",
+    }
+
     def resolve(
         self,
         expr: SourceExpr | None,
@@ -224,28 +234,15 @@ class SourceEvaluator:
         tokens_by_fragment: Optional[dict[str, dict[str, list[Any]]]] = None,
     ) -> Any:
         name = expr.name
+        if name not in self.ALLOWED_BUILTINS:
+            raise SourceEvalError(f"builtin '{name}' is not allowed in SourceEvaluator")
 
-        if name == "missing":
-            role_name = self._raw_identifier(expr.args, index=0, ctx=ctx, fragment=fragment, tokens_by_fragment=tokens_by_fragment)
-            fn = self._lookup_builtin(name, ctx)
-            return fn(role_name, ctx.frame)
-
-        if name == "origin":
-            role_name = self._raw_identifier(expr.args, index=0, ctx=ctx, fragment=fragment, tokens_by_fragment=tokens_by_fragment)
-            fn = self._lookup_builtin(name, ctx)
-            return fn(role_name, ctx.frame, ctx.claims_by_id)
-
-        if name == "evidence":
-            kind = self._raw_identifier(expr.args, index=0, ctx=ctx, fragment=fragment, tokens_by_fragment=tokens_by_fragment)
-            fn = self._lookup_builtin(name, ctx)
-            return fn(kind, ctx.frame, ctx.claims_by_id)
+        fn = self._lookup_builtin(name, ctx)
 
         if name in {"site_alias", "activity_alias", "unit_symbol", "period_expr", "number"}:
-            fn = self._lookup_builtin(name, ctx)
             return fn(ctx.text, ctx.env)
 
         if name == "one_of":
-            fn = self._lookup_builtin(name, ctx)
             choices = [
                 self.eval_value(arg, ctx=ctx, fragment=fragment, tokens_by_fragment=tokens_by_fragment)
                 for arg in expr.args
@@ -253,19 +250,14 @@ class SourceEvaluator:
             return fn(ctx.text, *choices, env=ctx.env)
 
         if name == "llm.fuzzy_lex":
-            fn = self._lookup_builtin(name, ctx)
             role_name = self._raw_identifier(expr.args, index=0, ctx=ctx, fragment=fragment, tokens_by_fragment=tokens_by_fragment)
             return fn(role_name, ctx.text, ctx.env)
 
-        fn = self._lookup_builtin(name, ctx)
         args = [
             self.eval_value(arg, ctx=ctx, fragment=fragment, tokens_by_fragment=tokens_by_fragment)
             for arg in expr.args
         ]
-
         for pattern in (
-            lambda: fn(*args, env=ctx.env, frame=ctx.frame, claims_by_id=ctx.claims_by_id),
-            lambda: fn(*args, env=ctx.env, frame=ctx.frame),
             lambda: fn(*args, env=ctx.env),
             lambda: fn(*args),
         ):
