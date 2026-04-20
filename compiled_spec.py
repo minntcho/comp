@@ -2,15 +2,35 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
+from ast_nodes import BindStmt, ParserInheritStmt, TagStmt
+from lex_ir import LexExpr
 from rule_ir import RuleExpr
+from source_ir import SourceExpr
 from spec_nodes import (
     ConstraintSpec,
     DiagnosticSpec,
     GovernancePolicy,
     InferSpec,
+    InheritSpec,
+    ParserSpec,
     ProgramSpec,
     ResolverPolicy,
+    TokenSpec,
 )
+
+
+@dataclass
+class CompiledTokenSpec:
+    syntax: TokenSpec
+    primary_ir: LexExpr | None = None
+    fallback_ir: LexExpr | None = None
+
+
+@dataclass
+class CompiledInheritSpec:
+    syntax: InheritSpec
+    source_ir: SourceExpr
+    condition_ir: RuleExpr
 
 
 @dataclass
@@ -33,6 +53,34 @@ class CompiledInferSpec:
 
 
 @dataclass
+class CompiledBindAction:
+    syntax: BindStmt
+    source_ir: SourceExpr
+
+
+@dataclass
+class CompiledParserInheritAction:
+    syntax: ParserInheritStmt
+    source_ir: SourceExpr
+    condition_ir: RuleExpr | None = None
+
+
+@dataclass
+class CompiledTagAction:
+    syntax: TagStmt
+    source_ir: SourceExpr
+
+
+CompiledParserAction = CompiledBindAction | CompiledParserInheritAction | CompiledTagAction
+
+
+@dataclass
+class CompiledParserSpec:
+    syntax: ParserSpec
+    actions: list[CompiledParserAction] = field(default_factory=list)
+
+
+@dataclass
 class CompiledResolverPolicy:
     syntax: ResolverPolicy
     assigns_ir: dict[str, RuleExpr] = field(default_factory=dict)
@@ -52,6 +100,10 @@ class CompiledGovernancePolicy:
 @dataclass
 class CompiledProgramSpec:
     syntax: ProgramSpec
+
+    compiled_tokens: dict[str, CompiledTokenSpec] = field(default_factory=dict)
+    compiled_parsers: dict[str, CompiledParserSpec] = field(default_factory=dict)
+    compiled_inherit_rules: list[CompiledInheritSpec] = field(default_factory=list)
 
     compiled_constraints: list[CompiledConstraintSpec] = field(default_factory=list)
     compiled_diagnostics: list[CompiledDiagnosticSpec] = field(default_factory=list)
