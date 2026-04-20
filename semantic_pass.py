@@ -1,60 +1,43 @@
-# semantic_pass.py
 from __future__ import annotations
 
 from dataclasses import dataclass
 from itertools import count
-from typing import Any, Optional
+from typing import Any
 
 from artifacts import CompileArtifacts, DiagnosticArtifact, PartialFrameArtifact
-from expr_eval import EvalContext, ExprEvaluator
+from compiled_spec import CompiledProgramSpec
+from expr_eval import EvalContext
+from rule_eval import RuleEvaluator
 from runtime_env import RuntimeEnv
-from spec_nodes import ConstraintSpec, DiagnosticSpec, ProgramSpec
 
 
 @dataclass
 class SemanticPassConfig:
-    """
-    phase_label:
-      - semantic_pre  : repair 전에 돌릴 때
-      - semantic_post : repair 후 최종 검증 때
-    """
     phase_label: str = "semantic_pre"
-
-    # 같은 phase/source_key/code의 진단은 중복으로 안 쌓이게
     dedupe: bool = True
-
-    # rerun 가능하게 같은 phase diagnostics를 지우고 다시 생성
     clear_same_phase_before_run: bool = True
 
 
 class SemanticPass:
-    """
-    frames -> diagnostics attached frames
-
-    책임:
-    1) require 규칙 평가
-    2) forbid 규칙 평가
-    3) explicit diagnostic rules(error/warning) 평가
-    4) frame / global diagnostics 축적
-    """
-
     def __init__(
         self,
-        evaluator: Optional[ExprEvaluator] = None,
-        config: Optional[SemanticPassConfig] = None,
+        evaluator: RuleEvaluator | None = None,
+        config: SemanticPassConfig | None = None,
     ) -> None:
-        self.evaluator = evaluator or ExprEvaluator()
+        self.evaluator = evaluator or RuleEvaluator()
         self.config = config or SemanticPassConfig()
         self._diag_seq = count(1)
 
     def run(
         self,
-        spec: ProgramSpec,
+        spec: CompiledProgramSpec,
         artifacts: CompileArtifacts,
         env: RuntimeEnv,
     ) -> CompileArtifacts:
-        claims_by_id = {c.claim_id: c for c in artifacts.claims}
+        if not isinstance(spec, CompiledProgramSpec):
+            raise TypeError("SemanticPass requires CompiledProgramSpec")
 
+        claims_by_id = {c.claim_id: c for c in artifacts.claims}
         if self.config.clear_same_phase_before_run:
             self._clear_same_phase(artifacts)
 
@@ -62,28 +45,24 @@ class SemanticPass:
 
         for frame in artifacts.frames:
             frame_diags: list[DiagnosticArtifact] = []
-
             ctx = EvalContext(
                 env=env,
                 text="",
                 scope_path=self._frame_scope(frame, artifacts.fragments),
                 frame=frame,
                 claims_by_id=claims_by_id,
-                local_vars={
-                    "frame_type": frame.frame_type,
-                    "status": frame.status,
-                },
+                local_vars={"frame_type": frame.frame_type, "status": frame.status},
                 warning_codes=self._existing_codes(frame, severity="warning"),
                 error_codes=self._existing_codes(frame, severity="error"),
             )
 
-            # 1) require / forbid
-            for idx, constraint in enumerate(spec.constraints, start=1):
+            for idx, compiled_constraint in enumerate(spec.compiled_constraints, start=1):
+                constraint = compiled_constraint.syntax
                 if constraint.frame_name is not None and constraint.frame_name != frame.frame_type:
                     continue
 
                 if constraint.kind == "require":
-                    passed = self.evaluator.eval_bool(constraint.condition, ctx)
+                    passed = self.evaluator.eval_bool(compiled_constraint.condition_ir, ctx)
                     if not passed:
                         diag = self._make_diagnostic(
                             severity="error",
@@ -96,9 +75,8 @@ class SemanticPass:
                         if self._accept_diag(frame, diag):
                             frame_diags.append(diag)
                             ctx.error_codes.add(diag.code)
-
                 elif constraint.kind == "forbid":
-                    violated = self.evaluator.eval_bool(constraint.condition, ctx)
+                    violated = self.evaluator.eval_bool(compiled_constraint.condition_ir, ctx)
                     if violated:
                         diag = self._make_diagnostic(
                             severity="error",
@@ -112,10 +90,9 @@ class SemanticPass:
                             frame_diags.append(diag)
                             ctx.error_codes.add(diag.code)
 
-            # 2) explicit diagnostic rules
-            for rule in spec.diagnostics:
-                triggered = self.evaluator.eval_bool(rule.condition, ctx)
-                if not triggered:
+            for compiled_rule in spec.compiled_diagnostics:
+                rule = compiled_rule.syntax
+                if not self.evaluator.eval_bool(compiled_rule.condition_ir, ctx):
                     continue
 
                 diag = self._make_diagnostic(
@@ -133,16 +110,11 @@ class SemanticPass:
                     elif rule.level == "error":
                         ctx.error_codes.add(rule.code)
 
-            # frame / global 반영
             frame.diagnostics.extend(frame_diags)
             new_global_diags.extend(frame_diags)
 
         artifacts.diagnostics.extend(new_global_diags)
         return artifacts
-
-    # ------------------------------------------------------------------
-    # Helpers
-    # ------------------------------------------------------------------
 
     def _make_diagnostic(
         self,
@@ -168,11 +140,7 @@ class SemanticPass:
             phase=self.config.phase_label,
         )
 
-    def _accept_diag(
-        self,
-        frame: PartialFrameArtifact,
-        diag: DiagnosticArtifact,
-    ) -> bool:
+    def _accept_diag(self, frame: PartialFrameArtifact, diag: DiagnosticArtifact) -> bool:
         if not self.config.dedupe:
             return True
 
@@ -190,24 +158,11 @@ class SemanticPass:
 
     def _clear_same_phase(self, artifacts: CompileArtifacts) -> None:
         phase = self.config.phase_label
-
         for frame in artifacts.frames:
-            frame.diagnostics = [
-                d for d in frame.diagnostics
-                if getattr(d, "phase", None) != phase
-            ]
+            frame.diagnostics = [d for d in frame.diagnostics if getattr(d, "phase", None) != phase]
+        artifacts.diagnostics = [d for d in artifacts.diagnostics if getattr(d, "phase", None) != phase]
 
-        artifacts.diagnostics = [
-            d for d in artifacts.diagnostics
-            if getattr(d, "phase", None) != phase
-        ]
-
-    def _existing_codes(
-        self,
-        frame: PartialFrameArtifact,
-        *,
-        severity: str,
-    ) -> set[str]:
+    def _existing_codes(self, frame: PartialFrameArtifact, *, severity: str) -> set[str]:
         codes = set()
         for d in frame.diagnostics:
             if getattr(d, "severity", None) == severity:
@@ -216,15 +171,8 @@ class SemanticPass:
                     codes.add(code)
         return codes
 
-    def _frame_scope(
-        self,
-        frame: PartialFrameArtifact,
-        fragments: list[Any],
-    ):
-        frag_map = {
-            getattr(f, "fragment_id", f"FRG-{i:06d}"): f
-            for i, f in enumerate(fragments, start=1)
-        }
+    def _frame_scope(self, frame: PartialFrameArtifact, fragments: list[Any]):
+        frag_map = {getattr(f, "fragment_id", f"FRG-{i:06d}"): f for i, f in enumerate(fragments, start=1)}
         if not frame.fragment_ids:
             return tuple()
         frag = frag_map.get(frame.fragment_ids[0])
