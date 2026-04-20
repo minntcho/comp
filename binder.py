@@ -6,23 +6,44 @@ from typing import Iterable
 from ast_nodes import (
     AlternationExpr,
     BinaryExpr,
+    BindStmt,
+    BuildStmt,
     ColumnRefExpr,
     ContextRefExpr,
     Expr,
     FunctionCallExpr,
     LiteralExpr,
     NameExpr,
+    ParserInheritStmt,
     RowLabelRefExpr,
     SetExpr,
+    TagStmt,
     UnaryExpr,
 )
 from compiled_spec import (
+    CompiledBindAction,
     CompiledConstraintSpec,
     CompiledDiagnosticSpec,
     CompiledGovernancePolicy,
+    CompiledInheritSpec,
     CompiledInferSpec,
+    CompiledParserInheritAction,
+    CompiledParserSpec,
     CompiledProgramSpec,
     CompiledResolverPolicy,
+    CompiledTagAction,
+    CompiledTokenSpec,
+)
+from lex_ir import (
+    LexBuiltinCall,
+    LexColumnRef,
+    LexContextRef,
+    LexExpr,
+    LexLiteral,
+    LexRowLabelMatch,
+    LexSetExpr,
+    LexSymbolConst,
+    LexUnion,
 )
 from rule_ir import (
     ContextValueRef,
@@ -40,6 +61,18 @@ from rule_ir import (
     RuleSetExpr,
     RuleUnary,
     SymbolConst,
+)
+from source_ir import (
+    SourceBuiltinCall,
+    SourceColumnRef,
+    SourceContextRef,
+    SourceExpr,
+    SourceFirstOf,
+    SourceLiteral,
+    SourceRowLabelMatch,
+    SourceSetExpr,
+    SourceSymbolConst,
+    SourceTokenRef,
 )
 from spec_nodes import ProgramSpec
 
@@ -98,6 +131,8 @@ class Binder:
         "llm.fuzzy_lex",
     }
 
+    KNOWN_BUILTINS = RULE_BUILTINS | LEXICAL_BUILTINS
+
     SYMBOL_ALLOWLIST = {
         "committed",
         "merged",
@@ -133,6 +168,32 @@ class Binder:
 
         return CompiledProgramSpec(
             syntax=spec,
+            compiled_tokens={
+                token_name: self._bind_token_spec(token_spec, report=report)
+                for token_name, token_spec in spec.tokens.items()
+            },
+            compiled_parsers={
+                parser_name: self._bind_parser_spec(spec, parser_spec, report=report)
+                for parser_name, parser_spec in spec.parsers.items()
+            },
+            compiled_inherit_rules=[
+                CompiledInheritSpec(
+                    syntax=inherit_rule,
+                    source_ir=self._bind_source_expr(
+                        inherit_rule.source_expr,
+                        spec=spec,
+                        report=report,
+                        allow_token_ref=False,
+                    ),
+                    condition_ir=self._bind_expr(
+                        inherit_rule.condition,
+                        host=self._frame_rule_host(spec, None),
+                        spec=spec,
+                        report=report,
+                    ),
+                )
+                for inherit_rule in spec.inherit_rules
+            ],
             compiled_constraints=[
                 CompiledConstraintSpec(
                     syntax=constraint,
@@ -184,6 +245,93 @@ class Binder:
                 for frame_name, policy in spec.governances.items()
             },
             binding_warnings=report.messages(),
+        )
+
+    def _bind_token_spec(self, token_spec, *, report: BindingReport) -> CompiledTokenSpec:
+        return CompiledTokenSpec(
+            syntax=token_spec,
+            primary_ir=(
+                self._bind_token_expr(token_spec.primary_expr, report=report)
+                if token_spec.primary_expr is not None
+                else None
+            ),
+            fallback_ir=(
+                self._bind_token_expr(token_spec.fallback_expr, report=report)
+                if token_spec.fallback_expr is not None
+                else None
+            ),
+        )
+
+    def _bind_parser_spec(
+        self,
+        spec: ProgramSpec,
+        parser_spec,
+        report: BindingReport,
+    ) -> CompiledParserSpec:
+        host = self._frame_rule_host(spec, parser_spec.build_frame)
+        compiled_actions = []
+
+        for action in parser_spec.actions:
+            if isinstance(action, BuildStmt):
+                continue
+
+            if isinstance(action, BindStmt):
+                compiled_actions.append(
+                    CompiledBindAction(
+                        syntax=action,
+                        source_ir=self._bind_source_expr(
+                            action.source_expr,
+                            spec=spec,
+                            report=report,
+                            allow_token_ref=True,
+                        ),
+                    )
+                )
+                continue
+
+            if isinstance(action, ParserInheritStmt):
+                compiled_actions.append(
+                    CompiledParserInheritAction(
+                        syntax=action,
+                        source_ir=self._bind_source_expr(
+                            action.source_expr,
+                            spec=spec,
+                            report=report,
+                            allow_token_ref=True,
+                        ),
+                        condition_ir=(
+                            self._bind_expr(
+                                action.condition,
+                                host=host,
+                                spec=spec,
+                                report=report,
+                            )
+                            if action.condition is not None
+                            else None
+                        ),
+                    )
+                )
+                continue
+
+            if isinstance(action, TagStmt):
+                compiled_actions.append(
+                    CompiledTagAction(
+                        syntax=action,
+                        source_ir=self._bind_source_expr(
+                            action.source_expr,
+                            spec=spec,
+                            report=report,
+                            allow_token_ref=True,
+                        ),
+                    )
+                )
+                continue
+
+            raise BindingError(f"unsupported parser action for binding: {type(action).__name__}")
+
+        return CompiledParserSpec(
+            syntax=parser_spec,
+            actions=compiled_actions,
         )
 
     def _bind_resolver_policy(
@@ -420,4 +568,134 @@ class Binder:
         return RuleBuiltinCall(
             name=expr.name,
             args=[self._bind_expr(arg, host=host, spec=spec, report=report) for arg in expr.args],
+        )
+
+    def _bind_token_expr(self, expr: Expr, *, report: BindingReport) -> LexExpr:
+        if isinstance(expr, LiteralExpr):
+            return LexLiteral(value=expr.value)
+
+        if isinstance(expr, NameExpr):
+            return LexSymbolConst(name=expr.name)
+
+        if isinstance(expr, FunctionCallExpr):
+            if expr.name not in self.KNOWN_BUILTINS:
+                raise BindingError(f"unknown builtin in token expression: {expr.name}")
+            return LexBuiltinCall(
+                name=expr.name,
+                args=[self._bind_token_value_expr(arg, report=report) for arg in expr.args],
+            )
+
+        if isinstance(expr, SetExpr):
+            return LexSetExpr(
+                items=[self._bind_token_value_expr(item, report=report) for item in expr.items]
+            )
+
+        if isinstance(expr, ColumnRefExpr):
+            return LexColumnRef(column_name=expr.column_name)
+
+        if isinstance(expr, ContextRefExpr):
+            return LexContextRef(role_name=expr.role_name)
+
+        if isinstance(expr, RowLabelRefExpr):
+            return LexRowLabelMatch(label=expr.label)
+
+        if isinstance(expr, AlternationExpr):
+            return LexUnion(
+                options=[self._bind_token_expr(option, report=report) for option in expr.options]
+            )
+
+        if isinstance(expr, (UnaryExpr, BinaryExpr)):
+            raise BindingError(f"boolean/comparison expression is not allowed in token host: {type(expr).__name__}")
+
+        raise BindingError(f"unsupported token expression: {type(expr).__name__}")
+
+    def _bind_token_value_expr(self, expr: Expr, *, report: BindingReport) -> LexExpr:
+        if isinstance(expr, AlternationExpr):
+            raise BindingError("alternation is not allowed inside token builtin arguments")
+        return self._bind_token_expr(expr, report=report)
+
+    def _bind_source_expr(
+        self,
+        expr: Expr,
+        *,
+        spec: ProgramSpec,
+        report: BindingReport,
+        allow_token_ref: bool,
+    ) -> SourceExpr:
+        if isinstance(expr, LiteralExpr):
+            return SourceLiteral(value=expr.value)
+
+        if isinstance(expr, NameExpr):
+            if allow_token_ref and expr.name in spec.tokens:
+                return SourceTokenRef(token_name=expr.name)
+            return SourceSymbolConst(name=expr.name)
+
+        if isinstance(expr, FunctionCallExpr):
+            if expr.name not in self.KNOWN_BUILTINS:
+                raise BindingError(f"unknown builtin in source expression: {expr.name}")
+            return SourceBuiltinCall(
+                name=expr.name,
+                args=[
+                    self._bind_source_value_expr(
+                        arg,
+                        spec=spec,
+                        report=report,
+                    )
+                    for arg in expr.args
+                ],
+            )
+
+        if isinstance(expr, SetExpr):
+            return SourceSetExpr(
+                items=[
+                    self._bind_source_value_expr(
+                        item,
+                        spec=spec,
+                        report=report,
+                    )
+                    for item in expr.items
+                ]
+            )
+
+        if isinstance(expr, ColumnRefExpr):
+            return SourceColumnRef(column_name=expr.column_name)
+
+        if isinstance(expr, ContextRefExpr):
+            return SourceContextRef(role_name=expr.role_name)
+
+        if isinstance(expr, RowLabelRefExpr):
+            return SourceRowLabelMatch(label=expr.label)
+
+        if isinstance(expr, AlternationExpr):
+            return SourceFirstOf(
+                options=[
+                    self._bind_source_expr(
+                        option,
+                        spec=spec,
+                        report=report,
+                        allow_token_ref=allow_token_ref,
+                    )
+                    for option in expr.options
+                ]
+            )
+
+        if isinstance(expr, (UnaryExpr, BinaryExpr)):
+            raise BindingError(f"boolean/comparison expression is not allowed in source host: {type(expr).__name__}")
+
+        raise BindingError(f"unsupported source expression: {type(expr).__name__}")
+
+    def _bind_source_value_expr(
+        self,
+        expr: Expr,
+        *,
+        spec: ProgramSpec,
+        report: BindingReport,
+    ) -> SourceExpr:
+        if isinstance(expr, AlternationExpr):
+            raise BindingError("alternation is not allowed inside source builtin arguments")
+        return self._bind_source_expr(
+            expr,
+            spec=spec,
+            report=report,
+            allow_token_ref=False,
         )
