@@ -1,4 +1,3 @@
-# repair_pass.py
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -12,9 +11,10 @@ from artifacts import (
     RoleSlotArtifact,
     diagnostic_codes,
 )
-from expr_eval import EvalContext, ExprEvaluator
+from compiled_spec import CompiledProgramSpec, CompiledResolverPolicy
+from expr_eval import EvalContext
+from rule_eval import RuleEvaluator
 from runtime_env import RuntimeEnv
-from spec_nodes import ProgramSpec, ResolverPolicy
 
 
 @dataclass
@@ -59,23 +59,26 @@ class RepairPass:
 
     def __init__(
         self,
-        evaluator: Optional[ExprEvaluator] = None,
-        config: Optional[RepairPassConfig] = None,
+        evaluator: RuleEvaluator | None = None,
+        config: RepairPassConfig | None = None,
     ) -> None:
-        self.evaluator = evaluator or ExprEvaluator()
+        self.evaluator = evaluator or RuleEvaluator()
         self.config = config or RepairPassConfig()
         self._event_seq = count(1)
 
     def run(
         self,
-        spec: ProgramSpec,
+        spec: CompiledProgramSpec,
         artifacts: CompileArtifacts,
         env: RuntimeEnv,
     ) -> CompileArtifacts:
+        if not isinstance(spec, CompiledProgramSpec):
+            raise TypeError("RepairPass requires CompiledProgramSpec")
+
         claims_by_id = {c.claim_id: c for c in artifacts.claims}
 
         for frame in artifacts.frames:
-            policy = spec.resolvers.get(frame.frame_type)
+            policy = spec.compiled_resolvers.get(frame.frame_type)
             if policy is None:
                 continue
 
@@ -96,7 +99,7 @@ class RepairPass:
         self,
         *,
         frame: PartialFrameArtifact,
-        policy: ResolverPolicy,
+        policy: CompiledResolverPolicy,
         claims_by_id: dict[str, ClaimArtifact],
         env: RuntimeEnv,
     ) -> None:
@@ -165,7 +168,6 @@ class RepairPass:
             else:
                 frame_stable = 0
 
-            # trace
             if self.config.trace_enabled:
                 frame.metadata["repair_trace"].append(
                     {
@@ -196,7 +198,7 @@ class RepairPass:
                 error_codes=error_codes,
             )
 
-            if policy.commit_condition is not None and self.evaluator.eval_bool(policy.commit_condition, eval_ctx):
+            if policy.commit_condition_ir is not None and self.evaluator.eval_bool(policy.commit_condition_ir, eval_ctx):
                 frame.status = "committed"
                 termination_reason = "commit_condition_satisfied"
                 break
@@ -240,16 +242,17 @@ class RepairPass:
                 "score": final_score,
                 "stable": frame_stable,
                 "status": frame.status,
+                "iteration": last_iter_no,
+                "no_improve_count": no_improve_count,
             },
             warning_codes=self._diag_codes(frame, severity="warning"),
             error_codes=self._diag_codes(frame, severity="error"),
         )
 
-        # 이미 committed면 유지
         if frame.status != "committed":
-            if policy.review_condition is not None and self.evaluator.eval_bool(policy.review_condition, final_ctx):
+            if policy.review_condition_ir is not None and self.evaluator.eval_bool(policy.review_condition_ir, final_ctx):
                 frame.status = "review_required"
-            elif policy.reject_otherwise:
+            elif policy.syntax.reject_otherwise:
                 frame.status = "rejected"
             else:
                 frame.status = "resolving"
@@ -283,7 +286,6 @@ class RepairPass:
     ) -> None:
         active_claim = claims_by_id.get(slot.active_claim_id) if slot.active_claim_id else None
 
-        # scoring pool = active + shadows
         pool_ids = []
         if slot.active_claim_id:
             pool_ids.append(slot.active_claim_id)
@@ -336,7 +338,6 @@ class RepairPass:
         best = scored[0]
         best_claim = claims_by_id[best.claim_id]
 
-        # active 교체 여부
         if active_claim is None:
             self._promote_to_active(slot, best_claim, claims_by_id)
         else:
@@ -353,7 +354,6 @@ class RepairPass:
                 ):
                     self._promote_to_active(slot, best_claim, claims_by_id)
 
-        # aging 업데이트 / frozen / rejected 정리
         self._update_candidate_lifecycle(
             slot=slot,
             claims_by_id=claims_by_id,
@@ -363,7 +363,6 @@ class RepairPass:
             shadow_limit=shadow_limit,
         )
 
-        # resolved value / confidence
         active = claims_by_id.get(slot.active_claim_id) if slot.active_claim_id else None
         if active is not None:
             slot.resolved_value = active.value
@@ -386,10 +385,6 @@ class RepairPass:
         if not allow_frozen:
             return
 
-        # revive 조건:
-        # - active 없음
-        # - context_conflict 있음
-        # - role 관련 diagnostic이 있음
         should_revive = False
 
         if slot.active_claim_id is None:
@@ -407,29 +402,21 @@ class RepairPass:
         if role_name == "site" and "MissingSite" in warning_codes:
             should_revive = True
 
-        if not should_revive:
+        if not should_revive or not slot.frozen_claim_ids:
             return
 
-        if not slot.frozen_claim_ids:
-            return
-
-        # frozen 중 confidence 가장 높은 1개만 shadow로 복귀
-        frozen_claims = [
-            claims_by_id[cid] for cid in slot.frozen_claim_ids
-            if cid in claims_by_id
-        ]
+        frozen_claims = [claims_by_id[cid] for cid in slot.frozen_claim_ids if cid in claims_by_id]
         frozen_claims.sort(key=lambda c: float(c.confidence), reverse=True)
 
         revive = frozen_claims[:1]
         revive_ids = {c.claim_id for c in revive}
 
         slot.frozen_claim_ids = [cid for cid in slot.frozen_claim_ids if cid not in revive_ids]
-        for c in revive:
-            c.candidate_state = "shadow"
-            c.metadata["not_selected_iters"] = 0
-            slot.shadow_claim_ids.append(c.claim_id)
+        for claim in revive:
+            claim.candidate_state = "shadow"
+            claim.metadata["not_selected_iters"] = 0
+            slot.shadow_claim_ids.append(claim.claim_id)
 
-        # shadow 길이 제한
         slot.shadow_claim_ids = slot.shadow_claim_ids[:shadow_limit]
 
     def _update_candidate_lifecycle(
@@ -442,7 +429,6 @@ class RepairPass:
         aging_cap: float,
         shadow_limit: int,
     ) -> None:
-        # shadow 정리: active 제거, 순서 유지
         slot.shadow_claim_ids = [cid for cid in slot.shadow_claim_ids if cid != active_claim_id]
 
         new_shadow: list[str] = []
@@ -476,17 +462,14 @@ class RepairPass:
             claim.candidate_state = "shadow"
             new_shadow.append(cid)
 
-        # active는 aging 리셋
         if active_claim_id and active_claim_id in claims_by_id:
             active = claims_by_id[active_claim_id]
             active.candidate_state = "active"
             active.metadata["aging_bonus"] = 0.0
             active.metadata["not_selected_iters"] = 0
 
-        # shadow score 순서대로 상위만 유지
         new_shadow.sort(
-            key=lambda cid: -self._claim_total_score(claims_by_id[cid])
-            if cid in claims_by_id else 0.0
+            key=lambda cid: -self._claim_total_score(claims_by_id[cid]) if cid in claims_by_id else 0.0
         )
         slot.shadow_claim_ids = new_shadow[:shadow_limit]
         slot.frozen_claim_ids = new_frozen
@@ -591,7 +574,6 @@ class RepairPass:
         challenger_score: float,
         replace_margin: float,
     ) -> bool:
-        # explicit active는 조금 더 보호
         margin = replace_margin
         if active_claim.extraction_mode == "explicit":
             margin += self.config.explicit_protection_margin
@@ -606,13 +588,7 @@ class RepairPass:
         items = []
         for role_name in sorted(frame.slots.keys()):
             slot = frame.slots[role_name]
-            items.append(
-                (
-                    role_name,
-                    slot.active_claim_id,
-                    slot.missing_tag,
-                )
-            )
+            items.append((role_name, slot.active_claim_id, slot.missing_tag))
         return tuple(items)
 
     def _detect_oscillation(self, state_history: list[tuple]) -> bool:
@@ -625,7 +601,6 @@ class RepairPass:
             a, b, c, d = tail
             return (a == c) and (b == d) and (a != b)
 
-        # generic fallback: 최근 window 안에서 두 상태가 번갈아 나오는지 느슨히 검사
         unique = list(dict.fromkeys(tail))
         return len(unique) == 2 and tail[0] == tail[2] and tail[1] == tail[3]
 
@@ -660,7 +635,7 @@ class RepairPass:
 
     def _extract_policy_params(
         self,
-        policy: ResolverPolicy,
+        policy: CompiledResolverPolicy,
         env: RuntimeEnv,
         frame: PartialFrameArtifact,
         claims_by_id: dict[str, ClaimArtifact],
@@ -677,10 +652,10 @@ class RepairPass:
             local_vars={},
         )
 
-        for k, expr in policy.assigns.items():
-            params[k] = self.evaluator.eval(expr, ctx)
+        for key, expr in policy.assigns_ir.items():
+            params[key] = self.evaluator.eval(expr, ctx)
 
-        for k, expr in policy.candidate_pool_assigns.items():
-            params[f"candidate_pool.{k}"] = self.evaluator.eval(expr, ctx)
+        for key, expr in policy.candidate_pool_assigns_ir.items():
+            params[f"candidate_pool.{key}"] = self.evaluator.eval(expr, ctx)
 
         return params
