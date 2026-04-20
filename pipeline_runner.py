@@ -21,7 +21,7 @@ from parse_pass import ParsePass
 from repair_pass import RepairPass
 from runtime_env import RuntimeEnv, SiteRecord, build_runtime_env
 from scope_resolution_pass import ScopeResolutionPass
-from semantic_pass import SemanticPass
+from semantic_pass import SemanticPass, SemanticPassConfig
 from spec_nodes import ProgramSpec
 
 
@@ -102,9 +102,17 @@ def load_compiled_program_spec_from_dsl(*, grammar_path: str | Path, dsl_path: s
 
 
 def build_default_passes(*, include_post_repair_semantic: bool = False) -> list[CompilerPass]:
-    passes: list[CompilerPass] = [LexPass(), ParsePass(), ScopeResolutionPass(), InferencePass(), SemanticPass(), RepairPass(), EmitPass(), GovernancePass(), CalculationPass()]
+    passes: list[CompilerPass] = [
+        LexPass(),
+        ParsePass(),
+        ScopeResolutionPass(),
+        InferencePass(),
+        SemanticPass(config=SemanticPassConfig(phase_label="semantic_pre")),
+        RepairPass(),
+    ]
     if include_post_repair_semantic:
-        passes = [LexPass(), ParsePass(), ScopeResolutionPass(), InferencePass(), SemanticPass(), RepairPass(), SemanticPass(), EmitPass(), GovernancePass(), CalculationPass()]
+        passes.append(SemanticPass(config=SemanticPassConfig(phase_label="semantic_post")))
+    passes.extend([EmitPass(), GovernancePass(), CalculationPass()])
     return passes
 
 
