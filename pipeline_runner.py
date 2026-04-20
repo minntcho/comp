@@ -1,4 +1,3 @@
-# pipeline_runner.py
 from __future__ import annotations
 
 from dataclasses import dataclass, field
@@ -9,8 +8,10 @@ from lark import Lark
 
 from artifacts import CompileArtifacts
 from ast_builder import ASTBuilder
+from binder import Binder
 from builtins import register_default_builtins
 from calculation_pass import CalculationPass
+from compiled_spec import CompiledProgramSpec
 from emit_pass import EmitPass
 from governance_pass import GovernancePass
 from inference_pass import InferencePass
@@ -25,26 +26,12 @@ from spec_nodes import ProgramSpec
 
 
 class Fragmentizer(Protocol):
-    """
-    documents -> fragments
-    반환 fragment는 최소한 아래 속성을 가져야 한다.
-    - fragment_id
-    - fragment_type
-    - text
-    - scope_path
-    - metadata (optional)
-    """
     def __call__(self, documents: Sequence[Any]) -> list[Any]:
         ...
 
 
 class CompilerPass(Protocol):
-    def run(
-        self,
-        spec: ProgramSpec,
-        artifacts: CompileArtifacts,
-        env: RuntimeEnv,
-    ) -> CompileArtifacts:
+    def run(self, spec: ProgramSpec | CompiledProgramSpec, artifacts: CompileArtifacts, env: RuntimeEnv) -> CompileArtifacts:
         ...
 
 
@@ -52,19 +39,16 @@ class CompilerPass(Protocol):
 class PipelineResources:
     site_records: Sequence[SiteRecord] = field(default_factory=list)
     factor_rows: Sequence[dict[str, Any]] = field(default_factory=list)
-
     policy_flags: dict[str, Any] = field(default_factory=dict)
-
     activity_aliases: dict[str, list[str]] = field(default_factory=dict)
     unit_aliases: dict[str, list[str]] = field(default_factory=dict)
-
     llm_fallback: Optional[Any] = None
     llm_budget: int = 0
 
 
 @dataclass
 class PipelineRunResult:
-    spec: ProgramSpec
+    spec: ProgramSpec | CompiledProgramSpec
     env: RuntimeEnv
     artifacts: CompileArtifacts
 
@@ -99,155 +83,65 @@ class PipelineRunResult:
         }
 
 
-def load_program_spec_from_dsl(
-    *,
-    grammar_path: str | Path,
-    dsl_path: str | Path | None = None,
-    dsl_text: str | None = None,
-) -> ProgramSpec:
+def load_program_spec_from_dsl(*, grammar_path: str | Path, dsl_path: str | Path | None = None, dsl_text: str | None = None) -> ProgramSpec:
     if dsl_text is None and dsl_path is None:
         raise ValueError("one of dsl_text or dsl_path must be provided")
-
     grammar = Path(grammar_path).read_text(encoding="utf-8")
     source = dsl_text if dsl_text is not None else Path(dsl_path).read_text(encoding="utf-8")
-
-    parser = Lark(
-        grammar,
-        parser="lalr",
-        lexer="contextual",
-        start="start",
-    )
+    parser = Lark(grammar, parser="lalr", lexer="contextual", start="start")
     tree = parser.parse(source)
-    program_ast = ASTBuilder().transform(tree)
-    program_spec = Lowerer().lower(program_ast)
-    return program_spec
+    return Lowerer().lower(ASTBuilder().transform(tree))
 
 
-def build_default_passes(
-    *,
-    include_post_repair_semantic: bool = False,
-) -> list[CompilerPass]:
-    passes: list[CompilerPass] = [
-        LexPass(),
-        ParsePass(),
-        ScopeResolutionPass(),
-        InferencePass(),
-        SemanticPass(),   # pre-repair semantic
-        RepairPass(),
-        EmitPass(),
-        GovernancePass(),
-        CalculationPass(),
-    ]
+def compile_program_spec(program_spec: ProgramSpec) -> CompiledProgramSpec:
+    return Binder().bind(program_spec)
 
-    # 참고:
-    # 현재 semantic pass는 stale diagnostics invalidation이 완전하지 않아서
-    # 기본은 pre-repair 1회로 둔다.
-    # 나중에 semantic_post를 정교화하면 RepairPass 뒤에 한 번 더 꽂을 수 있다.
+
+def load_compiled_program_spec_from_dsl(*, grammar_path: str | Path, dsl_path: str | Path | None = None, dsl_text: str | None = None) -> CompiledProgramSpec:
+    return compile_program_spec(load_program_spec_from_dsl(grammar_path=grammar_path, dsl_path=dsl_path, dsl_text=dsl_text))
+
+
+def build_default_passes(*, include_post_repair_semantic: bool = False) -> list[CompilerPass]:
+    passes: list[CompilerPass] = [LexPass(), ParsePass(), ScopeResolutionPass(), InferencePass(), SemanticPass(), RepairPass(), EmitPass(), GovernancePass(), CalculationPass()]
     if include_post_repair_semantic:
-        passes = [
-            LexPass(),
-            ParsePass(),
-            ScopeResolutionPass(),
-            InferencePass(),
-            SemanticPass(),   # pre
-            RepairPass(),
-            SemanticPass(),   # post (현재는 실험적)
-            EmitPass(),
-            GovernancePass(),
-            CalculationPass(),
-        ]
-
+        passes = [LexPass(), ParsePass(), ScopeResolutionPass(), InferencePass(), SemanticPass(), RepairPass(), SemanticPass(), EmitPass(), GovernancePass(), CalculationPass()]
     return passes
 
 
 class ESGPipelineRunner:
-    def __init__(
-        self,
-        *,
-        grammar_path: str | Path = "esgdl.lark",
-        passes: Optional[list[CompilerPass]] = None,
-        fragmentizer: Optional[Fragmentizer] = None,
-    ) -> None:
+    def __init__(self, *, grammar_path: str | Path = "esgdl.lark", passes: Optional[list[CompilerPass]] = None, fragmentizer: Optional[Fragmentizer] = None) -> None:
         self.grammar_path = Path(grammar_path)
         self.fragmentizer = fragmentizer
         self.passes = passes or build_default_passes()
 
-    def load_spec(
-        self,
-        *,
-        dsl_path: str | Path | None = None,
-        dsl_text: str | None = None,
-    ) -> ProgramSpec:
-        return load_program_spec_from_dsl(
-            grammar_path=self.grammar_path,
-            dsl_path=dsl_path,
-            dsl_text=dsl_text,
-        )
+    def load_spec(self, *, dsl_path: str | Path | None = None, dsl_text: str | None = None) -> CompiledProgramSpec:
+        return load_compiled_program_spec_from_dsl(grammar_path=self.grammar_path, dsl_path=dsl_path, dsl_text=dsl_text)
 
-    def build_env(
-        self,
-        *,
-        spec: ProgramSpec,
-        resources: Optional[PipelineResources] = None,
-    ) -> RuntimeEnv:
+    def build_env(self, *, spec: ProgramSpec | CompiledProgramSpec, resources: Optional[PipelineResources] = None) -> RuntimeEnv:
         resources = resources or PipelineResources()
-
-        env = build_runtime_env(
-            spec=spec,
-            site_records=list(resources.site_records),
-            factor_rows=list(resources.factor_rows),
-            policy_flags=dict(resources.policy_flags),
-            activity_aliases=dict(resources.activity_aliases),
-            unit_aliases=dict(resources.unit_aliases),
-            llm_fallback=resources.llm_fallback,
-            llm_budget=resources.llm_budget,
-        )
+        syntax_spec = spec.syntax if isinstance(spec, CompiledProgramSpec) else spec
+        env = build_runtime_env(spec=syntax_spec, site_records=list(resources.site_records), factor_rows=list(resources.factor_rows), policy_flags=dict(resources.policy_flags), activity_aliases=dict(resources.activity_aliases), unit_aliases=dict(resources.unit_aliases), llm_fallback=resources.llm_fallback, llm_budget=resources.llm_budget)
         register_default_builtins(env)
         return env
 
-    def prepare_fragments(
-        self,
-        *,
-        fragments: Optional[list[Any]] = None,
-        documents: Optional[Sequence[Any]] = None,
-    ) -> list[Any]:
+    def prepare_fragments(self, *, fragments: Optional[list[Any]] = None, documents: Optional[Sequence[Any]] = None) -> list[Any]:
         if fragments is not None:
             return fragments
-
         if documents is None:
             raise ValueError("one of fragments or documents must be provided")
-
         if self.fragmentizer is None:
-            raise ValueError(
-                "documents were provided but no fragmentizer is configured. "
-                "Either pass pre-built fragments or inject a fragmentizer callable."
-            )
-
+            raise ValueError("documents were provided but no fragmentizer is configured. Either pass pre-built fragments or inject a fragmentizer callable.")
         return self.fragmentizer(documents)
 
-    def run(
-        self,
-        *,
-        spec: Optional[ProgramSpec] = None,
-        dsl_path: str | Path | None = None,
-        dsl_text: str | None = None,
-        fragments: Optional[list[Any]] = None,
-        documents: Optional[Sequence[Any]] = None,
-        resources: Optional[PipelineResources] = None,
-    ) -> PipelineRunResult:
+    def run(self, *, spec: Optional[ProgramSpec | CompiledProgramSpec] = None, dsl_path: str | Path | None = None, dsl_text: str | None = None, fragments: Optional[list[Any]] = None, documents: Optional[Sequence[Any]] = None, resources: Optional[PipelineResources] = None) -> PipelineRunResult:
         if spec is None:
             spec = self.load_spec(dsl_path=dsl_path, dsl_text=dsl_text)
+        elif not isinstance(spec, CompiledProgramSpec):
+            spec = compile_program_spec(spec)
 
         env = self.build_env(spec=spec, resources=resources)
         prepared_fragments = self.prepare_fragments(fragments=fragments, documents=documents)
-
         artifacts = CompileArtifacts(fragments=prepared_fragments)
-
         for p in self.passes:
             artifacts = p.run(spec, artifacts, env)
-
-        return PipelineRunResult(
-            spec=spec,
-            env=env,
-            artifacts=artifacts,
-        )
+        return PipelineRunResult(spec=spec, env=env, artifacts=artifacts)
