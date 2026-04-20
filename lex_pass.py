@@ -6,22 +6,16 @@ from itertools import count
 from typing import Any, Optional
 
 from artifacts import CompileArtifacts, TokenOccurrence
-from ast_nodes import AlternationExpr, Expr
-from expr_eval import EvalContext, ExprEvaluator
+from compiled_spec import CompiledProgramSpec
+from lex_eval import LexEvaluator
 from runtime_env import LexCandidate, RuntimeEnv
-from spec_nodes import ProgramSpec, TokenSpec
 
 
 @dataclass
 class LexPassConfig:
-    # primary hit가 너무 약하거나 모호하면 fallback(LLM)까지 호출
     min_primary_confidence: float = 0.80
     ambiguity_delta: float = 0.05
-
-    # token 하나당 fragment에서 너무 많은 후보를 남기지 않도록 자름
     max_hits_per_token_per_fragment: int = 8
-
-    # fallback hit는 기본적으로 primary보다 보수적으로 다룸
     fallback_confidence_multiplier: float = 0.90
 
 
@@ -32,36 +26,38 @@ class LexPass:
     설계 원칙:
     1) deterministic(primary) lexer 먼저
     2) 필요할 때만 fallback lexer(LLM) 호출
-    3) token expr의 AlternationExpr는 "left-biased fallback"이 아니라
-       "candidate union"으로 처리
+    3) token declaration의 alternation은 union semantics
     4) 이 단계에서는 role-claim으로 확정하지 않고 token occurrence만 뽑음
     """
 
     def __init__(
         self,
-        evaluator: Optional[ExprEvaluator] = None,
+        evaluator: Optional[LexEvaluator] = None,
         config: Optional[LexPassConfig] = None,
     ) -> None:
-        self.evaluator = evaluator or ExprEvaluator()
+        self.evaluator = evaluator or LexEvaluator()
         self.config = config or LexPassConfig()
         self._seq = count(1)
 
     def run(
         self,
-        spec: ProgramSpec,
+        spec: CompiledProgramSpec,
         artifacts: CompileArtifacts,
         env: RuntimeEnv,
     ) -> CompileArtifacts:
+        if not isinstance(spec, CompiledProgramSpec):
+            raise TypeError("LexPass requires CompiledProgramSpec")
+
         out_tokens: list[TokenOccurrence] = []
 
         for fragment in artifacts.fragments:
             ctx = self._build_eval_context(fragment, env)
 
-            for token_spec in spec.tokens.values():
+            for token_spec in spec.compiled_tokens.values():
                 token_hits = self._lex_one_token(token_spec, ctx)
                 out_tokens.extend(
                     self._to_occurrences(
-                        token_name=token_spec.name,
+                        token_name=token_spec.syntax.name,
                         fragment=fragment,
                         hits=token_hits,
                     )
@@ -70,21 +66,17 @@ class LexPass:
         artifacts.tokens.extend(out_tokens)
         return artifacts
 
-    # ------------------------------------------------------------------
-    # Core
-    # ------------------------------------------------------------------
-
     def _lex_one_token(
         self,
-        token_spec: TokenSpec,
-        ctx: EvalContext,
+        token_spec,
+        ctx,
     ) -> list[LexCandidate]:
-        primary_hits = self._eval_token_expr(token_spec.primary_expr, ctx)
+        primary_hits = self.evaluator.resolve(token_spec.primary_ir, ctx)
         primary_hits = self._postprocess_hits(primary_hits, source_channel="primary")
 
         fallback_hits: list[LexCandidate] = []
-        if token_spec.fallback_expr is not None and self._should_use_fallback(primary_hits):
-            fallback_hits = self._eval_token_expr(token_spec.fallback_expr, ctx)
+        if token_spec.fallback_ir is not None and self._should_use_fallback(primary_hits):
+            fallback_hits = self.evaluator.resolve(token_spec.fallback_ir, ctx)
             fallback_hits = self._postprocess_hits(fallback_hits, source_channel="fallback")
 
         merged = self._merge_hits(primary_hits, fallback_hits)
@@ -96,63 +88,6 @@ class LexPass:
             )
         )
         return merged[: self.config.max_hits_per_token_per_fragment]
-
-    def _eval_token_expr(
-        self,
-        expr: Expr | None,
-        ctx: EvalContext,
-    ) -> list[LexCandidate]:
-        if expr is None:
-            return []
-
-        # token declaration에서 alternation은 union semantics
-        if isinstance(expr, AlternationExpr):
-            hits: list[LexCandidate] = []
-            for option in expr.options:
-                hits.extend(self._eval_token_expr(option, ctx))
-            return self._merge_hits(hits, [])
-
-        # 나머지는 evaluator에 맡기고 LexCandidate 리스트로 정규화
-        value = self.evaluator.eval(expr, ctx)
-        return self._coerce_to_lex_candidates(value)
-
-    # ------------------------------------------------------------------
-    # Candidate normalization
-    # ------------------------------------------------------------------
-
-    def _coerce_to_lex_candidates(self, value: Any) -> list[LexCandidate]:
-        if value is None:
-            return []
-
-        if isinstance(value, LexCandidate):
-            return [value]
-
-        if isinstance(value, list):
-            out: list[LexCandidate] = []
-            for item in value:
-                out.extend(self._coerce_to_lex_candidates(item))
-            return out
-
-        if isinstance(value, tuple) and len(value) == 3:
-            # convenience: (value, start, end)
-            return [
-                LexCandidate(
-                    value=value[0],
-                    start=value[1],
-                    end=value[2],
-                    confidence=0.80,
-                )
-            ]
-
-        # scalar는 매우 약한 후보로 래핑
-        return [
-            LexCandidate(
-                value=value,
-                start=None,
-                end=None,
-                confidence=0.50,
-            )
-        ]
 
     def _postprocess_hits(
         self,
@@ -188,9 +123,6 @@ class LexPass:
         primary_hits: list[LexCandidate],
         fallback_hits: list[LexCandidate],
     ) -> list[LexCandidate]:
-        """
-        동일 value/span 후보는 confidence가 높은 쪽을 남긴다.
-        """
         by_key: dict[tuple[Any, Optional[int], Optional[int]], LexCandidate] = {}
 
         for h in [*primary_hits, *fallback_hits]:
@@ -215,10 +147,6 @@ class LexPass:
                 return True
 
         return False
-
-    # ------------------------------------------------------------------
-    # Materialization
-    # ------------------------------------------------------------------
 
     def _to_occurrences(
         self,
@@ -265,11 +193,9 @@ class LexPass:
 
         return out
 
-    # ------------------------------------------------------------------
-    # Eval context
-    # ------------------------------------------------------------------
+    def _build_eval_context(self, fragment: Any, env: RuntimeEnv):
+        from expr_eval import EvalContext
 
-    def _build_eval_context(self, fragment: Any, env: RuntimeEnv) -> EvalContext:
         metadata = getattr(fragment, "metadata", {}) or {}
 
         row = metadata.get("row", {}) if isinstance(metadata, dict) else {}
