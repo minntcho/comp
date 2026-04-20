@@ -4,7 +4,7 @@ import pytest
 
 pytest.importorskip("lark")
 
-from binder import Binder
+from binder import Binder, BindingError
 from compiled_spec import CompiledBindAction, CompiledParserInheritAction, CompiledProgramSpec
 from lex_ir import LexBuiltinCall, LexUnion
 from pipeline_runner import load_program_spec_from_dsl
@@ -55,12 +55,12 @@ governance ActivityObservation {
 """.strip()
 
 
-def _load_program_spec():
-    return load_program_spec_from_dsl(grammar_path=GRAMMAR_PATH, dsl_text=LEX_SOURCE_DSL)
+def _bind_dsl(dsl_text: str):
+    return Binder().bind(load_program_spec_from_dsl(grammar_path=GRAMMAR_PATH, dsl_text=dsl_text))
 
 
 def test_binder_compiles_token_and_source_hosts_into_stage_specific_ir():
-    compiled = Binder().bind(_load_program_spec())
+    compiled = _bind_dsl(LEX_SOURCE_DSL)
 
     assert isinstance(compiled, CompiledProgramSpec)
 
@@ -86,3 +86,45 @@ def test_binder_compiles_token_and_source_hosts_into_stage_specific_ir():
 
     compiled_inherit = compiled.compiled_inherit_rules[0]
     assert isinstance(compiled_inherit.source_ir, SourceContextRef)
+
+
+def test_binder_rejects_unknown_bare_name_in_token_host():
+    bad_dsl = LEX_SOURCE_DSL.replace(
+        'token SiteToken := one_of("alpha") | one_of("beta")',
+        "token SiteToken := UnknownAlias",
+    )
+    with pytest.raises(BindingError, match="UnknownAlias"):
+        _bind_dsl(bad_dsl)
+
+
+def test_binder_rejects_unknown_bare_name_in_source_host():
+    bad_dsl = LEX_SOURCE_DSL.replace(
+        'bind site from column("site_name") | SiteToken',
+        'bind site from column("site_name") | SiteTokne',
+    )
+    with pytest.raises(BindingError, match="SiteTokne"):
+        _bind_dsl(bad_dsl)
+
+
+@pytest.mark.parametrize(
+    "bad_dsl, expected",
+    [
+        (
+            LEX_SOURCE_DSL.replace(
+                'token SiteToken := one_of("alpha") | one_of("beta")',
+                'token SiteToken := missing("site")',
+            ),
+            "token host",
+        ),
+        (
+            LEX_SOURCE_DSL.replace(
+                'bind site from column("site_name") | SiteToken',
+                'bind site from missing("site")',
+            ),
+            "source host",
+        ),
+    ],
+)
+def test_binder_rejects_rule_builtins_in_lex_and_source_hosts(bad_dsl: str, expected: str):
+    with pytest.raises(BindingError, match=expected):
+        _bind_dsl(bad_dsl)
