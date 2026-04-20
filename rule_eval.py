@@ -98,10 +98,13 @@ class RuleEvaluator:
         if mode == "value":
             return self.eval(arg, ctx)
         if mode in {"slot_name", "symbol_name"}:
+            if isinstance(arg, RowFieldRef):
+                raise RuleEvalError(
+                    f"row field ref '{arg.field_name}' cannot be used as {mode}; "
+                    "bind a value expression instead or use a row-aware builtin"
+                )
             if isinstance(arg, FrameSlotRef):
                 return arg.role_name
-            if isinstance(arg, RowFieldRef):
-                return arg.field_name
             if isinstance(arg, SymbolConst):
                 return arg.name
             if isinstance(arg, RuleLiteral):
