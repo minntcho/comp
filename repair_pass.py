@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import asdict, dataclass
 from itertools import count
 from typing import Any, Optional
 
@@ -11,6 +11,7 @@ from artifacts import (
     RoleSlotArtifact,
     diagnostic_codes,
 )
+from comp.compat.adapters import build_slot_selection_receipt
 from compiled_spec import CompiledProgramSpec, CompiledResolverPolicy
 from expr_eval import EvalContext
 from rule_eval import RuleEvaluator
@@ -265,6 +266,7 @@ class RepairPass:
         # backward-compatible mirrors; read paths should prefer frame.runtime.
         frame.metadata["termination_reason"] = termination_reason
         frame.metadata["final_score"] = final_score
+        self._store_selection_receipts(frame=frame, claims_by_id=claims_by_id, bundle_version=last_iter_no)
 
     # ------------------------------------------------------------------
     # Slot repair
@@ -494,6 +496,25 @@ class RepairPass:
 
         if claim.claim_id in slot.shadow_claim_ids:
             slot.shadow_claim_ids.remove(claim.claim_id)
+
+    def _store_selection_receipts(
+        self,
+        *,
+        frame: PartialFrameArtifact,
+        claims_by_id: dict[str, ClaimArtifact],
+        bundle_version: int,
+    ) -> None:
+        receipts = []
+        for role_name, slot in sorted(frame.slots.items()):
+            receipt = build_slot_selection_receipt(
+                frame=frame,
+                role_name=role_name,
+                slot=slot,
+                claims_by_id=claims_by_id,
+                bundle_version=bundle_version,
+            )
+            receipts.append(asdict(receipt))
+        frame.metadata["selection_receipts"] = receipts
 
     # ------------------------------------------------------------------
     # Scoring helpers
