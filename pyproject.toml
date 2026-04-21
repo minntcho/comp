@@ -1,0 +1,60 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "comp"
+version = "0.1.0a0"
+description = "Experimental ESG evidence compiler driven by ESGDL"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+  "lark>=1.1.8",
+]
+
+[tool.setuptools]
+packages = [
+  "comp",
+  "comp.dsl",
+  "comp.pipeline",
+  "comp.eval",
+  "comp.builtins",
+  "comp.compat",
+  "comp.judgment",
+  "comp.views",
+]
+py-modules = [
+  "artifacts",
+  "ast_builder",
+  "ast_nodes",
+  "binder",
+  "calculation_pass",
+  "compiled_expr_eval",
+  "compiled_pipeline_runner",
+  "compiled_spec",
+  "emit_pass",
+  "esg_builtins",
+  "expr_eval",
+  "governance_pass",
+  "inference_pass",
+  "lex_eval",
+  "lex_ir",
+  "lex_pass",
+  "lowering",
+  "parse_pass",
+  "pipeline_runner",
+  "repair_pass",
+  "rule_builtins",
+  "rule_eval",
+  "rule_ir",
+  "runtime_env",
+  "scope_resolution_pass",
+  "semantic_pass",
+  "source_eval",
+  "source_ir",
+  "spec_nodes",
+]
+include-package-data = true
+
+[tool.setuptools.package-data]
+"comp.dsl" = ["*.lark"]
