@@ -1,9 +1,11 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import asdict, dataclass
 from itertools import count
 
 from artifacts import CanonicalRowArtifact, CompileArtifacts, GovernanceDecisionArtifact
+from comp.compat.adapters import build_commit_receipt, commit_spec_from_row, draft_snapshot_from_row
+from comp.judgment import committable
 from compiled_spec import CompiledGovernancePolicy, CompiledProgramSpec
 from expr_eval import EvalContext
 from rule_eval import RuleEvaluator
@@ -38,7 +40,7 @@ class GovernancePass:
                 decisions.append(self._decision(row=row, from_status=row.status, to_status=row.status, action="hold", actor="policy_engine", reason_codes=["no_governance_policy"], matched_rule_keys=[]))
                 continue
 
-            decisions.append(self._apply_policy(row=row, policy=policy, env=env))
+            decisions.append(self._apply_policy(row=row, policy=policy, env=env, artifacts=artifacts))
 
         artifacts.merge_log.extend(decisions)
         for d in decisions:
@@ -55,7 +57,7 @@ class GovernancePass:
             })
         return artifacts
 
-    def _apply_policy(self, *, row: CanonicalRowArtifact, policy: CompiledGovernancePolicy, env: RuntimeEnv) -> GovernanceDecisionArtifact:
+    def _apply_policy(self, *, row: CanonicalRowArtifact, policy: CompiledGovernancePolicy, env: RuntimeEnv, artifacts: CompileArtifacts) -> GovernanceDecisionArtifact:
         ctx = self._build_eval_context(row, env)
         from_status = row.status
 
@@ -63,8 +65,28 @@ class GovernancePass:
             if not self._safe_eval_bool(policy.emit_condition_ir, ctx):
                 return self._decision(row=row, from_status=from_status, to_status=from_status, action="hold", actor="policy_engine", reason_codes=["emit_condition_not_satisfied"], matched_rule_keys=["emit_condition"])
 
-        if self.config.block_on_any_error and row.error_codes:
-            return self._decision(row=row, from_status=from_status, to_status=from_status, action="hold", actor="policy_engine", reason_codes=["row_has_error_diagnostics", *row.error_codes], matched_rule_keys=[])
+        snapshot = draft_snapshot_from_row(row)
+        commit_spec = commit_spec_from_row(row, block_on_any_error=self.config.block_on_any_error)
+        if not committable(snapshot, commit_spec):
+            reason_codes = self._commit_hold_reason_codes(snapshot, commit_spec)
+            row.metadata.setdefault("governance_trace", []).append({
+                "action": "hold",
+                "reason": "commit_barrier_not_satisfied",
+                "snapshot": {
+                    "fresh": snapshot.fresh,
+                    "active_hazards": sorted(snapshot.active_hazards),
+                    "provenance_edges": snapshot.provenance_edges,
+                },
+            })
+            return self._decision(
+                row=row,
+                from_status=from_status,
+                to_status=from_status,
+                action="hold",
+                actor="policy_engine",
+                reason_codes=reason_codes,
+                matched_rule_keys=["judgment_commit_barrier"],
+            )
 
         matched_forbid = [f"forbid_merge:{idx}" for idx, expr in enumerate(policy.forbid_merge_conditions_ir, start=1) if self._safe_eval_bool(expr, ctx)]
         if matched_forbid:
@@ -74,6 +96,9 @@ class GovernancePass:
         if matched_merge:
             row.status = "merged"
             actor = self._pick_actor(ctx)
+            commit_receipt = build_commit_receipt(row=row, decision_id=f"pending:{row.row_id}", matched_rule_keys=matched_merge)
+            artifacts.commit_log.append(commit_receipt)
+            row.metadata["commit_receipt"] = asdict(commit_receipt)
             row.metadata.setdefault("governance_trace", []).append({"action": "merge", "matched_rule_keys": matched_merge, "actor": actor})
             return self._decision(row=row, from_status=from_status, to_status="merged", action="merge", actor=actor, reason_codes=["merge_condition_satisfied"], matched_rule_keys=matched_merge)
 
@@ -143,3 +168,15 @@ class GovernancePass:
         if ctx.env.policy_flags.get("auto_merge", False):
             return "system"
         return "policy_engine"
+
+    def _commit_hold_reason_codes(self, snapshot, commit_spec) -> list[str]:
+        reason_codes: list[str] = []
+        if commit_spec.require_fresh and not snapshot.fresh:
+            reason_codes.append("stale_selection")
+        if commit_spec.blocking_hazards and snapshot.active_hazards:
+            reason_codes.extend(["commit_blocked_by_hazard", *sorted(snapshot.active_hazards)])
+        if snapshot.provenance_edges < commit_spec.min_provenance_edges:
+            reason_codes.append("insufficient_provenance")
+        if not reason_codes:
+            reason_codes.append("commit_barrier_not_satisfied")
+        return reason_codes
