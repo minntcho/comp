@@ -15,7 +15,7 @@ from semantic_pass import SemanticPass, SemanticPassConfig
 from spec_nodes import ActivitySpec, ConstraintSpec, FieldSpec, FrameSpec, GovernancePolicy, ProgramSpec
 
 
-class PR6ClosureTests(unittest.TestCase):
+class SemanticGovernanceCalculationClosureTests(unittest.TestCase):
     def _make_program_spec(self) -> ProgramSpec:
         return ProgramSpec(
             module_name="test_module",
