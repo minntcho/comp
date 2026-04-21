@@ -68,40 +68,41 @@ LexPass
 ```text
 comp/
   dsl/        # ESGDL grammar, DSL 관련 진입점
-  judgment/   # future judgment core, fixpoint engine, frontier, commit
+  judgment/   # judgment core, frontier, commit 관련 코드와 실험 공간
   pipeline/   # 현재 staged pass 공개 진입점
   eval/       # expression / rule / source evaluator 공개 진입점
   builtins/   # builtin 공개 진입점
   compat/     # 기존 artifacts/spec와의 bridge
-  views/      # future draft/review/public projection
+  views/      # public projection 및 view helper
 ```
 
 ## 현재 상태
 
 이 레포는 아직 **실험 단계**입니다.
 
-- 구조 정리와 패키징이 진행 중입니다.
+- 기본 패키지 골격과 README는 들어와 있습니다.
+- 내부 파이프라인과 judgment core의 경계를 계속 정리하는 중입니다.
+- 일부 top-level 모듈은 호환성과 이행을 위해 아직 유지되고 있습니다.
 - API/CLI는 아직 안정화되지 않았습니다.
-- 내부 파이프라인과 judgment core의 경계를 정리하는 중입니다.
 
 즉 지금은 “완성된 제품”보다 **작은 evidence compiler의 올바른 구조를 찾는 단계**에 가깝습니다.
 
 ## 로드맵
 
-### PR0
-- 루트 `comp/` 패키지 도입
-- `pyproject.toml` 추가
-- 기존 top-level 모듈과의 호환 래퍼 추가
-- 한글 README 추가
+### 패키징과 표면 정리
+- 의미 이름 기준으로 테스트와 문서를 정리합니다.
+- 남아 있는 top-level 진입점과 패키지 경계를 더 명확히 합니다.
+- import 체계를 점진적으로 패키지 기준으로 수렴시킵니다.
 
-### PR1
-- judgment core 뼈대 추가
-- frontier / commit / receipts 자리 고정
-- compat layer 정리
+### judgment core 정리
+- frontier / commit / receipts 경계를 더 분명하게 드러냅니다.
+- append-only judgment vocabulary를 안정화합니다.
+- compat layer를 통해 기존 pipeline과 새 judgment 구조를 이어 붙입니다.
 
-### PR2+
-- 기존 pass를 judgment program 쪽으로 점진적으로 내리기
-- emit/governance를 projection/commit 쪽으로 분리하기
+### staged pipeline의 점진적 흡수
+- 기존 pass를 judgment program 쪽으로 점진적으로 내립니다.
+- emit/governance를 projection/commit 쪽으로 더 분리합니다.
+- 계산과 merge 판단을 더 설명 가능한 receipt 중심 구조로 정리합니다.
 
 ## 지향점
 
