@@ -1,14 +1,14 @@
 """Public pass exports for the current staged pipeline."""
 
-from comp.pipeline.calculation import CalculationPass
-from comp.pipeline.emit import EmitPass
-from comp.pipeline.governance import GovernancePass
-from comp.pipeline.infer import InferencePass
-from comp.pipeline.lex import LexPass
-from comp.pipeline.parsing import ParsePass
-from comp.pipeline.repair import RepairPass
-from comp.pipeline.scope import ScopeResolutionPass
-from comp.pipeline.semantic import SemanticPass, SemanticPassConfig
+from calculation_pass import CalculationPass
+from emit_pass import EmitPass
+from governance_pass import GovernancePass
+from inference_pass import InferencePass
+from lex_pass import LexPass
+from parse_pass import ParsePass
+from repair_pass import RepairPass
+from scope_resolution_pass import ScopeResolutionPass
+from semantic_pass import SemanticPass, SemanticPassConfig
 
 __all__ = [
     "LexPass",
