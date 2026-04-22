@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Any, Iterable, Optional
 
-from artifacts import (
+from comp.compat.artifacts import (
     CanonicalRowArtifact,
     ClaimArtifact,
     LineageEvidenceArtifact,
@@ -12,7 +12,7 @@ from artifacts import (
     warning_codes_from_diagnostics,
 )
 from comp.judgment import ProjectionSpec, project_public_row
-from runtime_env import RuntimeEnv
+from comp.runtime_env import RuntimeEnv
 
 DEFAULT_PUBLIC_PROJECTION = ProjectionSpec(
     "canonical_row",
