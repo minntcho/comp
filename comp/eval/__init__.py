@@ -1,10 +1,10 @@
 """Public evaluator exports."""
 
-from compiled_expr_eval import CompiledExprEvaluator
-from expr_eval import ExprEvaluator
-from lex_eval import LexEvaluator
+from comp.eval.compiled_expr import CompiledExprEvaluator
+from comp.eval.expr import ExprEvaluator
+from comp.eval.lex import LexEvaluator
 from comp.eval.rule import RuleEvaluator
-from source_eval import SourceEvaluator
+from comp.eval.source_module import SourceEvaluator
 
 __all__ = [
     "ExprEvaluator",
