@@ -3,8 +3,8 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any, Optional
 
-from compiled_pipeline_runner import CompiledESGPipelineRunner as _LegacyCompiledRunner
-from pipeline_runner import (
+from comp.compat.compiled_pipeline_runner import CompiledESGPipelineRunner as _LegacyCompiledRunner
+from comp.compat.pipeline_runner import (
     ESGPipelineRunner as _LegacyRunner,
     PipelineResources,
     PipelineRunResult,
