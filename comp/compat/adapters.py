@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Iterable
 
-from artifacts import CanonicalRowArtifact, ClaimArtifact, PartialFrameArtifact, RoleLineageArtifact, RoleSlotArtifact
+from comp.compat.artifacts import CanonicalRowArtifact, ClaimArtifact, PartialFrameArtifact, RoleLineageArtifact, RoleSlotArtifact
 from comp.judgment import CandidateSummary, CommitReceipt, CommitSpec, DraftSnapshot, SelectionReceipt, frontier, winner_or_none
 
 _MODE_SPECIFICITY = {
