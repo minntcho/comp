@@ -7,6 +7,15 @@
 현재 레포에 이미 들어온 judgment vocabulary와,
 그 vocabulary가 기존 pipeline에 어디까지 연결되었는지도 함께 적는다.
 
+또한 이 문서는 다음을 전부 대신하지 않는다.
+
+- 공통 판정 언어 전체: `judgment-language.md`
+- 코어 의미론 전체: `core-semantics.md`
+- 목표 실행 모델 전체: `execution-model.md`
+
+즉 이 문서의 중심은
+**현재 레포에 judgment core가 어디까지 들어와 있는가** 이다.
+
 ---
 
 ## 왜 judgment core가 필요한가
@@ -106,7 +115,7 @@ append-only fact 집합과 subject version을 가진다.
 frontier를 계산한다.
 
 ### DraftSnapshot / committable
-draft가 public state로 승격 가능한지 판단하는 barrier 표현이다.
+ draft가 public state로 승격 가능한지 판단하는 barrier 표현이다.
 
 ### ProjectionSpec / project_public_row
 public row를 source of truth로 보는 대신,
@@ -151,26 +160,13 @@ judgment core는 아직 주 실행 모델을 대체하지 않았다.
 
 ---
 
-## 목표 상태
+## 같이 읽을 문서
 
-장기적으로는 다음에 가까워지는 것이 목표다.
-
-```text
-seed facts
-→ transfer rules
-→ fixpoint state
-→ frontier selection
-→ commit barrier
-→ public projection
-→ ledger / receipts
-```
-
-이 상태가 되면:
-
-- data와 spec을 같은 판단 언어로 설명할 수 있고
-- selection과 commit의 이유를 기록할 수 있고
-- emit을 source of truth가 아니라 projection으로 둘 수 있고
-- governance가 mutation보다 barrier/receipt 중심으로 설명 가능해진다
+- 공통 판정 언어: `judgment-language.md`
+- 코어 의미론: `core-semantics.md`
+- 목표 실행 모델: `execution-model.md`
+- view / ledger 구분: `views-ledger.md`
+- 앞으로의 정리 순서: `migration-plan.md`
 
 ---
 

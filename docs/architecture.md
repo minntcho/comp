@@ -136,8 +136,26 @@ raw input
 
 ---
 
+## 이 문서가 다루지 않는 것
+
+다음 내용은 이 문서에서 요약만 하고,
+별도 문서에서 더 자세히 다룬다.
+
+- 공통 판정 어휘와 judgeable subject
+- 하나의 judgment core / fixpoint / frontier shell 관점의 의미론
+- ESGDL/spec의 parse → bind → lower → validate 경로
+- staged pass를 장기 runtime engine으로 재배치하는 방식
+- authoritative state / receipt log / public ledger / view의 구분
+
+---
+
 ## 다음 문서
 
 - 현재 실제 실행 흐름: `current-pipeline.md`
 - judgment core의 개념과 현재 연결점: `judgment-core.md`
+- 공통 판정 언어: `judgment-language.md`
+- 코어 의미론: `core-semantics.md`
+- spec 컴파일 경로: `spec-pipeline.md`
+- 목표 실행 모델: `execution-model.md`
+- view / ledger 구분: `views-ledger.md`
 - 앞으로의 정리 순서: `migration-plan.md`

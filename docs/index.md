@@ -15,10 +15,25 @@
 ### 현재 코드 흐름이 궁금한 경우
 1. `current-pipeline.md`
 2. `migration-plan.md`
+3. `migration-checklist.md`
 
 ### 새 설계 방향이 궁금한 경우
 1. `architecture.md`
 2. `judgment-core.md`
+3. `migration-plan.md`
+
+### 판정 언어와 의미론이 궁금한 경우
+1. `judgment-language.md`
+2. `core-semantics.md`
+3. `judgment-core.md`
+
+### spec 컴파일 경로가 궁금한 경우
+1. `esgdl-reference.md`
+2. `spec-pipeline.md`
+
+### 목표 실행 모델과 view 구조가 궁금한 경우
+1. `execution-model.md`
+2. `views-ledger.md`
 3. `migration-plan.md`
 
 ## 문서 구성
@@ -33,8 +48,26 @@
 - `judgment-core.md`
   - 장기적으로 밀고 있는 judgment-first 구조와 현재 코드 연결점 설명
 
+- `judgment-language.md`
+  - data와 spec이 공유해야 할 공통 판정 어휘와 judgeable subject 설명
+
+- `core-semantics.md`
+  - 하나의 judgment core, fixpoint, frontier, commit shell 관점의 장기 의미론 설명
+
+- `spec-pipeline.md`
+  - ESGDL/spec가 parse → bind → lower → validate를 거쳐 실행 구조로 내려오는 경로 설명
+
+- `execution-model.md`
+  - staged pass를 장기적으로 어떤 runtime engine 경계로 재배치할지 설명
+
+- `views-ledger.md`
+  - 무엇이 authoritative state이고 무엇이 projection/view인지 설명
+
 - `migration-plan.md`
   - 패키지화, façade 제거, judgment core 흡수 등 이행 작업 추적 문서
+
+- `migration-checklist.md`
+  - PR 단위 완료 조건과 현재 진행 상태를 추적하는 실행 체크리스트
 
 - `testing.md`
   - 테스트가 무엇을 보호하는지 설명하는 문서
@@ -48,3 +81,4 @@
 2. 구현되지 않은 미래 구조를 이미 완료된 것처럼 쓰지 않는다.
 3. bridge 상태를 숨기지 않는다.
 4. README는 바깥 설명, `docs/`는 내부 지도로 역할을 분리한다.
+5. judgment vocabulary와 formal semantics는 별도 문서에서 다루고, 현재 코드 흐름 문서와 섞지 않는다.
