@@ -66,8 +66,10 @@ legacy artifact shape와 target judgment vocabulary 사이를 번역하는 modul
 
 | Module | Current role | Notes | Later action |
 |---|---|---|---|
-| `comp.__init__` | Public API facade | `comp.runner`의 runner API를 top-level package에서 노출한다. | eager import 부담은 A2에서 점검 |
+| `comp.__init__` | Public API facade | runner-facing API를 top-level package에서 lazy export한다. | 유지하되 export surface 변경 시 eager import smoke 유지 |
 | `comp.runner` | Public API facade / temporary runner facade | legacy runner class를 상속하고 package grammar path 기본값을 주입한다. | runner relocation 후 실제 package runner surface로 재분류 |
+
+`comp.__init__`은 runner-facing symbol을 공개하지만, 현재는 lazy `__getattr__`로 해석한다. 따라서 단순 `import comp`는 `comp.runner`나 legacy `pipeline_runner` bridge를 즉시 당기지 않아야 한다.
 
 `comp.runner`는 단순 re-export보다 조금 두껍다. 현재는 기본 grammar path를 package 내부로 잡아 주는 public convenience layer 역할을 한다. 하지만 실제 runner implementation은 아직 legacy runner 쪽에 있으므로, runner relocation 전까지는 temporary runner facade로도 봐야 한다.
 
@@ -176,9 +178,9 @@ legacy artifact shape와 target judgment vocabulary 사이를 번역하는 modul
 
 ### 4.1 Eager import risk
 
-`comp.__init__` imports `comp.runner`, and `comp.runner` imports compat runner bridges. That means top-level `import comp` may pull runner-adjacent legacy paths earlier than desired.
+`comp.__init__` has been guarded with lazy runner-facing exports, so simple `import comp` should not import `comp.runner` or legacy runner bridges.
 
-This should be audited under A-track eager import / cycle work.
+The remaining risk is regression: future public API additions must not reintroduce eager runner/legacy imports into the package entrypoint.
 
 ### 4.2 Bridge invisibility risk
 
