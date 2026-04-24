@@ -27,7 +27,8 @@
 5. frontier / winner / review 가능성
 6. commit barrier
 7. public projection
-8. explanation / receipt / ledger 관점
+8. calculation
+9. explanation / receipt / ledger 관점
 
 즉 이 문서는
 **현재 구현 흐름**과
@@ -65,6 +66,14 @@ scope_category = "scope2"
 하지만 `comp`는 이 값을 곧바로 정답 row로 만들지 않는다.
 먼저 후보, 근거, provenance, hazard를 거치는 중간 상태를 만든다.
 
+이 예제에서 용어는 다음처럼 둔다.
+
+- parser name: `energy_use_parser`
+- frame type: `ActivityObservation`
+
+`energy_use_parser`는 예제 parser의 이름이고,
+`ActivityObservation`은 후속 governance / calculation이 읽는 frame type이다.
+
 ---
 
 ## 2. 최소 spec 가정
@@ -79,10 +88,11 @@ scope_category = "scope2"
 - `2025-01`을 `period` 후보로 추출
 
 ### parser
-- 위 token들을 하나의 `energy_use` frame으로 조립
+- `energy_use_parser`가 위 token들을 하나의 `ActivityObservation` frame으로 조립한다.
 
-### infer
-- `site`가 있으면 registry를 통해 `entity_id`를 유도 가능
+### infer / projection
+- 장기 judgment 의미론에서는 `site -> entity_id`를 provenance가 붙은 inferred fact로 설명할 수 있다.
+- 현재 코드에서는 `entity_id`가 별도 claim으로 항상 생성되는 것은 아니며, public projection 단계에서 `site_id`를 기준으로 `RuntimeEnv.site_records`에서 resolve될 수 있다.
 
 ### resolver
 - 같은 role에 여러 candidate가 있으면 score / specificity / hazard를 기준으로 대표 후보를 정함
@@ -95,6 +105,43 @@ scope_category = "scope2"
 중요:
 이 문서의 목적은 ESGDL 문법 자체를 설명하는 것이 아니라,
 이런 선언이 **어떤 판단 구조를 만든다고 볼 수 있는지**를 보여 주는 것이다.
+
+---
+
+## 2.1 설명용 pseudo-ESGDL
+
+아래는 실제 grammar 전체를 보장하는 fixture가 아니다.
+이 예제에서 필요한 선언의 모양을 보여 주는 **pseudo-ESGDL**이다.
+
+```text
+module worked_example
+
+unit kWh dimension energy normalize_to kWh factor 1
+activity electricity dimension energy scope scope2
+
+token site_name = /Site Alpha|Alpha/
+token amount = /\d+/
+token unit = /kWh/
+token activity = /electricity/
+token period = /\d{4}-\d{2}/
+
+parser energy_use_parser builds ActivityObservation:
+  bind site <- site_name
+  bind raw_amount <- amount
+  bind raw_unit <- unit
+  bind activity_type <- activity
+  bind period <- period
+
+resolver ActivityObservation:
+  candidate_pool.shadow = 2
+  commit_condition = score >= 0.8
+
+governance ActivityObservation:
+  merge when no_errors and approved_by_policy
+```
+
+이 block의 목적은 syntax reference가 아니라,
+ESGDL/spec가 추출, 조립, 선택, governance 조건을 함께 선언한다는 점을 보여 주는 것이다.
 
 ---
 
@@ -127,7 +174,7 @@ fragment에서 token occurrence를 찾는다.
 - claim(activity_type = `"electricity"`)
 - claim(period = `"2025-01"`)
 
-그리고 `energy_use` frame 하나가 생긴다.
+그리고 `energy_use_parser`가 `ActivityObservation` frame 하나를 만든다.
 
 결과:
 - claim 추가
@@ -150,10 +197,15 @@ context와 scope 규칙을 사용해 후보를 보정한다.
 명시적으로 쓰이지 않은 값을 규칙으로 추가한다.
 
 예:
-- `site_alpha`가 확인되면 `entity_alpha` 후보 생성
+- 특정 조건을 만족하면 inferred claim 추가
+
+주의:
+이 예제에서 `entity_id`는 장기 의미론상 inferred fact로 설명할 수 있지만,
+현재 코드에서는 public projection 단계에서 `site_id`를 기준으로 resolve되는 쪽에 더 가깝다.
+따라서 `site -> entity_id`는 현재 구현 설명과 장기 의미론 설명을 구분해서 읽어야 한다.
 
 결과:
-- inferred claim 추가
+- inferred claim 추가 가능
 
 ### 3.5 SemanticPass
 
@@ -187,8 +239,9 @@ selection 관련 runtime 값을 계산한다.
 committed frame을 대상으로 canonical row를 materialize한다.
 
 중요:
-- 현재 구조에서는 row가 `artifacts.rows`에 materialize된다.
-- 하지만 장기 구조 설명에선 이 row를 projection 쪽으로 다시 본다.
+- 현재 기본 구조에서는 `EmitPass`가 committed frame만 row로 materialize한다.
+- 현재 row는 `artifacts.rows`에 물리적으로 저장된다.
+- 하지만 장기 구조 설명에선 이 row를 authoritative state가 아니라 projection 쪽으로 다시 본다.
 
 ### 3.8 GovernancePass
 
@@ -203,6 +256,13 @@ row 단위 policy와 commit barrier를 보고 merge/hold/skip을 결정한다.
 ### 3.9 CalculationPass
 
 merge 가능한 row를 기준으로 후속 계산을 수행한다.
+
+현재 기본 계산 경로는 다음 제약을 가진다.
+
+- 기본적으로 merged row만 계산한다.
+- 기본적으로 `ActivityObservation` frame type만 계산 대상으로 본다.
+- factor lookup은 `(activity_type, unit)`에 가깝게 이루어진다.
+- 계산은 대략 `co2e_kg = amount * emission_factor` 형태다.
 
 즉 현재 구현 관점에서는
 **하나의 artifact container가 stages를 지나며 정제된다**고 보는 것이 가장 정확하다.
@@ -289,15 +349,10 @@ merge 가능한 row를 기준으로 후속 계산을 수행한다.
 
 예를 들어 `site` slot에 다음 두 후보가 동시에 생긴다고 가정하자.
 
-- candidate A
-  - raw text: `"Site Alpha"`
-  - normalized site_id: `site_alpha`
-  - extraction_mode: `explicit`
-
-- candidate B
-  - raw text: `"Alpha"`
-  - normalized site_id: `site_alpha_legacy`
-  - extraction_mode: `derived`
+| candidate | raw text | normalized site_id | extraction_mode |
+|---|---|---|---|
+| `claim_site_alpha` | `Site Alpha` | `site_alpha` | `explicit` |
+| `claim_site_alpha_legacy` | `Alpha` | `site_alpha_legacy` | `derived` |
 
 이제 문제는
 “둘 중 값을 하나 고른다”가 아니라,
@@ -307,16 +362,13 @@ merge 가능한 row를 기준으로 후속 계산을 수행한다.
 
 각 후보는 대략 다음 정보를 가진다고 볼 수 있다.
 
-- positive evidence
-- negative evidence
-- hazard count
-- specificity
-- provenance depth
+| candidate | positive_evidence | negative_evidence | hazard_count | specificity | provenance_depth |
+|---|---:|---:|---:|---:|---:|
+| `claim_site_alpha` | 0.92 | 0.0 | 0 | 4 | 1 |
+| `claim_site_alpha_legacy` | 0.62 | 0.0 | 0 | 1 | 1 |
 
-예를 들면:
-
-- A는 직접 추출이라 specificity가 높다.
-- B는 alias 기반 유도 후보라 specificity가 더 낮다.
+이 경우 `claim_site_alpha`는 다른 후보보다 positive evidence와 specificity가 높고,
+다른 좌표에서 더 나쁘지 않으므로 `claim_site_alpha_legacy`를 dominate한다고 볼 수 있다.
 
 ### 6.2 dominance와 frontier
 
@@ -335,19 +387,10 @@ frontier 관점에선 전체 후보를 즉시 삭제하지 않는다.
 
 ### 6.3 이 예제의 selection 결과
 
-이 예제에서는 A가 더 강하다고 가정하자.
+위 표의 값이라면 selection 결과는 대략 이렇게 설명할 수 있다.
 
-그 이유는 예를 들면 다음과 같다.
-
-- 직접 추출 evidence가 더 강함
-- specificity가 더 높음
-- provenance가 더 짧고 직접적임
-- blocking hazard가 없음
-
-그러면 selection 결과는 대략 이렇게 설명할 수 있다.
-
-- winner = `site_alpha`
-- frontier size = 1
+- frontier = [`claim_site_alpha`]
+- winner = `claim_site_alpha`
 - requires_review = false
 
 이 순간 active candidate는 정해지지만,
@@ -361,14 +404,15 @@ selection이 끝나도 곧바로 public이 되지 않는다.
 
 이제 중요한 것은 현재 draft가 `committable`한가다.
 
-이 예제에서 barrier는 예를 들면 다음을 본다.
+### 7.1 목표 의미론의 commit barrier
+
+장기 target semantics에서 barrier는 예를 들면 다음을 본다.
 
 - 필수 bundle이 다 채워졌는가
 - blocking hazard가 남아 있는가
 - selection이 stale하지 않은가
 - provenance가 충분한가
-
-### 7.1 commit 가능 사례
+- policy가 public 승격을 허용하는가
 
 다음 조건을 만족한다고 하자.
 
@@ -381,28 +425,75 @@ selection이 끝나도 곧바로 public이 되지 않는다.
 - provenance 충분
 - selection fresh
 
-그러면 이 draft는 `committable = true`다.
+그러면 이 draft는 target semantics상 `committable = true`라고 설명할 수 있다.
 
-### 7.2 hold 사례
+### 7.2 현재 bridge 구현의 commit barrier
 
-worked example에는 반드시 hold 경우도 같이 넣는다.
+현재 구현의 commit barrier는 아직 목표 모델 전체를 구현하지 않는다.
 
-예를 들어 `raw_unit`이 누락되었거나,
-`site` 후보가 둘 다 frontier에 남아 review가 필요한 경우를 생각할 수 있다.
+현재 adapter는 대략 다음에 가깝다.
 
-그러면 결과는 대략 이렇게 된다.
+- row error code를 blocking hazard로 본다.
+- stale 여부를 snapshot에 반영한다.
+- provenance edge 수를 snapshot과 receipt에 남긴다.
+- `required_bundles`는 아직 비어 있다.
+- `min_provenance_edges`는 아직 0에 가깝다.
+- `require_fresh`는 true로 둔다.
 
-- `committable = false`
-- public projection은 계산 가능할 수 있음
-- 하지만 public ledger append나 merge는 hold
-
-이 장면이 중요하다.
-왜냐하면 여기서 처음으로
-“보이는 row”와 “정당하게 공개된 row”가 다르다는 점이 드러나기 때문이다.
+즉 현재 barrier는 목표 모델의 얇은 bridge다.
+필수 bundle, provenance threshold, policy-level barrier는 장기적으로 더 강화될 부분이다.
 
 ---
 
-## 8. public projection
+## 8. hold / review를 같이 보면
+
+worked example은 happy path만 보여 주면 안 된다.
+같은 예제를 hold / review 버전으로도 봐야 한다.
+
+예를 들어 다음 입력을 생각하자.
+
+```text
+Alpha consumed 1000 electricity in 2025-01.
+```
+
+여기서는 `raw_unit`이 없고,
+`Alpha`가 여러 site 후보에 걸릴 수 있다고 가정할 수 있다.
+
+그러면:
+
+- site 후보 frontier가 2개 남을 수 있음
+- `requires_review = true`
+- `raw_unit` missing hazard가 열릴 수 있음
+- draft는 생성되더라도 `committable = false`
+
+### 8.1 현재 default pipeline에서의 hold
+
+현재 기본 설정에서는 `EmitPass`가 committed frame만 row로 materialize한다.
+따라서 frame 자체가 `review_required`이거나 아직 resolving 상태라면,
+기본 pipeline에서는 `artifacts.rows`에 row가 생성되지 않을 수 있다.
+
+반면 frame은 committed 되었지만 row에 blocking error가 있거나,
+governance merge 조건을 만족하지 못하면,
+`GovernancePass`에서 row는 `committed` 상태로 남고 merge는 hold 될 수 있다.
+
+즉 현재 코드에서 hold는 크게 두 층으로 나눠 읽어야 한다.
+
+- frame이 committed되지 않아 emit 대상이 되지 않는 경우
+- row는 materialize되었지만 governance에서 merge되지 않는 경우
+
+### 8.2 장기 view 모델에서의 hold
+
+장기적으로는 non-public draft/review 상태도
+별도의 `DraftView`, `ReviewView`, `PublicExport` snapshot으로 볼 수 있다.
+
+하지만 이것은 authoritative public ledger append와 다르다.
+
+즉 장기 모델에서 “보이는 row-like projection”과
+“정당하게 public ledger에 append된 row”는 구분되어야 한다.
+
+---
+
+## 9. public projection
 
 이제 commit barrier를 통과한 경우를 보자.
 
@@ -425,35 +516,55 @@ scope_category = "scope2"
 이 row는 source of truth라기보다
 **판정 결과를 바깥으로 materialize한 public projection**이다.
 
+현재 코드에서는 projection 단계에서 active slot 값으로부터 `site_id`를 resolve하고,
+그 `site_id`를 기준으로 `entity_id`를 resolve할 수 있다.
+장기 의미론에서는 이 관계를 provenance가 붙은 inferred fact로 더 명확히 설명할 수 있다.
+
 즉 이 문서의 핵심은
 “row가 만들어졌다”보다
 “어떤 판단 상태가 projection 되었다”는 데 있다.
 
 ---
 
-## 9. receipt와 explanation
+## 10. receipt와 explanation
 
 이 예제는 마지막에 반드시 receipt까지 보여 줘야 한다.
 
-### 9.1 selection receipt
+### 10.1 selection receipt
 
 selection receipt는 예를 들면 다음을 담는다.
 
 - 어떤 bundle이었는가
 - frontier에는 어떤 candidate가 남았는가
 - winner는 누구였는가
-- 선택 이유로 어떤 reason code가 남았는가
+- slot에 어떤 raw reason code가 남았는가
 
-예시:
+현재 bridge에서 `SelectionReceipt.reason`은 주로 slot의 `reason_codes`를 담는 쪽에 가깝다.
+즉 아래처럼 비어 있거나, slot 상태에서 온 reason code가 들어갈 수 있다.
 
 ```text
 bundle_id = "frame_1:site"
 frontier_ids = ["claim_site_alpha"]
 winner_id = "claim_site_alpha"
-reason = ["higher_specificity", "direct_evidence"]
+reason = []
 ```
 
-### 9.2 commit receipt
+### 10.2 explanation view의 reason
+
+반면 사람이 읽는 설명 view는 receipt와 candidate summary를 다시 읽어서
+더 친절한 설명을 만들 수 있다.
+
+예:
+
+```text
+explanation_reason = ["higher_specificity", "direct_evidence"]
+```
+
+중요:
+`higher_specificity`, `direct_evidence`는 현재 raw receipt가 자동 합성한다고 보기보다,
+향후 `ExplanationView`가 `CandidateSummary`와 receipt를 읽어 사람이 보기 좋게 만든 설명 reason의 예시로 보는 편이 정확하다.
+
+### 10.3 commit receipt
 
 commit receipt는 예를 들면 다음을 담는다.
 
@@ -475,7 +586,7 @@ barrier_snapshot = {
 winner_receipt_ids = ["merge_condition:default"]
 ```
 
-### 9.3 explanation view
+### 10.4 explanation view
 
 receipt와 fact를 사람이 읽기 좋게 정리하면
 예를 들면 이렇게 설명할 수 있다.
@@ -495,41 +606,66 @@ receipt와 fact를 사람이 읽기 좋게 정리하면
 
 ---
 
-## 10. hold 버전을 같이 보면
+## 11. calculation까지 닫아 보기
 
-이 문서는 happy path만 보여 주면 안 된다.
-같은 예제를 hold 버전으로도 잠깐 봐야 한다.
+happy path가 governance를 통과해 merged row가 되었다고 하자.
+그러면 `CalculationPass`는 후속 calculation artifact를 만들 수 있다.
 
-예를 들어 다음 입력을 생각하자.
+예를 들어 factor table에 다음 row가 있다고 하자.
 
 ```text
-Alpha consumed 1000 electricity in 2025-01.
+activity_type = "electricity"
+unit = "kWh"
+emission_factor = 0.42
+factor_unit = "kgCO2e/kWh"
 ```
 
-여기서는 `raw_unit`이 없고,
-`Alpha`가 여러 site 후보에 걸릴 수 있다고 가정할 수 있다.
+그리고 public row가 다음 값을 가진다고 하자.
 
-그러면:
+```text
+activity_type = "electricity"
+standardized_amount = 1000
+standardized_unit = "kWh"
+```
 
-- site 후보 frontier가 2개 남을 수 있음
-- `requires_review = true`
-- `raw_unit` missing hazard가 열릴 수 있음
-- draft는 생성되더라도 `committable = false`
-- public projection snapshot은 만들 수 있어도 merge는 hold
+그러면 계산은 대략 다음과 같다.
 
-즉 이 경우는
-“구조화는 일부 되었지만 공개 상태는 아님”을 보여 준다.
+```text
+co2e_kg = 1000 * 0.42 = 420.0
+calculation_status = "success"
+```
 
-이 장면이 있어야 다음 구분이 실제로 보인다.
-
-- draft view
-- review view
-- public export snapshot
-- public ledger append
+중요:
+현재 기본 계산은 merged row를 대상으로 하며,
+기본 frame type gate는 `ActivityObservation`에 맞춰져 있다.
+따라서 이 예제의 frame type을 `ActivityObservation`으로 두는 것이 현재 코드 설명과 가장 잘 맞는다.
 
 ---
 
-## 11. 이 예제를 현재 코드와 장기 구조에 각각 대응시키기
+## 12. 현재 코드 객체와 장기 용어 대응
+
+이 문서는 현재 코드와 장기 구조를 겹쳐 보는 문서다.
+그래서 아래 표처럼 읽는 것이 좋다.
+
+| Worked example 용어 | 현재 코드 객체 | 장기 judgment 용어 |
+|---|---|---|
+| raw input | `artifacts.fragments` | seed source |
+| token | `TokenOccurrence` | proposal fact |
+| claim | `ClaimArtifact` | claim subject / evidence fact |
+| frame | `PartialFrameArtifact` | draft / bundle bridge |
+| slot candidates | `RoleSlotArtifact` | candidate bundle |
+| selection result | `selection_receipts` metadata | `SelectionReceipt` |
+| row | `CanonicalRowArtifact` | public projection candidate |
+| governance decision | `GovernanceDecisionArtifact` | commit barrier decision |
+| commit record | `artifacts.commit_log` | `CommitReceipt` |
+| calculation | `CalculationArtifact` | post-commit derivation |
+
+이 표의 목적은 현재 객체 이름을 장기 설계 이름으로 억지로 바꾸는 것이 아니다.
+현재 구현이 어떤 bridge 역할을 하는지 보여 주는 것이다.
+
+---
+
+## 13. 이 예제를 현재 코드와 장기 구조에 각각 대응시키기
 
 ### 현재 코드 관점
 
@@ -539,6 +675,7 @@ Alpha consumed 1000 electricity in 2025-01.
 - `CompileArtifacts`가 단계별로 갱신됨
 - row는 현재 물리적으로 `artifacts.rows`에 materialize됨
 - merge/hold 결정은 governance 쪽에서 남음
+- calculation은 merged row 이후의 post-commit derivation에 가까움
 
 ### 장기 구조 관점
 
@@ -561,7 +698,7 @@ Alpha consumed 1000 electricity in 2025-01.
 
 ---
 
-## 12. 이 예제가 보여 주는 핵심
+## 14. 이 예제가 보여 주는 핵심
 
 이 예제에서 가장 중요한 점은 다음이다.
 
@@ -569,9 +706,11 @@ Alpha consumed 1000 electricity in 2025-01.
 2. 먼저 후보/근거/hazard/provenance를 만든다.
 3. selection은 frontier 관점으로 설명된다.
 4. public row는 commit barrier를 통과한 projection이다.
-5. selection과 commit의 이유는 receipt로 남는다.
-6. explanation은 본체가 아니라 파생 view다.
-7. hold/review 상태도 같은 언어로 설명된다.
+5. 현재 commit barrier는 아직 얇은 bridge이고, 목표 semantics는 더 강하다.
+6. selection과 commit의 이유는 receipt로 남는다.
+7. explanation은 본체가 아니라 파생 view다.
+8. hold/review 상태도 같은 언어로 설명된다.
+9. calculation은 merged public row 이후의 post-commit derivation으로 설명할 수 있다.
 
 즉 `comp`는 단순 ETL보다
 **판정 가능한 세계를 만들고 그 세계를 public 상태로 승격시키는 judgment machine**에 가깝다.
