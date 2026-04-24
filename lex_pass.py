@@ -5,10 +5,10 @@ from dataclasses import dataclass
 from itertools import count
 from typing import Any, Optional
 
-from artifacts import CompileArtifacts, TokenOccurrence
-from compiled_spec import CompiledProgramSpec
-from lex_eval import LexEvaluator
-from runtime_env import LexCandidate, RuntimeEnv
+from comp.artifacts import CompileArtifacts, TokenOccurrence
+from comp.dsl.compiled_spec import CompiledProgramSpec
+from comp.eval.lex import LexEvaluator
+from comp.runtime_env import LexCandidate, RuntimeEnv
 
 
 @dataclass
@@ -194,7 +194,7 @@ class LexPass:
         return out
 
     def _build_eval_context(self, fragment: Any, env: RuntimeEnv):
-        from expr_eval import EvalContext
+        from comp.eval.expr import EvalContext
 
         metadata = getattr(fragment, "metadata", {}) or {}
 
