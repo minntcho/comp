@@ -170,6 +170,19 @@ agent는 작업 명령을 받으면 다음 사이클을 따른다.
 
 작업 시작 시 issue에는 assignee와 status label을 붙인다.
 
+기본 구분은 다음과 같다.
+
+```text
+assignee
+  누가 이 작업을 맡았는지 나타낸다.
+
+labels
+  이 작업이 migration 지도 안에서 어디에 놓이는지 나타낸다.
+```
+
+즉 agent 이름이나 작업자 종류를 label로 표현하지 않는다.
+작업자는 assignee로 표현하고, label은 작업의 좌표를 표현한다.
+
 권장 label 체계:
 
 ```text
@@ -192,10 +205,77 @@ kind:test
 kind:architecture
 kind:refactor
 
+area:dsl
+area:eval
+area:builtins
+area:pipeline
+area:runner
+area:compat
+area:views
+area:judgment
+area:docs
+area:tests
+
 risk:low
 risk:medium
 risk:high
+
+flow:parallel-ok
+flow:stacked
+flow:blocked-by-pr
+flow:blocked-by-issue
+flow:needs-rebase
+flow:ready-after-merge
 ```
+
+각 label 축의 의미는 다음과 같다.
+
+```text
+status
+  지금 issue를 집어도 되는지, 진행 중인지, 리뷰 단계인지 나타낸다.
+
+track
+  migration의 큰 작업 레일을 나타낸다.
+  Do Not Mix Rule의 충돌 방지 경계로 사용한다.
+
+kind
+  변경의 성격을 나타낸다.
+  예: migration, cleanup, docs, test, architecture, refactor.
+
+area
+  주로 영향을 받는 코드/문서 영역을 나타낸다.
+  병렬 작업자가 같은 영역을 동시에 건드리는지 판단하는 데 사용한다.
+
+risk
+  회귀 가능성과 리뷰 강도를 나타낸다.
+
+flow
+  병렬 가능성, stacked PR 여부, blocking 관계, rebase 필요 여부를 나타낸다.
+```
+
+예시:
+
+```text
+track:R-relocation
+kind:migration
+area:dsl
+risk:low
+flow:parallel-ok
+status:in-progress
+```
+
+이 조합은 DSL 영역의 실제 relocation 작업이며, 낮은 위험도로 병렬 진행 가능하고, 현재 작업 중이라는 뜻이다.
+
+```text
+track:A-import
+kind:cleanup
+area:pipeline
+risk:medium
+flow:blocked-by-pr
+status:blocked
+```
+
+이 조합은 pipeline 영역의 import convergence 작업이지만, 선행 PR이 머지되기 전까지 막혀 있다는 뜻이다.
 
 label이 아직 레포에 없으면 기존 label을 우선 사용한다.
 새 label이 필요하면 작업 로그에 남기거나 별도 정리 issue를 만든다.
