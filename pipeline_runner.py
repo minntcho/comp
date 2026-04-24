@@ -4,21 +4,21 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Optional, Protocol, Sequence
 
-from artifacts import CompileArtifacts
 from binder import Binder
-from esg_builtins import register_default_builtins
 from calculation_pass import CalculationPass
-from compiled_spec import CompiledProgramSpec
+from comp.artifacts import CompileArtifacts
+from comp.builtins.esg import register_default_builtins
+from comp.dsl.compiled_spec import CompiledProgramSpec
+from comp.dsl.spec_nodes import ProgramSpec
+from comp.runtime_env import RuntimeEnv, SiteRecord, build_runtime_env
 from emit_pass import EmitPass
 from governance_pass import GovernancePass
 from inference_pass import InferencePass
 from lex_pass import LexPass
 from parse_pass import ParsePass
 from repair_pass import RepairPass
-from runtime_env import RuntimeEnv, SiteRecord, build_runtime_env
 from scope_resolution_pass import ScopeResolutionPass
 from semantic_pass import SemanticPass, SemanticPassConfig
-from spec_nodes import ProgramSpec
 
 
 class Fragmentizer(Protocol):
