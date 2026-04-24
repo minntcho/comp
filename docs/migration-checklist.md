@@ -32,6 +32,8 @@
 - [x] judgment language / core semantics / spec pipeline / execution model / views-ledger 문서 추가
 - [x] package 공개 표면(`comp.*`) 구축 착수
 - [x] runner / pipeline / eval / builtins façade surface 구축
+- [x] `AGENTS.md`에 issue / PR / checklist 기반 agent 운영 규칙 추가
+- [x] `AGENTS.md`에 병렬 작업용 `area:*` / `flow:*` label 축 추가
 
 #### A-track: import convergence
 - [x] **PR-A3: DSL path 정합성 복구**
@@ -52,6 +54,15 @@
 - [x] **PR-R1k: relocate `source_ir`**
 - [x] **PR-R1l: relocate `rule_ir`**
 - [x] **PR-R2a: relocate `compiled_spec`**
+- [x] **PR-R2b: relocate `runtime_env`**
+  - `comp/runtime_env.py`가 실제 implementation을 소유
+  - top-level `runtime_env.py`는 compatibility wrapper로 축소
+  - package / legacy identity smoke test 추가
+- [x] **PR-R2c: relocate `artifacts`**
+  - `comp/artifacts.py`가 실제 implementation을 소유
+  - top-level `artifacts.py`는 compatibility wrapper로 축소
+  - `comp.compat.artifacts`는 package implementation을 참조
+  - artifact identity / parity smoke test 추가
 
 ---
 
@@ -60,8 +71,7 @@
 현재 레포는 정리 완료 상태가 아니라 **의도적 bridge 단계**다.
 
 - [ ] top-level legacy 모듈이 아직 배포 표면에 남아 있다.
-- [ ] `runtime_env.py`는 아직 top-level implementation이다.
-- [ ] `artifacts.py`는 아직 top-level implementation이다.
+- [ ] `runtime_env.py` / `artifacts.py`는 아직 top-level compatibility wrapper로 남아 있다.
 - [ ] `pipeline_runner.py`는 아직 main runner implementation이다.
 - [ ] 일부 `comp.pipeline.*` / `comp.compat.*` 모듈은 여전히 thin wrapper 또는 legacy bridge다.
 - [ ] `pyproject.toml`의 `py-modules`에는 legacy top-level 모듈들이 아직 포함되어 있다.
@@ -81,18 +91,11 @@
   - module import 단계에서 상호 재귀 경로 제거
   - test collection 기준으로 import cycle이 없는지 확인
 
-#### R-track: actual relocate 확장
-- [ ] **PR-R2b: relocate `runtime_env`**
-  - package 쪽 implementation을 만들고 top-level은 wrapper로 축소
-  - `ScopePath`, `LexCandidate`, `RuntimeEnv`, `build_runtime_env` identity smoke test 추가
-
-- [ ] **PR-R2c: relocate `artifacts`**
-  - package 쪽 implementation을 만들고 top-level은 wrapper로 축소
-  - artifact dataclass identity / helper parity test 추가
-
+#### R/A bridge cleanup
 - [ ] **PR-R2d: package/compat imports after runtime/artifacts move**
   - `comp.compat.*`, `comp.eval.*`, runner-adjacent 코드의 runtime/artifact import 경로 정리
   - behavior change 없이 import 경로만 정렬
+  - PR #52 / PR #57 이후 상태를 기준으로 진행
 
 ---
 
@@ -218,6 +221,11 @@
 - `pytest -q tests/test_lex_ir_package_location.py tests/test_source_ir_package_location.py tests/test_rule_ir_package_location.py`
 - `pytest -q tests/test_compiled_spec_package_location.py`
 
+### runtime / artifacts relocation
+- `pytest -q tests/test_runtime_env_package_location.py`
+- `pytest -q tests/test_artifacts_package_location.py`
+- `pytest -q tests/test_artifact_contracts.py`
+
 ### compiled path / governance safety
 - `pytest -q tests/test_default_runner_compiled_rule_path.py`
 
@@ -232,16 +240,19 @@
   - `lex_eval`, `source_eval`, `rule_eval` relocation 완료
   - `ast_nodes`, `spec_nodes`, `lex_ir`, `source_ir`, `rule_ir` relocation 완료
   - `compiled_spec` relocation 완료
+  - `runtime_env` relocation 완료
+  - `artifacts` relocation 완료
   - `comp.eval.compiled_expr` / `comp.eval.lex` / `comp.eval.source_module` / `comp.dsl.compiled_spec`의 package DSL import 정합성 확인
-- 기존 `PR-R2: runtime/artifacts/compiled_spec`를 분리했다.
+  - `AGENTS.md`에 병렬 작업용 `area:*` / `flow:*` label 축 추가
+- 기존 `PR-R2: runtime/artifacts/compiled_spec`를 분리하고 마감 상태를 반영했다.
   - `compiled_spec`는 완료된 `PR-R2a`로 이동
-  - `runtime_env`와 `artifacts`는 각각 `PR-R2b`, `PR-R2c`로 남김
+  - `runtime_env`는 완료된 `PR-R2b`로 이동
+  - `artifacts`는 완료된 `PR-R2c`로 이동
 - 다음 액션을 다음 순서로 재정렬했다.
-  1. `runtime_env` relocation
-  2. `artifacts` relocation
-  3. runtime/artifact 이동 후 package/compat import 정리
-  4. runner-adjacent relocation
-  5. façade inventory / thinness audit
+  1. runtime/artifact 이동 후 package/compat import 정리
+  2. eager import / cycle 점검
+  3. runner-adjacent relocation
+  4. façade inventory / thinness audit
 
 ### 2026-04-23
 
