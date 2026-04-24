@@ -4,7 +4,7 @@ from dataclasses import asdict, dataclass
 from itertools import count
 from typing import Any, Optional
 
-from artifacts import (
+from comp.artifacts import (
     ClaimArtifact,
     CompileArtifacts,
     PartialFrameArtifact,
@@ -12,10 +12,10 @@ from artifacts import (
     diagnostic_codes,
 )
 from comp.compat.adapters import build_slot_selection_receipt
-from compiled_spec import CompiledProgramSpec, CompiledResolverPolicy
-from expr_eval import EvalContext
-from rule_eval import RuleEvaluator
-from runtime_env import RuntimeEnv
+from comp.dsl.compiled_spec import CompiledProgramSpec, CompiledResolverPolicy
+from comp.eval.expr import EvalContext
+from comp.eval.rule import RuleEvaluator
+from comp.runtime_env import RuntimeEnv
 
 
 @dataclass

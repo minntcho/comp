@@ -3,13 +3,13 @@ from __future__ import annotations
 from dataclasses import asdict, dataclass
 from itertools import count
 
-from artifacts import CanonicalRowArtifact, CompileArtifacts, GovernanceDecisionArtifact
+from comp.artifacts import CanonicalRowArtifact, CompileArtifacts, GovernanceDecisionArtifact
 from comp.compat.adapters import build_commit_receipt, commit_spec_from_row, draft_snapshot_from_row
+from comp.dsl.compiled_spec import CompiledGovernancePolicy, CompiledProgramSpec
+from comp.eval.expr import EvalContext
+from comp.eval.rule import RuleEvaluator
 from comp.judgment import committable
-from compiled_spec import CompiledGovernancePolicy, CompiledProgramSpec
-from expr_eval import EvalContext
-from rule_eval import RuleEvaluator
-from runtime_env import RuntimeEnv
+from comp.runtime_env import RuntimeEnv
 
 
 @dataclass

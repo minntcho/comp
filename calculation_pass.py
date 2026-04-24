@@ -5,8 +5,8 @@ from dataclasses import dataclass
 from itertools import count
 from typing import Any, Optional
 
-from artifacts import CalculationArtifact, CanonicalRowArtifact, CompileArtifacts
-from runtime_env import RuntimeEnv
+from comp.artifacts import CalculationArtifact, CanonicalRowArtifact, CompileArtifacts
+from comp.runtime_env import RuntimeEnv
 
 
 @dataclass

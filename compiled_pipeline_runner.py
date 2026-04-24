@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from compiled_spec import CompiledProgramSpec
+from comp.dsl.compiled_spec import CompiledProgramSpec
 from pipeline_runner import ESGPipelineRunner, load_compiled_program_spec_from_dsl
 
 

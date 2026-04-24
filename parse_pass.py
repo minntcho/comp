@@ -3,11 +3,11 @@ from __future__ import annotations
 from itertools import count
 from typing import Any, Optional
 
-from artifacts import ClaimArtifact, CompileArtifacts, PartialFrameArtifact, RoleSlotArtifact, TokenOccurrence
-from compiled_spec import CompiledBindAction, CompiledParserInheritAction, CompiledProgramSpec, CompiledTagAction
-from rule_eval import RuleEvaluator
-from runtime_env import RuntimeEnv
-from source_eval import SourceEvaluator
+from comp.artifacts import ClaimArtifact, CompileArtifacts, PartialFrameArtifact, RoleSlotArtifact, TokenOccurrence
+from comp.dsl.compiled_spec import CompiledBindAction, CompiledParserInheritAction, CompiledProgramSpec, CompiledTagAction
+from comp.eval.rule import RuleEvaluator
+from comp.eval.source_module import SourceEvaluator
+from comp.runtime_env import RuntimeEnv
 
 
 class ParsePass:
@@ -100,7 +100,7 @@ class ParsePass:
         claims_out.extend(claims)
 
     def _build_eval_context(self, fragment: Any, env: RuntimeEnv, frame: PartialFrameArtifact):
-        from expr_eval import EvalContext
+        from comp.eval.expr import EvalContext
         metadata = getattr(fragment, "metadata", {}) or {}
         row = metadata.get("row", {}) if isinstance(metadata, dict) else {}
         row_label = metadata.get("row_label") if isinstance(metadata, dict) else None
