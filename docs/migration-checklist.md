@@ -64,6 +64,11 @@
   - `comp.compat.artifacts`는 package implementation을 참조
   - artifact identity / parity smoke test 추가
 
+#### B-track: façade 축소 기준 수립
+- [x] **PR-B0: facade inventory / thinness audit**
+  - `docs/facade-inventory.md`에 public API facade / temporary migration bridge / legacy compatibility wrapper / bridge adapter 분류 추가
+  - removal candidates를 기록하되 제거는 하지 않음
+
 ---
 
 ### Bridge state
@@ -108,10 +113,6 @@
   - package runner와 legacy runner의 parity 유지
 
 #### B-track: façade 축소 기준 수립
-- [ ] **PR-B0: facade inventory / thinness audit**
-  - 어떤 façade가 공개 API인지, 어떤 façade가 임시 bridge인지 구분
-  - 제거 가능한 wrapper와 유지해야 하는 compatibility wrapper를 분리
-
 - [ ] **PR-B1: facade thinness rule 문서화**
   - 허용되는 wrapper 기준 정리
   - wrapper가 의미 변경을 담지 못하도록 기준 고정
@@ -242,17 +243,19 @@
   - `compiled_spec` relocation 완료
   - `runtime_env` relocation 완료
   - `artifacts` relocation 완료
+  - façade inventory / thinness audit 완료
   - `comp.eval.compiled_expr` / `comp.eval.lex` / `comp.eval.source_module` / `comp.dsl.compiled_spec`의 package DSL import 정합성 확인
   - `AGENTS.md`에 병렬 작업용 `area:*` / `flow:*` label 축 추가
 - 기존 `PR-R2: runtime/artifacts/compiled_spec`를 분리하고 마감 상태를 반영했다.
   - `compiled_spec`는 완료된 `PR-R2a`로 이동
   - `runtime_env`는 완료된 `PR-R2b`로 이동
   - `artifacts`는 완료된 `PR-R2c`로 이동
+- `docs/facade-inventory.md`를 추가해 wrapper / bridge / facade 상태를 분류했다.
 - 다음 액션을 다음 순서로 재정렬했다.
   1. runtime/artifact 이동 후 package/compat import 정리
   2. eager import / cycle 점검
   3. runner-adjacent relocation
-  4. façade inventory / thinness audit
+  4. façade thinness rule 문서화
 
 ### 2026-04-23
 
