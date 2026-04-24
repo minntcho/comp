@@ -42,6 +42,11 @@
 3. `views-ledger.md`
 4. `migration-plan.md`
 
+### 이행 작업을 issue로 나누고 싶은 경우
+1. `migration-checklist.md`
+2. `issue-plan.md`
+3. `migration-plan.md`
+
 ## 문서 구성
 
 - `architecture.md`
@@ -77,6 +82,9 @@
 
 - `migration-checklist.md`
   - PR 단위 완료 조건과 현재 진행 상태를 추적하는 실행 체크리스트
+
+- `issue-plan.md`
+  - migration checklist를 실제 GitHub Issue 작업 단위로 내리는 운영 문서와 초기 issue 초안
 
 - `testing.md`
   - 테스트가 무엇을 보호하는지 설명하는 문서
