@@ -79,12 +79,12 @@ legacy artifact shape와 target judgment vocabulary 사이를 번역하는 modul
 
 `comp.pipeline.__init__`은 current staged pipeline pass들을 공개하는 public pass facade다.
 
-현재 하위 pass module 대부분은 top-level legacy pass를 `importlib.import_module(...)`로 가져와 다시 내보내는 temporary migration bridge다.
+현재 하위 pass module 일부는 package-owned implementation이고, 나머지는 아직 top-level legacy pass를 `importlib.import_module(...)`로 가져와 다시 내보내는 temporary migration bridge다.
 
 | Module | Current role | Legacy target | Later action |
 |---|---|---|---|
-| `comp.pipeline.lex` | Temporary migration bridge | `lex_pass` | pass implementation relocation 후 재분류 |
-| `comp.pipeline.parsing` | Temporary migration bridge | `parse_pass` | pass implementation relocation 후 재분류 |
+| `comp.pipeline.lex` | Actual implementation | top-level `lex_pass.py` wrapper points here | 유지 |
+| `comp.pipeline.parsing` | Actual implementation | top-level `parse_pass.py` wrapper points here | 유지 |
 | `comp.pipeline.scope` | Temporary migration bridge | `scope_resolution_pass` | pass implementation relocation 후 재분류 |
 | `comp.pipeline.infer` | Temporary migration bridge | `inference_pass` | pass implementation relocation 후 재분류 |
 | `comp.pipeline.semantic` | Temporary migration bridge | `semantic_pass` | pass implementation relocation 후 재분류 |
@@ -93,7 +93,7 @@ legacy artifact shape와 target judgment vocabulary 사이를 번역하는 modul
 | `comp.pipeline.governance` | Temporary migration bridge | `governance_pass` | pass implementation relocation 또는 architecture boundary cleanup 후 재분류 |
 | `comp.pipeline.calculation` | Temporary migration bridge | `calculation_pass` | pass implementation relocation 후 재분류 |
 
-이 계층은 현재 의도적으로 남겨진 bridge다. 아직 pass implementation이 top-level에 있으므로, 지금 제거하면 공개 package surface가 깨진다.
+이 계층은 아직 일부 의도적 bridge를 포함한다. `comp.pipeline.*`가 존재한다고 해서 모든 pass implementation이 package로 이동한 것은 아니다.
 
 ---
 
@@ -145,6 +145,8 @@ legacy artifact shape와 target judgment vocabulary 사이를 번역하는 modul
 | `artifacts.py` | Legacy compatibility wrapper | `comp.artifacts` | compatibility policy 이후 제거/축소 검토 |
 | `pipeline_runner.py` | Legacy compatibility wrapper | `comp.pipeline_runner` | compatibility policy 이후 제거/축소 검토 |
 | `compiled_pipeline_runner.py` | Legacy compatibility wrapper | `comp.compiled_pipeline_runner` | compatibility policy 이후 제거/축소 검토 |
+| `lex_pass.py` | Legacy compatibility wrapper | `comp.pipeline.lex` | compatibility policy 이후 제거/축소 검토 |
+| `parse_pass.py` | Legacy compatibility wrapper | `comp.pipeline.parsing` | compatibility policy 이후 제거/축소 검토 |
 
 이 파일들은 더 이상 top-level implementation으로 보면 안 된다. 현재는 legacy import path 보존을 위한 wrapper다.
 
@@ -154,9 +156,12 @@ legacy artifact shape와 target judgment vocabulary 사이를 번역하는 modul
 
 | Module family | Current role | Notes | Later action |
 |---|---|---|---|
-| `*_pass.py` modules | Legacy pass implementation | current staged pipeline pass bodies | pass relocation 또는 architecture cleanup에서 점진 이동 |
+| `scope_resolution_pass.py`, `inference_pass.py`, `semantic_pass.py` | Legacy pass implementation | middle staged pipeline pass bodies | R4b에서 package-owned implementation으로 이동 |
+| `repair_pass.py` | Legacy pass implementation | selection-adjacent pass body | R4c에서 package-owned implementation으로 이동 |
+| `emit_pass.py`, `governance_pass.py` | Legacy pass implementation | publicization-adjacent pass bodies | R4d에서 package-owned implementation으로 이동 |
+| `calculation_pass.py` | Legacy pass implementation | post-governance calculation pass body | R4e에서 package-owned implementation으로 이동 |
 
-이 영역은 아직 public package surface와 implementation owner가 분리되어 있다. 즉 `comp.pipeline.*`가 존재한다고 해서 pass implementation까지 package로 이동한 것은 아니다.
+이 영역은 아직 public package surface와 implementation owner가 분리되어 있다. 즉 `comp.pipeline.*`가 존재한다고 해서 모든 pass implementation까지 package로 이동한 것은 아니다.
 
 ---
 
@@ -166,10 +171,11 @@ legacy artifact shape와 target judgment vocabulary 사이를 번역하는 modul
 
 | Candidate | Remove only after |
 |---|---|
-| `comp.pipeline.*` importlib bridges | 해당 pass implementation이 package path로 이동하고 parity tests가 생긴 뒤 |
+| remaining `comp.pipeline.*` importlib bridges | 해당 pass implementation이 package path로 이동하고 parity tests가 생긴 뒤 |
 | `comp.compat.pipeline_runner` / `compiled_pipeline_runner` wrappers | compatibility / deprecation policy가 정리된 뒤 |
 | top-level `runtime_env.py` / `artifacts.py` wrappers | compatibility / deprecation policy가 정리된 뒤 |
 | top-level `pipeline_runner.py` / `compiled_pipeline_runner.py` wrappers | compatibility / deprecation policy가 정리된 뒤 |
+| top-level `lex_pass.py` / `parse_pass.py` wrappers | compatibility / deprecation policy가 정리된 뒤 |
 | old top-level evaluator / DSL / IR wrappers | package path가 충분히 안정되고 downstream compatibility 방침이 정리된 뒤 |
 | `comp.compat.adapters` | judgment core가 더 많은 실행 경로를 직접 담당하고 legacy artifact translation 경계가 줄어든 뒤 |
 
@@ -185,7 +191,7 @@ This should continue to be audited under A-track eager import / cycle work.
 
 ### 4.2 Bridge invisibility risk
 
-`comp.pipeline.*` looks like package-owned pass modules, but most of them still import top-level legacy pass implementations. This is acceptable only because the migration is explicit. Future docs and PRs should not describe these modules as completed relocations.
+Some `comp.pipeline.*` modules still look like package-owned pass modules while importing top-level legacy pass implementations. This is acceptable only because the migration is explicit. Future docs and PRs should not describe those modules as completed relocations until the implementation actually moves.
 
 ### 4.3 Adapter thickness risk
 
