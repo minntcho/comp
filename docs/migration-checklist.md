@@ -22,14 +22,51 @@
 
 ---
 
-## 1) Done / In flight / Now / Next / Later
+## 1) Done / Bridge / Now / Next / Later
 
-### Done / In flight
+### Done
 
-- [x] façade surface 구축 및 package 공개 표면(`comp.*`) 정리 착수
-- [x] internal import convergence 일부 진행
-- [x] actual relocate 시작
-  - builtins/eval 일부 leaf 모듈 패키지 경로 정리
+#### Docs / public surface
+- [x] 한국어 README와 `pyproject.toml`을 통해 공개 정체성 정리
+- [x] `docs/` 내부 지도 추가
+- [x] judgment language / core semantics / spec pipeline / execution model / views-ledger 문서 추가
+- [x] package 공개 표면(`comp.*`) 구축 착수
+- [x] runner / pipeline / eval / builtins façade surface 구축
+
+#### A-track: import convergence
+- [x] **PR-A3: DSL path 정합성 복구**
+  - `comp.eval.compiled_expr` / `comp.eval.lex` / `comp.eval.source_module` / `comp.dsl.compiled_spec`가 `comp.dsl.*` 경로를 참조
+  - 신규 package implementation은 가능한 한 `comp.*` import를 사용
+
+#### R-track: actual relocate
+- [x] **PR-R1a: relocate `esg_builtins`**
+- [x] **PR-R1b: relocate `rule_builtins`**
+- [x] **PR-R1c: relocate `expr_eval`**
+- [x] **PR-R1d: relocate `compiled_expr_eval`**
+- [x] **PR-R1e: relocate `lex_eval`**
+- [x] **PR-R1f: relocate `source_eval`**
+- [x] **PR-R1g: relocate `rule_eval`**
+- [x] **PR-R1h: relocate `ast_nodes`**
+- [x] **PR-R1i: relocate `spec_nodes`**
+- [x] **PR-R1j: relocate `lex_ir`**
+- [x] **PR-R1k: relocate `source_ir`**
+- [x] **PR-R1l: relocate `rule_ir`**
+- [x] **PR-R2a: relocate `compiled_spec`**
+
+---
+
+### Bridge state
+
+현재 레포는 정리 완료 상태가 아니라 **의도적 bridge 단계**다.
+
+- [ ] top-level legacy 모듈이 아직 배포 표면에 남아 있다.
+- [ ] `runtime_env.py`는 아직 top-level implementation이다.
+- [ ] `artifacts.py`는 아직 top-level implementation이다.
+- [ ] `pipeline_runner.py`는 아직 main runner implementation이다.
+- [ ] 일부 `comp.pipeline.*` / `comp.compat.*` 모듈은 여전히 thin wrapper 또는 legacy bridge다.
+- [ ] `pyproject.toml`의 `py-modules`에는 legacy top-level 모듈들이 아직 포함되어 있다.
+
+---
 
 ### Now (즉시)
 
@@ -37,45 +74,63 @@
 - [ ] **PR-A1: internal import convergence**
   - 신규/수정 코드 import를 `comp.*` 중심으로 수렴
   - legacy import 사용은 compat/bridge 문맥으로 제한
+  - top-level implementation 내부 import도 가능한 범위부터 package 경로로 전환
 
 - [ ] **PR-A2: eager import / cycle 차단**
   - `comp.__init__` / `comp.runner` / `comp.compat.*` / legacy runner 경로의 eager import를 점검
   - module import 단계에서 상호 재귀 경로 제거
+  - test collection 기준으로 import cycle이 없는지 확인
 
-- [ ] **PR-A3: DSL path 정합성 복구**
-  - `comp.eval.compiled_expr`가 참조하는 DSL 경로를 실제 패키지 구조와 일치시킴
+#### R-track: actual relocate 확장
+- [ ] **PR-R2b: relocate `runtime_env`**
+  - package 쪽 implementation을 만들고 top-level은 wrapper로 축소
+  - `ScopePath`, `LexCandidate`, `RuntimeEnv`, `build_runtime_env` identity smoke test 추가
 
-#### R-track: actual relocate
-- [x] **PR-R1a: relocate `esg_builtins`**
-- [x] **PR-R1b: relocate `rule_builtins`**
-- [x] **PR-R1c: relocate `expr_eval`**
-- [x] **PR-R1d: relocate `compiled_expr_eval`**
-- [ ] **PR-R1e: relocate `lex_eval`**
-- [ ] **PR-R1f: relocate `source_eval`**
+- [ ] **PR-R2c: relocate `artifacts`**
+  - package 쪽 implementation을 만들고 top-level은 wrapper로 축소
+  - artifact dataclass identity / helper parity test 추가
+
+- [ ] **PR-R2d: package/compat imports after runtime/artifacts move**
+  - `comp.compat.*`, `comp.eval.*`, runner-adjacent 코드의 runtime/artifact import 경로 정리
+  - behavior change 없이 import 경로만 정렬
+
+---
 
 ### Next (다음)
 
-#### R-track: actual relocate 확장
-- [ ] **PR-R2: relocate runtime/artifacts/compiled_spec leaf-safe pieces**
+#### R-track: runner-adjacent relocation
 - [ ] **PR-R3: relocate runner-adjacent modules**
+  - `pipeline_runner.py` / `compiled_pipeline_runner.py` 주변을 package implementation으로 이동
+  - top-level runner는 compatibility wrapper로 축소
+  - package runner와 legacy runner의 parity 유지
+
+#### B-track: façade 축소 기준 수립
+- [ ] **PR-B0: facade inventory / thinness audit**
+  - 어떤 façade가 공개 API인지, 어떤 façade가 임시 bridge인지 구분
+  - 제거 가능한 wrapper와 유지해야 하는 compatibility wrapper를 분리
+
+- [ ] **PR-B1: facade thinness rule 문서화**
+  - 허용되는 wrapper 기준 정리
+  - wrapper가 의미 변경을 담지 못하도록 기준 고정
 
 #### Architecture track (초기)
 - [ ] **PR-C1: emit/governance boundary 정리 시작**
   - emit projection 경계와 governance barrier 경계 분리
+  - row materialization / commit decision / receipt append 책임을 문서와 코드에서 더 명확히 분리
+
+---
 
 ### Later (후속)
-
-#### B-track: façade 축소 기준 수립 후 제거
-- [ ] **PR-B: façade 축소 기준 수립**
-- [ ] **PR-B1: facade thinness audit**
-- [ ] **PR-B2: facade 제거 후보 선정 및 점진 제거**
 
 #### Architecture track (본격)
 - [ ] **PR-D: judgment core 본류 흡수**
   - selection/commit 일부 실행을 judgment program+engine 경로로 직접 전환
+  - adapter가 아니라 실제 실행 경로 일부를 judgment core가 담당
 
 #### Legacy surface 축소
 - [ ] **PR-E: legacy top-level 모듈 단계적 축소**
+  - package 경로가 충분히 안정된 뒤 top-level module surface를 줄임
+  - 제거 전에는 deprecation / compatibility 방침을 먼저 정리
 
 ---
 
@@ -87,6 +142,7 @@
 - [ ] 문서 예제가 `comp.*` 기준이다.
 - [ ] import cycle이 사라져 test collection이 진행된다.
 - [ ] `ModuleNotFoundError` 경로 불일치가 해소된다.
+- [ ] legacy import는 compatibility wrapper 또는 bridge 문맥으로 제한된다.
 
 ### R-track (relocation)
 
@@ -95,18 +151,21 @@
 - [ ] package import와 legacy import가 같은 객체를 가리킨다.
 - [ ] smoke/parity 테스트 1개 이상으로 identity를 확인한다.
 - [ ] 의미 변경은 없다.
+- [ ] relocation PR은 import convergence 또는 architecture change와 섞지 않는다.
 
 ### B-track (façade 축소)
 
 - [ ] facade thinness 기준(허용/제거)을 문서화했다.
 - [ ] 제거 후보별 영향도(테스트/사용자 경로)를 기록했다.
 - [ ] 공개 API를 유지한 채 thin wrapper 수가 감소한다.
+- [ ] compatibility wrapper와 temporary bridge wrapper가 구분된다.
 
 ### Architecture track
 
 - [ ] emit가 row source-of-truth가 아니라 projection 경계로 설명 가능하다.
 - [ ] governance가 barrier/receipt 중심으로 추적 가능하다.
 - [ ] judgment core 경로가 일부 실제 실행을 담당한다.
+- [ ] architecture PR은 packaging relocation과 분리한다.
 
 ---
 
@@ -130,6 +189,8 @@
 
 - import 정리 PR에서 API break가 나면 shim 파일로 즉시 복구한다.
 - 구조 이동 PR에서 동작 회귀가 나면 구현만 되돌리고 공개 surface는 유지한다.
+- runtime/artifacts relocation은 영향 범위가 넓으므로 작은 PR로 쪼갠다.
+- runner-adjacent relocation은 반드시 package/legacy parity 테스트를 먼저 둔다.
 - judgment 흡수 PR은 항상 parity 테스트와 함께 머지한다.
 
 ---
@@ -138,15 +199,49 @@
 
 > 아래는 PR마다 최소 1회 실행한다. (변경 영역 우선)
 
+### 전체 smoke
 - `pytest -q`
+
+### package / runner façade
+- `pytest -q tests/test_package_smoke.py`
 - `pytest -q tests/test_runner_package_facades.py tests/test_pipeline_package_facades.py`
-- `pytest -q tests/test_eval_module_facades.py`
+
+### builtins relocation
 - `pytest -q tests/test_esg_builtins_package_location.py tests/test_rule_builtins_package_location.py`
+
+### eval relocation
 - `pytest -q tests/test_expr_eval_package_location.py tests/test_compiled_expr_eval_package_location.py`
+- `pytest -q tests/test_lex_eval_package_location.py tests/test_source_eval_package_location.py tests/test_rule_eval_package_location.py`
+
+### DSL / IR relocation
+- `pytest -q tests/test_ast_nodes_package_location.py tests/test_spec_nodes_package_location.py`
+- `pytest -q tests/test_lex_ir_package_location.py tests/test_source_ir_package_location.py tests/test_rule_ir_package_location.py`
+- `pytest -q tests/test_compiled_spec_package_location.py`
+
+### compiled path / governance safety
+- `pytest -q tests/test_default_runner_compiled_rule_path.py`
 
 ---
 
 ## 6) 진행 로그
+
+### 2026-04-24
+
+- 최근 merge 상태를 기준으로 체크리스트를 동기화했다.
+- 반영한 완료 항목:
+  - `lex_eval`, `source_eval`, `rule_eval` relocation 완료
+  - `ast_nodes`, `spec_nodes`, `lex_ir`, `source_ir`, `rule_ir` relocation 완료
+  - `compiled_spec` relocation 완료
+  - `comp.eval.compiled_expr` / `comp.eval.lex` / `comp.eval.source_module` / `comp.dsl.compiled_spec`의 package DSL import 정합성 확인
+- 기존 `PR-R2: runtime/artifacts/compiled_spec`를 분리했다.
+  - `compiled_spec`는 완료된 `PR-R2a`로 이동
+  - `runtime_env`와 `artifacts`는 각각 `PR-R2b`, `PR-R2c`로 남김
+- 다음 액션을 다음 순서로 재정렬했다.
+  1. `runtime_env` relocation
+  2. `artifacts` relocation
+  3. runtime/artifact 이동 후 package/compat import 정리
+  4. runner-adjacent relocation
+  5. façade inventory / thinness audit
 
 ### 2026-04-23
 
