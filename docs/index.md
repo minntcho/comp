@@ -47,6 +47,11 @@
 2. `issue-plan.md`
 3. `migration-plan.md`
 
+### façade / wrapper 상태가 궁금한 경우
+1. `facade-inventory.md`
+2. `migration-checklist.md`
+3. `migration-plan.md`
+
 ## 문서 구성
 
 - `architecture.md`
@@ -85,6 +90,9 @@
 
 - `issue-plan.md`
   - migration checklist를 실제 GitHub Issue 작업 단위로 내리는 운영 문서와 초기 issue 초안
+
+- `facade-inventory.md`
+  - package façade / compatibility wrapper / temporary bridge 상태를 분류하는 inventory 문서
 
 - `testing.md`
   - 테스트가 무엇을 보호하는지 설명하는 문서
