@@ -4,7 +4,7 @@ from typing import Any, Optional
 
 from comp.eval.expr import EvalContext
 from comp.runtime_env import LexCandidate
-from source_ir import (
+from comp.dsl.source_ir import (
     SourceBuiltinCall,
     SourceCandidate,
     SourceColumnRef,
