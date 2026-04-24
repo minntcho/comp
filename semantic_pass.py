@@ -4,11 +4,11 @@ from dataclasses import dataclass
 from itertools import count
 from typing import Any
 
-from artifacts import CompileArtifacts, DiagnosticArtifact, PartialFrameArtifact
-from compiled_spec import CompiledProgramSpec
-from expr_eval import EvalContext
-from rule_eval import RuleEvaluator
-from runtime_env import RuntimeEnv
+from comp.artifacts import CompileArtifacts, DiagnosticArtifact, PartialFrameArtifact
+from comp.dsl.compiled_spec import CompiledProgramSpec
+from comp.eval.expr import EvalContext
+from comp.eval.rule import RuleEvaluator
+from comp.runtime_env import RuntimeEnv
 
 
 @dataclass
