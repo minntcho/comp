@@ -5,12 +5,12 @@ from dataclasses import dataclass
 from itertools import count
 from typing import Any, Optional
 
-from artifacts import ClaimArtifact, CompileArtifacts, PartialFrameArtifact, RoleSlotArtifact
-from compiled_spec import CompiledProgramSpec
-from rule_eval import RuleEvaluator
-from runtime_env import RuntimeEnv, ScopePath
-from source_eval import SourceEvaluator
-from spec_nodes import ContextPolicy
+from comp.artifacts import ClaimArtifact, CompileArtifacts, PartialFrameArtifact, RoleSlotArtifact
+from comp.dsl.compiled_spec import CompiledProgramSpec
+from comp.dsl.spec_nodes import ContextPolicy
+from comp.eval.rule import RuleEvaluator
+from comp.eval.source_module import SourceEvaluator
+from comp.runtime_env import RuntimeEnv, ScopePath
 
 
 YEAR_ONLY_RE = re.compile(r"^20\d{2}$")
@@ -196,5 +196,5 @@ class ScopeResolutionPass:
         return getattr(frag, "scope_path", tuple())
 
     def _make_eval_context(self, *, env: RuntimeEnv, scope_path: ScopePath, frame: PartialFrameArtifact, claims_by_id: dict[str, ClaimArtifact]):
-        from expr_eval import EvalContext
+        from comp.eval.expr import EvalContext
         return EvalContext(env=env, text="", scope_path=scope_path, frame=frame, claims_by_id=claims_by_id, local_vars={"frame_type": frame.frame_type, "status": frame.status})
