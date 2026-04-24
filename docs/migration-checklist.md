@@ -109,9 +109,9 @@
   - `comp.pipeline.*` temporary bridges를 package implementation re-export로 재분류
 
 #### Architecture track (초기)
-- [ ] **PR-C1: emit/governance boundary 정리 시작**
-  - emit projection 경계와 governance barrier 경계 분리
-  - row materialization / commit decision / receipt append 책임을 문서와 코드에서 더 명확히 분리
+- [ ] **PR-C1b: emit/governance boundary 코드 정리**
+  - #73 docs boundary 정리 이후 코드에서 emit projection 경계와 governance barrier 경계를 명확히 분리
+  - row materialization / commit decision / receipt append 책임을 코드 경계 기준으로 더 명확히 분리
 
 ---
 
@@ -238,7 +238,7 @@
   - `PR-R2d` runtime/artifacts 이동 후 package 경로 import 정리 완료
 - 다음 액션을 재정렬했다.
   1. `PR-R4` pass implementation relocation
-  2. `PR-C1` emit/governance boundary 정리
+  2. `PR-C1b` emit/governance boundary 코드 정리
   3. `PR-E` legacy top-level surface 축소
 
 - 최근 merge 상태를 기준으로 체크리스트를 동기화했다.
@@ -261,11 +261,6 @@
 - top-level runner files와 `comp.compat.*runner`는 package implementation wrapper로 축소했다.
 - `docs/facade-inventory.md`를 추가해 wrapper / bridge / facade 상태를 분류했다.
 - `docs/facade-thinness.md`를 추가해 wrapper 허용/금지 규칙을 정리했다.
-- 다음 액션을 다음 순서로 재정렬했다.
-  1. runtime/artifact 이동 후 package/compat import 정리
-  2. eager import / cycle 점검
-  3. emit/governance boundary 정리
-  4. pass implementation relocation
 
 ### 2026-04-23
 
