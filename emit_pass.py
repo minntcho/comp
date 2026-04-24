@@ -4,9 +4,9 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Optional
 
-from artifacts import ClaimArtifact, CompileArtifacts, PartialFrameArtifact
+from comp.artifacts import ClaimArtifact, CompileArtifacts, PartialFrameArtifact
+from comp.runtime_env import RuntimeEnv
 from comp.views import materialize_public_rows, project_canonical_row
-from runtime_env import RuntimeEnv
 
 
 @dataclass
