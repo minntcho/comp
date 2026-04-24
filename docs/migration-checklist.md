@@ -63,6 +63,11 @@
   - top-level `artifacts.py`는 compatibility wrapper로 축소
   - `comp.compat.artifacts`는 package implementation을 참조
   - artifact identity / parity smoke test 추가
+- [x] **PR-R3: relocate runner-adjacent modules**
+  - `comp.pipeline_runner` / `comp.compiled_pipeline_runner`가 실제 runner implementation을 소유
+  - top-level `pipeline_runner.py` / `compiled_pipeline_runner.py`는 compatibility wrapper로 축소
+  - `comp.compat.pipeline_runner` / `comp.compat.compiled_pipeline_runner`는 package implementation을 참조
+  - runner wrapper / package parity test 갱신
 
 #### B-track: façade 축소 기준 수립
 - [x] **PR-B0: facade inventory / thinness audit**
@@ -79,9 +84,8 @@
 현재 레포는 정리 완료 상태가 아니라 **의도적 bridge 단계**다.
 
 - [ ] top-level legacy 모듈이 아직 배포 표면에 남아 있다.
-- [ ] `runtime_env.py` / `artifacts.py`는 아직 top-level compatibility wrapper로 남아 있다.
-- [ ] `pipeline_runner.py`는 아직 main runner implementation이다.
-- [ ] 일부 `comp.pipeline.*` / `comp.compat.*` 모듈은 여전히 thin wrapper 또는 legacy bridge다.
+- [ ] `runtime_env.py` / `artifacts.py` / `pipeline_runner.py` / `compiled_pipeline_runner.py`는 아직 top-level compatibility wrapper로 남아 있다.
+- [ ] 일부 `comp.pipeline.*` 모듈은 여전히 thin wrapper 또는 legacy bridge다.
 - [ ] `pyproject.toml`의 `py-modules`에는 legacy top-level 모듈들이 아직 포함되어 있다.
 
 ---
@@ -109,12 +113,6 @@
 
 ### Next (다음)
 
-#### R-track: runner-adjacent relocation
-- [ ] **PR-R3: relocate runner-adjacent modules**
-  - `pipeline_runner.py` / `compiled_pipeline_runner.py` 주변을 package implementation으로 이동
-  - top-level runner는 compatibility wrapper로 축소
-  - package runner와 legacy runner의 parity 유지
-
 #### Architecture track (초기)
 - [ ] **PR-C1: emit/governance boundary 정리 시작**
   - emit projection 경계와 governance barrier 경계 분리
@@ -123,6 +121,11 @@
 ---
 
 ### Later (후속)
+
+#### R-track: pass implementation relocation
+- [ ] **PR-R4: relocate pass implementation modules**
+  - `*_pass.py` implementation을 package-owned modules로 점진 이동
+  - `comp.pipeline.*` temporary bridges를 package implementation re-export로 재분류
 
 #### Architecture track (본격)
 - [ ] **PR-D: judgment core 본류 흡수**
@@ -241,6 +244,7 @@
   - `compiled_spec` relocation 완료
   - `runtime_env` relocation 완료
   - `artifacts` relocation 완료
+  - runner-adjacent relocation 완료
   - façade inventory / thinness audit 완료
   - façade thinness rule 문서화 완료
   - `comp.eval.compiled_expr` / `comp.eval.lex` / `comp.eval.source_module` / `comp.dsl.compiled_spec`의 package DSL import 정합성 확인
@@ -249,13 +253,15 @@
   - `compiled_spec`는 완료된 `PR-R2a`로 이동
   - `runtime_env`는 완료된 `PR-R2b`로 이동
   - `artifacts`는 완료된 `PR-R2c`로 이동
+- `comp.pipeline_runner` / `comp.compiled_pipeline_runner`가 runner implementation을 소유하도록 이동했다.
+- top-level runner files와 `comp.compat.*runner`는 package implementation wrapper로 축소했다.
 - `docs/facade-inventory.md`를 추가해 wrapper / bridge / facade 상태를 분류했다.
 - `docs/facade-thinness.md`를 추가해 wrapper 허용/금지 규칙을 정리했다.
 - 다음 액션을 다음 순서로 재정렬했다.
   1. runtime/artifact 이동 후 package/compat import 정리
   2. eager import / cycle 점검
-  3. runner-adjacent relocation
-  4. emit/governance boundary 정리
+  3. emit/governance boundary 정리
+  4. pass implementation relocation
 
 ### 2026-04-23
 
