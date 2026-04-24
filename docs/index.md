@@ -49,8 +49,9 @@
 
 ### façade / wrapper 상태가 궁금한 경우
 1. `facade-inventory.md`
-2. `migration-checklist.md`
-3. `migration-plan.md`
+2. `facade-thinness.md`
+3. `migration-checklist.md`
+4. `migration-plan.md`
 
 ## 문서 구성
 
@@ -93,6 +94,9 @@
 
 - `facade-inventory.md`
   - package façade / compatibility wrapper / temporary bridge 상태를 분류하는 inventory 문서
+
+- `facade-thinness.md`
+  - façade / wrapper / bridge가 허용하는 얇은 역할과 금지되는 behavior를 정리하는 규칙 문서
 
 - `testing.md`
   - 테스트가 무엇을 보호하는지 설명하는 문서
