@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from itertools import count
 from typing import Any
 
-from artifacts import (
+from comp.artifacts import (
     ClaimArtifact,
     CompileArtifacts,
     DiagnosticArtifact,
@@ -13,10 +13,10 @@ from artifacts import (
     error_codes_from_diagnostics,
     warning_codes_from_diagnostics,
 )
-from compiled_spec import CompiledProgramSpec
-from expr_eval import EvalContext
-from rule_eval import RuleEvaluator
-from runtime_env import RuntimeEnv, ScopePath
+from comp.dsl.compiled_spec import CompiledProgramSpec
+from comp.eval.expr import EvalContext
+from comp.eval.rule import RuleEvaluator
+from comp.runtime_env import RuntimeEnv, ScopePath
 
 
 @dataclass
