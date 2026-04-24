@@ -10,31 +10,37 @@
 ### 처음 보는 경우
 1. `../README.md`
 2. `architecture.md`
-3. `current-pipeline.md`
+3. `worked-example.md`
+4. `current-pipeline.md`
 
 ### 현재 코드 흐름이 궁금한 경우
 1. `current-pipeline.md`
-2. `migration-plan.md`
-3. `migration-checklist.md`
+2. `worked-example.md`
+3. `migration-plan.md`
+4. `migration-checklist.md`
 
 ### 새 설계 방향이 궁금한 경우
 1. `architecture.md`
-2. `judgment-core.md`
-3. `migration-plan.md`
+2. `worked-example.md`
+3. `judgment-core.md`
+4. `migration-plan.md`
 
 ### 판정 언어와 의미론이 궁금한 경우
-1. `judgment-language.md`
-2. `core-semantics.md`
-3. `judgment-core.md`
+1. `worked-example.md`
+2. `judgment-language.md`
+3. `core-semantics.md`
+4. `judgment-core.md`
 
 ### spec 컴파일 경로가 궁금한 경우
 1. `esgdl-reference.md`
 2. `spec-pipeline.md`
+3. `worked-example.md`
 
 ### 목표 실행 모델과 view 구조가 궁금한 경우
-1. `execution-model.md`
-2. `views-ledger.md`
-3. `migration-plan.md`
+1. `worked-example.md`
+2. `execution-model.md`
+3. `views-ledger.md`
+4. `migration-plan.md`
 
 ## 문서 구성
 
@@ -44,6 +50,9 @@
 
 - `current-pipeline.md`
   - 현재 staged pipeline의 실제 실행 흐름과 artifact 계약 설명
+
+- `worked-example.md`
+  - 작은 입력 하나를 현재 pipeline과 장기 judgment-first 관점으로 함께 따라가는 예제 문서
 
 - `judgment-core.md`
   - 장기적으로 밀고 있는 judgment-first 구조와 현재 코드 연결점 설명
