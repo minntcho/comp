@@ -36,6 +36,13 @@
 - [x] `AGENTS.md`에 병렬 작업용 `area:*` / `flow:*` label 축 추가
 
 #### A-track: import convergence
+- [x] **PR-A1: internal import convergence**
+  - 신규/수정 runner-adjacent 코드의 import를 가능한 범위에서 `comp.*` 중심으로 수렴
+  - top-level pass/runner implementation 내부에서도 relocated contracts는 package 경로를 참조
+  - 아직 package-owned implementation으로 이동하지 않은 runner/pass import는 PR-R3 전까지 의도적 bridge 상태로 유지
+- [x] **PR-A2: eager import / cycle 차단**
+  - `comp.__init__` runner-facing export를 lazy `__getattr__`로 전환
+  - `import comp`만으로 `comp.runner` / legacy `pipeline_runner` bridge를 당기지 않는 smoke guard 추가
 - [x] **PR-A3: DSL path 정합성 복구**
   - `comp.eval.compiled_expr` / `comp.eval.lex` / `comp.eval.source_module` / `comp.dsl.compiled_spec`가 `comp.dsl.*` 경로를 참조
   - 신규 package implementation은 가능한 한 `comp.*` import를 사용
@@ -64,6 +71,12 @@
   - `comp.compat.artifacts`는 package implementation을 참조
   - artifact identity / parity smoke test 추가
 
+#### R/A bridge cleanup
+- [x] **PR-R2d: package/compat imports after runtime/artifacts move**
+  - runner-adjacent staged pass files가 relocated `comp.artifacts`, `comp.runtime_env`, `comp.dsl.*`, `comp.eval.*`, `comp.builtins.*` 경로를 참조
+  - behavior change 없이 import 경로만 정렬
+  - runner/pass implementation relocation은 포함하지 않음
+
 #### B-track: façade 축소 기준 수립
 - [x] **PR-B0: facade inventory / thinness audit**
   - `docs/facade-inventory.md`에 public API facade / temporary migration bridge / legacy compatibility wrapper / bridge adapter 분류 추가
@@ -85,37 +98,22 @@
 
 ### Now (즉시)
 
-#### A-track: import convergence
-- [ ] **PR-A1: internal import convergence**
-  - 신규/수정 코드 import를 `comp.*` 중심으로 수렴
-  - legacy import 사용은 compat/bridge 문맥으로 제한
-  - top-level implementation 내부 import도 가능한 범위부터 package 경로로 전환
-
-- [ ] **PR-A2: eager import / cycle 차단**
-  - `comp.__init__` / `comp.runner` / `comp.compat.*` / legacy runner 경로의 eager import를 점검
-  - module import 단계에서 상호 재귀 경로 제거
-  - test collection 기준으로 import cycle이 없는지 확인
-
-#### R/A bridge cleanup
-- [ ] **PR-R2d: package/compat imports after runtime/artifacts move**
-  - `comp.compat.*`, `comp.eval.*`, runner-adjacent 코드의 runtime/artifact import 경로 정리
-  - behavior change 없이 import 경로만 정렬
-  - PR #52 / PR #57 이후 상태를 기준으로 진행
-
----
-
-### Next (다음)
-
 #### R-track: runner-adjacent relocation
 - [ ] **PR-R3: relocate runner-adjacent modules**
   - `pipeline_runner.py` / `compiled_pipeline_runner.py` 주변을 package implementation으로 이동
   - top-level runner는 compatibility wrapper로 축소
   - package runner와 legacy runner의 parity 유지
+  - `comp.runner` / `comp.compat.*` bridge 관계를 relocation 이후 재분류
 
 #### B-track: façade 축소 기준 수립
 - [ ] **PR-B1: facade thinness rule 문서화**
   - 허용되는 wrapper 기준 정리
   - wrapper가 의미 변경을 담지 못하도록 기준 고정
+  - `docs/facade-inventory.md`의 removal candidates와 연결
+
+---
+
+### Next (다음)
 
 #### Architecture track (초기)
 - [ ] **PR-C1: emit/governance boundary 정리 시작**
@@ -243,6 +241,8 @@
   - `compiled_spec` relocation 완료
   - `runtime_env` relocation 완료
   - `artifacts` relocation 완료
+  - package entrypoint eager import guard 완료
+  - runtime/artifact relocation 이후 runner-adjacent import convergence 완료
   - façade inventory / thinness audit 완료
   - `comp.eval.compiled_expr` / `comp.eval.lex` / `comp.eval.source_module` / `comp.dsl.compiled_spec`의 package DSL import 정합성 확인
   - `AGENTS.md`에 병렬 작업용 `area:*` / `flow:*` label 축 추가
@@ -250,12 +250,13 @@
   - `compiled_spec`는 완료된 `PR-R2a`로 이동
   - `runtime_env`는 완료된 `PR-R2b`로 이동
   - `artifacts`는 완료된 `PR-R2c`로 이동
+  - runtime/artifact 이후 import cleanup은 완료된 `PR-R2d`로 분리
 - `docs/facade-inventory.md`를 추가해 wrapper / bridge / facade 상태를 분류했다.
+- #68 / #69 / #70 merge 상태를 반영해 Now 항목을 재정렬했다.
 - 다음 액션을 다음 순서로 재정렬했다.
-  1. runtime/artifact 이동 후 package/compat import 정리
-  2. eager import / cycle 점검
-  3. runner-adjacent relocation
-  4. façade thinness rule 문서화
+  1. runner-adjacent relocation
+  2. façade thinness rule 문서화
+  3. emit/governance boundary 정리 시작
 
 ### 2026-04-23
 
