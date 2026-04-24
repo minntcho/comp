@@ -66,10 +66,12 @@ legacy artifact shape와 target judgment vocabulary 사이를 번역하는 modul
 
 | Module | Current role | Notes | Later action |
 |---|---|---|---|
-| `comp.__init__` | Public API facade | `comp.runner`의 runner API를 top-level package에서 노출한다. | eager import 부담은 A2에서 점검 |
-| `comp.runner` | Public API facade / temporary runner facade | legacy runner class를 상속하고 package grammar path 기본값을 주입한다. | runner relocation 후 실제 package runner surface로 재분류 |
+| `comp.__init__` | Public API facade | runner-facing symbols를 lazy export한다. | 유지하되 eager import는 계속 감시 |
+| `comp.runner` | Public API facade | package runner implementation 위에 package-local default grammar path를 주입한다. | 유지 |
+| `comp.pipeline_runner` | Actual implementation | staged runner implementation을 package가 소유한다. | 유지 |
+| `comp.compiled_pipeline_runner` | Actual implementation | compiled runner implementation을 package가 소유한다. | 유지 |
 
-`comp.runner`는 단순 re-export보다 조금 두껍다. 현재는 기본 grammar path를 package 내부로 잡아 주는 public convenience layer 역할을 한다. 하지만 실제 runner implementation은 아직 legacy runner 쪽에 있으므로, runner relocation 전까지는 temporary runner facade로도 봐야 한다.
+`comp.runner`는 단순 re-export보다 조금 두껍다. 현재는 기본 grammar path를 package 내부로 잡아 주는 public convenience layer 역할을 한다. 실제 runner implementation은 `comp.pipeline_runner` / `comp.compiled_pipeline_runner`가 소유한다.
 
 ---
 
@@ -99,8 +101,8 @@ legacy artifact shape와 target judgment vocabulary 사이를 번역하는 modul
 
 | Module | Current role | Notes | Later action |
 |---|---|---|---|
-| `comp.compat.pipeline_runner` | Temporary migration bridge | top-level `pipeline_runner`를 importlib로 참조한다. | runner relocation 후 package implementation re-export로 축소 |
-| `comp.compat.compiled_pipeline_runner` | Temporary migration bridge | top-level `compiled_pipeline_runner`를 importlib로 참조한다. | runner relocation 후 package implementation re-export로 축소 |
+| `comp.compat.pipeline_runner` | Legacy compatibility wrapper | `comp.pipeline_runner` package implementation을 re-export한다. | compatibility 방침 정리 후 제거/축소 검토 |
+| `comp.compat.compiled_pipeline_runner` | Legacy compatibility wrapper | `comp.compiled_pipeline_runner` package implementation을 re-export한다. | compatibility 방침 정리 후 제거/축소 검토 |
 | `comp.compat.artifacts` | Legacy compatibility wrapper | 이미 `comp.artifacts` package implementation을 re-export한다. | top-level compatibility 방침이 정리될 때까지 유지 |
 | `comp.compat.adapters` | Bridge adapter | legacy artifact object를 judgment receipt / frontier / commit vocabulary로 번역한다. | judgment core absorption 이후 축소 또는 재배치 후보 |
 
@@ -141,8 +143,10 @@ legacy artifact shape와 target judgment vocabulary 사이를 번역하는 modul
 |---|---|---|---|
 | `runtime_env.py` | Legacy compatibility wrapper | `comp.runtime_env` | compatibility policy 이후 제거/축소 검토 |
 | `artifacts.py` | Legacy compatibility wrapper | `comp.artifacts` | compatibility policy 이후 제거/축소 검토 |
+| `pipeline_runner.py` | Legacy compatibility wrapper | `comp.pipeline_runner` | compatibility policy 이후 제거/축소 검토 |
+| `compiled_pipeline_runner.py` | Legacy compatibility wrapper | `comp.compiled_pipeline_runner` | compatibility policy 이후 제거/축소 검토 |
 
-이 둘은 더 이상 top-level implementation으로 보면 안 된다. 현재는 legacy import path 보존을 위한 wrapper다.
+이 파일들은 더 이상 top-level implementation으로 보면 안 된다. 현재는 legacy import path 보존을 위한 wrapper다.
 
 ---
 
@@ -150,8 +154,6 @@ legacy artifact shape와 target judgment vocabulary 사이를 번역하는 modul
 
 | Module family | Current role | Notes | Later action |
 |---|---|---|---|
-| `pipeline_runner.py` | Legacy implementation | main staged runner implementation | PR-R3에서 package-owned implementation으로 이동 |
-| `compiled_pipeline_runner.py` | Legacy implementation | compiled runner implementation | PR-R3에서 package-owned implementation으로 이동 |
 | `*_pass.py` modules | Legacy pass implementation | current staged pipeline pass bodies | pass relocation 또는 architecture cleanup에서 점진 이동 |
 
 이 영역은 아직 public package surface와 implementation owner가 분리되어 있다. 즉 `comp.pipeline.*`가 존재한다고 해서 pass implementation까지 package로 이동한 것은 아니다.
@@ -165,8 +167,9 @@ legacy artifact shape와 target judgment vocabulary 사이를 번역하는 modul
 | Candidate | Remove only after |
 |---|---|
 | `comp.pipeline.*` importlib bridges | 해당 pass implementation이 package path로 이동하고 parity tests가 생긴 뒤 |
-| `comp.compat.pipeline_runner` / `compiled_pipeline_runner` legacy bridges | runner implementation이 package path로 이동한 뒤 |
+| `comp.compat.pipeline_runner` / `compiled_pipeline_runner` wrappers | compatibility / deprecation policy가 정리된 뒤 |
 | top-level `runtime_env.py` / `artifacts.py` wrappers | compatibility / deprecation policy가 정리된 뒤 |
+| top-level `pipeline_runner.py` / `compiled_pipeline_runner.py` wrappers | compatibility / deprecation policy가 정리된 뒤 |
 | old top-level evaluator / DSL / IR wrappers | package path가 충분히 안정되고 downstream compatibility 방침이 정리된 뒤 |
 | `comp.compat.adapters` | judgment core가 더 많은 실행 경로를 직접 담당하고 legacy artifact translation 경계가 줄어든 뒤 |
 
@@ -176,9 +179,9 @@ legacy artifact shape와 target judgment vocabulary 사이를 번역하는 modul
 
 ### 4.1 Eager import risk
 
-`comp.__init__` imports `comp.runner`, and `comp.runner` imports compat runner bridges. That means top-level `import comp` may pull runner-adjacent legacy paths earlier than desired.
+`comp.__init__` lazily resolves runner-facing symbols so plain `import comp` should not eagerly import runner implementation.
 
-This should be audited under A-track eager import / cycle work.
+This should continue to be audited under A-track eager import / cycle work.
 
 ### 4.2 Bridge invisibility risk
 
