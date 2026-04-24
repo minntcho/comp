@@ -1,3 +1,37 @@
-"""Compatibility wrapper for legacy artifact types."""
+"""Compatibility wrapper for artifact types."""
 
-from artifacts import *
+from comp.artifacts import (
+    CalculationArtifact,
+    CanonicalRowArtifact,
+    ClaimArtifact,
+    CompileArtifacts,
+    DiagnosticArtifact,
+    FrameRuntimeState,
+    GovernanceDecisionArtifact,
+    LineageEvidenceArtifact,
+    PartialFrameArtifact,
+    RoleLineageArtifact,
+    RoleSlotArtifact,
+    TokenOccurrence,
+    diagnostic_codes,
+    error_codes_from_diagnostics,
+    warning_codes_from_diagnostics,
+)
+
+__all__ = [
+    "CalculationArtifact",
+    "CanonicalRowArtifact",
+    "ClaimArtifact",
+    "CompileArtifacts",
+    "DiagnosticArtifact",
+    "FrameRuntimeState",
+    "GovernanceDecisionArtifact",
+    "LineageEvidenceArtifact",
+    "PartialFrameArtifact",
+    "RoleLineageArtifact",
+    "RoleSlotArtifact",
+    "TokenOccurrence",
+    "diagnostic_codes",
+    "error_codes_from_diagnostics",
+    "warning_codes_from_diagnostics",
+]
