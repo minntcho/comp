@@ -153,7 +153,7 @@ __all__ = ["EmitPass"]
 - 내부 implementation owner가 명확하다.
 - default가 바뀌면 테스트나 PR 본문에서 명시한다.
 
-`comp.runner`는 현재 이 범주와 temporary runner facade 사이에 있다. package grammar path 기본값을 주입하지만, 실제 runner implementation은 아직 legacy runner에 있다. 따라서 runner relocation 전까지는 public convenience facade이면서 temporary runner facade로 취급한다.
+`comp.runner`는 이 범주에 해당한다. 기본 grammar path를 package 내부로 잡아 주는 public convenience layer이고, 실제 runner behavior는 `comp.pipeline_runner` / `comp.compiled_pipeline_runner`가 소유한다.
 
 ---
 
@@ -203,7 +203,7 @@ class CompileArtifacts(CompileArtifacts):
 
 - `comp.pipeline.emit` wrapper 안에서 public projection semantics를 새로 구현
 - `comp.pipeline.governance` wrapper 안에서 commit barrier 판단을 바꿈
-- `comp.compat.pipeline_runner`에서 pass order를 바꿈
+- compatibility wrapper에서 pass order를 바꿈
 
 architecture work는 별도 issue / PR로 분리한다.
 
@@ -340,11 +340,11 @@ Wrapper / facade 관련 PR은 다음을 확인한다.
 
 현재 inventory 기준으로 적용하면 다음과 같다.
 
-- `comp.eval.*` and `comp.builtins.*`
+- `comp.eval.*`, `comp.builtins.*`, `comp.pipeline_runner`, and `comp.compiled_pipeline_runner`
   - package-owned implementation 영역이다.
   - 새 code는 이 경로를 기준으로 써야 한다.
 
-- `runtime_env.py` and `artifacts.py`
+- `runtime_env.py`, `artifacts.py`, `pipeline_runner.py`, and `compiled_pipeline_runner.py`
   - legacy compatibility wrapper다.
   - package implementation을 re-export해야 하며 behavior를 추가하면 안 된다.
 
@@ -354,12 +354,12 @@ Wrapper / facade 관련 PR은 다음을 확인한다.
   - package-owned implementation처럼 설명하면 안 된다.
 
 - `comp.compat.pipeline_runner` and `comp.compat.compiled_pipeline_runner`
-  - runner relocation 전 temporary migration bridge다.
-  - runner behavior를 추가하면 안 된다.
+  - legacy compatibility wrapper다.
+  - package runner implementation을 re-export해야 하며 runner behavior를 추가하면 안 된다.
 
 - `comp.runner`
-  - public convenience facade이지만, 실제 runner implementation은 아직 legacy에 있다.
-  - runner relocation 후 재분류가 필요하다.
+  - public convenience facade다.
+  - package-owned runner implementation 위에 default grammar path를 주입한다.
 
 - `comp.compat.adapters`
   - explicit bridge adapter다.
@@ -374,7 +374,6 @@ Wrapper / facade 관련 PR은 다음을 확인한다.
 다음 follow-up은 별도 issue / PR로 나눈다.
 
 - eager import / cycle audit
-- runner-adjacent relocation
 - pass implementation relocation
 - compatibility wrapper deprecation policy
 - adapter boundary tests
