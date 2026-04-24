@@ -68,6 +68,9 @@
 - [x] **PR-B0: facade inventory / thinness audit**
   - `docs/facade-inventory.md`에 public API facade / temporary migration bridge / legacy compatibility wrapper / bridge adapter 분류 추가
   - removal candidates를 기록하되 제거는 하지 않음
+- [x] **PR-B1: facade thinness rule 문서화**
+  - `docs/facade-thinness.md`에 wrapper 허용 패턴 / 금지 패턴 / classification별 규칙 추가
+  - wrapper가 hidden behavior를 담지 못하도록 기준 고정
 
 ---
 
@@ -112,11 +115,6 @@
   - top-level runner는 compatibility wrapper로 축소
   - package runner와 legacy runner의 parity 유지
 
-#### B-track: façade 축소 기준 수립
-- [ ] **PR-B1: facade thinness rule 문서화**
-  - 허용되는 wrapper 기준 정리
-  - wrapper가 의미 변경을 담지 못하도록 기준 고정
-
 #### Architecture track (초기)
 - [ ] **PR-C1: emit/governance boundary 정리 시작**
   - emit projection 경계와 governance barrier 경계 분리
@@ -159,10 +157,10 @@
 
 ### B-track (façade 축소)
 
-- [ ] facade thinness 기준(허용/제거)을 문서화했다.
-- [ ] 제거 후보별 영향도(테스트/사용자 경로)를 기록했다.
+- [x] facade thinness 기준(허용/제거)을 문서화했다.
+- [x] 제거 후보별 영향도(테스트/사용자 경로)를 기록했다.
 - [ ] 공개 API를 유지한 채 thin wrapper 수가 감소한다.
-- [ ] compatibility wrapper와 temporary bridge wrapper가 구분된다.
+- [x] compatibility wrapper와 temporary bridge wrapper가 구분된다.
 
 ### Architecture track
 
@@ -244,6 +242,7 @@
   - `runtime_env` relocation 완료
   - `artifacts` relocation 완료
   - façade inventory / thinness audit 완료
+  - façade thinness rule 문서화 완료
   - `comp.eval.compiled_expr` / `comp.eval.lex` / `comp.eval.source_module` / `comp.dsl.compiled_spec`의 package DSL import 정합성 확인
   - `AGENTS.md`에 병렬 작업용 `area:*` / `flow:*` label 축 추가
 - 기존 `PR-R2: runtime/artifacts/compiled_spec`를 분리하고 마감 상태를 반영했다.
@@ -251,11 +250,12 @@
   - `runtime_env`는 완료된 `PR-R2b`로 이동
   - `artifacts`는 완료된 `PR-R2c`로 이동
 - `docs/facade-inventory.md`를 추가해 wrapper / bridge / facade 상태를 분류했다.
+- `docs/facade-thinness.md`를 추가해 wrapper 허용/금지 규칙을 정리했다.
 - 다음 액션을 다음 순서로 재정렬했다.
   1. runtime/artifact 이동 후 package/compat import 정리
   2. eager import / cycle 점검
   3. runner-adjacent relocation
-  4. façade thinness rule 문서화
+  4. emit/governance boundary 정리
 
 ### 2026-04-23
 
