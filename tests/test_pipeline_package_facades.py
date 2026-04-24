@@ -2,7 +2,7 @@ from calculation_pass import CalculationPass as LegacyCalculationPass
 from emit_pass import EmitPass as LegacyEmitPass
 from governance_pass import GovernancePass as LegacyGovernancePass
 from inference_pass import InferencePass as LegacyInferencePass
-from lex_pass import LexPass as LegacyLexPass
+from lex_pass import LexPass as LegacyLexPass, LexPassConfig as LegacyLexPassConfig
 from parse_pass import ParsePass as LegacyParsePass
 from repair_pass import RepairPass as LegacyRepairPass
 from scope_resolution_pass import ScopeResolutionPass as LegacyScopeResolutionPass
@@ -24,7 +24,7 @@ from comp.pipeline.calculation import CalculationPass as PackageCalculationPass
 from comp.pipeline.emit import EmitPass as PackageEmitPass
 from comp.pipeline.governance import GovernancePass as PackageGovernancePass
 from comp.pipeline.infer import InferencePass as PackageInferencePass
-from comp.pipeline.lex import LexPass as PackageLexPass
+from comp.pipeline.lex import LexPass as PackageLexPass, LexPassConfig as PackageLexPassConfig
 from comp.pipeline.parsing import ParsePass as PackageParsePass
 from comp.pipeline.repair import RepairPass as PackageRepairPass
 from comp.pipeline.scope import ScopeResolutionPass as PackageScopeResolutionPass
@@ -46,6 +46,7 @@ def test_pipeline_package_exports_match_legacy_objects():
 
 def test_pipeline_module_facades_match_legacy_objects():
     assert PackageLexPass is LegacyLexPass
+    assert PackageLexPassConfig is LegacyLexPassConfig
     assert PackageParsePass is LegacyParsePass
     assert PackageScopeResolutionPass is LegacyScopeResolutionPass
     assert PackageInferencePass is LegacyInferencePass
