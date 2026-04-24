@@ -224,7 +224,7 @@
 ### runtime / artifacts relocation
 - `pytest -q tests/test_runtime_env_package_location.py`
 - `pytest -q tests/test_artifacts_package_location.py`
-- `pytest -q tests/test_artifact_contracts.py`
+- `pytest -q tests/test_artifact_contract.py`
 
 ### compiled path / governance safety
 - `pytest -q tests/test_default_runner_compiled_rule_path.py`
