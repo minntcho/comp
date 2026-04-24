@@ -15,15 +15,17 @@
 
 ### 현재 코드 흐름이 궁금한 경우
 1. `current-pipeline.md`
-2. `worked-example.md`
-3. `migration-plan.md`
-4. `migration-checklist.md`
+2. `emit-governance-boundary.md`
+3. `worked-example.md`
+4. `migration-plan.md`
+5. `migration-checklist.md`
 
 ### 새 설계 방향이 궁금한 경우
 1. `architecture.md`
 2. `worked-example.md`
 3. `judgment-core.md`
-4. `migration-plan.md`
+4. `emit-governance-boundary.md`
+5. `migration-plan.md`
 
 ### 판정 언어와 의미론이 궁금한 경우
 1. `worked-example.md`
@@ -40,7 +42,8 @@
 1. `worked-example.md`
 2. `execution-model.md`
 3. `views-ledger.md`
-4. `migration-plan.md`
+4. `emit-governance-boundary.md`
+5. `migration-plan.md`
 
 ### 이행 작업을 issue로 나누고 싶은 경우
 1. `migration-checklist.md`
@@ -61,6 +64,9 @@
 
 - `current-pipeline.md`
   - 현재 staged pipeline의 실제 실행 흐름과 artifact 계약 설명
+
+- `emit-governance-boundary.md`
+  - `EmitPass`를 projection boundary로, `GovernancePass`를 barrier / decision / receipt-adjacent boundary로 분리해서 설명하는 문서
 
 - `worked-example.md`
   - 작은 입력 하나를 현재 pipeline과 장기 judgment-first 관점으로 함께 따라가는 예제 문서

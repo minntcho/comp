@@ -101,6 +101,9 @@ committed frame을 대상으로 canonical row를 materialize한다.
 중요:
 - 여기서는 row를 projection처럼 다루기 시작했지만,
 - 현재 구조상 row는 여전히 `artifacts.rows`에 materialize된다.
+- merge / hold / skip 최종 결정은 여기서 하지 않고 다음 `GovernancePass`가 맡는다.
+
+즉 현재 구현에서 `EmitPass`는 **projection materialization boundary**에 가깝다.
 
 ### 8. GovernancePass
 row 단위 policy와 commit barrier를 보고 merge/hold/skip을 결정한다.
@@ -110,6 +113,10 @@ row 단위 policy와 commit barrier를 보고 merge/hold/skip을 결정한다.
 - `event_log`
 - `commit_log`
 - row status 일부 변경
+
+즉 현재 구현에서 `GovernancePass`는 **barrier / decision / receipt-adjacent boundary**에 가깝다.
+
+`EmitPass`와 `GovernancePass`의 경계는 `emit-governance-boundary.md`에서 따로 설명한다.
 
 ### 9. CalculationPass
 merge 가능한 row를 기준으로 calculation을 수행한다.
@@ -145,5 +152,6 @@ merge 가능한 row를 기준으로 calculation을 수행한다.
 - frontier 기반 candidate selection
 - commit barrier의 장기 정식 모델
 - spec/data를 같은 judgment language로 다루는 구조
+- emit projection boundary와 governance barrier boundary의 상세 구분
 
-그 내용은 `judgment-core.md`에서 다룬다.
+그 내용은 각각 `judgment-core.md`와 `emit-governance-boundary.md`에서 다룬다.
