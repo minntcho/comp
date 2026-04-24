@@ -36,6 +36,12 @@
 - [x] `AGENTS.md`에 병렬 작업용 `area:*` / `flow:*` label 축 추가
 
 #### A-track: import convergence
+- [x] **PR-A1: internal import convergence**
+  - `scope_resolution_pass.py` / `inference_pass.py` / `semantic_pass.py` / `calculation_pass.py`가 `comp.*` 경로를 우선 사용하도록 정렬
+  - relocation 이후 import를 package 중심으로 수렴
+- [x] **PR-A2: eager import / cycle 차단**
+  - `comp.__init__`에서 runner export를 lazy resolution(`__getattr__`)로 전환
+  - `import comp` 시점에 legacy runner bridge가 eager import되지 않음을 smoke test로 고정
 - [x] **PR-A3: DSL path 정합성 복구**
   - `comp.eval.compiled_expr` / `comp.eval.lex` / `comp.eval.source_module` / `comp.dsl.compiled_spec`가 `comp.dsl.*` 경로를 참조
   - 신규 package implementation은 가능한 한 `comp.*` import를 사용
@@ -77,6 +83,11 @@
   - `docs/facade-thinness.md`에 wrapper 허용 패턴 / 금지 패턴 / classification별 규칙 추가
   - wrapper가 hidden behavior를 담지 못하도록 기준 고정
 
+#### R/A bridge cleanup
+- [x] **PR-R2d: package/compat imports after runtime/artifacts move**
+  - runtime/artifacts relocation 이후 pass/runner-adjacent import를 package 경로 기준으로 정렬
+  - behavior change 없이 import 경로만 정리
+
 ---
 
 ### Bridge state
@@ -92,50 +103,33 @@
 
 ### Now (즉시)
 
-#### A-track: import convergence
-- [ ] **PR-A1: internal import convergence**
-  - 신규/수정 코드 import를 `comp.*` 중심으로 수렴
-  - legacy import 사용은 compat/bridge 문맥으로 제한
-  - top-level implementation 내부 import도 가능한 범위부터 package 경로로 전환
-
-- [ ] **PR-A2: eager import / cycle 차단**
-  - `comp.__init__` / `comp.runner` / `comp.compat.*` / legacy runner 경로의 eager import를 점검
-  - module import 단계에서 상호 재귀 경로 제거
-  - test collection 기준으로 import cycle이 없는지 확인
-
-#### R/A bridge cleanup
-- [ ] **PR-R2d: package/compat imports after runtime/artifacts move**
-  - `comp.compat.*`, `comp.eval.*`, runner-adjacent 코드의 runtime/artifact import 경로 정리
-  - behavior change 없이 import 경로만 정렬
-  - PR #52 / PR #57 이후 상태를 기준으로 진행
-
----
-
-### Next (다음)
-
-#### Architecture track (초기)
-- [ ] **PR-C1: emit/governance boundary 정리 시작**
-  - emit projection 경계와 governance barrier 경계 분리
-  - row materialization / commit decision / receipt append 책임을 문서와 코드에서 더 명확히 분리
-
----
-
-### Later (후속)
-
 #### R-track: pass implementation relocation
 - [ ] **PR-R4: relocate pass implementation modules**
   - `*_pass.py` implementation을 package-owned modules로 점진 이동
   - `comp.pipeline.*` temporary bridges를 package implementation re-export로 재분류
 
-#### Architecture track (본격)
-- [ ] **PR-D: judgment core 본류 흡수**
-  - selection/commit 일부 실행을 judgment program+engine 경로로 직접 전환
-  - adapter가 아니라 실제 실행 경로 일부를 judgment core가 담당
+#### Architecture track (초기)
+- [ ] **PR-C1b: emit/governance boundary 코드 정리**
+  - #73 docs boundary 정리 이후 코드에서 emit projection 경계와 governance barrier 경계를 명확히 분리
+  - row materialization / commit decision / receipt append 책임을 코드 경계 기준으로 더 명확히 분리
+
+---
+
+### Next (다음)
 
 #### Legacy surface 축소
 - [ ] **PR-E: legacy top-level 모듈 단계적 축소**
   - package 경로가 충분히 안정된 뒤 top-level module surface를 줄임
   - 제거 전에는 deprecation / compatibility 방침을 먼저 정리
+
+---
+
+### Later (후속)
+
+#### Architecture track (본격)
+- [ ] **PR-D: judgment core 본류 흡수**
+  - selection/commit 일부 실행을 judgment program+engine 경로로 직접 전환
+  - adapter가 아니라 실제 실행 경로 일부를 judgment core가 담당
 
 ---
 
@@ -237,6 +231,16 @@
 
 ### 2026-04-24
 
+- merge 상태 재점검 후 `Now/Next/Later` 우선순위를 갱신했다.
+- 반영한 완료 항목:
+  - `PR-A1` internal import convergence 완료 (`scope_resolution_pass.py`, `inference_pass.py`, `semantic_pass.py`, `calculation_pass.py`)
+  - `PR-A2` eager import guard 완료 (`comp.__init__` lazy export + `tests/test_package_smoke.py` 회귀 방지 테스트)
+  - `PR-R2d` runtime/artifacts 이동 후 package 경로 import 정리 완료
+- 다음 액션을 재정렬했다.
+  1. `PR-R4` pass implementation relocation
+  2. `PR-C1b` emit/governance boundary 코드 정리
+  3. `PR-E` legacy top-level surface 축소
+
 - 최근 merge 상태를 기준으로 체크리스트를 동기화했다.
 - 반영한 완료 항목:
   - `lex_eval`, `source_eval`, `rule_eval` relocation 완료
@@ -257,11 +261,6 @@
 - top-level runner files와 `comp.compat.*runner`는 package implementation wrapper로 축소했다.
 - `docs/facade-inventory.md`를 추가해 wrapper / bridge / facade 상태를 분류했다.
 - `docs/facade-thinness.md`를 추가해 wrapper 허용/금지 규칙을 정리했다.
-- 다음 액션을 다음 순서로 재정렬했다.
-  1. runtime/artifact 이동 후 package/compat import 정리
-  2. eager import / cycle 점검
-  3. emit/governance boundary 정리
-  4. pass implementation relocation
 
 ### 2026-04-23
 
