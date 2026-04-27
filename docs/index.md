@@ -59,8 +59,9 @@
 ### façade / wrapper 상태가 궁금한 경우
 1. `facade-inventory.md`
 2. `facade-thinness.md`
-3. `migration-checklist.md`
-4. `migration-plan.md`
+3. `compatibility-policy.md`
+4. `migration-checklist.md`
+5. `migration-plan.md`
 
 ## 문서 구성
 
@@ -109,6 +110,9 @@
 
 - `facade-thinness.md`
   - façade / wrapper / bridge가 허용하는 얇은 역할과 금지되는 behavior를 정리하는 규칙 문서
+
+- `compatibility-policy.md`
+  - top-level wrapper / compat wrapper의 유지, deprecation, removal gate를 정리하는 정책 문서
 
 - `design-probes/index.md`
   - 미래 아키텍처 방향을 구현 대기열이 아니라 관찰 가능한 설계 가설로 관리하는 운영 문서
