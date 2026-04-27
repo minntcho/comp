@@ -106,6 +106,10 @@
 - [x] **PR-B1: facade thinness rule 문서화**
   - `docs/facade-thinness.md`에 wrapper 허용 패턴 / 금지 패턴 / classification별 규칙 추가
   - wrapper가 hidden behavior를 담지 못하도록 기준 고정
+- [x] **PR-E0: define top-level wrapper compatibility / deprecation policy**
+  - `docs/compatibility-policy.md`에 wrapper 유지 / deprecation / removal gate 추가
+  - top-level wrapper 제거 전 필요한 parity / docs / downstream risk 조건 고정
+  - 실제 wrapper 제거는 하지 않음
 
 ---
 
@@ -128,13 +132,6 @@
   - #73 docs boundary 정리 이후 코드에서 emit projection 경계와 governance barrier 경계를 명확히 분리
   - row materialization / commit decision / receipt append 책임을 코드 경계 기준으로 더 명확히 분리
   - packaging relocation과 섞지 않는다.
-
-#### Compatibility track
-- [ ] **PR-E0: define top-level wrapper compatibility / deprecation policy**
-  - 어떤 top-level wrapper가 supported compatibility path인지 정리
-  - 어떤 wrapper가 temporary migration artifact인지 정리
-  - wrapper 제거 전 필요한 parity test / deprecation 조건 정리
-  - 실제 wrapper 제거는 하지 않는다.
 
 ---
 
@@ -203,6 +200,7 @@ Active Design Probes
 - [x] 제거 후보별 영향도(테스트/사용자 경로)를 기록했다.
 - [ ] 공개 API를 유지한 채 thin wrapper 수가 감소한다.
 - [x] compatibility wrapper와 temporary bridge wrapper가 구분된다.
+- [x] top-level wrapper 제거 전 compatibility / deprecation policy를 문서화했다.
 
 ### Architecture track
 
@@ -261,8 +259,8 @@ Active Design Probes
 
 ### DSL / IR relocation
 - `pytest -q tests/test_ast_nodes_package_location.py tests/test_spec_nodes_package_location.py`
-- `pytest -q tests/test_lex_ir_package_location.py tests/test_source_ir_package_location.py tests/test_rule_ir_package_location.py`
-- `pytest -q tests/test_compiled_spec_package_location.py`
+- `pytest -q tests/test_lex_ir_package_location.py tests/test_source_ir_package_location.py`
+- `pytest -q tests/test_rule_ir_package_location.py tests/test_compiled_spec_package_location.py`
 
 ### runtime / artifacts relocation
 - `pytest -q tests/test_runtime_env_package_location.py`
@@ -290,10 +288,10 @@ Active Design Probes
   - #80 / PR #89: `CalculationPass` package-owned implementation 전환
 - `comp.pipeline.*` pass modules는 이제 staged pipeline pass implementation을 소유한다.
 - top-level `*_pass.py` files는 compatibility wrappers로 남아 있다.
+- `docs/compatibility-policy.md`를 추가해 top-level wrapper 유지 / deprecation / removal gate를 정의했다.
 - 다음 작업 큐를 다음 순서로 재정렬했다.
   1. `PR-C1b` emit/governance boundary 코드 정리
-  2. `PR-E0` top-level wrapper compatibility / deprecation policy
-  3. `PR-E1` legacy top-level surface 축소 계획
+  2. `PR-E1` legacy top-level surface 축소 계획
 
 ### 2026-04-24
 
