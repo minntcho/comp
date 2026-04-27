@@ -1,4 +1,4 @@
-from calculation_pass import CalculationPass as LegacyCalculationPass
+from calculation_pass import CalculationPass as LegacyCalculationPass, CalculationPassConfig as LegacyCalculationPassConfig
 from emit_pass import EmitPass as LegacyEmitPass, EmitPassConfig as LegacyEmitPassConfig
 from governance_pass import GovernancePass as LegacyGovernancePass, GovernancePassConfig as LegacyGovernancePassConfig
 from inference_pass import InferencePass as LegacyInferencePass, InferencePassConfig as LegacyInferencePassConfig
@@ -20,7 +20,7 @@ from comp.pipeline import (
     SemanticPass,
     SemanticPassConfig,
 )
-from comp.pipeline.calculation import CalculationPass as PackageCalculationPass
+from comp.pipeline.calculation import CalculationPass as PackageCalculationPass, CalculationPassConfig as PackageCalculationPassConfig
 from comp.pipeline.emit import EmitPass as PackageEmitPass, EmitPassConfig as PackageEmitPassConfig
 from comp.pipeline.governance import GovernancePass as PackageGovernancePass, GovernancePassConfig as PackageGovernancePassConfig
 from comp.pipeline.infer import InferencePass as PackageInferencePass, InferencePassConfig as PackageInferencePassConfig
@@ -61,3 +61,4 @@ def test_pipeline_module_facades_match_legacy_objects():
     assert PackageGovernancePass is LegacyGovernancePass
     assert PackageGovernancePassConfig is LegacyGovernancePassConfig
     assert PackageCalculationPass is LegacyCalculationPass
+    assert PackageCalculationPassConfig is LegacyCalculationPassConfig
