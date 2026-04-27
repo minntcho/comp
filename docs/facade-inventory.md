@@ -79,7 +79,7 @@ legacy artifact shape와 target judgment vocabulary 사이를 번역하는 modul
 
 `comp.pipeline.__init__`은 current staged pipeline pass들을 공개하는 public pass facade다.
 
-현재 하위 pass module 일부는 package-owned implementation이고, 나머지는 아직 top-level legacy pass를 `importlib.import_module(...)`로 가져와 다시 내보내는 temporary migration bridge다.
+현재 하위 pass module은 package-owned implementation이다. Top-level pass files are now legacy compatibility wrappers that re-export these package implementations.
 
 | Module | Current role | Legacy target | Later action |
 |---|---|---|---|
@@ -91,9 +91,7 @@ legacy artifact shape와 target judgment vocabulary 사이를 번역하는 modul
 | `comp.pipeline.repair` | Actual implementation | top-level `repair_pass.py` wrapper points here | 유지 |
 | `comp.pipeline.emit` | Actual implementation | top-level `emit_pass.py` wrapper points here | 유지 |
 | `comp.pipeline.governance` | Actual implementation | top-level `governance_pass.py` wrapper points here | 유지 |
-| `comp.pipeline.calculation` | Temporary migration bridge | `calculation_pass` | pass implementation relocation 후 재분류 |
-
-이 계층은 아직 일부 의도적 bridge를 포함한다. `comp.pipeline.*`가 존재한다고 해서 모든 pass implementation이 package로 이동한 것은 아니다.
+| `comp.pipeline.calculation` | Actual implementation | top-level `calculation_pass.py` wrapper points here | 유지 |
 
 ---
 
@@ -153,6 +151,7 @@ legacy artifact shape와 target judgment vocabulary 사이를 번역하는 modul
 | `repair_pass.py` | Legacy compatibility wrapper | `comp.pipeline.repair` | compatibility policy 이후 제거/축소 검토 |
 | `emit_pass.py` | Legacy compatibility wrapper | `comp.pipeline.emit` | compatibility policy 이후 제거/축소 검토 |
 | `governance_pass.py` | Legacy compatibility wrapper | `comp.pipeline.governance` | compatibility policy 이후 제거/축소 검토 |
+| `calculation_pass.py` | Legacy compatibility wrapper | `comp.pipeline.calculation` | compatibility policy 이후 제거/축소 검토 |
 
 이 파일들은 더 이상 top-level implementation으로 보면 안 된다. 현재는 legacy import path 보존을 위한 wrapper다.
 
@@ -160,11 +159,7 @@ legacy artifact shape와 target judgment vocabulary 사이를 번역하는 modul
 
 ### 2.7 Remaining top-level implementations
 
-| Module family | Current role | Notes | Later action |
-|---|---|---|---|
-| `calculation_pass.py` | Legacy pass implementation | post-governance calculation pass body | R4e에서 package-owned implementation으로 이동 |
-
-이 영역은 아직 public package surface와 implementation owner가 분리되어 있다. 즉 `comp.pipeline.*`가 존재한다고 해서 모든 pass implementation까지 package로 이동한 것은 아니다.
+No staged pipeline pass implementations remain top-level-owned. The remaining top-level files are compatibility wrappers or non-pass legacy surfaces.
 
 ---
 
@@ -174,14 +169,10 @@ legacy artifact shape와 target judgment vocabulary 사이를 번역하는 modul
 
 | Candidate | Remove only after |
 |---|---|
-| remaining `comp.pipeline.*` importlib bridges | 해당 pass implementation이 package path로 이동하고 parity tests가 생긴 뒤 |
 | `comp.compat.pipeline_runner` / `compiled_pipeline_runner` wrappers | compatibility / deprecation policy가 정리된 뒤 |
 | top-level `runtime_env.py` / `artifacts.py` wrappers | compatibility / deprecation policy가 정리된 뒤 |
 | top-level `pipeline_runner.py` / `compiled_pipeline_runner.py` wrappers | compatibility / deprecation policy가 정리된 뒤 |
-| top-level `lex_pass.py` / `parse_pass.py` wrappers | compatibility / deprecation policy가 정리된 뒤 |
-| top-level `scope_resolution_pass.py` / `inference_pass.py` / `semantic_pass.py` wrappers | compatibility / deprecation policy가 정리된 뒤 |
-| top-level `repair_pass.py` wrapper | compatibility / deprecation policy가 정리된 뒤 |
-| top-level `emit_pass.py` / `governance_pass.py` wrappers | compatibility / deprecation policy가 정리된 뒤 |
+| top-level pass wrappers (`*_pass.py`) | compatibility / deprecation policy가 정리된 뒤 |
 | old top-level evaluator / DSL / IR wrappers | package path가 충분히 안정되고 downstream compatibility 방침이 정리된 뒤 |
 | `comp.compat.adapters` | judgment core가 더 많은 실행 경로를 직접 담당하고 legacy artifact translation 경계가 줄어든 뒤 |
 
@@ -195,9 +186,9 @@ legacy artifact shape와 target judgment vocabulary 사이를 번역하는 modul
 
 This should continue to be audited under A-track eager import / cycle work.
 
-### 4.2 Bridge invisibility risk
+### 4.2 Compatibility surface drift risk
 
-Some `comp.pipeline.*` modules still look like package-owned pass modules while importing top-level legacy pass implementations. This is acceptable only because the migration is explicit. Future docs and PRs should not describe those modules as completed relocations until the implementation actually moves.
+Pipeline pass implementations are package-owned, while top-level compatibility wrappers still remain. Future PRs should keep wrapper identity parity until a compatibility / deprecation policy is written.
 
 ### 4.3 Adapter thickness risk
 
@@ -218,11 +209,11 @@ Some `comp.pipeline.*` modules still look like package-owned pass modules while 
 
 ## 6. Follow-up
 
-The natural follow-up is `PR-B1: facade thinness rule 문서화`.
+The natural follow-up is compatibility / deprecation policy for top-level wrappers.
 
-That follow-up should turn this inventory into a stricter rule for:
+That follow-up should define:
 
-- what wrappers are allowed to do
-- what wrappers must not do
-- when a bridge adapter is allowed to be thicker than a re-export
-- when a wrapper becomes a removal candidate
+- which legacy wrappers remain supported import paths
+- which wrappers are temporary migration artifacts
+- when wrapper removal is allowed
+- what parity tests must exist before removal
