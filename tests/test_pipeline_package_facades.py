@@ -4,7 +4,7 @@ from governance_pass import GovernancePass as LegacyGovernancePass
 from inference_pass import InferencePass as LegacyInferencePass, InferencePassConfig as LegacyInferencePassConfig
 from lex_pass import LexPass as LegacyLexPass, LexPassConfig as LegacyLexPassConfig
 from parse_pass import ParsePass as LegacyParsePass
-from repair_pass import RepairPass as LegacyRepairPass
+from repair_pass import CandidateScore as LegacyCandidateScore, RepairPass as LegacyRepairPass, RepairPassConfig as LegacyRepairPassConfig
 from scope_resolution_pass import ScopeResolutionPass as LegacyScopeResolutionPass
 from semantic_pass import SemanticPass as LegacySemanticPass, SemanticPassConfig as LegacySemanticPassConfig
 
@@ -26,7 +26,7 @@ from comp.pipeline.governance import GovernancePass as PackageGovernancePass
 from comp.pipeline.infer import InferencePass as PackageInferencePass, InferencePassConfig as PackageInferencePassConfig
 from comp.pipeline.lex import LexPass as PackageLexPass, LexPassConfig as PackageLexPassConfig
 from comp.pipeline.parsing import ParsePass as PackageParsePass
-from comp.pipeline.repair import RepairPass as PackageRepairPass
+from comp.pipeline.repair import CandidateScore as PackageCandidateScore, RepairPass as PackageRepairPass, RepairPassConfig as PackageRepairPassConfig
 from comp.pipeline.scope import ScopeResolutionPass as PackageScopeResolutionPass
 from comp.pipeline.semantic import SemanticPass as PackageSemanticPass, SemanticPassConfig as PackageSemanticPassConfig
 
@@ -54,6 +54,8 @@ def test_pipeline_module_facades_match_legacy_objects():
     assert PackageSemanticPass is LegacySemanticPass
     assert PackageSemanticPassConfig is LegacySemanticPassConfig
     assert PackageRepairPass is LegacyRepairPass
+    assert PackageRepairPassConfig is LegacyRepairPassConfig
+    assert PackageCandidateScore is LegacyCandidateScore
     assert PackageEmitPass is LegacyEmitPass
     assert PackageGovernancePass is LegacyGovernancePass
     assert PackageCalculationPass is LegacyCalculationPass
