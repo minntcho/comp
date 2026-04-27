@@ -133,6 +133,28 @@
 
 ---
 
+## Active Design Probes
+
+이 섹션은 구현 대기열이 아니다.
+
+Design Probe는 현재 migration 작업 중 반복해서 드러나는 미래 설계 압력을 추적하는 관찰판이다. 실제 구현은 별도 architecture / implementation issue로 승격된 뒤에만 진행한다.
+
+| Probe | Status | Related migration work | Promotion trigger |
+|---|---|---|---|
+| `docs/design-probes/index.md` | lane-definition | #85 | 개별 probe issue가 생성될 때 이 표에 추가한다. |
+
+운영 기준:
+
+```text
+Migration checklist의 Now / Next / Later
+  실제 실행 작업 큐
+
+Active Design Probes
+  미래 설계 압력 관찰판
+```
+
+---
+
 ## 2) 트랙별 완료 조건 (Acceptance Criteria)
 
 ### A-track (import convergence)
@@ -228,6 +250,13 @@
 ---
 
 ## 6) 진행 로그
+
+### 2026-04-27
+
+- `docs/design-probes/` lane을 추가했다.
+- Design Probe를 구현 대기열이 아니라 미래 설계 압력 관찰판으로 정의했다.
+- 각 probe가 promotion criteria, retirement criteria, disconfirming evidence, guardrail을 갖도록 템플릿을 추가했다.
+- `Active Design Probes` 섹션을 추가해 migration checklist에서 probe 가시성을 유지하도록 했다.
 
 ### 2026-04-24
 
