@@ -27,6 +27,12 @@
 4. `emit-governance-boundary.md`
 5. `migration-plan.md`
 
+### 미래 설계 압력을 탐색하고 싶은 경우
+1. `design-probes/index.md`
+2. `design-probes/_template.md`
+3. `migration-checklist.md`
+4. `architecture.md`
+
 ### 판정 언어와 의미론이 궁금한 경우
 1. `worked-example.md`
 2. `judgment-language.md`
@@ -104,6 +110,12 @@
 - `facade-thinness.md`
   - façade / wrapper / bridge가 허용하는 얇은 역할과 금지되는 behavior를 정리하는 규칙 문서
 
+- `design-probes/index.md`
+  - 미래 아키텍처 방향을 구현 대기열이 아니라 관찰 가능한 설계 가설로 관리하는 운영 문서
+
+- `design-probes/_template.md`
+  - Design Probe 작성 템플릿. promotion / retirement criteria, disconfirming evidence, guardrail을 포함한다.
+
 - `testing.md`
   - 테스트가 무엇을 보호하는지 설명하는 문서
 
@@ -117,3 +129,4 @@
 3. bridge 상태를 숨기지 않는다.
 4. README는 바깥 설명, `docs/`는 내부 지도로 역할을 분리한다.
 5. judgment vocabulary와 formal semantics는 별도 문서에서 다루고, 현재 코드 흐름 문서와 섞지 않는다.
+6. Design Probe는 구현 대기열이 아니라 미래 설계 압력 관찰판으로 유지한다.
