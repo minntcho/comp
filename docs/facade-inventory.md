@@ -88,7 +88,7 @@ legacy artifact shape와 target judgment vocabulary 사이를 번역하는 modul
 | `comp.pipeline.scope` | Actual implementation | top-level `scope_resolution_pass.py` wrapper points here | 유지 |
 | `comp.pipeline.infer` | Actual implementation | top-level `inference_pass.py` wrapper points here | 유지 |
 | `comp.pipeline.semantic` | Actual implementation | top-level `semantic_pass.py` wrapper points here | 유지 |
-| `comp.pipeline.repair` | Temporary migration bridge | `repair_pass` | pass implementation relocation 후 재분류 |
+| `comp.pipeline.repair` | Actual implementation | top-level `repair_pass.py` wrapper points here | 유지 |
 | `comp.pipeline.emit` | Temporary migration bridge | `emit_pass` | pass implementation relocation 또는 architecture boundary cleanup 후 재분류 |
 | `comp.pipeline.governance` | Temporary migration bridge | `governance_pass` | pass implementation relocation 또는 architecture boundary cleanup 후 재분류 |
 | `comp.pipeline.calculation` | Temporary migration bridge | `calculation_pass` | pass implementation relocation 후 재분류 |
@@ -150,6 +150,7 @@ legacy artifact shape와 target judgment vocabulary 사이를 번역하는 modul
 | `scope_resolution_pass.py` | Legacy compatibility wrapper | `comp.pipeline.scope` | compatibility policy 이후 제거/축소 검토 |
 | `inference_pass.py` | Legacy compatibility wrapper | `comp.pipeline.infer` | compatibility policy 이후 제거/축소 검토 |
 | `semantic_pass.py` | Legacy compatibility wrapper | `comp.pipeline.semantic` | compatibility policy 이후 제거/축소 검토 |
+| `repair_pass.py` | Legacy compatibility wrapper | `comp.pipeline.repair` | compatibility policy 이후 제거/축소 검토 |
 
 이 파일들은 더 이상 top-level implementation으로 보면 안 된다. 현재는 legacy import path 보존을 위한 wrapper다.
 
@@ -159,7 +160,6 @@ legacy artifact shape와 target judgment vocabulary 사이를 번역하는 modul
 
 | Module family | Current role | Notes | Later action |
 |---|---|---|---|
-| `repair_pass.py` | Legacy pass implementation | selection-adjacent pass body | R4c에서 package-owned implementation으로 이동 |
 | `emit_pass.py`, `governance_pass.py` | Legacy pass implementation | publicization-adjacent pass bodies | R4d에서 package-owned implementation으로 이동 |
 | `calculation_pass.py` | Legacy pass implementation | post-governance calculation pass body | R4e에서 package-owned implementation으로 이동 |
 
@@ -179,6 +179,7 @@ legacy artifact shape와 target judgment vocabulary 사이를 번역하는 modul
 | top-level `pipeline_runner.py` / `compiled_pipeline_runner.py` wrappers | compatibility / deprecation policy가 정리된 뒤 |
 | top-level `lex_pass.py` / `parse_pass.py` wrappers | compatibility / deprecation policy가 정리된 뒤 |
 | top-level `scope_resolution_pass.py` / `inference_pass.py` / `semantic_pass.py` wrappers | compatibility / deprecation policy가 정리된 뒤 |
+| top-level `repair_pass.py` wrapper | compatibility / deprecation policy가 정리된 뒤 |
 | old top-level evaluator / DSL / IR wrappers | package path가 충분히 안정되고 downstream compatibility 방침이 정리된 뒤 |
 | `comp.compat.adapters` | judgment core가 더 많은 실행 경로를 직접 담당하고 legacy artifact translation 경계가 줄어든 뒤 |
 
