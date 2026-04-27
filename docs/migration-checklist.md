@@ -34,6 +34,7 @@
 - [x] runner / pipeline / eval / builtins façade surface 구축
 - [x] `AGENTS.md`에 issue / PR / checklist 기반 agent 운영 규칙 추가
 - [x] `AGENTS.md`에 병렬 작업용 `area:*` / `flow:*` label 축 추가
+- [x] `docs/design-probes/` lane 추가
 
 #### A-track: import convergence
 - [x] **PR-A1: internal import convergence**
@@ -69,11 +70,34 @@
   - top-level `artifacts.py`는 compatibility wrapper로 축소
   - `comp.compat.artifacts`는 package implementation을 참조
   - artifact identity / parity smoke test 추가
+- [x] **PR-R2d: package/compat imports after runtime/artifacts move**
+  - runtime/artifacts relocation 이후 pass/runner-adjacent import를 package 경로 기준으로 정렬
+  - behavior change 없이 import 경로만 정리
 - [x] **PR-R3: relocate runner-adjacent modules**
   - `comp.pipeline_runner` / `comp.compiled_pipeline_runner`가 실제 runner implementation을 소유
   - top-level `pipeline_runner.py` / `compiled_pipeline_runner.py`는 compatibility wrapper로 축소
   - `comp.compat.pipeline_runner` / `comp.compat.compiled_pipeline_runner`는 package implementation을 참조
   - runner wrapper / package parity test 갱신
+- [x] **PR-R4a: relocate lex / parse pass implementations**
+  - `comp.pipeline.lex` / `comp.pipeline.parsing`이 실제 pass implementation을 소유
+  - top-level `lex_pass.py` / `parse_pass.py`는 compatibility wrapper로 축소
+  - pipeline package / legacy parity test 갱신
+- [x] **PR-R4b: relocate scope / inference / semantic pass implementations**
+  - `comp.pipeline.scope` / `comp.pipeline.infer` / `comp.pipeline.semantic`이 실제 pass implementation을 소유
+  - top-level `scope_resolution_pass.py` / `inference_pass.py` / `semantic_pass.py`는 compatibility wrapper로 축소
+  - pipeline package / legacy parity test 갱신
+- [x] **PR-R4c: relocate repair pass implementation**
+  - `comp.pipeline.repair`가 실제 repair implementation을 소유
+  - top-level `repair_pass.py`는 compatibility wrapper로 축소
+  - selection behavior / receipt shape 변경 없음
+- [x] **PR-R4d: relocate emit / governance pass implementations**
+  - `comp.pipeline.emit` / `comp.pipeline.governance`가 실제 pass implementation을 소유
+  - top-level `emit_pass.py` / `governance_pass.py`는 compatibility wrapper로 축소
+  - row materialization / governance decision 변경 없음
+- [x] **PR-R4e: relocate calculation pass implementation**
+  - `comp.pipeline.calculation`이 실제 calculation implementation을 소유
+  - top-level `calculation_pass.py`는 compatibility wrapper로 축소
+  - factor lookup / merged-row gating behavior 변경 없음
 
 #### B-track: façade 축소 기준 수립
 - [x] **PR-B0: facade inventory / thinness audit**
@@ -83,11 +107,6 @@
   - `docs/facade-thinness.md`에 wrapper 허용 패턴 / 금지 패턴 / classification별 규칙 추가
   - wrapper가 hidden behavior를 담지 못하도록 기준 고정
 
-#### R/A bridge cleanup
-- [x] **PR-R2d: package/compat imports after runtime/artifacts move**
-  - runtime/artifacts relocation 이후 pass/runner-adjacent import를 package 경로 기준으로 정렬
-  - behavior change 없이 import 경로만 정리
-
 ---
 
 ### Bridge state
@@ -95,32 +114,36 @@
 현재 레포는 정리 완료 상태가 아니라 **의도적 bridge 단계**다.
 
 - [ ] top-level legacy 모듈이 아직 배포 표면에 남아 있다.
-- [ ] `runtime_env.py` / `artifacts.py` / `pipeline_runner.py` / `compiled_pipeline_runner.py`는 아직 top-level compatibility wrapper로 남아 있다.
-- [ ] 일부 `comp.pipeline.*` 모듈은 여전히 thin wrapper 또는 legacy bridge다.
+- [ ] `runtime_env.py` / `artifacts.py` / runner top-level files / `*_pass.py`는 아직 top-level compatibility wrapper로 남아 있다.
+- [ ] `comp.pipeline.*` pass modules는 package-owned implementation이지만, legacy import path parity를 위해 top-level wrappers가 유지된다.
+- [ ] `comp.compat.*`에는 compatibility wrapper와 bridge adapter가 함께 남아 있다.
 - [ ] `pyproject.toml`의 `py-modules`에는 legacy top-level 모듈들이 아직 포함되어 있다.
 
 ---
 
 ### Now (즉시)
 
-#### R-track: pass implementation relocation
-- [ ] **PR-R4: relocate pass implementation modules**
-  - `*_pass.py` implementation을 package-owned modules로 점진 이동
-  - `comp.pipeline.*` temporary bridges를 package implementation re-export로 재분류
-
 #### Architecture track (초기)
 - [ ] **PR-C1b: emit/governance boundary 코드 정리**
   - #73 docs boundary 정리 이후 코드에서 emit projection 경계와 governance barrier 경계를 명확히 분리
   - row materialization / commit decision / receipt append 책임을 코드 경계 기준으로 더 명확히 분리
+  - packaging relocation과 섞지 않는다.
+
+#### Compatibility track
+- [ ] **PR-E0: define top-level wrapper compatibility / deprecation policy**
+  - 어떤 top-level wrapper가 supported compatibility path인지 정리
+  - 어떤 wrapper가 temporary migration artifact인지 정리
+  - wrapper 제거 전 필요한 parity test / deprecation 조건 정리
+  - 실제 wrapper 제거는 하지 않는다.
 
 ---
 
 ### Next (다음)
 
 #### Legacy surface 축소
-- [ ] **PR-E: legacy top-level 모듈 단계적 축소**
-  - package 경로가 충분히 안정된 뒤 top-level module surface를 줄임
-  - 제거 전에는 deprecation / compatibility 방침을 먼저 정리
+- [ ] **PR-E1: legacy top-level surface 축소 계획 수립**
+  - PR-E0 이후 제거 후보별 영향도와 순서를 정리
+  - 실제 제거는 compatibility policy와 test coverage가 고정된 뒤 진행
 
 ---
 
@@ -159,20 +182,20 @@ Active Design Probes
 
 ### A-track (import convergence)
 
-- [ ] 신규/수정 코드가 `comp.*` import를 사용한다.
-- [ ] 문서 예제가 `comp.*` 기준이다.
-- [ ] import cycle이 사라져 test collection이 진행된다.
-- [ ] `ModuleNotFoundError` 경로 불일치가 해소된다.
-- [ ] legacy import는 compatibility wrapper 또는 bridge 문맥으로 제한된다.
+- [x] 신규/수정 코드가 `comp.*` import를 사용한다.
+- [x] 문서 예제가 `comp.*` 기준이다.
+- [x] import cycle이 사라져 test collection이 진행된다.
+- [x] `ModuleNotFoundError` 경로 불일치가 해소된다.
+- [x] legacy import는 compatibility wrapper 또는 bridge 문맥으로 제한된다.
 
 ### R-track (relocation)
 
-- [ ] package 쪽 파일이 실제 구현을 가진다.
-- [ ] top-level legacy 모듈은 thin wrapper만 남는다.
-- [ ] package import와 legacy import가 같은 객체를 가리킨다.
-- [ ] smoke/parity 테스트 1개 이상으로 identity를 확인한다.
-- [ ] 의미 변경은 없다.
-- [ ] relocation PR은 import convergence 또는 architecture change와 섞지 않는다.
+- [x] package 쪽 파일이 실제 구현을 가진다.
+- [x] top-level legacy 모듈은 thin wrapper만 남는다.
+- [x] package import와 legacy import가 같은 객체를 가리킨다.
+- [x] smoke/parity 테스트 1개 이상으로 identity를 확인한다.
+- [x] 의미 변경은 없다.
+- [x] relocation PR은 import convergence 또는 architecture change와 섞지 않는다.
 
 ### B-track (façade 축소)
 
@@ -212,6 +235,8 @@ Active Design Probes
 - 구조 이동 PR에서 동작 회귀가 나면 구현만 되돌리고 공개 surface는 유지한다.
 - runtime/artifacts relocation은 영향 범위가 넓으므로 작은 PR로 쪼갠다.
 - runner-adjacent relocation은 반드시 package/legacy parity 테스트를 먼저 둔다.
+- pass implementation relocation은 frontend / middle / repair / emit-governance / calculation 단위로 나눠 진행한다.
+- compatibility wrapper 제거는 deprecation policy와 parity test가 고정된 뒤에만 진행한다.
 - judgment 흡수 PR은 항상 parity 테스트와 함께 머지한다.
 
 ---
@@ -223,7 +248,7 @@ Active Design Probes
 ### 전체 smoke
 - `pytest -q`
 
-### package / runner façade
+### package / runner / pipeline façade
 - `pytest -q tests/test_package_smoke.py`
 - `pytest -q tests/test_runner_package_facades.py tests/test_pipeline_package_facades.py`
 
@@ -257,6 +282,18 @@ Active Design Probes
 - Design Probe를 구현 대기열이 아니라 미래 설계 압력 관찰판으로 정의했다.
 - 각 probe가 promotion criteria, retirement criteria, disconfirming evidence, guardrail을 갖도록 템플릿을 추가했다.
 - `Active Design Probes` 섹션을 추가해 migration checklist에서 probe 가시성을 유지하도록 했다.
+- R4 pass implementation relocation sequence를 완료했다.
+  - #76 / PR #83: `LexPass` / `ParsePass` package-owned implementation 전환
+  - #77 / PR #84: `ScopeResolutionPass` / `InferencePass` / `SemanticPass` package-owned implementation 전환
+  - #78 / PR #86: `RepairPass` package-owned implementation 전환
+  - #79 / PR #88: `EmitPass` / `GovernancePass` package-owned implementation 전환
+  - #80 / PR #89: `CalculationPass` package-owned implementation 전환
+- `comp.pipeline.*` pass modules는 이제 staged pipeline pass implementation을 소유한다.
+- top-level `*_pass.py` files는 compatibility wrappers로 남아 있다.
+- 다음 작업 큐를 다음 순서로 재정렬했다.
+  1. `PR-C1b` emit/governance boundary 코드 정리
+  2. `PR-E0` top-level wrapper compatibility / deprecation policy
+  3. `PR-E1` legacy top-level surface 축소 계획
 
 ### 2026-04-24
 
