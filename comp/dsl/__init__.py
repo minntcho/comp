@@ -1,9 +1,9 @@
 """DSL-facing package exports for ESGDL."""
 
-from comp.dsl.ast_builder import ASTBuilder
-from comp.dsl.binder import Binder, BindingError
-from comp.dsl.lowering import Lowerer
-from comp.dsl.spec_nodes import ProgramSpec
+from ast_builder import ASTBuilder
+from binder import Binder, BindingError
+from lowering import Lowerer
+from spec_nodes import ProgramSpec
 
 __all__ = [
     "ASTBuilder",

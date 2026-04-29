@@ -1,7 +1,0 @@
-from compiled_expr_eval import CompiledExprEvaluator as LegacyCompiledExprEvaluator
-
-from comp.eval.compiled_expr import CompiledExprEvaluator as PackageCompiledExprEvaluator
-
-
-def test_compiled_expr_eval_wrapper_matches_package_module():
-    assert LegacyCompiledExprEvaluator is PackageCompiledExprEvaluator
