@@ -3,9 +3,9 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any, Optional
 
-from comp.compiled_pipeline_runner import CompiledESGPipelineRunner as _PackageCompiledRunner
-from comp.pipeline_runner import (
-    ESGPipelineRunner as _PackageRunner,
+from compiled_pipeline_runner import CompiledESGPipelineRunner as _LegacyCompiledRunner
+from pipeline_runner import (
+    ESGPipelineRunner as _LegacyRunner,
     PipelineResources,
     PipelineRunResult,
     compile_program_spec,
@@ -16,7 +16,7 @@ from comp.pipeline_runner import (
 _DEFAULT_GRAMMAR_PATH = Path(__file__).resolve().parent / "dsl" / "esgdl.lark"
 
 
-class ESGPipelineRunner(_PackageRunner):
+class ESGPipelineRunner(_LegacyRunner):
     def __init__(
         self,
         *,
@@ -31,7 +31,7 @@ class ESGPipelineRunner(_PackageRunner):
         )
 
 
-class CompiledESGPipelineRunner(_PackageCompiledRunner):
+class CompiledESGPipelineRunner(_LegacyCompiledRunner):
     def __init__(
         self,
         *,

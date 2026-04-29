@@ -1,6 +1,6 @@
-"""Compatibility wrapper for compiled spec types."""
+"""Compatibility wrapper for legacy compiled spec types."""
 
-from comp.dsl.compiled_spec import (
+from compiled_spec import (
     CompiledBindAction,
     CompiledConstraintSpec,
     CompiledDiagnosticSpec,
