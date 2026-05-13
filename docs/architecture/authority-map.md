@@ -34,6 +34,41 @@ legacy event and merge logs
 
 ---
 
+## Evidence frontend boundary
+
+Evidence frontends may generate candidates, spans, parse derivations, token hypotheses, and provenance hints.
+
+They do not own selection authority.
+
+For example, the ambiguity-preserving Lark frontend design treats Lark as a candidate generator:
+
+```text
+raw fragment
+→ ambiguous parse forest
+→ ClaimCandidate facts
+```
+
+The frontend must not decide truth.
+
+```text
+Lark preserves ambiguity.
+Judgment resolves ambiguity.
+Receipt proves the resolution.
+Projection renders it.
+```
+
+Therefore, evidence frontend output must still pass through the authoritative layers:
+
+```text
+ClaimCandidate facts
+→ Judgment Kernel
+→ Governance Decision
+→ Receipt Ledger
+→ Projection
+```
+
+---
+
 ## Ownership rules
 
 Evidence answers:
