@@ -36,9 +36,12 @@ Read these first:
 ```text
 docs/architecture/authority-map.md
 docs/architecture/kill-list.md
+docs/architecture/ambiguity-preserving-lark-frontend.md
 ```
 
 These documents define what may own authority in the rebuild branch.
+
+The Lark frontend document is a design proposal for preserving raw-fragment ambiguity as evidence candidates. It does not make parsing, Lark, or generated grammars the source of truth.
 
 ---
 
