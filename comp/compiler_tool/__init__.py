@@ -12,6 +12,7 @@ from comp.compiler_tool.models import (
     UnknownClaim,
     UncheckedArea,
 )
+from comp.compiler_tool.to_judgment import compile_report_to_facts
 from comp.compiler_tool.tool import CompilerTool
 
 __all__ = [
@@ -26,4 +27,5 @@ __all__ = [
     "ProofObligation",
     "UnknownClaim",
     "UncheckedArea",
+    "compile_report_to_facts",
 ]
