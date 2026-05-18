@@ -12,5 +12,6 @@ requires-python = ">=3.11"
 [tool.setuptools]
 packages = [
   "comp",
+  "comp.compiler_tool",
   "comp.judgment",
 ]
