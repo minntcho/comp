@@ -1,0 +1,37 @@
+{
+  "frames": [
+    {
+      "parser_name": "LineParser",
+      "frame_type": "ActivityObservation",
+      "status": "committed",
+      "diagnostic_codes": [
+        "error:RequireViolation"
+      ]
+    }
+  ],
+  "rows": [
+    {
+      "frame_type": "ActivityObservation",
+      "status": "committed",
+      "site_id": "SITE-SEOUL",
+      "activity_type": "electricity",
+      "period": null,
+      "warning_codes": [],
+      "error_codes": [
+        "RequireViolation"
+      ]
+    }
+  ],
+  "merge_log": [
+    {
+      "action": "hold",
+      "from_status": "committed",
+      "to_status": "committed",
+      "reason_codes": [
+        "RequireViolation",
+        "row_has_error_diagnostics"
+      ]
+    }
+  ],
+  "calculations": []
+}

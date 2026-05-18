@@ -1,0 +1,188 @@
+start: program
+
+program: statement*
+
+?statement: module_decl
+          | import_decl
+          | dimension_decl
+          | unit_decl
+          | activity_decl
+          | scope_decl
+          | context_decl
+          | frame_decl
+          | token_decl
+          | fallback_token_decl
+          | parser_decl
+          | inherit_rule
+          | infer_rule
+          | require_rule
+          | forbid_rule
+          | diagnostic_rule
+          | resolver_decl
+          | governance_decl
+
+module_decl: "module" qname                         -> module_decl
+import_decl: "import" qname                         -> import_decl
+
+dimension_decl: "dimension" IDENT                   -> dimension_decl
+
+unit_decl: "unit" IDENT ":" IDENT normalize_clause? -> unit_decl
+normalize_clause: "normalize" "(" IDENT "," NORM_OP NUMBER ")" -> normalize_clause
+
+activity_decl: "activity" IDENT ":" IDENT "->" IDENT -> activity_decl
+
+scope_decl: "scope" scope_chain                     -> scope_decl
+scope_chain: IDENT (">" IDENT)+
+
+context_decl: "context" IDENT "{" context_stmt* "}" -> context_decl
+?context_stmt: precedence_stmt
+             | refine_stmt
+             | ttl_stmt
+             | supports_stmt
+
+precedence_stmt: "precedence" precedence_chain      -> precedence_stmt
+precedence_chain: IDENT (">" IDENT)+
+
+refine_stmt: "refine" IDENT "over" IDENT            -> refine_stmt
+
+ttl_stmt: "ttl" ttl_chain                           -> ttl_stmt
+ttl_chain: IDENT ("|" IDENT)+
+
+supports_stmt: "supports" supports_chain            -> supports_stmt
+supports_chain: IDENT ("," IDENT)*
+
+frame_decl: "frame" IDENT "{" field_decl* "}"       -> frame_decl
+field_decl: IDENT ":" type_ref optional_marker?     -> field_decl
+optional_marker: "?"
+type_ref: IDENT generic_arg?                        -> type_ref
+generic_arg: "<" IDENT ">"
+
+token_decl: "token" IDENT ":=" token_expr           -> token_decl
+fallback_token_decl: "fallback" "token" IDENT ":=" token_expr -> fallback_token_decl
+
+token_expr: source_expr
+
+parser_decl: "parser" IDENT "on" selector_chain "{" parser_stmt* "}" -> parser_decl
+selector_chain: IDENT ("|" IDENT)*
+
+?parser_stmt: build_stmt
+            | bind_stmt
+            | parser_inherit_stmt
+            | tag_stmt
+
+build_stmt: "build" IDENT                           -> build_stmt
+bind_stmt: "bind" IDENT optional_marker? "from" source_expr -> bind_stmt
+parser_inherit_stmt: "inherit" IDENT "from" source_expr ("when" bool_expr)? -> parser_inherit_stmt
+tag_stmt: "tag" IDENT "from" source_expr            -> tag_stmt
+
+inherit_rule: "inherit" IDENT "from" source_expr "when" bool_expr -> inherit_rule
+
+infer_rule: "infer" IDENT INFER_OP expr infer_weight? "when" bool_expr -> infer_rule
+infer_weight: "weight" NUMBER
+
+require_rule: "require" bool_expr                   -> require_rule
+forbid_rule: "forbid" bool_expr ("for" "frame" IDENT)? -> forbid_rule
+
+diagnostic_rule: DIAG_LEVEL IDENT "when" bool_expr -> diagnostic_rule
+
+resolver_decl: "resolver" IDENT "{" resolver_stmt* "}" -> resolver_decl
+?resolver_stmt: assign_stmt
+              | candidate_pool_block
+              | commit_stmt
+              | review_stmt
+              | reject_stmt
+
+assign_stmt: IDENT "=" expr                         -> assign_stmt
+
+candidate_pool_block: "candidate_pool" "{" assign_stmt* "}" -> candidate_pool_block
+
+commit_stmt: "commit" "when" bool_expr             -> commit_stmt
+review_stmt: "review" "when" bool_expr             -> review_stmt
+reject_stmt: "reject" "otherwise"                  -> reject_stmt
+
+governance_decl: "governance" IDENT "{" governance_stmt* "}" -> governance_decl
+?governance_stmt: emit_stmt
+                | merge_stmt
+                | forbid_merge_stmt
+
+emit_stmt: "emit" "row" "when" bool_expr           -> emit_stmt
+merge_stmt: "merge" "when" bool_expr               -> merge_stmt
+forbid_merge_stmt: "forbid" "merge" "when" bool_expr -> forbid_merge_stmt
+
+
+// -----------------------------
+// Expressions
+// -----------------------------
+
+?source_expr: source_atom ("|" source_atom)*        -> source_expr
+
+?source_atom: function_call
+            | column_ref
+            | context_ref
+            | row_label_ref
+            | qname
+            | literal
+
+?expr: function_call
+     | column_ref
+     | context_ref
+     | row_label_ref
+     | set_literal
+     | qname
+     | literal
+
+?bool_expr: bool_or
+
+?bool_or: bool_or "or" bool_and                     -> bool_or
+        | bool_and
+
+?bool_and: bool_and "and" bool_not                  -> bool_and
+         | bool_not
+
+?bool_not: "not" bool_not                           -> bool_not
+         | comparison
+         | predicate
+         | "(" bool_expr ")"                        -> grouped_bool
+
+?comparison: expr COMP_OP expr                      -> comparison
+           | expr "in" set_literal                  -> in_expr
+           | expr "matches" expr                    -> matches_expr
+
+?predicate: function_call                           -> bool_call
+          | qname                                   -> bool_ref
+
+function_call: qname "(" [arg_list] ")"            -> function_call
+arg_list: expr ("," expr)*
+
+set_literal: "{" [expr ("," expr)*] "}"            -> set_literal
+
+column_ref: "column" "(" STRING ")"                -> column_ref
+context_ref: "context" "." IDENT                   -> context_ref
+row_label_ref: "row_label" "(" STRING ")"          -> row_label_ref
+
+qname: IDENT ("." IDENT)*                          -> qname
+
+literal: STRING                                    -> string_lit
+       | NUMBER                                    -> number_lit
+       | BOOL                                      -> bool_lit
+
+
+// -----------------------------
+// Tokens
+// -----------------------------
+
+BOOL: "true" | "false"
+COMP_OP: "==" | "!=" | ">=" | "<=" | ">" | "<"
+NORM_OP: "*" | "/" | "+" | "-"
+INFER_OP: "=" | "~"
+DIAG_LEVEL: "error" | "warning"
+
+IDENT: /[A-Za-z_][A-Za-z0-9_]*/
+NUMBER: /-?[0-9]+(\.[0-9]+)?/
+
+%import common.ESCAPED_STRING -> STRING
+%import common.WS
+
+%ignore WS
+%ignore /\/\/[^\n]*/
+%ignore /\#[^\n]*/
