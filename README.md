@@ -36,9 +36,10 @@ Read these first:
 ```text
 docs/architecture/authority-map.md
 docs/architecture/kill-list.md
+docs/architecture/llm-orchestrated-compiler-tool-loop.md
 ```
 
-These documents define what may own authority in the rebuild branch.
+These documents define what may own authority in the rebuild branch, and how LLM-driven interpretation loops should treat the compiler as an obligation-producing tool rather than a public truth authority.
 
 ---
 
