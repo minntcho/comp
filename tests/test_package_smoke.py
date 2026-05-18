@@ -70,7 +70,7 @@ def test_top_level_package_no_longer_exports_legacy_runner_surface():
     assert not hasattr(comp, "PipelineRunResult")
 
 
-def test_pyproject_only_packages_active_surface():
+def test_pyproject_packages_comp_core_and_agent_layer():
     pyproject = tomllib.loads(Path("pyproject.toml").read_text())
 
     setuptools_config = pyproject["tool"]["setuptools"]
@@ -78,8 +78,12 @@ def test_pyproject_only_packages_active_surface():
         "comp",
         "comp.compiler_tool",
         "comp.judgment",
+        "minchoagnt",
     ]
     assert "py-modules" not in setuptools_config
+
+    scripts = pyproject["project"].get("scripts", {})
+    assert scripts["minchoagnt"] == "minchoagnt.cli:main"
 
     dependencies = pyproject["project"].get("dependencies", [])
     assert not any(dependency.startswith("lark") for dependency in dependencies)
@@ -88,3 +92,12 @@ def test_pyproject_only_packages_active_surface():
 def test_legacy_pipeline_sources_are_not_active_files():
     assert not [path for path in LEGACY_ACTIVE_PATHS if Path(path).exists()]
     assert "comp.runner" not in (comp.__doc__ or "")
+
+
+def test_comp_core_does_not_import_agent_layer():
+    comp_sources = Path("comp").rglob("*.py")
+    assert not [
+        path
+        for path in comp_sources
+        if "minchoagnt" in path.read_text(encoding="utf-8")
+    ]
