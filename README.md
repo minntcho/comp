@@ -53,13 +53,8 @@ from comp import Fact, JudgmentState, SubjectRef
 from comp import SelectionReceipt, CommitReceipt
 ```
 
-Legacy pipeline runners remain importable from `comp.runner` while they are kept for compatibility, but they are no longer the active top-level contract.
-
-```python
-from comp.runner import ESGPipelineRunner
-```
-
-This compatibility surface is an archive candidate, not the rebuild target.
+Legacy pipeline runners, pass-pipeline modules, and compatibility facades are
+kept as archive reference material, not active package source.
 
 ---
 
