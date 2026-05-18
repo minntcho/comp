@@ -74,7 +74,11 @@ def test_pyproject_only_packages_active_surface():
     pyproject = tomllib.loads(Path("pyproject.toml").read_text())
 
     setuptools_config = pyproject["tool"]["setuptools"]
-    assert setuptools_config["packages"] == ["comp", "comp.judgment"]
+    assert setuptools_config["packages"] == [
+        "comp",
+        "comp.compiler_tool",
+        "comp.judgment",
+    ]
     assert "py-modules" not in setuptools_config
 
     dependencies = pyproject["project"].get("dependencies", [])
