@@ -1,13 +1,25 @@
-from comp import CompiledESGPipelineRunner, ESGPipelineRunner
-from comp.compat.artifacts import CompileArtifacts
-from comp.compat.compiled_spec import CompiledProgramSpec
-from comp.pipeline import LexPass, ParsePass
+import comp
+from comp import (
+    CommitReceipt,
+    Fact,
+    FixpointEngine,
+    JudgmentState,
+    SelectionReceipt,
+    SubjectRef,
+)
 
 
-def test_package_smoke_imports():
-    assert ESGPipelineRunner is not None
-    assert CompiledESGPipelineRunner is not None
-    assert CompileArtifacts is not None
-    assert CompiledProgramSpec is not None
-    assert LexPass is not None
-    assert ParsePass is not None
+def test_top_level_package_exposes_active_judgment_surface():
+    assert Fact is not None
+    assert JudgmentState is not None
+    assert SubjectRef is not None
+    assert FixpointEngine is not None
+    assert SelectionReceipt is not None
+    assert CommitReceipt is not None
+
+
+def test_top_level_package_no_longer_exports_legacy_runner_surface():
+    assert not hasattr(comp, "ESGPipelineRunner")
+    assert not hasattr(comp, "CompiledESGPipelineRunner")
+    assert not hasattr(comp, "PipelineResources")
+    assert not hasattr(comp, "PipelineRunResult")

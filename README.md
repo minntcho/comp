@@ -37,9 +37,29 @@ Read these first:
 docs/architecture/authority-map.md
 docs/architecture/kill-list.md
 docs/architecture/llm-orchestrated-compiler-tool-loop.md
+docs/architecture/active-surface-cutover.md
 ```
 
-These documents define what may own authority in the rebuild branch, and how LLM-driven interpretation loops should treat the compiler as an obligation-producing tool rather than a public truth authority.
+These documents define what may own authority in the rebuild branch, how LLM-driven interpretation loops should treat the compiler as an obligation-producing tool rather than a public truth authority, and which package surface is active during the cutover.
+
+---
+
+## Active package surface
+
+The top-level `comp` package intentionally exposes the judgment-core surface only.
+
+```python
+from comp import Fact, JudgmentState, SubjectRef
+from comp import SelectionReceipt, CommitReceipt
+```
+
+Legacy pipeline runners remain importable from `comp.runner` while they are kept for compatibility, but they are no longer the active top-level contract.
+
+```python
+from comp.runner import ESGPipelineRunner
+```
+
+This compatibility surface is an archive candidate, not the rebuild target.
 
 ---
 
