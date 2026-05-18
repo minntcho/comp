@@ -1,0 +1,43 @@
+{
+  "frames": [
+    {
+      "parser_name": "LineParser",
+      "frame_type": "ActivityObservation",
+      "status": "committed",
+      "diagnostic_codes": [
+        "warning:AggregateRow"
+      ]
+    }
+  ],
+  "rows": [
+    {
+      "frame_type": "ActivityObservation",
+      "status": "merged",
+      "site_id": "SITE-SEOUL",
+      "activity_type": "electricity",
+      "period": "2025-03",
+      "warning_codes": [
+        "AggregateRow"
+      ],
+      "error_codes": []
+    }
+  ],
+  "merge_log": [
+    {
+      "action": "merge",
+      "from_status": "committed",
+      "to_status": "merged",
+      "reason_codes": [
+        "merge_condition_satisfied"
+      ]
+    }
+  ],
+  "calculations": [
+    {
+      "calculation_status": "excluded",
+      "exclusion_reason": "aggregate_row_excluded",
+      "activity_type": "electricity",
+      "co2e_kg": null
+    }
+  ]
+}

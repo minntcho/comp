@@ -85,6 +85,25 @@ lex/source stage semantics tied to the legacy pass pipeline
 
 ---
 
+## Archive Layout
+
+The copied legacy surface is split by purpose:
+
+```text
+modules/
+  root-level legacy Python modules
+dsl/
+  legacy ESGDL grammar
+package_surfaces/
+  compatibility wrappers and legacy package entrypoints as reference material
+reference_tests/
+  legacy-oriented tests renamed to .py.txt so active pytest does not collect
+reference_tests/golden/
+  legacy golden output snapshots
+```
+
+---
+
 ## Test Collection Policy
 
 Archived tests must not be collected by active pytest runs.
@@ -114,4 +133,3 @@ change runtime behavior
 implement CompilerTool
 create public projection
 ```
-
