@@ -13,6 +13,10 @@ from comp.compiler_tool.models import (
     UnknownClaim,
 )
 from comp.compiler_tool.tool import CompilerTool
+from comp.compiler_tool.judgment_adapter import (
+    add_compile_report_facts,
+    compile_report_to_facts,
+)
 
 __all__ = [
     "InterpretationHypothesis",
@@ -26,4 +30,6 @@ __all__ = [
     "ProofObligation",
     "Hazard",
     "CompilerTool",
+    "compile_report_to_facts",
+    "add_compile_report_facts",
 ]

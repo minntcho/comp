@@ -92,5 +92,6 @@ class CompileReport:
     unknowns: tuple[UnknownClaim, ...] = field(default_factory=tuple)
     unchecked_areas: tuple[UncheckedArea, ...] = field(default_factory=tuple)
     obligations: tuple[ProofObligation, ...] = field(default_factory=tuple)
+    resolved_obligations: tuple[ProofObligation, ...] = field(default_factory=tuple)
     hazards: tuple[Hazard, ...] = field(default_factory=tuple)
     can_project_public_row: bool = False
