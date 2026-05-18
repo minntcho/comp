@@ -1,21 +1,62 @@
-"""Top-level package entrypoint for the experimental comp package."""
+"""Active package surface for the comp rebuild branch.
 
-from comp.runner import (
-    ESGPipelineRunner,
-    CompiledESGPipelineRunner,
-    PipelineResources,
-    PipelineRunResult,
-    compile_program_spec,
-    load_compiled_program_spec_from_dsl,
-    load_program_spec_from_dsl,
+The top-level package intentionally exposes the judgment-core surface only.
+Legacy pipeline runners remain importable from ``comp.runner`` while they are
+kept for compatibility, but they are no longer the active top-level contract.
+"""
+
+from comp.judgment import (
+    BundleSpec,
+    CandidateSummary,
+    CommitReceipt,
+    CommitSpec,
+    CompiledJudgmentProgram,
+    DraftSnapshot,
+    Fact,
+    FactTag,
+    FixpointEngine,
+    JudgmentState,
+    ProjectionSpec,
+    SelectionReceipt,
+    SubjectKind,
+    SubjectRef,
+    TransferEmitter,
+    TransferRule,
+    blocking_hazards_clear,
+    committable,
+    dominates,
+    frontier,
+    needs_review,
+    project_public_row,
+    prov_enough,
+    resolved_required_bundles,
+    winner_or_none,
 )
 
 __all__ = [
-    "ESGPipelineRunner",
-    "CompiledESGPipelineRunner",
-    "PipelineResources",
-    "PipelineRunResult",
-    "compile_program_spec",
-    "load_program_spec_from_dsl",
-    "load_compiled_program_spec_from_dsl",
+    "SubjectKind",
+    "FactTag",
+    "SubjectRef",
+    "Fact",
+    "JudgmentState",
+    "TransferEmitter",
+    "TransferRule",
+    "BundleSpec",
+    "CommitSpec",
+    "ProjectionSpec",
+    "CompiledJudgmentProgram",
+    "FixpointEngine",
+    "CandidateSummary",
+    "dominates",
+    "frontier",
+    "winner_or_none",
+    "needs_review",
+    "DraftSnapshot",
+    "resolved_required_bundles",
+    "blocking_hazards_clear",
+    "prov_enough",
+    "committable",
+    "project_public_row",
+    "SelectionReceipt",
+    "CommitReceipt",
 ]
