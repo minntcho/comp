@@ -14,4 +14,8 @@ packages = [
   "comp",
   "comp.compiler_tool",
   "comp.judgment",
+  "minchoagnt",
 ]
+
+[project.scripts]
+minchoagnt = "minchoagnt.cli:main"
