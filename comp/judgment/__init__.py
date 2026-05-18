@@ -2,6 +2,7 @@
 
 from comp.judgment.commit import (
     DraftSnapshot,
+    ProjectionBlocked,
     blocking_hazards_clear,
     committable,
     project_public_row,
@@ -46,6 +47,7 @@ __all__ = [
     "winner_or_none",
     "needs_review",
     "DraftSnapshot",
+    "ProjectionBlocked",
     "resolved_required_bundles",
     "blocking_hazards_clear",
     "prov_enough",
