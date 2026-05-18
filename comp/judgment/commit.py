@@ -4,6 +4,7 @@ from dataclasses import dataclass, field
 from typing import Any, Mapping
 
 from comp.judgment.program import CommitSpec, ProjectionSpec
+from comp.judgment.receipts import CommitReceipt
 
 
 @dataclass(frozen=True, slots=True)
@@ -13,6 +14,10 @@ class DraftSnapshot:
     active_hazards: frozenset[str] = frozenset()
     fresh: bool = True
     provenance_edges: int = 0
+
+
+class ProjectionBlocked(RuntimeError):
+    """Raised when public projection lacks receipt authority."""
 
 
 def resolved_required_bundles(snapshot: DraftSnapshot, required_bundles: tuple[str, ...]) -> bool:
@@ -36,12 +41,20 @@ def committable(snapshot: DraftSnapshot, spec: CommitSpec) -> bool:
     )
 
 
-def project_public_row(field_values: Mapping[str, Any], projection: ProjectionSpec) -> dict[str, Any]:
+def project_public_row(
+    field_values: Mapping[str, Any],
+    projection: ProjectionSpec,
+    *,
+    receipt: CommitReceipt | None = None,
+) -> dict[str, Any]:
+    if receipt is None:
+        raise ProjectionBlocked("Public projection requires a CommitReceipt.")
     return {field: field_values.get(field) for field in projection.output_fields}
 
 
 __all__ = [
     "DraftSnapshot",
+    "ProjectionBlocked",
     "resolved_required_bundles",
     "blocking_hazards_clear",
     "prov_enough",
