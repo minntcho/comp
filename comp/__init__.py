@@ -1,8 +1,8 @@
 """Active package surface for the comp rebuild branch.
 
 The top-level package intentionally exposes the judgment-core surface only.
-Legacy pipeline runners remain importable from ``comp.runner`` while they are
-kept for compatibility, but they are no longer the active top-level contract.
+The legacy pass pipeline is archived under ``legacy/archive`` and is no longer
+part of the active package surface.
 """
 
 from comp.judgment import (

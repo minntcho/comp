@@ -155,13 +155,13 @@ from comp import Fact, JudgmentState, SubjectRef
 from comp.judgment import SelectionReceipt, CommitReceipt
 ```
 
-legacy runner가 필요한 과거 테스트나 archive reference에서는 명시적으로 legacy path를 사용한다.
+legacy runner가 필요한 과거 테스트나 archive reference에서는 archive copy를 사용한다.
 
-```python
-from comp.runner import ESGPipelineRunner
+```text
+legacy/archive/pipeline_legacy_20260518
 ```
 
-다만 `comp.runner` 자체도 장기 active API가 아니다. 이후 PR에서 legacy archive로 이동하거나 compatibility-only surface로 낮춘다.
+`comp.runner` 자체도 장기 active API가 아니므로 active package에서 제거한다.
 
 ---
 
