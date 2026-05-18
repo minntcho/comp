@@ -85,6 +85,31 @@ lex/source stage semantics tied to the legacy pass pipeline
 
 ---
 
+## Current Snapshot Layout
+
+The PR3 archive copy keeps original active files in place and adds this
+reference snapshot:
+
+```text
+dsl/
+modules/
+package_surfaces/
+reference_tests/
+```
+
+`modules/` contains the top-level legacy pipeline implementation and supporting
+DSL compiler/runtime modules.
+
+`dsl/` contains the root legacy grammar snapshot.
+
+`package_surfaces/` contains compatibility package facades that preserve legacy
+runner, DSL, evaluator, builtin, compat, and pass-export surfaces.
+
+`reference_tests/` contains legacy-oriented tests and fixtures as reference
+material, not active test authority.
+
+---
+
 ## Test Collection Policy
 
 Archived tests must not be collected by active pytest runs.
@@ -102,12 +127,11 @@ Do not let archived tests define the active pass/fail status of the rebuild.
 
 ---
 
-## Non-Goals For This Declaration
+## Non-Goals For This Archive Snapshot
 
-This declaration does not:
+This archive snapshot does not:
 
 ```text
-move legacy files
 delete active files
 change pyproject packaging
 change runtime behavior
