@@ -325,8 +325,8 @@ receipt authority exists.
 
 ### Phase A: Docs
 
-Add this document and keep it independent from concurrent README or
-authority-map PRs.
+Add this document and keep it independent from concurrent README or architecture
+policy PRs.
 
 ### Phase B: Agent-Side Comp Adapter
 
