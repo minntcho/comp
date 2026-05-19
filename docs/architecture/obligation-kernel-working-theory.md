@@ -412,7 +412,318 @@ Extractors must not create checked, selected, committed, or projected states.
 
 ---
 
-## 11. Scenario Cases
+## 11. Reference-Grounded Calculation
+
+LLM numeric scoring is unsafe.
+
+The system should not ask an LLM to decide:
+
+```text
+which emission factor is correct
+whether a calculated value is reasonable
+whether a disclosure deserves an 87/100 score
+whether a vector-search top result is the true concept
+```
+
+Numeric evaluation should be reference-grounded:
+
+```text
+embedding = candidate retrieval
+reference DB = canonical definitions
+deterministic selector = reference binding
+calculator = derived claim generation
+quality score = coverage metadata, not truth authority
+```
+
+This is not plain RAG. It is a reference-grounded calculation pipeline.
+
+### Reference Flow
+
+The intended flow is:
+
+```text
+Source evidence
+-> extractor / LLM / Lark / table parser
+-> ClaimHypothesis
+-> reference resolver
+   - embedding search
+   - alias search
+   - taxonomy lookup
+   - factor candidate retrieval
+-> ReferenceCandidateSet
+-> deterministic filter
+   - unit compatible?
+   - period compatible?
+   - geography compatible?
+   - method compatible?
+   - source priority acceptable?
+-> ReferenceBinding
+-> calculator
+   - unit conversion
+   - factor application
+   - uncertainty metadata
+   - calculation trace
+-> DerivedClaim
+-> validator
+-> governance
+-> receipt
+-> projection
+```
+
+Embedding and alias search widen the candidate set. They do not select the
+canonical reference by themselves.
+
+### Reference DB
+
+The reference DB is domain authority, not the vector index.
+
+Minimum reference DB families:
+
+```text
+TaxonomyConcept
+  concept_id
+  labels
+  aliases
+  description
+  parent / child relationships
+  applicable claim types
+
+MetricDefinition
+  metric_id
+  required fields
+  allowed units
+  calculation formula
+  required evidence
+
+UnitDefinition
+  unit_id
+  dimension
+  conversion rules
+
+EmissionFactor
+  factor_id
+  activity / concept id
+  geography
+  valid period
+  method
+  unit basis
+  source priority
+  uncertainty metadata
+  source row witness
+
+Formula
+  formula_id
+  input requirements
+  unit conversion requirements
+  output unit
+
+Rubric
+  rubric_id
+  question template
+  acceptable verdicts
+  allowed judge candidates
+
+ProjectionSpec
+  projection_id
+  output fields
+  required receipt authority
+```
+
+Vector indexes may cover:
+
+```text
+labels
+aliases
+descriptions
+examples
+standard references
+factor source descriptions
+```
+
+Canonical authority is the reference row id, not vector similarity.
+
+### Reference Candidates
+
+Retrieval output should remain candidate-only:
+
+```python
+@dataclass(frozen=True)
+class ReferenceCandidate:
+    candidate_id: str
+    reference_id: str
+    reference_type: str
+    retrieval_method: str
+    retrieval_score: float | None = None
+    authority: str = "candidate_only"
+```
+
+`retrieval_score` is a ranking hint. It is not a truth score.
+
+The system must not use embedding top-1 as a selected factor, concept, unit, or
+metric definition.
+
+### Reference Binding
+
+Reference binding is the point where candidates become usable inputs.
+
+A binding should record the deterministic compatibility checks that selected one
+canonical reference and rejected the others:
+
+```text
+ReferenceBinding:
+  binding_id
+  claim_id
+  concept_id
+  reference_id
+  reference_type
+  unit_id
+  method
+  period
+  geography
+  source_witness_ids
+  compatibility_checks
+  rejected_candidates
+```
+
+Example:
+
+```text
+ReferenceBinding:
+  claim_id: electricity_amount_123
+  concept_id: taxonomy.electricity_consumption
+  factor_id: emission_factor.kr_grid_2024
+  unit_id: kWh
+  method: location_based
+  period: 2024-01
+  geography: KR
+  source_witnesses:
+    - span_amount
+    - span_unit
+    - span_period
+    - factor_table_row
+  rejected_candidates:
+    - supplier_specific_factor_missing_supplier_id
+    - residual_mix_factor_method_mismatch
+```
+
+If binding cannot be completed deterministically, the validator should open an
+obligation instead of guessing:
+
+```text
+method unknown
+-> SemanticJudgmentObligation or ContextObligation
+
+factor period missing
+-> ContextObligation
+
+factor rule family missing
+-> RuleCoverageObligation / UncheckedArea
+
+candidate factors conflict
+-> ConflictResolutionObligation
+```
+
+### Derived Claims
+
+Calculator output is not public output. It is a derived claim.
+
+Example:
+
+```text
+1200 kWh * 0.0004 tCO2e/kWh = 0.48 tCO2e
+```
+
+Architecture shape:
+
+```text
+DerivedClaim:
+  claim_type: co2e_emission
+  value: 0.48
+  unit: tCO2e
+  input_claim_ids:
+    - activity_amount_claim
+  reference_binding_ids:
+    - unit_binding
+    - emission_factor_binding
+  formula_id: electricity_factor_multiplication_v1
+  calculation_trace:
+    - convert unit if needed
+    - multiply by factor
+  provenance:
+    - amount span
+    - unit span
+    - factor row
+```
+
+The validator should then check:
+
+```text
+Are input claims checked?
+Are reference bindings accepted?
+Is the formula allowed by the active profile?
+Is unit conversion valid?
+Is the calculation trace complete?
+Are there open blocking obligations?
+```
+
+Only governance and receipt authority can make a derived claim projectable.
+
+### Evidence Quality
+
+The system may produce an evidence quality report, but it should start as a
+vector of coverage states, not a single truth-looking scalar.
+
+Example:
+
+```text
+EvidenceQuality:
+  source_witness: present
+  unit_witness: missing
+  period_resolved: present
+  geography_resolved: present
+  method_resolved: ambiguous
+  factor_bound: blocked
+  calculation_trace: unavailable
+  conflicts: none
+  open_obligations:
+    - find_source_witness(unit)
+    - semantic_judgment_required(scope2_method)
+```
+
+If a scalar score is later needed, it must be a deterministic summary of the
+coverage vector. It is a quality indicator, not publication authority.
+
+Blocking gates override scores:
+
+```text
+score 95 but no CommitReceipt
+-> projection blocked
+
+score 95 but unresolved SemanticJudgmentObligation
+-> projection blocked
+
+score 95 but factor binding rejected
+-> projection blocked
+```
+
+### Calculation Invariants
+
+These invariants belong with the core / profile boundary:
+
+```text
+Embedding top-1 cannot bind a reference.
+LLM cannot assign evidence quality authority.
+Retrieval score cannot select a factor.
+ReferenceBinding requires deterministic compatibility checks or open obligations.
+Calculator output is a DerivedClaim, not public output.
+DerivedClaim requires formula_id and calculation trace.
+Quality score cannot override open obligations, failed checks, or missing receipt.
+CommitReceipt should cite input claim ids, reference binding ids, formula ids, trace ids, and evidence span ids.
+```
+
+---
+
+## 12. Scenario Cases
 
 ### Missing Source Witness
 
@@ -492,9 +803,64 @@ Expected trace:
   -> domain pack / profile version
 ```
 
+### Reference Candidate Retrieval
+
+```text
+Source:
+  "Purchased electricity 1,200 kWh Seoul office Jan 2024"
+
+Expected:
+  Embedding retrieves concept and factor candidates.
+  Candidates remain candidate_only.
+  Deterministic filter must bind concept, unit, period, geography, method, and factor before calculation.
+```
+
+### Factor Binding
+
+```text
+Candidate:
+  amount = 1200 kWh
+  geography = KR
+  period = 2024-01
+  method is unknown
+
+Expected:
+  KR grid location-based factor may be a candidate.
+  Supplier-specific or residual mix factors may also be candidates.
+  Binding is blocked until method or source priority is resolved.
+  Validator opens a ContextObligation or SemanticJudgmentObligation.
+```
+
+### Derived Claim
+
+```text
+Candidate:
+  electricity amount claim is checked
+  emission factor binding is accepted
+  formula is active in profile
+
+Expected:
+  Calculator creates DerivedClaim for emissions.
+  DerivedClaim contains formula id, input claim ids, binding ids, and calculation trace.
+  DerivedClaim still requires validator / governance / receipt before projection.
+```
+
+### Evidence Quality Score
+
+```text
+Candidate:
+  source witness, period, and geography are present
+  unit witness is missing
+
+Expected:
+  EvidenceQuality vector reports missing unit witness.
+  Any scalar quality score remains advisory.
+  Publication remains blocked.
+```
+
 ---
 
-## 12. Next PR Scope
+## 13. Next PR Scope
 
 Recommended next PR:
 
@@ -558,9 +924,25 @@ Validate submitted judgments against obligation_id, rubric_id, verdict, judge po
 Keep ESG specifics in test fixtures or a tiny domain fixture, not core.
 ```
 
+The reference-grounded calculation work should come after the semantic
+obligation slice unless a smaller document-only PR is needed first:
+
+```text
+PR10 candidate: ReferenceBinding / DerivedClaim Working Slice
+```
+
+Candidate scope:
+
+```text
+Add generic ReferenceCandidate / ReferenceBinding / DerivedClaim model envelopes.
+Keep reference DB specifics in a tiny domain fixture.
+Show that retrieval scores do not bind references.
+Show that calculator output remains a derived claim until receipt.
+```
+
 ---
 
-## 13. Open Questions
+## 14. Open Questions
 
 These are intentionally unresolved:
 
@@ -573,15 +955,21 @@ How are rubric version migrations handled?
 What belongs in GovernanceDecision versus CommitReceipt?
 How much of DomainPack should be serializable?
 Should DSL compile to DomainPack only, or also to CompilerProfile candidates?
+Should ReferenceCandidate / ReferenceBinding / DerivedClaim live in core or compiler_tool?
+Should reference DB rows be part of DomainPack, external resources, or both?
+How should reference DB versions and vector index versions be pinned in CompilerProfile?
+How should evidence quality vectors map to scalar UI indicators without becoming authority?
 ```
 
 ---
 
-## 14. Revision Log
+## 15. Revision Log
 
 ```text
 2026-05-19:
   Initial working theory.
   Reframes compiler as an obligation / receipt kernel rather than an ESG-specific compiler.
   Sets the next implementation slice as semantic judgment obligations before broader governance work.
+  Adds reference-grounded calculation direction:
+    embedding retrieves candidates, deterministic binding selects references, calculator emits derived claims, and quality scores remain advisory.
 ```
