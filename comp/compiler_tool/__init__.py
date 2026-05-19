@@ -14,6 +14,16 @@ from comp.compiler_tool.models import (
     UncheckedArea,
     UnknownClaim,
 )
+from comp.compiler_tool.profiles import (
+    CompilerProfile,
+    DomainPack,
+    JudgePolicy,
+    ProfileValidationError,
+    RuleFamily,
+    SemanticRubric,
+    active_rule_families,
+    validate_compiler_profile,
+)
 from comp.compiler_tool.semantic import apply_semantic_judgments
 from comp.compiler_tool.tool import CompilerTool
 from comp.compiler_tool.judgment_adapter import (
@@ -34,6 +44,14 @@ __all__ = [
     "SemanticJudgmentRequirement",
     "SemanticJudgment",
     "Hazard",
+    "RuleFamily",
+    "SemanticRubric",
+    "JudgePolicy",
+    "DomainPack",
+    "CompilerProfile",
+    "ProfileValidationError",
+    "validate_compiler_profile",
+    "active_rule_families",
     "CompilerTool",
     "apply_semantic_judgments",
     "compile_report_to_facts",
