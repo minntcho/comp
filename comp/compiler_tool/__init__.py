@@ -75,6 +75,11 @@ from comp.compiler_tool.report_status import (
     recompute_report_status,
     with_recomputed_status,
 )
+from comp.compiler_tool.resolver_tasks import (
+    ResolverTask,
+    resolver_task_from_obligation,
+    resolver_tasks_from_report,
+)
 from comp.compiler_tool.semantic import apply_semantic_judgments
 from comp.compiler_tool.tool import CompilerTool
 from comp.compiler_tool.judgment_adapter import (
@@ -133,6 +138,9 @@ __all__ = [
     "select_reference_binding",
     "recompute_report_status",
     "with_recomputed_status",
+    "ResolverTask",
+    "resolver_task_from_obligation",
+    "resolver_tasks_from_report",
     "RuleFamily",
     "SemanticRubric",
     "JudgePolicy",
