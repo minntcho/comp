@@ -11,6 +11,7 @@ from comp.compiler_tool.calculations import (
     calculate_derived_claim,
 )
 from comp.compiler_tool.calculation_report import apply_calculation_result
+from comp.compiler_tool.calculation_resolution import plan_calculation_resolution
 from comp.compiler_tool.models import (
     CheckedClaim,
     ClaimHypothesis,
@@ -80,6 +81,7 @@ __all__ = [
     "DerivedClaim",
     "calculate_derived_claim",
     "apply_calculation_result",
+    "plan_calculation_resolution",
     "ReferenceCandidate",
     "RejectedReferenceCandidate",
     "ReferenceBinding",
