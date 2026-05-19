@@ -35,6 +35,11 @@ from comp.compiler_tool.reference_db import (
     ReferenceLookupError,
     ReferenceRecord,
 )
+from comp.compiler_tool.reference_selector import (
+    ReferenceSelectionCriteria,
+    ReferenceSelectionResult,
+    select_reference_binding,
+)
 from comp.compiler_tool.references import (
     ReferenceBinding,
     ReferenceCandidate,
@@ -69,6 +74,9 @@ __all__ = [
     "ReferenceLookupError",
     "ReferenceRecord",
     "ReferenceCatalog",
+    "ReferenceSelectionCriteria",
+    "ReferenceSelectionResult",
+    "select_reference_binding",
     "RuleFamily",
     "SemanticRubric",
     "JudgePolicy",
