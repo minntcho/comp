@@ -51,6 +51,10 @@ calculation
   CalculationTrace
   DerivedClaim
 
+resolver tasks
+  ProofObligation -> ResolverTask
+  resolver-facing task type, required artifact, and payload
+
 governance / commit
   CommitPackage
   GovernanceDecision
