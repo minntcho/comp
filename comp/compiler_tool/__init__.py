@@ -30,6 +30,11 @@ from comp.compiler_tool.profiles import (
     validate_compiler_profile,
 )
 from comp.compiler_tool.profile_runner import compile_with_profile
+from comp.compiler_tool.reference_db import (
+    ReferenceCatalog,
+    ReferenceLookupError,
+    ReferenceRecord,
+)
 from comp.compiler_tool.references import (
     ReferenceBinding,
     ReferenceCandidate,
@@ -61,6 +66,9 @@ __all__ = [
     "ReferenceCandidate",
     "RejectedReferenceCandidate",
     "ReferenceBinding",
+    "ReferenceLookupError",
+    "ReferenceRecord",
+    "ReferenceCatalog",
     "RuleFamily",
     "SemanticRubric",
     "JudgePolicy",
