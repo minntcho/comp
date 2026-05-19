@@ -123,7 +123,10 @@ def test_calculation_requirement_metadata_is_visible_to_judgment_facts():
         tag="hazard_open",
         subject=SubjectRef("claim", "hyp-1"),
         key="proof_obligation:co2e_emission",
-        value="proof_obligation:calculation_blocked:co2e_emission:unit_mismatch",
+        value=(
+            "calculation:ghg.electricity_factor_multiplication.v1:"
+            "hyp-1:co2e_emission:unit_mismatch"
+        ),
         meta=(
             ("kind", "calculation_blocked"),
             ("reason", "unit_mismatch"),

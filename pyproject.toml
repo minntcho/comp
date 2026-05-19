@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "comp"
 version = "0.1.0a0"
-description = "Experimental ESG evidence compiler driven by ESGDL"
+description = "Receipt-gated proof package compiler for obligation, reference, calculation, and commit workflows"
 readme = "README.md"
 requires-python = ">=3.11"
 

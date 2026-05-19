@@ -279,7 +279,7 @@ def _obligation_fact(
         tag=tag,
         subject=subject,
         key=f"proof_obligation:{obligation.field}",
-        value=_obligation_id(obligation.kind, obligation.field, obligation.reason),
+        value=_obligation_id(obligation),
         meta=tuple(meta),
     )
 
@@ -296,8 +296,15 @@ def _unchecked_area_id(field: str, reason: str) -> str:
     return _stable_id("unchecked_area", field, reason)
 
 
-def _obligation_id(kind: str, field: str, reason: str) -> str:
-    return _stable_id("proof_obligation", kind, field, reason)
+def _obligation_id(obligation: ProofObligation) -> str:
+    if obligation.obligation_id is not None:
+        return obligation.obligation_id
+    return _stable_id(
+        "proof_obligation",
+        obligation.kind,
+        obligation.field,
+        obligation.reason,
+    )
 
 
 def _hazard_id(kind: str, field: str, severity: str) -> str:

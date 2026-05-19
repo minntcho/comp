@@ -1,116 +1,97 @@
 # comp
 
-`comp` is a rebuild branch for an evidence-preserving compiler.
+`comp` is a receipt-gated proof package compiler.
 
-This branch starts from the PR #14 judgment-core point. It does not continue the later package migration as the active direction.
+The active direction is no longer a domain-specific DSL-first compiler or a row generator.
+The core work is to preserve evidence, expose obligations, bind references,
+calculate derived claims, and only publish through receipt authority.
 
-The goal is to decide authority first, then move code.
-
----
-
-## Core claim
-
-`comp` is not primarily a row generator.
-
-It is a compiler that should explain whether a public output is justified.
-
-The intended flow is:
+## Current Flow
 
 ```text
-raw fragment
-→ evidence / claim
-→ judgment
-→ governance decision
-→ receipt
-→ public projection
+candidate / obligation / judgment / reference / calculation
+-> CommitPackage
+-> GovernanceDecision
+-> CommitReceipt
+-> Judgment Facts
+-> receipt-gated projection
 ```
 
-The table is not the source of truth. The judgment trail and receipt are the source of truth.
+Important authority boundaries:
 
----
+```text
+DerivedClaim != public output
+CommitPackage != public authority
+GovernanceDecision != public authority
+CommitReceipt == projection gate
+```
 
-## Active policy
+## Active Package Surface
+
+The top-level `comp` package exposes the judgment-core surface:
+
+```python
+from comp import Fact, JudgmentState, SubjectRef
+from comp import SelectionReceipt, CommitReceipt
+from comp import ProjectionSpec, project_public_row
+```
+
+The compiler-tool surface exposes the current deterministic kernel:
+
+```python
+from comp.compiler_tool import CompilerTool, CompileReport
+from comp.compiler_tool import prepare_commit, build_commit_receipt
+from comp.compiler_tool import compile_report_to_facts
+```
+
+Legacy pipeline runners, pass-pipeline modules, and compatibility facades are
+archive reference material, not active package source.
+
+## Compiler Tool Layers
+
+`comp.compiler_tool` is intentionally layered:
+
+```text
+semantic
+  semantic judgment obligations and submitted judgment validation
+
+reference
+  reference candidates, deterministic selection, and canonical bindings
+
+calculation
+  calculation requirements, calculation traces, and derived claims
+
+governance / commit
+  CommitPackage, GovernanceDecision, CommitReceipt builder, CommitPreparation
+
+judgment facts
+  adapters that publish compiler reports and commit preparation artifacts into
+  JudgmentState as evidence, hazards, discharges, and provenance edges
+```
+
+Extractors such as Lark are candidate producers. They should produce evidence
+and claim hypotheses for the compiler tool; they should not mint checked claims,
+commit receipts, or public projections.
+
+## Active Policy
 
 Read these first:
 
 ```text
 docs/architecture/authority-map.md
 docs/architecture/kill-list.md
+docs/architecture/obligation-kernel-working-theory.md
 docs/architecture/llm-orchestrated-compiler-tool-loop.md
-docs/architecture/active-surface-cutover.md
+docs/architecture/memory-assisted-compiler-loop.md
 ```
 
-These documents define what may own authority in the rebuild branch, how LLM-driven interpretation loops should treat the compiler as an obligation-producing tool rather than a public truth authority, and which package surface is active during the cutover.
+These documents define the authority boundaries, the obligation/receipt kernel,
+and how LLM or agent loops should interact with compiler diagnostics without
+becoming public truth authority.
 
----
+## Rebuild Rule
 
-## Active package surface
-
-The top-level `comp` package intentionally exposes the judgment-core surface only.
-
-```python
-from comp import Fact, JudgmentState, SubjectRef
-from comp import SelectionReceipt, CommitReceipt
-```
-
-Legacy pipeline runners, pass-pipeline modules, and compatibility facades are
-kept as archive reference material, not active package source.
-
----
-
-## Authoritative concepts
-
-Long-term authority belongs to:
-
-```text
-Evidence-backed Judgment
-Governance Decision
-Receipt Ledger
-```
-
-Derived outputs include:
-
-```text
-Public row
-CSV / JSON output
-DataFrame view
-Report-facing projection
-```
-
-Legacy transport includes:
-
-```text
-CompileArtifacts
-frame runtime metadata
-row status fields
-pipeline pass metadata
-legacy event and merge logs
-```
-
-Legacy transport may remain for compatibility, but it should not become the long-term source of truth.
-
----
-
-## What this branch is not
-
-This branch is not a continuation of relocation-first migration.
-
-It does not treat these as architecture success criteria:
-
-```text
-moving files into package paths
-making legacy and package imports point to the same object
-preserving behavior before deciding whether the behavior should survive
-keeping wrappers without an explicit reason
-```
-
-Those can be useful migration tools, but they are not the target architecture.
-
----
-
-## Rebuild rule
-
-Before moving a module, answer:
+Before moving or expanding a module, answer:
 
 ```text
 What authority does this module own today?
@@ -118,85 +99,4 @@ Should that authority stay here long term?
 If not, which layer should own it?
 ```
 
-If the answer is unclear, architecture correction comes before relocation.
-
----
-
-## Layer ownership
-
-Evidence answers:
-
-```text
-Where did this value come from?
-What source, claim, provenance, or conflict is attached?
-```
-
-Judgment answers:
-
-```text
-Which candidate is selected?
-Why was it selected?
-What derivation or justification exists?
-```
-
-Governance answers:
-
-```text
-Can this judgment be made public?
-Is the decision hold, commit, or reject?
-What receipt explains the decision?
-```
-
-Projection answers:
-
-```text
-How is a committed decision represented externally?
-```
-
-Runner/app code assembles these layers and may handle legacy adapters.
-
----
-
-## Preserved migration state
-
-The later migration state is preserved separately at:
-
-```text
-legacy/current-migration-state-20260429
-```
-
-Historical migration documents are reference material. They are not active policy for this rebuild branch.
-
-See:
-
-```text
-docs/archive/2026-migration/README.md
-```
-
----
-
-## Current status
-
-This branch is an architecture reset point.
-
-Current intent:
-
-```text
-1. keep the PR #14 judgment-core baseline
-2. define authority ownership
-3. prevent legacy transport from becoming the new source of truth
-4. build a small vertical slice before continuing relocation
-```
-
-Next useful slice:
-
-```text
-fragment
-→ claim
-→ judgment
-→ governance decision
-→ receipt
-→ projected row
-```
-
-That slice should work before broad migration continues.
+Architecture correction comes before broad relocation.

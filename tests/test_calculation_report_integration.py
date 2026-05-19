@@ -155,7 +155,10 @@ def test_calculation_obligation_maps_to_judgment_fact():
         tag="hazard_open",
         subject=subject,
         key="proof_obligation:co2e_emission",
-        value="proof_obligation:calculation_blocked:co2e_emission:unit_mismatch",
+        value=(
+            "calculation:ghg.electricity_factor_multiplication.v1:"
+            "hyp-1:co2e_emission:unit_mismatch"
+        ),
         meta=(
             ("kind", "calculation_blocked"),
             ("reason", "unit_mismatch"),
