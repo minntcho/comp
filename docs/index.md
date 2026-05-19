@@ -69,6 +69,10 @@ judgment facts
 Extractor work, including Lark, belongs before the compiler tool. Extractors
 produce evidence and claim hypotheses; they do not authorize projection.
 
+Agent work, including `minchoagnt`, belongs outside the compiler core. Agents may
+consume `ResolverTask` items and submit resolver artifacts such as semantic
+judgments or reference queries, but they do not mint commit receipts.
+
 ## Historical Reference
 
 Later migration documents are preserved outside the active surface at:
