@@ -47,6 +47,35 @@ def compile_report_to_facts(report: CompileReport, subject: SubjectRef) -> set[F
             )
         )
 
+    for binding in report.reference_bindings:
+        facts.add(
+            Fact(
+                tag="prov_edge",
+                subject=subject,
+                key=f"reference_binding:{binding.binding_id}",
+                value=binding.reference_id,
+                witness=binding.selected_candidate_id,
+                weight=1.0,
+                meta=(
+                    ("authority", binding.authority),
+                    ("binding_id", binding.binding_id),
+                    ("claim_id", binding.claim_id),
+                    ("reference_type", binding.reference_type),
+                    (
+                        "rejected_candidates",
+                        tuple(
+                            (candidate.candidate_id, candidate.reason)
+                            for candidate in binding.rejected_candidates
+                        ),
+                    ),
+                    ("report_section", "reference_binding"),
+                    ("report_status", report.status),
+                    ("selector_rule_id", binding.selector_rule_id),
+                    ("source_witness_ids", binding.source_witness_ids),
+                ),
+            )
+        )
+
     for claim in report.failed_claims:
         facts.add(
             Fact(
