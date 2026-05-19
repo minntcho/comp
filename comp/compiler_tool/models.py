@@ -71,10 +71,37 @@ class UncheckedArea:
 
 
 @dataclass(frozen=True)
+class SemanticJudgmentRequirement:
+    question: str
+    claim_id: str
+    evidence_span_ids: tuple[str, ...] = field(default_factory=tuple)
+    rubric_id: str = ""
+    acceptable_verdicts: tuple[str, ...] = field(default_factory=tuple)
+    required_verdict: str = "supports"
+    allowed_judges: tuple[str, ...] = field(default_factory=tuple)
+
+
+@dataclass(frozen=True)
 class ProofObligation:
     kind: str
     field: str
     reason: str
+    obligation_id: str | None = None
+    claim_id: str | None = None
+    blocking: bool = True
+    semantic_requirement: SemanticJudgmentRequirement | None = None
+
+
+@dataclass(frozen=True)
+class SemanticJudgment:
+    judgment_id: str
+    obligation_id: str
+    verdict: str
+    rubric_id: str
+    judge: str
+    cited_span_ids: tuple[str, ...]
+    rationale: str
+    confidence: float | None = None
 
 
 @dataclass(frozen=True)
