@@ -13,8 +13,7 @@ legacy/current-migration-state-20260429
 Active rebuild policy starts from:
 
 ```text
-docs/architecture/authority-map.md
-docs/architecture/kill-list.md
+docs/index.md
 ```
 
 Rule:

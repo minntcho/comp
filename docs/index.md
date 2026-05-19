@@ -22,12 +22,10 @@ The compiler does not create public truth directly. Public projection requires a
 
 Read these first:
 
-1. `architecture/authority-map.md`
-2. `architecture/kill-list.md`
-3. `architecture/retrieval-fabric-north-star.md`
-4. `architecture/obligation-kernel-working-theory.md`
-5. `architecture/llm-orchestrated-compiler-tool-loop.md`
-6. `architecture/memory-assisted-compiler-loop.md`
+1. `architecture/retrieval-fabric-north-star.md`
+2. `architecture/obligation-kernel-working-theory.md`
+3. `architecture/llm-orchestrated-compiler-tool-loop.md`
+4. `architecture/memory-assisted-compiler-loop.md`
 
 `architecture/retrieval-fabric-north-star.md` is the long-term direction for
 retrieval, embedding, LLM artifact resolution, typed reference authority, and

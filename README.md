@@ -1,12 +1,13 @@
 # comp
 
-`comp` is a receipt-gated proof package compiler.
+`comp`는 receipt-gated proof package compiler다.
 
-The active direction is no longer a domain-specific DSL-first compiler or a row generator.
-The core work is to preserve evidence, expose obligations, bind references,
-calculate derived claims, and only publish through receipt authority.
+현재 방향은 ESG 전용 DSL 컴파일러도, row generator도 아니다. 핵심은
+evidence를 보존하고, obligation을 드러내고, reference를 canonical하게
+bind하고, 계산 결과를 traceable claim으로 만들고, 마지막 공개는 receipt
+authority를 통해서만 허가하는 것이다.
 
-## Current Flow
+## 현재 흐름
 
 ```text
 candidate / obligation / judgment / reference / calculation
@@ -17,18 +18,33 @@ candidate / obligation / judgment / reference / calculation
 -> receipt-gated projection
 ```
 
-Important authority boundaries:
+중요한 권한 경계:
 
 ```text
+ReferenceCandidate != ReferenceBinding
 DerivedClaim != public output
 CommitPackage != public authority
 GovernanceDecision != public authority
 CommitReceipt == projection gate
 ```
 
-## Active Package Surface
+embedding과 LLM도 같은 원칙을 따른다.
 
-The top-level `comp` package exposes the judgment-core surface:
+```text
+Embedding = recall fabric
+LLM = resolver artifact proposer
+Compiler = artifact / binding gate
+DB = typed canonical reference authority
+Receipt = public projection authority
+```
+
+즉 embedding은 후보를 찾고, LLM은 obligation 해결용 artifact를 제출한다.
+그 artifact가 실제로 obligation을 discharge하는지는 compiler gate가
+판단한다.
+
+## 활성 패키지 표면
+
+top-level `comp` 패키지는 judgment-core surface를 노출한다.
 
 ```python
 from comp import Fact, JudgmentState, SubjectRef
@@ -36,67 +52,97 @@ from comp import SelectionReceipt, CommitReceipt
 from comp import ProjectionSpec, project_public_row
 ```
 
-The compiler-tool surface exposes the current deterministic kernel:
+`comp.compiler_tool`은 현재 deterministic publication kernel surface를
+노출한다.
 
 ```python
 from comp.compiler_tool import CompilerTool, CompileReport
+from comp.compiler_tool import resolver_tasks_from_report
 from comp.compiler_tool import prepare_commit, build_commit_receipt
 from comp.compiler_tool import compile_report_to_facts
 ```
 
-Legacy pipeline runners, pass-pipeline modules, and compatibility facades are
-archive reference material, not active package source.
+legacy pipeline runner, pass-pipeline module, compatibility facade는 active
+package source가 아니다. 필요하면 archive reference material로만 취급한다.
 
-## Compiler Tool Layers
+## Compiler Tool 레이어
 
-`comp.compiler_tool` is intentionally layered:
+`comp.compiler_tool`은 의도적으로 레이어를 나눈다.
 
 ```text
 semantic
-  semantic judgment obligations and submitted judgment validation
+  semantic judgment obligation
+  submitted SemanticJudgment protocol validation
 
 reference
-  reference candidates, deterministic selection, and canonical bindings
+  ReferenceCandidate
+  deterministic selection
+  canonical ReferenceBinding
 
 calculation
-  calculation requirements, calculation traces, and derived claims
+  CalculationRequirement
+  CalculationTrace
+  DerivedClaim
+
+resolver tasks
+  ProofObligation -> ResolverTask
+  resolver-facing task type, required artifact, payload
 
 governance / commit
-  CommitPackage, GovernanceDecision, CommitReceipt builder, CommitPreparation
+  CommitPackage
+  GovernanceDecision
+  CommitReceipt builder
+  CommitPreparation
 
 judgment facts
-  adapters that publish compiler reports and commit preparation artifacts into
-  JudgmentState as evidence, hazards, discharges, and provenance edges
+  CompileReport -> Fact
+  CommitPreparation -> Fact
 ```
 
-Extractors such as Lark are candidate producers. They should produce evidence
-and claim hypotheses for the compiler tool; they should not mint checked claims,
-commit receipts, or public projections.
+extractor, Lark, table parser, LLM hypothesis generator는 compiler 앞단의
+candidate producer다. 이들은 checked claim, commit receipt, public
+projection을 직접 만들면 안 된다.
 
-## Active Policy
+`minchoagnt` 같은 agent layer는 compiler core 바깥에 있다. agent는
+`ResolverTask`를 읽고 semantic judgment, reference query 같은 resolver
+artifact를 제출할 수 있지만, commit receipt를 만들 권한은 없다.
 
-Read these first:
+## 문서 읽는 순서
+
+현재 active architecture 문서는 여기서 시작한다.
 
 ```text
-docs/architecture/authority-map.md
-docs/architecture/kill-list.md
+docs/index.md
+docs/architecture/retrieval-fabric-north-star.md
 docs/architecture/obligation-kernel-working-theory.md
 docs/architecture/llm-orchestrated-compiler-tool-loop.md
 docs/architecture/memory-assisted-compiler-loop.md
 ```
 
-These documents define the authority boundaries, the obligation/receipt kernel,
-and how LLM or agent loops should interact with compiler diagnostics without
-becoming public truth authority.
-
-## Rebuild Rule
-
-Before moving or expanding a module, answer:
+역할은 대략 이렇다.
 
 ```text
-What authority does this module own today?
-Should that authority stay here long term?
-If not, which layer should own it?
+retrieval-fabric-north-star
+  embedding / retrieval / LLM resolver / reference DB의 장기 방향을 고정한다.
+
+obligation-kernel-working-theory
+  현재 구현 slice의 세부 working theory를 담는다.
+
+llm-orchestrated-compiler-tool-loop
+  LLM이 compiler diagnostic과 obligation을 어떻게 다루는지 설명한다.
+
+memory-assisted-compiler-loop
+  minchoagnt memory / skill loop가 obligation resolution을 어떻게 보조하는지 설명한다.
 ```
 
-Architecture correction comes before broad relocation.
+## 재구축 규칙
+
+module을 옮기거나 키우기 전에 먼저 답해야 한다.
+
+```text
+이 module은 지금 어떤 authority를 갖고 있는가?
+그 authority가 장기적으로 여기 있어야 하는가?
+아니라면 어느 layer가 가져야 하는가?
+```
+
+답이 흐리면 relocation보다 architecture correction이 먼저다.

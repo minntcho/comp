@@ -158,7 +158,7 @@ Non-goals:
 ```text
 No code changes.
 No README edits.
-No authority-map edits.
+No architecture policy edits.
 No package export changes.
 No legacy file moves or copies.
 No test migration.
@@ -386,7 +386,7 @@ Known concurrent PR handling:
 If PR #108 is open, treat it as PR1-in-progress and do not duplicate it.
 If PR #106 is open, keep Lark frontend content out of PR0-PR7 unless it is
 explicitly merged, updated, or superseded.
-Avoid editing the same README or authority-map sections across concurrent PRs
+Avoid editing the same README or architecture policy sections across concurrent PRs
 unless the PR explicitly reconciles them.
 ```
 

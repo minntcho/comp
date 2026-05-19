@@ -134,7 +134,7 @@ legacy event_log / merge_log 중심 tests
 
 이들은 바로 삭제하지 않는다. 하지만 장기 authority boundary로 승격하지 않는다.
 
-이 판단은 `docs/architecture/kill-list.md`의 다음 항목들과 연결된다.
+이 판단은 현재 active architecture 문서의 legacy authority 경계와 연결된다.
 
 ```text
 row.status as commit truth
