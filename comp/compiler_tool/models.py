@@ -3,6 +3,8 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Any, Literal
 
+from comp.compiler_tool.references import ReferenceBinding, ReferenceCandidate
+
 CompileStatus = Literal[
     "accepted",
     "blocked",
@@ -121,4 +123,6 @@ class CompileReport:
     obligations: tuple[ProofObligation, ...] = field(default_factory=tuple)
     resolved_obligations: tuple[ProofObligation, ...] = field(default_factory=tuple)
     hazards: tuple[Hazard, ...] = field(default_factory=tuple)
+    reference_candidates: tuple[ReferenceCandidate, ...] = field(default_factory=tuple)
+    reference_bindings: tuple[ReferenceBinding, ...] = field(default_factory=tuple)
     can_project_public_row: bool = False
