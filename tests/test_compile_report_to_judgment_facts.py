@@ -174,6 +174,56 @@ def test_resolved_obligations_discharge_matching_hazard_ids():
     )
 
 
+def test_obligation_facts_preserve_explicit_obligation_ids():
+    subject = SubjectRef("claim", "hyp-1")
+    report = CompileReport(
+        status="review_required",
+        obligations=(
+            ProofObligation(
+                kind="semantic_judgment_required",
+                field="scope2_method",
+                reason="support_required",
+                obligation_id="obl-custom-open",
+            ),
+        ),
+        resolved_obligations=(
+            ProofObligation(
+                kind="find_source_witness",
+                field="unit",
+                reason="unsupported_unit",
+                obligation_id="obl-custom-resolved",
+            ),
+        ),
+    )
+
+    facts = compile_report_to_facts(report, subject)
+
+    assert Fact(
+        tag="hazard_open",
+        subject=subject,
+        key="proof_obligation:scope2_method",
+        value="obl-custom-open",
+        meta=(
+            ("kind", "semantic_judgment_required"),
+            ("reason", "support_required"),
+            ("report_section", "proof_obligation"),
+            ("report_status", "review_required"),
+        ),
+    ) in facts
+    assert Fact(
+        tag="hazard_discharge",
+        subject=subject,
+        key="proof_obligation:unit",
+        value="obl-custom-resolved",
+        meta=(
+            ("kind", "find_source_witness"),
+            ("reason", "unsupported_unit"),
+            ("report_section", "resolved_obligation"),
+            ("report_status", "review_required"),
+        ),
+    ) in facts
+
+
 def test_add_compile_report_facts_is_append_only_and_idempotent():
     subject = SubjectRef("claim", "hyp-1")
     report = CompileReport(

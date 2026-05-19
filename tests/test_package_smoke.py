@@ -73,6 +73,11 @@ def test_top_level_package_no_longer_exports_legacy_runner_surface():
 def test_pyproject_packages_comp_core_and_agent_layer():
     pyproject = tomllib.loads(Path("pyproject.toml").read_text())
 
+    assert pyproject["project"]["description"] == (
+        "Receipt-gated proof package compiler for obligation, reference, "
+        "calculation, and commit workflows"
+    )
+
     setuptools_config = pyproject["tool"]["setuptools"]
     assert setuptools_config["packages"] == [
         "comp",
