@@ -25,3 +25,37 @@ expected receipt/projection
 The first scenario is `tiny_pcf`, a product-carbon-footprint slice that exercises
 reference search, near-miss rejection, canonical binding, calculation trace,
 commit preparation, and receipt-gated projection.
+
+## Testing Philosophy
+
+Domain scenario tests should lock authority boundaries, not implementation shape.
+They are pressure tests for the compiler contract, not golden snapshots of a
+final LCA, DPP, UI, or reference database schema.
+
+Strong assertions are encouraged for core invariants:
+
+```text
+ReferenceCandidate remains candidate_only
+retrieval_score never authorizes truth
+ReferenceBinding is required for calculation authority
+DerivedClaim cannot authorize public projection
+CommitReceipt is required for projection
+open obligations prevent receipt issuance
+receipt traces binding, formula, calculation, and derived-claim evidence
+```
+
+Weak assertions are preferred for surfaces that are still exploratory:
+
+```text
+exact viewer JSON shape
+resolver function names
+file or module layout
+fixture factor values as real-world PCF truth
+final LCA/DPP domain-pack schema
+UI viewer layout
+the exact function where profile-aware gating is enforced
+```
+
+Scenario payloads should stay stable enough for a viewer to explain the run, but
+tests should avoid asserting one huge exported JSON blob. Prefer targeted checks
+that prove the authority boundary and traceability story still hold.
