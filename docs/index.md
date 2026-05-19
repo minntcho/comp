@@ -11,6 +11,12 @@ Start here:
 
 These documents decide ownership before relocation.
 
+## Working theories
+
+These documents describe current design hypotheses. They are not final policy.
+
+1. `architecture/obligation-kernel-working-theory.md`
+
 ## Historical reference
 
 Later migration documents are preserved outside this branch at:
