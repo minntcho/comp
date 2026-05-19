@@ -46,6 +46,7 @@ from comp.compiler_tool.reference_resolution import (
     ReferenceSearchQuery,
     resolve_reference_search_obligations,
 )
+from comp.compiler_tool.reference_selection_report import apply_reference_selection
 from comp.compiler_tool.reference_selector import (
     ReferenceSelectionCriteria,
     ReferenceSelectionResult,
@@ -94,6 +95,7 @@ __all__ = [
     "ReferenceCatalog",
     "ReferenceSearchQuery",
     "resolve_reference_search_obligations",
+    "apply_reference_selection",
     "ReferenceSelectionCriteria",
     "ReferenceSelectionResult",
     "select_reference_binding",
