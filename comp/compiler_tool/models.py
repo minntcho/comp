@@ -3,6 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Any, Literal
 
+from comp.compiler_tool.calculations import DerivedClaim
 from comp.compiler_tool.references import ReferenceBinding, ReferenceCandidate
 
 CompileStatus = Literal[
@@ -125,4 +126,5 @@ class CompileReport:
     hazards: tuple[Hazard, ...] = field(default_factory=tuple)
     reference_candidates: tuple[ReferenceCandidate, ...] = field(default_factory=tuple)
     reference_bindings: tuple[ReferenceBinding, ...] = field(default_factory=tuple)
+    derived_claims: tuple[DerivedClaim, ...] = field(default_factory=tuple)
     can_project_public_row: bool = False

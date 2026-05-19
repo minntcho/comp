@@ -1,5 +1,10 @@
 """Deterministic compiler-tool contract surface."""
 
+from comp.compiler_tool.calculations import (
+    CalculationStep,
+    CalculationTrace,
+    DerivedClaim,
+)
 from comp.compiler_tool.models import (
     CheckedClaim,
     ClaimHypothesis,
@@ -50,6 +55,9 @@ __all__ = [
     "SemanticJudgmentRequirement",
     "SemanticJudgment",
     "Hazard",
+    "CalculationStep",
+    "CalculationTrace",
+    "DerivedClaim",
     "ReferenceCandidate",
     "RejectedReferenceCandidate",
     "ReferenceBinding",
