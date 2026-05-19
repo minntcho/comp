@@ -36,6 +36,155 @@ DB rows and deterministic bindings carry canonical authority.
 Receipt authorizes public projection.
 ```
 
+## Architecture Diagrams
+
+These diagrams are orientation maps. They do not define new implementation
+contracts.
+
+### North Star Flow
+
+```mermaid
+flowchart TD
+    source["Source Evidence"]
+    extractor["Extractor / LLM / Table / Lark"]
+    hypothesis["ClaimHypothesis"]
+    compiler1["Deterministic Compiler Gate"]
+    report["CompileReport"]
+    task["ProofObligation / ResolverTask"]
+    retrieval["Embedding Retrieval Fabric"]
+    artifacts["Resolver Artifacts"]
+    compiler2["Artifact / Binding Gate"]
+    binding["ReferenceBinding / SemanticJudgment / ContextAttachment"]
+    calculation["CalculationTrace / DerivedClaim"]
+    package["CommitPackage"]
+    governance["GovernanceDecision"]
+    receipt["CommitReceipt"]
+    projection["Receipt-gated Projection"]
+
+    source --> extractor
+    extractor --> hypothesis
+    hypothesis --> compiler1
+    compiler1 --> report
+    report --> task
+    task --> retrieval
+    retrieval --> artifacts
+    artifacts --> compiler2
+    compiler2 --> binding
+    binding --> calculation
+    calculation --> package
+    package --> governance
+    governance --> receipt
+    receipt --> projection
+
+    report -. accepted with no open blockers .-> package
+    compiler2 -. rejected or insufficient .-> report
+```
+
+### Authority Boundary Map
+
+```mermaid
+flowchart LR
+    subgraph recall["Recall / proposal only"]
+        embedding["Embedding"]
+        llm["LLM"]
+        memory["Memory / Skill Recall"]
+    end
+
+    subgraph submitted["Submitted artifacts"]
+        candidate["ReferenceCandidate"]
+        query["ReferenceQuery"]
+        judgment["SemanticJudgment"]
+        objection["LLMObjection"]
+    end
+
+    subgraph gates["Deterministic gates"]
+        compiler["Compiler Gate"]
+        selector["Reference Selector"]
+        calculator["Calculator"]
+        governance["Governance"]
+    end
+
+    subgraph authority["Authority chain"]
+        db["Typed Reference DB Row"]
+        binding["ReferenceBinding"]
+        derived["DerivedClaim"]
+        receipt["CommitReceipt"]
+        public["PublicProjection"]
+    end
+
+    embedding --> candidate
+    embedding --> query
+    memory --> query
+    llm --> judgment
+    llm --> objection
+
+    candidate --> selector
+    query --> compiler
+    judgment --> compiler
+    objection --> compiler
+
+    db --> selector
+    selector --> binding
+    binding --> calculator
+    calculator --> derived
+    derived --> governance
+    compiler --> governance
+    governance --> receipt
+    receipt --> public
+
+    candidate -. candidate_only .-> selector
+    judgment -. submitted artifact only .-> compiler
+    derived -. not public authority .-> governance
+```
+
+### Retrieval Lens Map
+
+```mermaid
+flowchart TD
+    task["ProofObligation / ResolverTask"]
+
+    concept["ConceptLens"]
+    metric["MetricLens"]
+    unit["UnitLens"]
+    factor["FactorLens"]
+    formula["FormulaLens"]
+    rubric["RubricLens"]
+    rule["RuleLens"]
+    memory["MemorySkillLens"]
+
+    candidates["Candidate-only recall set"]
+    resolver["LLM / Human / Deterministic Resolver"]
+    artifact["Submitted resolver artifact"]
+    gate["Compiler / Selector Gate"]
+    accepted["Accepted binding or discharged obligation"]
+    open["Open obligation / hazard"]
+
+    task --> concept
+    task --> metric
+    task --> unit
+    task --> factor
+    task --> formula
+    task --> rubric
+    task --> rule
+    task --> memory
+
+    concept --> candidates
+    metric --> candidates
+    unit --> candidates
+    factor --> candidates
+    formula --> candidates
+    rubric --> candidates
+    rule --> candidates
+    memory --> candidates
+
+    candidates --> resolver
+    resolver --> artifact
+    artifact --> gate
+    gate --> accepted
+    gate --> open
+    open --> task
+```
+
 ## Authority Boundaries
 
 The first invariant is that recall is not authority:
