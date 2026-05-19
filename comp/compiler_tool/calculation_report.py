@@ -2,7 +2,11 @@ from __future__ import annotations
 
 from dataclasses import replace
 
-from comp.compiler_tool.calculations import CalculationFormula, CalculationResult
+from comp.compiler_tool.calculations import (
+    CalculationFormula,
+    CalculationRequirement,
+    CalculationResult,
+)
 from comp.compiler_tool.models import CompileReport, ProofObligation
 
 
@@ -21,6 +25,11 @@ def apply_calculation_result(
         )
 
     reason = result.reason or "calculation_blocked"
+    requirement = result.requirement or CalculationRequirement(
+        reason=reason,
+        formula_id=formula.formula_id,
+        output_claim_id=output_claim_id,
+    )
     obligation = ProofObligation(
         kind="calculation_blocked",
         field=formula.output_field,
@@ -30,6 +39,7 @@ def apply_calculation_result(
         ),
         claim_id=output_claim_id,
         blocking=True,
+        calculation_requirement=requirement,
     )
     return replace(
         report,

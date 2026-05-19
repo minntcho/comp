@@ -3,6 +3,7 @@
 from comp.compiler_tool.calculations import (
     CalculationFormula,
     CalculationInput,
+    CalculationRequirement,
     CalculationResult,
     CalculationStep,
     CalculationTrace,
@@ -72,6 +73,7 @@ __all__ = [
     "Hazard",
     "CalculationInput",
     "CalculationFormula",
+    "CalculationRequirement",
     "CalculationResult",
     "CalculationStep",
     "CalculationTrace",

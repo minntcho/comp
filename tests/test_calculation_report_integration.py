@@ -1,6 +1,7 @@
 from comp.compiler_tool import (
     CalculationFormula,
     CalculationInput,
+    CalculationRequirement,
     CompileReport,
     ProofObligation,
     ReferenceBinding,
@@ -117,6 +118,16 @@ def test_blocked_calculation_opens_blocking_obligation_on_report():
             ),
             claim_id="hyp-1:co2e_emission",
             blocking=True,
+            calculation_requirement=CalculationRequirement(
+                reason="unit_mismatch",
+                formula_id="ghg.electricity_factor_multiplication.v1",
+                output_claim_id="hyp-1:co2e_emission",
+                input_claim_id="hyp-1:amount",
+                reference_binding_id="bind-amount-factor",
+                reference_id="factor.kr_grid.2024.location_based",
+                expected_unit="kWh",
+                actual_unit="MWh",
+            ),
         ),
     )
     assert updated.can_project_public_row is False
@@ -148,6 +159,13 @@ def test_calculation_obligation_maps_to_judgment_fact():
         meta=(
             ("kind", "calculation_blocked"),
             ("reason", "unit_mismatch"),
+            ("actual_unit", "MWh"),
+            ("expected_unit", "kWh"),
+            ("formula_id", "ghg.electricity_factor_multiplication.v1"),
+            ("input_claim_id", "hyp-1:amount"),
+            ("output_claim_id", "hyp-1:co2e_emission"),
+            ("reference_binding_id", "bind-amount-factor"),
+            ("reference_id", "factor.kr_grid.2024.location_based"),
             ("report_section", "proof_obligation"),
             ("report_status", "blocked"),
         ),
