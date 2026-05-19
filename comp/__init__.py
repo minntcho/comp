@@ -9,6 +9,7 @@ from comp.judgment import (
     BundleSpec,
     CandidateSummary,
     CommitReceipt,
+    CommitReceiptCitations,
     CommitSpec,
     CompiledJudgmentProgram,
     DraftSnapshot,
@@ -61,4 +62,5 @@ __all__ = [
     "project_public_row",
     "SelectionReceipt",
     "CommitReceipt",
+    "CommitReceiptCitations",
 ]

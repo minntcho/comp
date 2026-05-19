@@ -26,7 +26,11 @@ from comp.judgment.program import (
     TransferEmitter,
     TransferRule,
 )
-from comp.judgment.receipts import CommitReceipt, SelectionReceipt
+from comp.judgment.receipts import (
+    CommitReceipt,
+    CommitReceiptCitations,
+    SelectionReceipt,
+)
 
 __all__ = [
     "SubjectKind",
@@ -55,4 +59,5 @@ __all__ = [
     "project_public_row",
     "SelectionReceipt",
     "CommitReceipt",
+    "CommitReceiptCitations",
 ]
