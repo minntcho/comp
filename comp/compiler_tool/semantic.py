@@ -8,6 +8,7 @@ from comp.compiler_tool.models import (
     ProofObligation,
     SemanticJudgment,
 )
+from comp.compiler_tool.report_status import with_recomputed_status
 
 
 def apply_semantic_judgments(
@@ -67,26 +68,24 @@ def apply_semantic_judgments(
 
         open_obligations.append(obligation)
 
-    return CompileReport(
-        status=_status_for(
-            report=report,
-            open_obligations=tuple(open_obligations),
+    return with_recomputed_status(
+        CompileReport(
+            status=report.status,
+            checked_claims=report.checked_claims,
+            failed_claims=report.failed_claims,
+            unknowns=report.unknowns,
+            unchecked_areas=report.unchecked_areas,
+            obligations=tuple(open_obligations),
+            resolved_obligations=(
+                *report.resolved_obligations,
+                *tuple(newly_resolved),
+            ),
             hazards=tuple(hazards),
-        ),
-        checked_claims=report.checked_claims,
-        failed_claims=report.failed_claims,
-        unknowns=report.unknowns,
-        unchecked_areas=report.unchecked_areas,
-        obligations=tuple(open_obligations),
-        resolved_obligations=(
-            *report.resolved_obligations,
-            *tuple(newly_resolved),
-        ),
-        hazards=tuple(hazards),
-        reference_candidates=report.reference_candidates,
-        reference_bindings=report.reference_bindings,
-        derived_claims=report.derived_claims,
-        can_project_public_row=report.can_project_public_row,
+            reference_candidates=report.reference_candidates,
+            reference_bindings=report.reference_bindings,
+            derived_claims=report.derived_claims,
+            can_project_public_row=report.can_project_public_row,
+        )
     )
 
 
@@ -117,35 +116,6 @@ def _judgment_satisfies_protocol(
         return False
 
     return True
-
-
-def _status_for(
-    *,
-    report: CompileReport,
-    open_obligations: tuple[ProofObligation, ...],
-    hazards: tuple[Hazard, ...],
-) -> str:
-    if report.failed_claims:
-        return "blocked"
-    if any(
-        obligation.kind == "calculation_blocked" and obligation.blocking
-        for obligation in open_obligations
-    ):
-        return "blocked"
-    if hazards:
-        return "review_required"
-    if any(
-        obligation.kind == "semantic_judgment_required" and obligation.blocking
-        for obligation in open_obligations
-    ):
-        return "review_required"
-    if report.unchecked_areas:
-        return "unchecked"
-    if report.unknowns:
-        return "underconstrained"
-    if any(obligation.blocking for obligation in open_obligations):
-        return "review_required"
-    return "accepted"
 
 
 def _obligation_id(obligation: ProofObligation) -> str:

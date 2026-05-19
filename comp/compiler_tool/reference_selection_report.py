@@ -2,13 +2,14 @@ from __future__ import annotations
 
 from dataclasses import replace
 
-from comp.compiler_tool.models import CompileReport, Hazard, ProofObligation
+from comp.compiler_tool.models import CompileReport, ProofObligation
 from comp.compiler_tool.reference_db import ReferenceCatalog
 from comp.compiler_tool.reference_selector import (
     ReferenceSelectionCriteria,
     select_reference_binding,
 )
 from comp.compiler_tool.references import ReferenceBinding
+from comp.compiler_tool.report_status import with_recomputed_status
 
 
 def apply_reference_selection(
@@ -36,23 +37,20 @@ def apply_reference_selection(
             for obligation in report.obligations
             if _matches_selection_obligation(obligation, obligation_id)
         )
-        return replace(
-            report,
-            status=_status_for(
-                report=report,
-                open_obligations=open_obligations,
-                hazards=report.hazards,
-            ),
-            obligations=open_obligations,
-            resolved_obligations=_append_unique_obligations(
-                report.resolved_obligations,
-                resolved,
-            ),
-            reference_bindings=_append_unique_bindings(
-                report.reference_bindings,
-                (result.binding,),
-            ),
-            can_project_public_row=False,
+        return with_recomputed_status(
+            replace(
+                report,
+                obligations=open_obligations,
+                resolved_obligations=_append_unique_obligations(
+                    report.resolved_obligations,
+                    resolved,
+                ),
+                reference_bindings=_append_unique_bindings(
+                    report.reference_bindings,
+                    (result.binding,),
+                ),
+                can_project_public_row=False,
+            )
         )
 
     obligation = ProofObligation(
@@ -63,11 +61,12 @@ def apply_reference_selection(
         claim_id=criteria.claim_id,
         blocking=True,
     )
-    return replace(
-        report,
-        status="blocked",
-        obligations=_append_unique_obligation_by_id(report.obligations, obligation),
-        can_project_public_row=False,
+    return with_recomputed_status(
+        replace(
+            report,
+            obligations=_append_unique_obligation_by_id(report.obligations, obligation),
+            can_project_public_row=False,
+        )
     )
 
 
@@ -119,30 +118,6 @@ def _append_unique_obligation_by_id(
     if addition in existing:
         return existing
     return (*existing, addition)
-
-
-def _status_for(
-    *,
-    report: CompileReport,
-    open_obligations: tuple[ProofObligation, ...],
-    hazards: tuple[Hazard, ...],
-) -> str:
-    if report.failed_claims:
-        return "blocked"
-    if any(
-        obligation.kind == "calculation_blocked" and obligation.blocking
-        for obligation in open_obligations
-    ):
-        return "blocked"
-    if hazards:
-        return "review_required"
-    if report.unchecked_areas:
-        return "unchecked"
-    if report.unknowns:
-        return "underconstrained"
-    if any(obligation.blocking for obligation in open_obligations):
-        return "review_required"
-    return "accepted"
 
 
 __all__ = ["apply_reference_selection"]
