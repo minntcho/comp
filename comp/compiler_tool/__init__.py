@@ -24,6 +24,7 @@ from comp.compiler_tool.profiles import (
     active_rule_families,
     validate_compiler_profile,
 )
+from comp.compiler_tool.profile_runner import compile_with_profile
 from comp.compiler_tool.semantic import apply_semantic_judgments
 from comp.compiler_tool.tool import CompilerTool
 from comp.compiler_tool.judgment_adapter import (
@@ -52,6 +53,7 @@ __all__ = [
     "ProfileValidationError",
     "validate_compiler_profile",
     "active_rule_families",
+    "compile_with_profile",
     "CompilerTool",
     "apply_semantic_judgments",
     "compile_report_to_facts",
