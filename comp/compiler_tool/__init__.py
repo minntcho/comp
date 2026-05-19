@@ -10,6 +10,7 @@ from comp.compiler_tool.calculations import (
     DerivedClaim,
     calculate_derived_claim,
 )
+from comp.compiler_tool.calculation_flow import resolve_reference_grounded_calculation
 from comp.compiler_tool.calculation_report import apply_calculation_result
 from comp.compiler_tool.calculation_resolution import plan_calculation_resolution
 from comp.compiler_tool.calculation_retry import retry_blocked_calculation
@@ -86,6 +87,7 @@ __all__ = [
     "CalculationTrace",
     "DerivedClaim",
     "calculate_derived_claim",
+    "resolve_reference_grounded_calculation",
     "apply_calculation_result",
     "plan_calculation_resolution",
     "retry_blocked_calculation",
