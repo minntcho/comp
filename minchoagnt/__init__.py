@@ -1,7 +1,12 @@
 """A tiny Hermes-style memory, skills, and review loop."""
 
 from minchoagnt.agent import ChatResult, MiniAgent, ReviewSummary
-from minchoagnt.comp_adapter import CompCompileResult, CompCompilerAdapter
+from minchoagnt.comp_adapter import (
+    CompCompileResult,
+    CompCompilerAdapter,
+    CompResolutionResult,
+    DeterministicCompResolver,
+)
 from minchoagnt.memory import MemoryStore
 from minchoagnt.ollama import OllamaHTTPClient, OllamaReviewEngine
 from minchoagnt.review import (
@@ -17,6 +22,8 @@ __all__ = [
     "ChatResult",
     "CompCompileResult",
     "CompCompilerAdapter",
+    "CompResolutionResult",
+    "DeterministicCompResolver",
     "MemoryStore",
     "MiniAgent",
     "OllamaHTTPClient",

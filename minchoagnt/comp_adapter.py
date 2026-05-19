@@ -1,12 +1,21 @@
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from collections.abc import Iterable, Mapping
+from dataclasses import dataclass, field, replace
 
 from comp.compiler_tool import (
     CompileReport,
     CompilerTool,
     InterpretationHypothesis,
+    ProofObligation,
+    ReferenceCatalog,
+    ResolverTask,
+    SemanticJudgment,
+    apply_semantic_judgments,
     compile_report_to_facts,
+    resolve_reference_search_obligations,
+    resolver_task_from_obligation,
+    resolver_tasks_from_report,
 )
 from comp.judgment import CommitReceipt, Fact, JudgmentState, SubjectRef
 
@@ -18,6 +27,15 @@ class CompCompileResult:
     report: CompileReport
     judgment: JudgmentState = field(default_factory=JudgmentState)
     receipt: CommitReceipt | None = None
+
+
+@dataclass(frozen=True)
+class CompResolutionResult:
+    source: CompCompileResult
+    result: CompCompileResult
+    tasks: tuple[ResolverTask, ...] = field(default_factory=tuple)
+    semantic_judgment_ids: tuple[str, ...] = field(default_factory=tuple)
+    reference_query_obligation_ids: tuple[str, ...] = field(default_factory=tuple)
 
 
 class CompCompilerAdapter:
@@ -54,5 +72,100 @@ class CompCompilerAdapter:
         facts = compile_report_to_facts(result.report, result.subject)
         return result.judgment.add_facts(facts)
 
+    def resolver_tasks(self, result: CompCompileResult) -> tuple[ResolverTask, ...]:
+        return resolver_tasks_from_report(result.report)
 
-__all__ = ["CompCompileResult", "CompCompilerAdapter"]
+
+class DeterministicCompResolver:
+    """Fixture resolver for agent-side comp loops without LLM authority."""
+
+    def __init__(
+        self,
+        *,
+        semantic_judgments: Iterable[SemanticJudgment] = (),
+        available_span_ids: Iterable[str] | None = None,
+        reference_catalog: ReferenceCatalog | None = None,
+        reference_queries: Mapping[str, str] | None = None,
+        reference_type: str | None = None,
+        reference_limit: int = 10,
+        retrieval_method: str = "keyword",
+    ):
+        self.semantic_judgments = tuple(semantic_judgments)
+        self.available_span_ids = (
+            None if available_span_ids is None else tuple(available_span_ids)
+        )
+        self.reference_catalog = reference_catalog
+        self.reference_queries = dict(reference_queries or {})
+        self.reference_type = reference_type
+        self.reference_limit = reference_limit
+        self.retrieval_method = retrieval_method
+
+    def resolve(self, result: CompCompileResult) -> CompResolutionResult:
+        tasks = resolver_tasks_from_report(result.report)
+        report = result.report
+
+        semantic_judgments = self._semantic_judgments_for(tasks)
+        if semantic_judgments:
+            report = apply_semantic_judgments(
+                report,
+                semantic_judgments,
+                available_span_ids=self.available_span_ids,
+            )
+
+        reference_query_obligation_ids = self._reference_query_obligation_ids(tasks)
+        if self.reference_catalog is not None and reference_query_obligation_ids:
+            report = resolve_reference_search_obligations(
+                report,
+                self.reference_catalog,
+                query_for_obligation=self._query_for_obligation,
+                reference_type=self.reference_type,
+                limit=self.reference_limit,
+                retrieval_method=self.retrieval_method,
+            )
+
+        resolved = replace(result, report=report, receipt=None)
+        return CompResolutionResult(
+            source=result,
+            result=resolved,
+            tasks=tasks,
+            semantic_judgment_ids=tuple(
+                judgment.judgment_id for judgment in semantic_judgments
+            ),
+            reference_query_obligation_ids=reference_query_obligation_ids,
+        )
+
+    def _semantic_judgments_for(
+        self, tasks: tuple[ResolverTask, ...]
+    ) -> tuple[SemanticJudgment, ...]:
+        semantic_obligation_ids = {
+            task.obligation_id
+            for task in tasks
+            if task.task_type == "semantic_judgment"
+        }
+        return tuple(
+            judgment
+            for judgment in self.semantic_judgments
+            if judgment.obligation_id in semantic_obligation_ids
+        )
+
+    def _reference_query_obligation_ids(
+        self, tasks: tuple[ResolverTask, ...]
+    ) -> tuple[str, ...]:
+        return tuple(
+            task.obligation_id
+            for task in tasks
+            if task.task_type == "reference_search"
+            and task.obligation_id in self.reference_queries
+        )
+
+    def _query_for_obligation(self, obligation: ProofObligation) -> str | None:
+        task = resolver_task_from_obligation(obligation)
+        return self.reference_queries.get(task.obligation_id)
+
+
+__all__ = [
+    "CompCompileResult",
+    "CompResolutionResult",
+    "CompCompilerAdapter",
+    "DeterministicCompResolver",
+]
