@@ -24,13 +24,19 @@ Read these first:
 
 1. `architecture/authority-map.md`
 2. `architecture/kill-list.md`
-3. `architecture/obligation-kernel-working-theory.md`
-4. `architecture/llm-orchestrated-compiler-tool-loop.md`
-5. `architecture/memory-assisted-compiler-loop.md`
+3. `architecture/retrieval-fabric-north-star.md`
+4. `architecture/obligation-kernel-working-theory.md`
+5. `architecture/llm-orchestrated-compiler-tool-loop.md`
+6. `architecture/memory-assisted-compiler-loop.md`
 
-`architecture/obligation-kernel-working-theory.md` is the broad working map for
-semantic obligations, reference-grounded calculation, commit packages,
-governance decisions, and receipt-gated projection.
+`architecture/retrieval-fabric-north-star.md` is the long-term direction for
+retrieval, embedding, LLM artifact resolution, typed reference authority, and
+compiler/receipt gates.
+
+`architecture/obligation-kernel-working-theory.md` is the detailed working map
+for current implementation slices: semantic obligations, reference-grounded
+calculation, commit packages, governance decisions, and receipt-gated
+projection.
 
 ## Compiler Tool Layers
 
