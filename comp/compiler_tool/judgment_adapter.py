@@ -141,17 +141,26 @@ def _obligation_fact(
     *,
     section: str = "proof_obligation",
 ) -> Fact:
+    meta = [
+        ("kind", obligation.kind),
+        ("reason", obligation.reason),
+    ]
+    if obligation.calculation_requirement is not None:
+        meta.extend(
+            _calculation_requirement_meta(obligation.calculation_requirement)
+        )
+    meta.extend(
+        [
+            ("report_section", section),
+            ("report_status", status),
+        ]
+    )
     return Fact(
         tag=tag,
         subject=subject,
         key=f"proof_obligation:{obligation.field}",
         value=_obligation_id(obligation.kind, obligation.field, obligation.reason),
-        meta=(
-            ("kind", obligation.kind),
-            ("reason", obligation.reason),
-            ("report_section", section),
-            ("report_status", status),
-        ),
+        meta=tuple(meta),
     )
 
 
@@ -173,6 +182,25 @@ def _obligation_id(kind: str, field: str, reason: str) -> str:
 
 def _hazard_id(kind: str, field: str, severity: str) -> str:
     return _stable_id("hazard", kind, field, severity)
+
+
+def _calculation_requirement_meta(requirement) -> list[tuple[str, str]]:
+    return [
+        (key, value)
+        for key, value in (
+            ("actual_output_unit", requirement.actual_output_unit),
+            ("actual_unit", requirement.actual_unit),
+            ("expected_output_unit", requirement.expected_output_unit),
+            ("expected_unit", requirement.expected_unit),
+            ("formula_id", requirement.formula_id),
+            ("input_claim_id", requirement.input_claim_id),
+            ("missing_attribute", requirement.missing_attribute),
+            ("output_claim_id", requirement.output_claim_id),
+            ("reference_binding_id", requirement.reference_binding_id),
+            ("reference_id", requirement.reference_id),
+        )
+        if value is not None
+    ]
 
 
 def _stable_id(*parts: str) -> str:

@@ -3,7 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Any, Literal
 
-from comp.compiler_tool.calculations import DerivedClaim
+from comp.compiler_tool.calculations import CalculationRequirement, DerivedClaim
 from comp.compiler_tool.references import ReferenceBinding, ReferenceCandidate
 
 CompileStatus = Literal[
@@ -93,6 +93,7 @@ class ProofObligation:
     claim_id: str | None = None
     blocking: bool = True
     semantic_requirement: SemanticJudgmentRequirement | None = None
+    calculation_requirement: CalculationRequirement | None = None
 
 
 @dataclass(frozen=True)

@@ -68,10 +68,26 @@ class CalculationFormula:
 
 
 @dataclass(frozen=True)
+class CalculationRequirement:
+    reason: str
+    formula_id: str
+    output_claim_id: str
+    input_claim_id: str | None = None
+    reference_binding_id: str | None = None
+    reference_id: str | None = None
+    expected_unit: str | None = None
+    actual_unit: str | None = None
+    expected_output_unit: str | None = None
+    actual_output_unit: str | None = None
+    missing_attribute: str | None = None
+
+
+@dataclass(frozen=True)
 class CalculationResult:
     status: str
     derived_claim: DerivedClaim | None = None
     reason: str | None = None
+    requirement: CalculationRequirement | None = None
 
 
 def calculate_derived_claim(
@@ -85,22 +101,67 @@ def calculate_derived_claim(
     try:
         reference = catalog.get(reference_binding.reference_id)
     except ReferenceLookupError:
-        return _blocked("unknown_reference")
+        return _blocked(
+            _requirement(
+                reason="unknown_reference",
+                output_claim_id=output_claim_id,
+                input_claim=input_claim,
+                reference_binding=reference_binding,
+                formula=formula,
+            )
+        )
 
     factor_value = reference.attribute(formula.factor_value_attribute)
     if factor_value is None:
-        return _blocked("missing_factor_value")
+        return _blocked(
+            _requirement(
+                reason="missing_factor_value",
+                output_claim_id=output_claim_id,
+                input_claim=input_claim,
+                reference_binding=reference_binding,
+                formula=formula,
+                missing_attribute=formula.factor_value_attribute,
+            )
+        )
 
     expected_input_unit = reference.attribute(formula.input_unit_attribute)
     if expected_input_unit is not None and input_claim.unit != expected_input_unit:
-        return _blocked("unit_mismatch")
+        return _blocked(
+            _requirement(
+                reason="unit_mismatch",
+                output_claim_id=output_claim_id,
+                input_claim=input_claim,
+                reference_binding=reference_binding,
+                formula=formula,
+                expected_unit=expected_input_unit,
+                actual_unit=input_claim.unit,
+            )
+        )
 
     expected_output_unit = reference.attribute(formula.output_unit_attribute)
     if expected_output_unit is not None and formula.output_unit != expected_output_unit:
-        return _blocked("output_unit_mismatch")
+        return _blocked(
+            _requirement(
+                reason="output_unit_mismatch",
+                output_claim_id=output_claim_id,
+                input_claim=input_claim,
+                reference_binding=reference_binding,
+                formula=formula,
+                expected_output_unit=expected_output_unit,
+                actual_output_unit=formula.output_unit,
+            )
+        )
 
     if not isinstance(input_claim.value, Number) or not isinstance(factor_value, Number):
-        return _blocked("non_numeric_input")
+        return _blocked(
+            _requirement(
+                reason="non_numeric_input",
+                output_claim_id=output_claim_id,
+                input_claim=input_claim,
+                reference_binding=reference_binding,
+                formula=formula,
+            )
+        )
 
     output_value = _multiply(input_claim.value, factor_value)
     trace = CalculationTrace(
@@ -130,8 +191,40 @@ def calculate_derived_claim(
     )
 
 
-def _blocked(reason: str) -> CalculationResult:
-    return CalculationResult(status="blocked", reason=reason)
+def _blocked(requirement: CalculationRequirement) -> CalculationResult:
+    return CalculationResult(
+        status="blocked",
+        reason=requirement.reason,
+        requirement=requirement,
+    )
+
+
+def _requirement(
+    *,
+    reason: str,
+    output_claim_id: str,
+    input_claim: CalculationInput,
+    reference_binding: ReferenceBinding,
+    formula: CalculationFormula,
+    expected_unit: str | None = None,
+    actual_unit: str | None = None,
+    expected_output_unit: str | None = None,
+    actual_output_unit: str | None = None,
+    missing_attribute: str | None = None,
+) -> CalculationRequirement:
+    return CalculationRequirement(
+        reason=reason,
+        formula_id=formula.formula_id,
+        output_claim_id=output_claim_id,
+        input_claim_id=input_claim.claim_id,
+        reference_binding_id=reference_binding.binding_id,
+        reference_id=reference_binding.reference_id,
+        expected_unit=expected_unit,
+        actual_unit=actual_unit,
+        expected_output_unit=expected_output_unit,
+        actual_output_unit=actual_output_unit,
+        missing_attribute=missing_attribute,
+    )
 
 
 def _multiply(left: Number, right: Number) -> int | float:
@@ -147,6 +240,7 @@ __all__ = [
     "DerivedClaim",
     "CalculationInput",
     "CalculationFormula",
+    "CalculationRequirement",
     "CalculationResult",
     "calculate_derived_claim",
 ]
