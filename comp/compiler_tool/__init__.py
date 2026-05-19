@@ -14,6 +14,7 @@ from comp.compiler_tool.calculation_flow import resolve_reference_grounded_calcu
 from comp.compiler_tool.calculation_report import apply_calculation_result
 from comp.compiler_tool.calculation_resolution import plan_calculation_resolution
 from comp.compiler_tool.calculation_retry import retry_blocked_calculation
+from comp.compiler_tool.commit_package import CommitPackage, build_commit_package
 from comp.compiler_tool.models import (
     CheckedClaim,
     ClaimHypothesis,
@@ -95,6 +96,8 @@ __all__ = [
     "apply_calculation_result",
     "plan_calculation_resolution",
     "retry_blocked_calculation",
+    "CommitPackage",
+    "build_commit_package",
     "ReferenceCandidate",
     "RejectedReferenceCandidate",
     "ReferenceBinding",
