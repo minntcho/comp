@@ -77,7 +77,9 @@ from comp.compiler_tool.report_status import (
 from comp.compiler_tool.semantic import apply_semantic_judgments
 from comp.compiler_tool.tool import CompilerTool
 from comp.compiler_tool.judgment_adapter import (
+    add_commit_preparation_facts,
     add_compile_report_facts,
+    commit_preparation_to_facts,
     compile_report_to_facts,
 )
 
@@ -142,4 +144,6 @@ __all__ = [
     "apply_semantic_judgments",
     "compile_report_to_facts",
     "add_compile_report_facts",
+    "commit_preparation_to_facts",
+    "add_commit_preparation_facts",
 ]

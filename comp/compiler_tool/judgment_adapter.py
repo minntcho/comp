@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from comp.compiler_tool.commit_flow import CommitPreparation
 from comp.compiler_tool.models import CompileReport, ProofObligation
 from comp.judgment import Fact, FactTag, JudgmentState, SubjectRef
 
@@ -162,6 +163,96 @@ def add_compile_report_facts(
     return state.add_facts(compile_report_to_facts(report, subject))
 
 
+def commit_preparation_to_facts(
+    preparation: CommitPreparation, subject: SubjectRef
+) -> set[Fact]:
+    package = preparation.package
+    decision = preparation.decision
+    facts = {
+        Fact(
+            tag="prov_edge",
+            subject=subject,
+            key="commit_package",
+            value=package.package_id,
+            meta=(
+                ("checked_claim_fields", package.checked_claim_fields),
+                ("checked_claim_witness_ids", package.checked_claim_witness_ids),
+                ("calculation_trace_ids", package.calculation_trace_ids),
+                ("complete", package.complete),
+                ("derived_claim_ids", package.derived_claim_ids),
+                ("formula_ids", package.formula_ids),
+                ("hazard_ids", package.hazard_ids),
+                ("open_obligation_ids", package.open_obligation_ids),
+                ("profile_id", package.profile_id),
+                ("reference_binding_ids", package.reference_binding_ids),
+                ("report_status", package.report_status),
+                ("resolved_obligation_ids", package.resolved_obligation_ids),
+                ("semantic_judgment_ids", package.semantic_judgment_ids),
+            ),
+        ),
+        Fact(
+            tag="prov_edge",
+            subject=subject,
+            key="governance_decision",
+            value=decision.decision_id,
+            meta=(
+                ("can_issue_commit_receipt", decision.can_issue_commit_receipt),
+                ("governance_reasons", decision.reasons),
+                ("governance_status", decision.status),
+                ("package_id", decision.package_id),
+                ("profile_id", decision.profile_id),
+            ),
+        ),
+    }
+
+    for obligation_id in package.open_obligation_ids:
+        facts.add(
+            Fact(
+                tag="hazard_open",
+                subject=subject,
+                key=f"commit_obligation:{obligation_id}",
+                value=obligation_id,
+                meta=(("report_section", "commit_package"),),
+            )
+        )
+
+    for hazard_id in package.hazard_ids:
+        facts.add(
+            Fact(
+                tag="hazard_open",
+                subject=subject,
+                key=f"commit_hazard:{hazard_id}",
+                value=hazard_id,
+                meta=(("report_section", "commit_package"),),
+            )
+        )
+
+    if preparation.receipt is not None:
+        facts.add(
+            Fact(
+                tag="prov_edge",
+                subject=subject,
+                key="commit_receipt",
+                value=preparation.receipt.public_row_id,
+                witness=decision.decision_id,
+                meta=(
+                    ("commit_package_id", package.package_id),
+                    ("receipt_snapshot", preparation.receipt.barrier_snapshot),
+                ),
+            )
+        )
+
+    return facts
+
+
+def add_commit_preparation_facts(
+    state: JudgmentState,
+    preparation: CommitPreparation,
+    subject: SubjectRef,
+) -> set[Fact]:
+    return state.add_facts(commit_preparation_to_facts(preparation, subject))
+
+
 def _obligation_fact(
     tag: FactTag,
     status: str,
@@ -239,4 +330,6 @@ def _stable_id(*parts: str) -> str:
 __all__ = [
     "compile_report_to_facts",
     "add_compile_report_facts",
+    "commit_preparation_to_facts",
+    "add_commit_preparation_facts",
 ]
