@@ -1,0 +1,157 @@
+from comp.compiler_tool import (
+    ClaimHypothesis,
+    CompilerProfile,
+    DomainPack,
+    EvidenceWitness,
+    InterpretationHypothesis,
+    JudgePolicy,
+    ProofObligation,
+    RuleFamily,
+    SemanticJudgment,
+    SemanticRubric,
+    active_rule_families,
+    apply_semantic_judgments,
+    compile_with_profile,
+)
+
+
+SCOPE2_RUBRIC_ID = "fixture.ghg.scope2_method_support.v1"
+SCOPE2_RULE_ID = "fixture.ghg.scope2_method_support_rule.v1"
+JUDGE_POLICY_ID = "fixture.default_judge_policy.v1"
+
+
+def _scope2_method_rule(claim, hypothesis, profile):
+    if claim.field != "scope2_method":
+        return ()
+    rubric = profile.rubric(SCOPE2_RUBRIC_ID)
+    judge_policy = profile.judge_policy()
+    return (
+        ProofObligation(
+            kind="semantic_judgment_required",
+            field=claim.field,
+            reason="semantic_support_required",
+            obligation_id=f"semantic:{claim.field}:{claim.witness_id}",
+            claim_id=f"{hypothesis.hypothesis_id}:{claim.field}",
+            semantic_requirement=rubric.requirement(
+                question="Does the cited span support the claimed Scope 2 method?",
+                claim_id=f"{hypothesis.hypothesis_id}:{claim.field}",
+                evidence_span_ids=(claim.witness_id,),
+                allowed_judges=judge_policy.allowed_judges,
+            ),
+        ),
+    )
+
+
+def _tiny_domain():
+    return DomainPack(
+        domain_id="fixture-ghg",
+        version="2026.1",
+        rule_families=(
+            RuleFamily(
+                rule_id=SCOPE2_RULE_ID,
+                required_rubric_ids=(SCOPE2_RUBRIC_ID,),
+                evaluate=_scope2_method_rule,
+            ),
+            RuleFamily(rule_id="fixture.inactive_rule.v1"),
+        ),
+        rubrics=(
+            SemanticRubric(
+                rubric_id=SCOPE2_RUBRIC_ID,
+                acceptable_verdicts=("supports", "refutes", "ambiguous"),
+                required_verdict="supports",
+            ),
+        ),
+        judge_policies=(
+            JudgePolicy(
+                judge_policy_id=JUDGE_POLICY_ID,
+                allowed_judges=("human/reviewer", "llm/model@policy-v1"),
+            ),
+        ),
+    )
+
+
+def _profile(*, active_rule_ids=(SCOPE2_RULE_ID,)):
+    return CompilerProfile(
+        profile_id="fixture-ghg-profile",
+        domain_packs=(_tiny_domain(),),
+        active_rule_ids=active_rule_ids,
+        active_rubric_ids=(SCOPE2_RUBRIC_ID,),
+        judge_policy_id=JUDGE_POLICY_ID,
+    )
+
+
+def _hypothesis():
+    return InterpretationHypothesis(
+        hypothesis_id="hyp-scope2",
+        subject_id="claim-scope2",
+        claims=(
+            ClaimHypothesis(
+                field="scope2_method",
+                value="market_based",
+                witness_id="span-17",
+                origin="llm_inferred",
+            ),
+        ),
+        witnesses=(
+            EvidenceWitness(
+                witness_id="span-17",
+                field="scope2_method",
+                source="report.pdf",
+                span="p12",
+            ),
+        ),
+    )
+
+
+def _judgment(obligation_id):
+    return SemanticJudgment(
+        judgment_id="judgment-scope2",
+        obligation_id=obligation_id,
+        verdict="supports",
+        rubric_id=SCOPE2_RUBRIC_ID,
+        judge="llm/model@policy-v1",
+        cited_span_ids=("span-17",),
+        rationale="The cited span supports the claimed Scope 2 method.",
+    )
+
+
+def test_tiny_domain_profile_opens_scope2_semantic_obligation():
+    report = compile_with_profile(_hypothesis(), _profile())
+
+    assert report.status == "review_required"
+    assert len(report.obligations) == 1
+    obligation = report.obligations[0]
+    assert obligation.kind == "semantic_judgment_required"
+    assert obligation.field == "scope2_method"
+    assert obligation.semantic_requirement is not None
+    assert obligation.semantic_requirement.rubric_id == SCOPE2_RUBRIC_ID
+    assert obligation.semantic_requirement.allowed_judges == (
+        "human/reviewer",
+        "llm/model@policy-v1",
+    )
+    assert report.can_project_public_row is False
+
+
+def test_tiny_domain_semantic_judgment_discharges_obligation():
+    report = compile_with_profile(_hypothesis(), _profile())
+    obligation = report.obligations[0]
+
+    resolved = apply_semantic_judgments(
+        report,
+        (_judgment(obligation.obligation_id),),
+        available_span_ids=("span-17",),
+    )
+
+    assert resolved.status == "accepted"
+    assert resolved.obligations == ()
+    assert resolved.resolved_obligations == (obligation,)
+
+
+def test_inactive_tiny_domain_rule_does_not_open_obligation():
+    profile = _profile(active_rule_ids=())
+
+    report = compile_with_profile(_hypothesis(), profile)
+
+    assert active_rule_families(profile) == ()
+    assert report.status == "accepted"
+    assert report.obligations == ()

@@ -1,7 +1,9 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import TypeVar
+from typing import Any, Callable, TypeVar
+
+RuleEvaluator = Callable[[Any, Any, "CompilerProfile"], tuple[Any, ...]]
 
 
 class ProfileValidationError(ValueError):
@@ -13,6 +15,7 @@ class RuleFamily:
     rule_id: str
     required_rubric_ids: tuple[str, ...] = field(default_factory=tuple)
     description: str = ""
+    evaluate: RuleEvaluator | None = None
 
 
 @dataclass(frozen=True)
@@ -21,6 +24,26 @@ class SemanticRubric:
     acceptable_verdicts: tuple[str, ...]
     required_verdict: str = "supports"
     description: str = ""
+
+    def requirement(
+        self,
+        *,
+        question: str,
+        claim_id: str,
+        evidence_span_ids: tuple[str, ...] = (),
+        allowed_judges: tuple[str, ...] = (),
+    ):
+        from comp.compiler_tool.models import SemanticJudgmentRequirement
+
+        return SemanticJudgmentRequirement(
+            question=question,
+            claim_id=claim_id,
+            evidence_span_ids=evidence_span_ids,
+            rubric_id=self.rubric_id,
+            acceptable_verdicts=self.acceptable_verdicts,
+            required_verdict=self.required_verdict,
+            allowed_judges=allowed_judges,
+        )
 
 
 @dataclass(frozen=True)
@@ -49,6 +72,24 @@ class CompilerProfile:
     judge_policy_id: str | None = None
     projection_policy_id: str | None = None
     core_invariant_version: str = "core-invariants-v1"
+
+    def rubric(self, rubric_id: str) -> SemanticRubric:
+        _, rubrics, _ = _catalogs(self)
+        try:
+            return rubrics[rubric_id]
+        except KeyError as exc:
+            raise ProfileValidationError(f"unknown rubric id: {rubric_id}") from exc
+
+    def judge_policy(self) -> JudgePolicy:
+        if self.judge_policy_id is None:
+            return JudgePolicy(judge_policy_id="default-empty-judge-policy")
+        _, _, judge_policies = _catalogs(self)
+        try:
+            return judge_policies[self.judge_policy_id]
+        except KeyError as exc:
+            raise ProfileValidationError(
+                f"unknown judge policy id: {self.judge_policy_id}"
+            ) from exc
 
 
 def validate_compiler_profile(profile: CompilerProfile) -> None:
