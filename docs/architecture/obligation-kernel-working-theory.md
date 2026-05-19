@@ -860,89 +860,139 @@ Expected:
 
 ---
 
-## 13. Next PR Scope
+## 13. Current Implementation Status
 
-Recommended next PR:
+This document started as a working theory before the publication kernel existed.
+The active code has now moved beyond that initial planning slice. Treat this
+section as the current map for what has already landed and what should come
+next.
+
+Implemented:
 
 ```text
-PR8: Core / Domain Boundary Working Theory
+Core / domain boundary
+  DomainPack, CompilerProfile, RuleFamily, SemanticRubric, and JudgePolicy
+  lock active domain behavior without giving domain packs projection authority.
+
+SemanticJudgment obligation validation
+  Rules can open semantic_judgment_required obligations.
+  Submitted SemanticJudgment artifacts are validated against obligation id,
+  rubric id, verdict, judge policy, cited spans, and conflicts.
+
+ReferenceCandidate / ReferenceBinding
+  ReferenceCandidate remains candidate_only.
+  Deterministic selection creates canonical ReferenceBinding artifacts and
+  preserves rejected near-miss candidates.
+
+Reference-grounded calculation
+  CalculationRequirement explains blocked calculations.
+  Reference search and selection can discharge calculation blockers.
+  CalculationTrace and DerivedClaim record reproducible calculated claims.
+
+ResolverTask bridge
+  CompileReport obligations can be converted into resolver-facing tasks.
+  Agents may submit artifacts, but they do not mint receipts.
+
+CommitPackage / GovernanceDecision / CommitReceipt
+  Proof artifacts are bundled into CommitPackage.
+  GovernanceDecision decides commit / hold / reject.
+  CommitReceipt is the public projection authority.
+
+Judgment Facts adapter
+  CompileReport and CommitPreparation artifacts become Fact records for
+  evidence, provenance, open hazards, and discharged obligations.
+
+Domain Scenario Lab
+  Domain scenarios run empirical tiny-domain flows through pytest assertions
+  while preserving JSON-ready traces for future viewers.
+```
+
+The implementation still lives mostly under `comp.compiler_tool`. That namespace
+is acceptable for the current rebuild stage, but new work should keep the layer
+map clear:
+
+```text
+semantic
+reference
+calculation
+resolver tasks
+governance / commit
+judgment facts
+domain scenarios
+```
+
+---
+
+## 14. Next Implementation Slice
+
+Recommended next implementation direction:
+
+```text
+feat: add retrieval lens interface and embedding resolver stub
 ```
 
 Purpose:
 
 ```text
-Document the working theory before adding new semantic obligation models.
-Prevent the next implementation PR from leaking ESG/GHG details into core.
-Define the next vertical slice as SemanticJudgmentObligation -> SemanticJudgment -> discharge validation.
+Turn the retrieval north star into a small deterministic interface.
+Keep embedding as candidate recall, not authority.
+Let obligations choose a retrieval lens before candidate generation.
+Preserve the ReferenceCandidate != ReferenceBinding boundary.
 ```
 
-Deliverables:
+Candidate deliverables:
 
 ```text
-docs/architecture/obligation-kernel-working-theory.md
-README pointer or architecture index pointer, if the repo wants discoverability.
-No runtime behavior change.
-No package surface change.
-No domain pack implementation yet.
+ReferenceQuery
+ReferenceIndexEntry
+ReferenceResolver protocol
+EmbeddingResolverStub
+Lens names:
+  concept
+  metric
+  unit
+  factor
+  formula
+  rubric
+  rule
+  memory/skill
 ```
 
 Acceptance criteria:
 
 ```text
-The document explicitly says this is a working theory, not final architecture.
-The document separates core, domain pack, compiler profile, resolver, and extractor responsibilities.
-The document states core invariants that domain packs cannot weaken.
-The document defines SemanticJudgmentObligation as the next vertical slice.
-The document states that DSL compiles to domain packs, not publication authority.
-The document includes scenario cases for missing witness, table header judgment, Scope 2 method support, factor compatibility, new concept addition, and public row trace.
-Existing tests still pass.
+Retrieval lens interface can return candidate_only artifacts.
+EmbeddingResolverStub can produce deterministic candidates for tests.
+Retrieval score is never enough to create ReferenceBinding.
+Top-1 retrieval cannot authorize calculation.
+Obligation-indexed retrieval can feed the existing reference search / selection loop.
+No vector DB dependency is introduced.
+No real LLM call is introduced.
 ```
 
 Non-goals:
 
 ```text
-No GovernanceDecision implementation.
-No new rule engine.
-No LLM integration.
-No Lark reintroduction into core.
-No ESG taxonomy ingestion.
-No package rename.
+No production embedding model.
+No reference DB ingestion pipeline.
+No automatic profile patch activation.
+No candidate graph implementation.
+No retrieval staging area implementation.
+No UI viewer yet.
 ```
 
-The following PR should then be:
+Future retrieval work can then add:
 
 ```text
-PR9: SemanticJudgmentObligation Minimal Slice
-```
-
-Candidate scope:
-
-```text
-Add generic SemanticJudgmentRequirement / SemanticJudgment models.
-Allow a rule to open semantic_judgment_required obligations.
-Validate submitted judgments against obligation_id, rubric_id, verdict, judge policy, and cited spans.
-Keep ESG specifics in test fixtures or a tiny domain fixture, not core.
-```
-
-The reference-grounded calculation work should come after the semantic
-obligation slice unless a smaller document-only PR is needed first:
-
-```text
-PR10 candidate: ReferenceBinding / DerivedClaim Working Slice
-```
-
-Candidate scope:
-
-```text
-Add generic ReferenceCandidate / ReferenceBinding / DerivedClaim model envelopes.
-Keep reference DB specifics in a tiny domain fixture.
-Show that retrieval scores do not bind references.
-Show that calculator output remains a derived claim until receipt.
+near-miss / negative retrieval fixtures
+profile coverage retrieval
+candidate graph facts
+static Domain Scenario Lab report viewer
 ```
 
 ---
 
-## 14. Open Questions
+## 15. Open Questions
 
 These are intentionally unresolved:
 
@@ -959,11 +1009,15 @@ Should ReferenceCandidate / ReferenceBinding / DerivedClaim live in core or comp
 Should reference DB rows be part of DomainPack, external resources, or both?
 How should reference DB versions and vector index versions be pinned in CompilerProfile?
 How should evidence quality vectors map to scalar UI indicators without becoming authority?
+How should retrieval lens versions be pinned in CompilerProfile?
+How should embedding model ids and reference index versions appear in receipts?
+Should candidate graph edges become Fact records or a separate trace artifact?
+When should Domain Scenario Lab JSON become a stable fixture contract?
 ```
 
 ---
 
-## 15. Revision Log
+## 16. Revision Log
 
 ```text
 2026-05-19:
@@ -972,4 +1026,9 @@ How should evidence quality vectors map to scalar UI indicators without becoming
   Sets the next implementation slice as semantic judgment obligations before broader governance work.
   Adds reference-grounded calculation direction:
     embedding retrieves candidates, deterministic binding selects references, calculator emits derived claims, and quality scores remain advisory.
+  Refreshes current implementation status after semantic judgment, reference binding,
+  calculation, resolver task, commit package, governance, receipt, judgment fact,
+  and Domain Scenario Lab slices landed.
+  Aligns next implementation direction with Retrieval lens interface and
+  EmbeddingResolverStub.
 ```

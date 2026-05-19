@@ -72,6 +72,40 @@ def test_top_level_package_no_longer_exports_legacy_runner_surface():
     assert not hasattr(comp, "PipelineRunResult")
 
 
+def test_readme_compiler_tool_import_surface_is_exported():
+    from comp.compiler_tool import (
+        CompileReport,
+        CompilerTool,
+        build_commit_receipt,
+        compile_report_to_facts,
+        prepare_commit,
+        resolver_tasks_from_report,
+    )
+
+    assert CompilerTool is not None
+    assert CompileReport is not None
+    assert resolver_tasks_from_report is not None
+    assert prepare_commit is not None
+    assert build_commit_receipt is not None
+    assert compile_report_to_facts is not None
+
+
+def test_working_theory_status_section_tracks_current_rebuild_state():
+    working_theory = Path(
+        "docs/architecture/obligation-kernel-working-theory.md"
+    ).read_text(encoding="utf-8")
+
+    assert "## 13. Current Implementation Status" in working_theory
+    assert "SemanticJudgment obligation validation" in working_theory
+    assert "ReferenceCandidate / ReferenceBinding" in working_theory
+    assert "CommitPackage / GovernanceDecision / CommitReceipt" in working_theory
+    assert "Domain Scenario Lab" in working_theory
+    assert "Retrieval lens interface" in working_theory
+    assert "EmbeddingResolverStub" in working_theory
+    assert "PR8: Core / Domain Boundary Working Theory" not in working_theory
+    assert "PR9: SemanticJudgmentObligation Minimal Slice" not in working_theory
+
+
 def test_pyproject_packages_comp_core_and_agent_layer():
     pyproject = tomllib.loads(Path("pyproject.toml").read_text())
 
