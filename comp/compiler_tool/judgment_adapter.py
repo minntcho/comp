@@ -24,6 +24,29 @@ def compile_report_to_facts(report: CompileReport, subject: SubjectRef) -> set[F
             )
         )
 
+    for claim in report.derived_claims:
+        facts.add(
+            Fact(
+                tag="evidence",
+                subject=subject,
+                key=claim.field,
+                value=claim.value,
+                witness=claim.trace.trace_id,
+                weight=1.0,
+                meta=(
+                    ("claim_id", claim.claim_id),
+                    ("formula_id", claim.formula_id),
+                    ("input_claim_ids", claim.trace.input_claim_ids),
+                    ("origin", claim.origin),
+                    ("reference_binding_ids", claim.trace.reference_binding_ids),
+                    ("report_section", "derived_claim"),
+                    ("report_status", report.status),
+                    ("trace_id", claim.trace.trace_id),
+                    ("unit", claim.unit),
+                ),
+            )
+        )
+
     for claim in report.failed_claims:
         facts.add(
             Fact(
