@@ -83,6 +83,8 @@ def apply_semantic_judgments(
             *tuple(newly_resolved),
         ),
         hazards=tuple(hazards),
+        reference_candidates=report.reference_candidates,
+        reference_bindings=report.reference_bindings,
         can_project_public_row=report.can_project_public_row,
     )
 

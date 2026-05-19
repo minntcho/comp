@@ -25,6 +25,11 @@ from comp.compiler_tool.profiles import (
     validate_compiler_profile,
 )
 from comp.compiler_tool.profile_runner import compile_with_profile
+from comp.compiler_tool.references import (
+    ReferenceBinding,
+    ReferenceCandidate,
+    RejectedReferenceCandidate,
+)
 from comp.compiler_tool.semantic import apply_semantic_judgments
 from comp.compiler_tool.tool import CompilerTool
 from comp.compiler_tool.judgment_adapter import (
@@ -45,6 +50,9 @@ __all__ = [
     "SemanticJudgmentRequirement",
     "SemanticJudgment",
     "Hazard",
+    "ReferenceCandidate",
+    "RejectedReferenceCandidate",
+    "ReferenceBinding",
     "RuleFamily",
     "SemanticRubric",
     "JudgePolicy",
