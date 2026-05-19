@@ -1,0 +1,93 @@
+from __future__ import annotations
+
+from collections.abc import Iterable
+from dataclasses import dataclass, field
+
+from comp.compiler_tool.models import CompileReport, Hazard, ProofObligation
+from comp.compiler_tool.report_status import recompute_report_status
+
+
+@dataclass(frozen=True)
+class CommitPackage:
+    package_id: str
+    subject_id: str
+    report_status: str
+    checked_claim_fields: tuple[str, ...] = field(default_factory=tuple)
+    semantic_judgment_ids: tuple[str, ...] = field(default_factory=tuple)
+    reference_binding_ids: tuple[str, ...] = field(default_factory=tuple)
+    derived_claim_ids: tuple[str, ...] = field(default_factory=tuple)
+    calculation_trace_ids: tuple[str, ...] = field(default_factory=tuple)
+    open_obligation_ids: tuple[str, ...] = field(default_factory=tuple)
+    resolved_obligation_ids: tuple[str, ...] = field(default_factory=tuple)
+    hazard_ids: tuple[str, ...] = field(default_factory=tuple)
+    profile_id: str | None = None
+    complete: bool = False
+
+    @property
+    def can_authorize_public_projection(self) -> bool:
+        return False
+
+
+def build_commit_package(
+    report: CompileReport,
+    *,
+    subject_id: str,
+    package_id: str | None = None,
+    profile_id: str | None = None,
+    semantic_judgment_ids: Iterable[str] = (),
+) -> CommitPackage:
+    report_status = recompute_report_status(report)
+    open_obligation_ids = tuple(
+        _obligation_id(obligation) for obligation in report.obligations
+    )
+    has_open_blocking_obligation = any(
+        obligation.blocking for obligation in report.obligations
+    )
+    hazard_ids = tuple(_hazard_id(hazard) for hazard in report.hazards)
+
+    return CommitPackage(
+        package_id=package_id or f"commit-package:{subject_id}",
+        subject_id=subject_id,
+        report_status=report_status,
+        checked_claim_fields=tuple(claim.field for claim in report.checked_claims),
+        semantic_judgment_ids=tuple(semantic_judgment_ids),
+        reference_binding_ids=tuple(
+            binding.binding_id for binding in report.reference_bindings
+        ),
+        derived_claim_ids=tuple(claim.claim_id for claim in report.derived_claims),
+        calculation_trace_ids=tuple(
+            claim.trace.trace_id for claim in report.derived_claims
+        ),
+        open_obligation_ids=open_obligation_ids,
+        resolved_obligation_ids=tuple(
+            _obligation_id(obligation)
+            for obligation in report.resolved_obligations
+        ),
+        hazard_ids=hazard_ids,
+        profile_id=profile_id,
+        complete=report_status == "accepted"
+        and not has_open_blocking_obligation
+        and not hazard_ids,
+    )
+
+
+def _obligation_id(obligation: ProofObligation) -> str:
+    if obligation.obligation_id is not None:
+        return obligation.obligation_id
+    return _stable_id(
+        "proof_obligation",
+        obligation.kind,
+        obligation.field,
+        obligation.reason,
+    )
+
+
+def _hazard_id(hazard: Hazard) -> str:
+    return _stable_id("hazard", hazard.kind, hazard.field, hazard.severity)
+
+
+def _stable_id(*parts: str) -> str:
+    return ":".join(str(part) for part in parts)
+
+
+__all__ = ["CommitPackage", "build_commit_package"]
