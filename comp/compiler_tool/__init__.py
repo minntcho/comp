@@ -12,6 +12,7 @@ from comp.compiler_tool.calculations import (
 )
 from comp.compiler_tool.calculation_report import apply_calculation_result
 from comp.compiler_tool.calculation_resolution import plan_calculation_resolution
+from comp.compiler_tool.calculation_retry import retry_blocked_calculation
 from comp.compiler_tool.models import (
     CheckedClaim,
     ClaimHypothesis,
@@ -87,6 +88,7 @@ __all__ = [
     "calculate_derived_claim",
     "apply_calculation_result",
     "plan_calculation_resolution",
+    "retry_blocked_calculation",
     "ReferenceCandidate",
     "RejectedReferenceCandidate",
     "ReferenceBinding",
