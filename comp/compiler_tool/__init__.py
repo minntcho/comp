@@ -42,6 +42,10 @@ from comp.compiler_tool.reference_db import (
     ReferenceLookupError,
     ReferenceRecord,
 )
+from comp.compiler_tool.reference_resolution import (
+    ReferenceSearchQuery,
+    resolve_reference_search_obligations,
+)
 from comp.compiler_tool.reference_selector import (
     ReferenceSelectionCriteria,
     ReferenceSelectionResult,
@@ -88,6 +92,8 @@ __all__ = [
     "ReferenceLookupError",
     "ReferenceRecord",
     "ReferenceCatalog",
+    "ReferenceSearchQuery",
+    "resolve_reference_search_obligations",
     "ReferenceSelectionCriteria",
     "ReferenceSelectionResult",
     "select_reference_binding",
