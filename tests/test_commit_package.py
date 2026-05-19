@@ -65,10 +65,12 @@ def test_commit_package_collects_report_artifacts_without_receipt_authority():
     assert package.profile_id == "esg-ghg-v1"
     assert package.report_status == "accepted"
     assert package.checked_claim_fields == ("amount",)
+    assert package.checked_claim_witness_ids == ("span-amount",)
     assert package.semantic_judgment_ids == ("judgment-scope2",)
     assert package.reference_binding_ids == ("bind-amount-factor",)
     assert package.derived_claim_ids == ("hyp-1:co2e_emission",)
     assert package.calculation_trace_ids == ("trace:hyp-1:co2e_emission",)
+    assert package.formula_ids == ("ghg.electricity_factor_multiplication.v1",)
     assert package.open_obligation_ids == ()
     assert package.resolved_obligation_ids == ("calculation:hyp-1:co2e_emission",)
     assert package.hazard_ids == ()

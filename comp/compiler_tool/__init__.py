@@ -65,6 +65,10 @@ from comp.compiler_tool.references import (
     ReferenceCandidate,
     RejectedReferenceCandidate,
 )
+from comp.compiler_tool.receipt_builder import (
+    ReceiptBuildBlocked,
+    build_commit_receipt,
+)
 from comp.compiler_tool.report_status import (
     recompute_report_status,
     with_recomputed_status,
@@ -109,6 +113,8 @@ __all__ = [
     "ReferenceCandidate",
     "RejectedReferenceCandidate",
     "ReferenceBinding",
+    "ReceiptBuildBlocked",
+    "build_commit_receipt",
     "ReferenceLookupError",
     "ReferenceRecord",
     "ReferenceCatalog",

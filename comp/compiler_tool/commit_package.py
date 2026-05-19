@@ -13,10 +13,12 @@ class CommitPackage:
     subject_id: str
     report_status: str
     checked_claim_fields: tuple[str, ...] = field(default_factory=tuple)
+    checked_claim_witness_ids: tuple[str, ...] = field(default_factory=tuple)
     semantic_judgment_ids: tuple[str, ...] = field(default_factory=tuple)
     reference_binding_ids: tuple[str, ...] = field(default_factory=tuple)
     derived_claim_ids: tuple[str, ...] = field(default_factory=tuple)
     calculation_trace_ids: tuple[str, ...] = field(default_factory=tuple)
+    formula_ids: tuple[str, ...] = field(default_factory=tuple)
     open_obligation_ids: tuple[str, ...] = field(default_factory=tuple)
     resolved_obligation_ids: tuple[str, ...] = field(default_factory=tuple)
     hazard_ids: tuple[str, ...] = field(default_factory=tuple)
@@ -50,6 +52,9 @@ def build_commit_package(
         subject_id=subject_id,
         report_status=report_status,
         checked_claim_fields=tuple(claim.field for claim in report.checked_claims),
+        checked_claim_witness_ids=tuple(
+            claim.witness_id for claim in report.checked_claims
+        ),
         semantic_judgment_ids=tuple(semantic_judgment_ids),
         reference_binding_ids=tuple(
             binding.binding_id for binding in report.reference_bindings
@@ -58,6 +63,7 @@ def build_commit_package(
         calculation_trace_ids=tuple(
             claim.trace.trace_id for claim in report.derived_claims
         ),
+        formula_ids=_unique(claim.formula_id for claim in report.derived_claims),
         open_obligation_ids=open_obligation_ids,
         resolved_obligation_ids=tuple(
             _obligation_id(obligation)
@@ -88,6 +94,17 @@ def _hazard_id(hazard: Hazard) -> str:
 
 def _stable_id(*parts: str) -> str:
     return ":".join(str(part) for part in parts)
+
+
+def _unique(values: Iterable[str]) -> tuple[str, ...]:
+    seen = set()
+    unique_values = []
+    for value in values:
+        if value in seen:
+            continue
+        seen.add(value)
+        unique_values.append(value)
+    return tuple(unique_values)
 
 
 __all__ = ["CommitPackage", "build_commit_package"]
