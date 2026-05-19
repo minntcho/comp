@@ -8,6 +8,7 @@ from comp.compiler_tool.calculations import (
     CalculationResult,
 )
 from comp.compiler_tool.models import CompileReport, ProofObligation
+from comp.compiler_tool.report_status import with_recomputed_status
 
 
 def apply_calculation_result(
@@ -18,10 +19,12 @@ def apply_calculation_result(
     formula: CalculationFormula,
 ) -> CompileReport:
     if result.status == "calculated" and result.derived_claim is not None:
-        return replace(
-            report,
-            derived_claims=(*report.derived_claims, result.derived_claim),
-            can_project_public_row=False,
+        return with_recomputed_status(
+            replace(
+                report,
+                derived_claims=(*report.derived_claims, result.derived_claim),
+                can_project_public_row=False,
+            )
         )
 
     reason = result.reason or "calculation_blocked"
@@ -41,11 +44,12 @@ def apply_calculation_result(
         blocking=True,
         calculation_requirement=requirement,
     )
-    return replace(
-        report,
-        status="blocked",
-        obligations=_append_unique(report.obligations, obligation),
-        can_project_public_row=False,
+    return with_recomputed_status(
+        replace(
+            report,
+            obligations=_append_unique(report.obligations, obligation),
+            can_project_public_row=False,
+        )
     )
 
 

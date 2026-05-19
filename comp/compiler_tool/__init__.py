@@ -59,6 +59,10 @@ from comp.compiler_tool.references import (
     ReferenceCandidate,
     RejectedReferenceCandidate,
 )
+from comp.compiler_tool.report_status import (
+    recompute_report_status,
+    with_recomputed_status,
+)
 from comp.compiler_tool.semantic import apply_semantic_judgments
 from comp.compiler_tool.tool import CompilerTool
 from comp.compiler_tool.judgment_adapter import (
@@ -103,6 +107,8 @@ __all__ = [
     "ReferenceSelectionCriteria",
     "ReferenceSelectionResult",
     "select_reference_binding",
+    "recompute_report_status",
+    "with_recomputed_status",
     "RuleFamily",
     "SemanticRubric",
     "JudgePolicy",

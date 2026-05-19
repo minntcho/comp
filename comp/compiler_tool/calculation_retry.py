@@ -9,9 +9,10 @@ from comp.compiler_tool.calculations import (
     DerivedClaim,
     calculate_derived_claim,
 )
-from comp.compiler_tool.models import CompileReport, Hazard, ProofObligation
+from comp.compiler_tool.models import CompileReport, ProofObligation
 from comp.compiler_tool.reference_db import ReferenceCatalog
 from comp.compiler_tool.references import ReferenceBinding
+from comp.compiler_tool.report_status import with_recomputed_status
 
 
 def retry_blocked_calculation(
@@ -45,18 +46,15 @@ def retry_blocked_calculation(
             ),
             can_project_public_row=False,
         )
-        return replace(
-            base_report,
-            status=_status_for(
-                report=base_report,
-                open_obligations=base_report.obligations,
-                hazards=base_report.hazards,
-            ),
-            derived_claims=_append_unique_derived_claim(
-                base_report.derived_claims,
-                result.derived_claim,
-            ),
-            can_project_public_row=False,
+        return with_recomputed_status(
+            replace(
+                base_report,
+                derived_claims=_append_unique_derived_claim(
+                    base_report.derived_claims,
+                    result.derived_claim,
+                ),
+                can_project_public_row=False,
+            )
         )
 
     return apply_calculation_result(
@@ -127,30 +125,6 @@ def _append_unique_derived_claim(
     if any(claim.claim_id == addition.claim_id for claim in existing):
         return existing
     return (*existing, addition)
-
-
-def _status_for(
-    *,
-    report: CompileReport,
-    open_obligations: tuple[ProofObligation, ...],
-    hazards: tuple[Hazard, ...],
-) -> str:
-    if report.failed_claims:
-        return "blocked"
-    if any(
-        obligation.kind == "calculation_blocked" and obligation.blocking
-        for obligation in open_obligations
-    ):
-        return "blocked"
-    if hazards:
-        return "review_required"
-    if report.unchecked_areas:
-        return "unchecked"
-    if report.unknowns:
-        return "underconstrained"
-    if any(obligation.blocking for obligation in open_obligations):
-        return "review_required"
-    return "accepted"
 
 
 __all__ = ["retry_blocked_calculation"]

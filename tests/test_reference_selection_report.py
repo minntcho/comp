@@ -134,7 +134,7 @@ def test_reference_selection_opens_obligation_when_candidates_are_ambiguous():
         field="co2e_emission",
     )
 
-    assert updated.status == "blocked"
+    assert updated.status == "review_required"
     assert updated.reference_bindings == ()
     assert updated.obligations == (_selection_obligation(reason="ambiguous"),)
 
@@ -158,7 +158,7 @@ def test_reference_selection_opens_obligation_when_no_candidate_matches():
         field="co2e_emission",
     )
 
-    assert updated.status == "blocked"
+    assert updated.status == "review_required"
     assert updated.reference_bindings == ()
     assert updated.obligations == (_selection_obligation(reason="no_match"),)
 

@@ -12,6 +12,7 @@ from comp.compiler_tool.models import (
     UncheckedArea,
     UnknownClaim,
 )
+from comp.compiler_tool.report_status import with_recomputed_status
 
 
 class CompilerTool:
@@ -106,15 +107,17 @@ class CompilerTool:
             hazards.append(Hazard(kind="missing_unit", field="unit", severity="review"))
             self._add_find_source_witness(obligations, "unit", "missing_unit")
 
-        return CompileReport(
-            status=self._status_for(failed, hazards, unchecked, unknowns),
-            checked_claims=tuple(checked),
-            failed_claims=tuple(failed),
-            unknowns=tuple(unknowns),
-            unchecked_areas=tuple(unchecked),
-            obligations=tuple(obligations),
-            hazards=tuple(hazards),
-            can_project_public_row=False,
+        return with_recomputed_status(
+            CompileReport(
+                status="accepted",
+                checked_claims=tuple(checked),
+                failed_claims=tuple(failed),
+                unknowns=tuple(unknowns),
+                unchecked_areas=tuple(unchecked),
+                obligations=tuple(obligations),
+                hazards=tuple(hazards),
+                can_project_public_row=False,
+            )
         )
 
     @staticmethod
@@ -160,23 +163,6 @@ class CompilerTool:
             )
 
         return None
-
-    @staticmethod
-    def _status_for(
-        failed: list[FailedClaim],
-        hazards: list[Hazard],
-        unchecked: list[UncheckedArea],
-        unknowns: list[UnknownClaim],
-    ) -> str:
-        if failed:
-            return "blocked"
-        if hazards:
-            return "review_required"
-        if unchecked:
-            return "unchecked"
-        if unknowns:
-            return "underconstrained"
-        return "accepted"
 
     @staticmethod
     def _add_find_source_witness(

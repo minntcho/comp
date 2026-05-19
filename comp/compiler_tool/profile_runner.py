@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from comp.compiler_tool.models import CompileReport, InterpretationHypothesis, ProofObligation
 from comp.compiler_tool.profiles import CompilerProfile, active_rule_families, validate_compiler_profile
+from comp.compiler_tool.report_status import with_recomputed_status
 
 
 def compile_with_profile(
@@ -19,20 +20,13 @@ def compile_with_profile(
                 if isinstance(result, ProofObligation) and result not in obligations:
                     obligations.append(result)
 
-    return CompileReport(
-        status=_status_for(obligations),
-        obligations=tuple(obligations),
-        can_project_public_row=False,
+    return with_recomputed_status(
+        CompileReport(
+            status="accepted",
+            obligations=tuple(obligations),
+            can_project_public_row=False,
+        )
     )
-
-
-def _status_for(obligations: list[ProofObligation]) -> str:
-    if any(
-        obligation.kind == "semantic_judgment_required" and obligation.blocking
-        for obligation in obligations
-    ):
-        return "review_required"
-    return "accepted"
 
 
 __all__ = ["compile_with_profile"]
