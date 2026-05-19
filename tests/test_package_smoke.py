@@ -4,6 +4,7 @@ import tomllib
 import comp
 from comp import (
     CommitReceipt,
+    CommitReceiptCitations,
     Fact,
     FixpointEngine,
     JudgmentState,
@@ -61,6 +62,7 @@ def test_top_level_package_exposes_active_judgment_surface():
     assert FixpointEngine is not None
     assert SelectionReceipt is not None
     assert CommitReceipt is not None
+    assert CommitReceiptCitations is not None
 
 
 def test_top_level_package_no_longer_exports_legacy_runner_surface():
