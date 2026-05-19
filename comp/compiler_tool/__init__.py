@@ -9,6 +9,7 @@ from comp.compiler_tool.calculations import (
     DerivedClaim,
     calculate_derived_claim,
 )
+from comp.compiler_tool.calculation_report import apply_calculation_result
 from comp.compiler_tool.models import (
     CheckedClaim,
     ClaimHypothesis,
@@ -76,6 +77,7 @@ __all__ = [
     "CalculationTrace",
     "DerivedClaim",
     "calculate_derived_claim",
+    "apply_calculation_result",
     "ReferenceCandidate",
     "RejectedReferenceCandidate",
     "ReferenceBinding",

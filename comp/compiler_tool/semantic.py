@@ -127,6 +127,11 @@ def _status_for(
 ) -> str:
     if report.failed_claims:
         return "blocked"
+    if any(
+        obligation.kind == "calculation_blocked" and obligation.blocking
+        for obligation in open_obligations
+    ):
+        return "blocked"
     if hazards:
         return "review_required"
     if any(
@@ -138,6 +143,8 @@ def _status_for(
         return "unchecked"
     if report.unknowns:
         return "underconstrained"
+    if any(obligation.blocking for obligation in open_obligations):
+        return "review_required"
     return "accepted"
 
 
