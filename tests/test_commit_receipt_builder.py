@@ -2,9 +2,15 @@ import pytest
 
 from comp import ProjectionBlocked, ProjectionSpec, project_public_row
 from comp.compiler_tool import (
+    CalculationTrace,
+    CheckedClaim,
     CommitPackage,
     CommitReceiptCitations,
+    CompileReport,
+    DerivedClaim,
+    ProjectionValueCommitment,
     ReceiptBuildBlocked,
+    build_commit_package,
     build_commit_receipt,
     decide_governance,
 )
@@ -109,14 +115,148 @@ def test_commit_receipt_builder_exposes_typed_citations():
     assert receipt.citations.to_barrier_snapshot() == receipt.barrier_snapshot
 
 
-def test_generated_commit_receipt_can_authorize_existing_projection_gate():
-    package = CommitPackage(
-        package_id="commit-package:facility-1",
-        subject_id="facility-1",
-        report_status="accepted",
-        checked_claim_fields=("site", "amount"),
-        complete=True,
+def test_commit_receipt_builder_commits_checked_and_derived_projection_values():
+    report = CompileReport(
+        status="accepted",
+        checked_claims=(
+            CheckedClaim(
+                field="amount",
+                value=1200,
+                witness_id="span-amount",
+                origin="source_text",
+            ),
+        ),
+        derived_claims=(
+            DerivedClaim(
+                claim_id="hyp-1:co2e_emission",
+                field="co2e_emission",
+                value=0.48,
+                unit="tCO2e",
+                trace=CalculationTrace(
+                    trace_id="trace:hyp-1:co2e_emission",
+                    formula_id="ghg.electricity_factor_multiplication.v1",
+                ),
+            ),
+        ),
     )
+    package = build_commit_package(
+        report,
+        subject_id="facility-1",
+        profile_id="esg-ghg-v1",
+    )
+
+    receipt = build_commit_receipt(
+        package,
+        decide_governance(package),
+        public_row_id="public-row-1",
+        projection_id="public-row",
+    )
+
+    commitments = receipt.citations.projection_value_commitments
+    assert commitments == (
+        ProjectionValueCommitment.from_value(
+            field="amount",
+            source_kind="checked_claim",
+            source_id="checked_claim:amount:span-amount",
+            value=1200,
+        ),
+        ProjectionValueCommitment.from_value(
+            field="co2e_emission",
+            source_kind="derived_claim",
+            source_id="hyp-1:co2e_emission",
+            value=0.48,
+        ),
+    )
+
+    snapshot = dict(receipt.barrier_snapshot)
+    assert snapshot["projection_value_commitments"] == commitments
+    assert tuple(ProjectionValueCommitment.__dataclass_fields__) == (
+        "field",
+        "source_kind",
+        "source_id",
+        "value_digest",
+        "digest_alg",
+    )
+    assert all(commitment.value_digest.startswith("sha256:") for commitment in commitments)
+
+
+def test_commit_receipt_value_digests_preserve_value_type():
+    report = CompileReport(
+        status="accepted",
+        checked_claims=(
+            CheckedClaim(
+                field="amount_int",
+                value=1200,
+                witness_id="span-int",
+                origin="source_text",
+            ),
+            CheckedClaim(
+                field="amount_int_again",
+                value=1200,
+                witness_id="span-int-again",
+                origin="source_text",
+            ),
+            CheckedClaim(
+                field="amount_str",
+                value="1200",
+                witness_id="span-str",
+                origin="source_text",
+            ),
+            CheckedClaim(
+                field="amount_float",
+                value=1200.0,
+                witness_id="span-float",
+                origin="source_text",
+            ),
+        ),
+    )
+    package = build_commit_package(report, subject_id="facility-1")
+    receipt = build_commit_receipt(
+        package,
+        decide_governance(package),
+        public_row_id="public-row-1",
+        projection_id="public-row",
+    )
+
+    commitments = {
+        commitment.field: commitment
+        for commitment in receipt.citations.projection_value_commitments
+    }
+
+    assert commitments["amount_int"].value_digest.startswith("sha256:")
+    assert (
+        commitments["amount_int"].value_digest
+        == commitments["amount_int_again"].value_digest
+    )
+    assert (
+        commitments["amount_int"].value_digest
+        != commitments["amount_str"].value_digest
+    )
+    assert (
+        commitments["amount_int"].value_digest
+        != commitments["amount_float"].value_digest
+    )
+
+
+def test_generated_commit_receipt_can_authorize_existing_projection_gate():
+    report = CompileReport(
+        status="accepted",
+        checked_claims=(
+            CheckedClaim(
+                field="site",
+                value="plant-a",
+                witness_id="span-site",
+                origin="source_text",
+            ),
+            CheckedClaim(
+                field="amount",
+                value=100,
+                witness_id="span-amount",
+                origin="source_text",
+            ),
+        ),
+    )
+    package = build_commit_package(report, subject_id="facility-1")
     receipt = build_commit_receipt(
         package,
         decide_governance(package),

@@ -1,3 +1,6 @@
+import pytest
+
+from comp import ProjectionBlocked, ProjectionSpec, project_public_row
 from tests.domain_scenarios.core import (
     ScenarioDefinition,
     SourceRef,
@@ -56,6 +59,18 @@ def test_tiny_pcf_scenario_runs_reference_to_receipt_flow():
     assert result.preparation.decision.status == "commit"
     assert result.preparation.receipt is not None
     assert result.projection == EXPECTED_PROJECTION
+
+
+def test_tiny_pcf_scenario_rejects_tampered_projection_value():
+    result = run_tiny_pcf_scenario()
+
+    assert result.preparation.receipt is not None
+    with pytest.raises(ProjectionBlocked, match="value commitment"):
+        project_public_row(
+            {"electricity_kwh": 1200, "co2e_kg": 999999},
+            ProjectionSpec("pcf-public-row", ("electricity_kwh", "co2e_kg")),
+            receipt=result.preparation.receipt,
+        )
 
 
 def test_tiny_pcf_scenario_preserves_traceable_domain_artifacts():

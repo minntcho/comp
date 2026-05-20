@@ -1,6 +1,11 @@
 from __future__ import annotations
 
+import hashlib
+import json
+import math
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, field
+from decimal import Decimal
 from typing import Any
 
 
@@ -11,6 +16,34 @@ class SelectionReceipt:
     winner_id: str | None
     bundle_version: int
     reason: tuple[str, ...] = field(default_factory=tuple)
+
+
+@dataclass(frozen=True, slots=True)
+class ProjectionValueCommitment:
+    field: str
+    source_kind: str
+    source_id: str
+    value_digest: str
+    digest_alg: str = "sha256"
+
+    @classmethod
+    def from_value(
+        cls,
+        *,
+        field: str,
+        source_kind: str,
+        source_id: str,
+        value: Any,
+    ) -> "ProjectionValueCommitment":
+        return cls(
+            field=field,
+            source_kind=source_kind,
+            source_id=source_id,
+            value_digest=_value_digest(value),
+        )
+
+    def matches_value(self, value: Any) -> bool:
+        return self.value_digest == _value_digest(value)
 
 
 @dataclass(frozen=True, slots=True)
@@ -36,6 +69,9 @@ class CommitReceiptCitations:
     resolved_obligation_ids: tuple[str, ...]
     open_obligation_ids: tuple[str, ...]
     hazard_ids: tuple[str, ...]
+    projection_value_commitments: tuple[ProjectionValueCommitment, ...] = field(
+        default_factory=tuple
+    )
 
     def to_barrier_snapshot(self) -> tuple[tuple[str, Any], ...]:
         return (
@@ -60,6 +96,10 @@ class CommitReceiptCitations:
             ("resolved_obligation_ids", self.resolved_obligation_ids),
             ("open_obligation_ids", self.open_obligation_ids),
             ("hazard_ids", self.hazard_ids),
+            (
+                "projection_value_commitments",
+                self.projection_value_commitments,
+            ),
         )
 
 
@@ -74,4 +114,61 @@ class CommitReceipt:
     citations: CommitReceiptCitations | None = None
 
 
-__all__ = ["SelectionReceipt", "CommitReceipt", "CommitReceiptCitations"]
+def _value_digest(value: Any) -> str:
+    canonical = json.dumps(
+        _canonical_value(value),
+        allow_nan=False,
+        ensure_ascii=True,
+        separators=(",", ":"),
+        sort_keys=True,
+    )
+    digest = hashlib.sha256(canonical.encode("utf-8")).hexdigest()
+    return f"sha256:{digest}"
+
+
+def _canonical_value(value: Any) -> Any:
+    if value is None:
+        return {"type": "none", "value": None}
+    if isinstance(value, bool):
+        return {"type": "bool", "value": value}
+    if isinstance(value, int):
+        return {"type": "int", "value": str(value)}
+    if isinstance(value, float):
+        if not math.isfinite(value):
+            raise ValueError("Projection value commitment requires a finite float.")
+        return {"type": "float", "value": repr(value)}
+    if isinstance(value, str):
+        return {"type": "str", "value": value}
+    if isinstance(value, Decimal):
+        if not value.is_finite():
+            raise ValueError("Projection value commitment requires a finite decimal.")
+        return {"type": "decimal", "value": str(value)}
+    if isinstance(value, Mapping):
+        return {
+            "type": "mapping",
+            "value": tuple(
+                (str(key), _canonical_value(item))
+                for key, item in sorted(value.items(), key=lambda pair: str(pair[0]))
+            ),
+        }
+    if isinstance(value, tuple):
+        return {
+            "type": "tuple",
+            "value": tuple(_canonical_value(item) for item in value),
+        }
+    if isinstance(value, Sequence) and not isinstance(value, (bytes, bytearray)):
+        return {
+            "type": "sequence",
+            "value": tuple(_canonical_value(item) for item in value),
+        }
+    raise TypeError(
+        f"Unsupported projection value for commitment: {type(value).__name__}"
+    )
+
+
+__all__ = [
+    "SelectionReceipt",
+    "ProjectionValueCommitment",
+    "CommitReceipt",
+    "CommitReceiptCitations",
+]

@@ -19,6 +19,7 @@ from comp.judgment import (
     JudgmentState,
     ProjectionBlocked,
     ProjectionSpec,
+    ProjectionValueCommitment,
     SelectionReceipt,
     SubjectKind,
     SubjectRef,
@@ -61,6 +62,7 @@ __all__ = [
     "committable",
     "project_public_row",
     "SelectionReceipt",
+    "ProjectionValueCommitment",
     "CommitReceipt",
     "CommitReceiptCitations",
 ]
