@@ -923,9 +923,10 @@ domain scenarios
 
 ---
 
-## 14. Next Implementation Slice
+## 14. Retrieval Implementation Slice
 
-Recommended next implementation direction:
+The retrieval north star should enter the codebase in small slices. The first
+slice is:
 
 ```text
 feat: add retrieval lens interface and embedding resolver stub
@@ -965,7 +966,37 @@ Retrieval lens interface can return candidate_only artifacts.
 EmbeddingResolverStub can produce deterministic candidates for tests.
 Retrieval score is never enough to create ReferenceBinding.
 Top-1 retrieval cannot authorize calculation.
-Obligation-indexed retrieval can feed the existing reference search / selection loop.
+No vector DB dependency is introduced.
+No real LLM call is introduced.
+```
+
+The bridge slice is:
+
+```text
+feat: add retrieval resolver bridge
+```
+
+Purpose:
+
+```text
+Connect reference_search_required obligations to ReferenceResolver.search.
+Add candidate_only ReferenceCandidate artifacts to CompileReport.
+Resolve only the search obligation, not calculation or publication authority.
+Leave ReferenceBinding to deterministic reference selection.
+Leave DerivedClaim to deterministic calculation retry.
+```
+
+Acceptance criteria:
+
+```text
+ProofObligation(reference_search_required)
+-> ReferenceQuery
+-> ReferenceResolver.search(...)
+-> CompileReport.reference_candidates
+
+No ReferenceBinding is created by retrieval.
+No DerivedClaim is created by retrieval.
+No public projection authority is created by retrieval.
 No vector DB dependency is introduced.
 No real LLM call is introduced.
 ```

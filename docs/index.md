@@ -51,6 +51,9 @@ semantic
   SemanticJudgment protocol validation
 
 reference
+  ReferenceQuery
+  ReferenceResolver / EmbeddingResolverStub
+  reference_search_required -> candidate-only ReferenceCandidate
   ReferenceCandidate
   ReferenceBinding
   deterministic reference selection
