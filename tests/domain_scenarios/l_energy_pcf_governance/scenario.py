@@ -7,7 +7,7 @@ from comp.compiler_tool import (
     apply_reference_selection,
     plan_calculation_resolution,
     prepare_commit,
-    reference_query_for_obligation_from_policy,
+    reference_query_for_obligation_from_profile_policy,
     resolve_reference_retrieval_obligations,
     resolver_tasks_from_report,
     retry_blocked_calculation,
@@ -41,9 +41,9 @@ from tests.domain_scenarios.l_energy_pcf_governance.fixtures import (
     criteria,
     formula,
     input_claim,
+    profile,
     reference_resolver,
     retrieval_query_context,
-    retrieval_query_policy,
 )
 
 
@@ -52,7 +52,7 @@ RESOLVER_STEPS = (
     "open_l_energy_own_emission_calculation_obligation",
     "plan_calculation_resolution",
     "resolver_tasks_from_report",
-    "retrieval_query_policy",
+    "profile_active_retrieval_policy",
     "resolver_task_to_reference_query",
     "reference_retrieval:embedding_stub:factor",
     "deterministic_reference_selection",
@@ -126,15 +126,16 @@ def _projection_source(report) -> dict[str, object]:
 
 
 def _compile_retrieval_backed_report() -> CompileReport:
+    scenario_profile = profile()
     opened_report = blocked_report()
     planned_report = plan_calculation_resolution(opened_report)
     resolver_tasks = resolver_tasks_from_report(planned_report)
     retrieval_report = resolve_reference_retrieval_obligations(
         planned_report,
         reference_resolver(),
-        query_for_obligation=reference_query_for_obligation_from_policy(
+        query_for_obligation=reference_query_for_obligation_from_profile_policy(
             resolver_tasks,
-            policy=retrieval_query_policy(),
+            profile=scenario_profile,
             context=retrieval_query_context(),
         ),
     )

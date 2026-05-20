@@ -8,7 +8,9 @@ from comp.compiler_tool import (
     CalculationTrace,
     CheckedClaim,
     CompileReport,
+    CompilerProfile,
     DerivedClaim,
+    DomainPack,
     EmbeddingResolverStub,
     ReferenceCatalog,
     ReferenceBinding,
@@ -306,6 +308,20 @@ def retrieval_query_policy() -> RetrievalQueryPolicy:
     )
 
 
+def profile() -> CompilerProfile:
+    return CompilerProfile(
+        profile_id=PROFILE_ID,
+        domain_packs=(
+            DomainPack(
+                domain_id="l-energy-pcf-governance",
+                version="2026.1",
+                retrieval_query_policies=(retrieval_query_policy(),),
+            ),
+        ),
+        active_retrieval_policy_ids=("l-energy-pcf-retrieval-query-policy-v1",),
+    )
+
+
 def retrieval_query_context() -> dict[str, object]:
     return {
         "geography": "Korea",
@@ -435,6 +451,7 @@ __all__ = [
     "downstream_reference_bindings",
     "formula",
     "input_claim",
+    "profile",
     "reference_resolver",
     "reference_bindings",
     "retrieval_query_context",

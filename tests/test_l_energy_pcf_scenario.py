@@ -1,5 +1,7 @@
 from tests.domain_scenarios.assertions import assert_receipt_trace
+from comp.compiler_tool import active_retrieval_query_policies
 from tests.domain_scenarios.core import assert_scenario_contract, run_scenario
+from tests.domain_scenarios.l_energy_pcf_governance.fixtures import profile
 from tests.domain_scenarios.l_energy_pcf_governance.expected import (
     EXPECTED_DERIVED_CLAIM_IDS,
     EXPECTED_FORMULA_IDS,
@@ -38,7 +40,7 @@ def test_l_energy_pcf_governance_scenario_resolves_energy_factor_through_retriev
     result = run_l_energy_pcf_governance_scenario()
 
     assert "resolver_tasks_from_report" in result.resolver_steps
-    assert "retrieval_query_policy" in result.resolver_steps
+    assert "profile_active_retrieval_policy" in result.resolver_steps
     assert "reference_retrieval:embedding_stub:factor" in result.resolver_steps
     assert tuple(
         obligation.kind for obligation in result.report.resolved_obligations
@@ -81,6 +83,18 @@ def test_l_energy_pcf_governance_scenario_resolves_energy_factor_through_retriev
     assert own_emission_claim.trace.reference_binding_ids == (
         "bind:pcf:electricity_factor",
     )
+
+
+def test_l_energy_pcf_governance_pins_retrieval_policy_in_profile():
+    scenario_profile = profile()
+
+    assert scenario_profile.active_retrieval_policy_ids == (
+        "l-energy-pcf-retrieval-query-policy-v1",
+    )
+    assert tuple(
+        policy.policy_id
+        for policy in active_retrieval_query_policies(scenario_profile)
+    ) == ("l-energy-pcf-retrieval-query-policy-v1",)
 
 
 def test_l_energy_pcf_governance_scenario_preserves_actor_receipt_trace():
