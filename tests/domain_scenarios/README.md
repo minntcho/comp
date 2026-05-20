@@ -26,6 +26,12 @@ The first scenario is `tiny_pcf`, a product-carbon-footprint slice that exercise
 reference search, near-miss rejection, canonical binding, calculation trace,
 commit preparation, and receipt-gated projection.
 
+The first larger source-referenced pack is `l_energy_pcf_governance`, based on
+`minntcho/esg-platform` case `001-l-energy-pcf-governance`. It uses
+fixture-derived claims from the platform expected receipt to test whether a
+realistic PCF governance case can be represented as `comp` authority artifacts
+without adding a full PCF workflow engine.
+
 ## Testing Philosophy
 
 Domain scenario tests should lock authority boundaries, not implementation shape.
