@@ -1,6 +1,9 @@
 # Trust Kernel Extension Rings
 
-Status: active architecture frame.
+Status: active-contract
+Owner: trust-kernel
+Last checked against code: 2026-05-20
+Can block PRs: yes
 
 This document names the outer shape of the `comp` rebuild. The core is a small
 trust kernel. Domain logic, retrieval, LLM workers, parsers, persistence

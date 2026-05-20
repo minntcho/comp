@@ -1,5 +1,10 @@
 # Legacy Archive Cutover Plan
 
+Status: historical-note
+Owner: docs
+Last checked against code: 2026-05-20
+Can block PRs: no
+
 This document defines the PR sequence for moving `comp` from the legacy
 pass-pipeline surface toward the authority-first compiler-tool architecture.
 

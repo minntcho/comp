@@ -1,6 +1,9 @@
 # Extension Port Contracts
 
-Status: active architecture contract.
+Status: active-contract
+Owner: trust-kernel
+Last checked against code: 2026-05-20
+Can block PRs: yes
 
 This document defines how outer-ring extensions attach to the `comp` trust
 kernel without gaining authority. It is a companion to
@@ -215,6 +218,8 @@ should cite the profile/domain behavior that influenced the projection.
 ## ArtifactStore
 
 Artifact stores persist replay substrate. They do not interpret authority.
+The builder contract for producing replay substrate lives in
+`artifact-envelope-builder.md`.
 
 ```python
 class ArtifactStore(Protocol):

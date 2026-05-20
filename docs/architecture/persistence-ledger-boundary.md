@@ -1,5 +1,10 @@
 # Persistence / Ledger Boundary
 
+Status: active-contract
+Owner: persistence
+Last checked against code: 2026-05-20
+Can block PRs: yes
+
 CommitReceipt as the durable explanation root.
 
 This document fixes the persistence boundary for the active `comp` rebuild. It
@@ -16,6 +21,9 @@ CommitReceipt is the ledger root.
 Artifact envelopes are the replay substrate.
 Fingerprints pin the world that made the receipt meaningful.
 ```
+
+`artifact-envelope-builder.md` defines the active contract for constructing the
+envelope set required by receipt replay.
 
 The current implementation now has the first in-memory replay substrate:
 

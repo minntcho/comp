@@ -20,57 +20,48 @@ The compiler does not create public truth directly. Public projection requires a
 
 ## Active Map
 
-Read these first:
+Read `architecture/document-governance.md` first when deciding whether a
+document can block a PR. The rest of the architecture docs are grouped by that
+authority model.
 
-1. `architecture/trust-kernel-extension-rings.md`
-2. `architecture/extension-port-contracts.md`
-3. `architecture/retrieval-fabric-north-star.md`
-4. `architecture/obligation-kernel-working-theory.md`
-5. `architecture/trust-kernel-hardening.md`
-6. `architecture/persistence-ledger-boundary.md`
-7. `architecture/receipt-proof-graph.md`
-8. `architecture/domain-scenario-pack-generation.md`
-9. `architecture/llm-orchestrated-compiler-tool-loop.md`
-10. `architecture/llm-worker-orchestration.md`
-11. `architecture/memory-assisted-compiler-loop.md`
+### Active Contracts
 
-`architecture/trust-kernel-extension-rings.md` is the active architecture frame
-for keeping `comp` small: outer rings submit artifacts or render views, while
-only deterministic gates inside the trust kernel promote authority.
+These documents can block PRs when a change violates their authority boundary
+without explicitly updating the contract.
 
-`architecture/extension-port-contracts.md` defines how extractors, resolvers,
-retrieval backends, profile providers, persistence stores, replay engines, and
-product shells attach without gaining authority.
+1. `architecture/document-governance.md`
+2. `architecture/trust-kernel-extension-rings.md`
+3. `architecture/extension-port-contracts.md`
+4. `architecture/artifact-envelope-builder.md`
+5. `architecture/persistence-ledger-boundary.md`
+6. `architecture/receipt-proof-graph.md`
+7. `architecture/trust-kernel-hardening.md`
+8. `architecture/memory-assisted-compiler-loop.md`
 
-`architecture/retrieval-fabric-north-star.md` is the long-term direction for
-retrieval, embedding, LLM artifact resolution, typed reference authority, and
-compiler/receipt gates.
+### Implementation Maps
 
-`architecture/obligation-kernel-working-theory.md` is the detailed working map
-for current implementation slices: semantic obligations, reference-grounded
-calculation, commit packages, governance decisions, and receipt-gated
-projection.
+These documents track the current implementation shape. They can block a PR
+when the PR changes the mapped area but leaves the map stale.
 
-`architecture/trust-kernel-hardening.md` is the implementation standard for
-trust-kernel hardening: keep domain behavior explicit, fingerprint
-profile-active behavior, preserve retrieval/reference provenance, and keep the
-canonical scenario persistence-replayable.
+1. `architecture/obligation-kernel-working-theory.md`
+2. `architecture/domain-scenario-pack-generation.md`
 
-`architecture/persistence-ledger-boundary.md` defines the replay substrate:
-artifact envelopes, receipt ledgers, replay reports, dependency fingerprints,
-and the distinction between stored views and receipt authority.
+### North Stars
 
-`architecture/receipt-proof-graph.md` defines receipt-scoped graph export as an
-explanation-only read model. Receipt authorizes, replay verifies, graph
-explains, and UI renders.
+These documents guide roadmap direction and review questions. They do not
+override active contracts.
 
-`architecture/domain-scenario-pack-generation.md` describes how to add
-replaceable Domain Scenario Lab packs without turning them into hard-coded
-golden fixtures.
+1. `architecture/retrieval-fabric-north-star.md`
+2. `architecture/llm-worker-orchestration.md`
 
-`architecture/llm-worker-orchestration.md` records a provisional background LLM
-worker hypothesis: work orders, allowed tool menus, typed artifact submission,
-abstention, and scoreless embedding-informed routing.
+### Historical Notes
+
+These documents preserve migration context and older reasoning. They cannot
+block PRs by themselves.
+
+1. `architecture/active-surface-cutover.md`
+2. `architecture/legacy-archive-cutover-plan.md`
+3. `architecture/llm-orchestrated-compiler-tool-loop.md`
 
 ## Compiler Tool Layers
 

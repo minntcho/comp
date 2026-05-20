@@ -1,6 +1,9 @@
 # Receipt Proof Graph
 
-Status: active architecture decision.
+Status: active-contract
+Owner: explanation
+Last checked against code: 2026-05-20
+Can block PRs: yes
 
 This document fixes the role of receipt-scoped graph export in the active
 `comp` rebuild. The graph is not a trust-kernel feature, a compiler decision,

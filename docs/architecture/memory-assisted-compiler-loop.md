@@ -1,5 +1,10 @@
 # Memory-Assisted Compiler Loop
 
+Status: active-contract
+Owner: agent-layer
+Last checked against code: 2026-05-20
+Can block PRs: yes
+
 This document fixes the integration boundary between `comp` and a
 Hermes-style memory/skill agent layer such as `minchoagnt`.
 

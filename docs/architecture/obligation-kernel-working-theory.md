@@ -1,6 +1,9 @@
 # Obligation Kernel Working Theory
 
-Status: working theory, not final architecture.
+Status: implementation-map
+Owner: trust-kernel
+Last checked against code: 2026-05-20
+Can block PRs: limited
 
 This document captures the current direction for the rebuild branch after the
 receipt-gated projection slice. It is intentionally not an ADR. The goal is to
