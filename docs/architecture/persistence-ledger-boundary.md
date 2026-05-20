@@ -17,7 +17,7 @@ Artifact envelopes are the replay substrate.
 Fingerprints pin the world that made the receipt meaningful.
 ```
 
-The current implementation already points in this direction:
+The current implementation now has the first in-memory replay substrate:
 
 ```text
 CommitReceipt
@@ -32,6 +32,12 @@ project_public_row(...)
   checks projection id
   checks field scope
   checks value commitments
+
+comp.persistence
+  ArtifactEnvelope + canonical artifact_digest
+  InMemoryArtifactStore
+  InMemoryReceiptLedger
+  replay_public_projection(...)
 ```
 
 This document describes how that in-memory authority boundary should become a
@@ -419,30 +425,36 @@ real embedding index persistence
 LLM trace retention policy
 ```
 
-Those decisions should come after the artifact envelope and ledger boundary are
-small enough to test in memory.
+Those decisions should come after the in-memory replay substrate is exercised by
+the canonical scenario harness.
 
 ---
 
-## 11. Next Implementation Slice
+## 11. Current Implementation Status
 
-Recommended next code slice:
-
-```text
-feat: add artifact envelope and in-memory receipt ledger stub
-```
-
-Candidate files:
+The first persistence slice is implemented:
 
 ```text
-comp/persistence/__init__.py
+docs/architecture/persistence-ledger-boundary.md
+  defines replay vs recompute, storage categories, and receipt-as-root.
+
 comp/persistence/digest.py
 comp/persistence/envelope.py
+  provide canonical artifact body digests and ArtifactEnvelope.
+
 comp/persistence/ledger.py
-tests/test_persistence_ledger_boundary.py
+  provides InMemoryArtifactStore, InMemoryReceiptLedger, append-only receipt
+  root semantics, and materialized projection verification.
+
+comp/persistence/replay.py
+  derives ArtifactRef items from CommitReceipt citations and replays a public
+  row by checking receipt value commitments plus cited artifact envelopes.
+
+tests/support/persistence_cases.py
+  keeps persistence test setup readable without hiding negative mutation cases.
 ```
 
-Minimum behavior:
+The implemented minimum behavior is:
 
 ```text
 ArtifactEnvelope body digest is stable canonical JSON.
@@ -450,8 +462,45 @@ Changing body changes digest.
 Changing metadata does not change digest.
 CommitReceipt can be recorded as an append-only ledger root.
 Materialized public projection is treated as a view, not authority.
-Replay can verify projection values against receipt commitments.
+Replay verifies projection values against receipt commitments.
 Replay blocks when an artifact body or projected value no longer matches its digest.
+```
+
+That completes the original in-memory substrate slice. It does not yet mean
+production persistence exists, nor does it mean scenario runs automatically
+persist every artifact needed for replay.
+
+---
+
+## 12. Next Implementation Slice
+
+Recommended next code slice:
+
+```text
+test/feat: replay canonical scenario from stored artifact envelopes
+```
+
+Candidate files:
+
+```text
+tests/domain_scenarios/canonical_working_loop/scenario.py
+tests/domain_scenarios/canonical_working_loop/fixtures.py
+tests/test_canonical_working_loop_scenario.py
+tests/test_persistence_projection_replay.py
+comp/persistence/*.py, only if the replay API needs a narrow helper
+```
+
+Minimum behavior:
+
+```text
+Canonical working loop records receipt-cited artifacts in an InMemoryArtifactStore.
+The run records the CommitReceipt as an InMemoryReceiptLedger root.
+The scenario replays its materialized projection through replay_public_projection.
+Replay report includes package, governance decision, checked/derived sources,
+bindings, traces, formulas, and witness refs that are already present in receipt
+citations.
+Negative scenario blocks replay when a cited artifact is missing or its body
+digest drifts.
 ```
 
 Non-goals for that slice:
@@ -463,7 +512,25 @@ no production storage backend
 no catalog ingestion pipeline
 no legal retention policy
 no full event sourcing
+no profile/domain/reference fingerprint implementation yet
 ```
 
-The goal is to make the replay substrate testable before deciding where it
-lives.
+The goal is to prove the replay substrate is not only unit-testable, but also
+attached to the raw-input canonical working loop.
+
+---
+
+## 13. Following Slice
+
+After the canonical scenario emits and replays stored envelopes, the next likely
+slice is dependency pinning:
+
+```text
+CompilerProfile declaration fingerprint
+DomainPack fingerprint
+selected ReferenceRecord envelope or digest
+ReferenceCatalogSnapshot manifest, later
+```
+
+That slice should keep the document's rule: replay explains the old receipt,
+while recompute may produce a new answer under today's catalog and profile.
