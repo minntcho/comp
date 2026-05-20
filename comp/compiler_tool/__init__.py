@@ -88,6 +88,10 @@ from comp.compiler_tool.retrieval import (
     ReferenceResolver,
     RetrievalLens,
 )
+from comp.compiler_tool.retrieval_resolution import (
+    ReferenceRetrievalQuery,
+    resolve_reference_retrieval_obligations,
+)
 from comp.compiler_tool.semantic import apply_semantic_judgments
 from comp.compiler_tool.tool import CompilerTool
 from comp.compiler_tool.judgment_adapter import (
@@ -156,6 +160,8 @@ __all__ = [
     "ReferenceIndexEntry",
     "ReferenceResolver",
     "EmbeddingResolverStub",
+    "ReferenceRetrievalQuery",
+    "resolve_reference_retrieval_obligations",
     "RuleFamily",
     "SemanticRubric",
     "JudgePolicy",

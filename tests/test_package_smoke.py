@@ -80,6 +80,7 @@ def test_readme_compiler_tool_import_surface_is_exported():
         ReferenceIndexEntry,
         ReferenceQuery,
         ReferenceResolver,
+        resolve_reference_retrieval_obligations,
         build_commit_receipt,
         compile_report_to_facts,
         prepare_commit,
@@ -96,6 +97,7 @@ def test_readme_compiler_tool_import_surface_is_exported():
     assert ReferenceIndexEntry is not None
     assert ReferenceResolver is not None
     assert EmbeddingResolverStub is not None
+    assert resolve_reference_retrieval_obligations is not None
 
 
 def test_working_theory_status_section_tracks_current_rebuild_state():
@@ -110,6 +112,8 @@ def test_working_theory_status_section_tracks_current_rebuild_state():
     assert "Domain Scenario Lab" in working_theory
     assert "Retrieval lens interface" in working_theory
     assert "EmbeddingResolverStub" in working_theory
+    assert "retrieval resolver bridge" in working_theory
+    assert "resolve only the search obligation" in working_theory.lower()
     assert "PR8: Core / Domain Boundary Working Theory" not in working_theory
     assert "PR9: SemanticJudgmentObligation Minimal Slice" not in working_theory
 
