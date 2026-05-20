@@ -1,10 +1,16 @@
 # Trust Kernel Hardening Standard
 
-Status: active standard for the next hardening PRs.
+Status: active standard for trust-kernel hardening PRs.
 
 This document fixes the implementation standard for the next slice of the
 `comp` rebuild. The goal is to keep `comp` as a small trust kernel rather than
 letting it drift back into an ESG row generator.
+
+This standard sits under the broader
+`trust-kernel-extension-rings.md` architecture frame. In that frame, hardening
+is the first phase: keep the trust kernel small, keep outer rings
+non-authoritative, and preserve the authority promotion path through deterministic
+gates.
 
 ## Thesis
 
@@ -81,9 +87,9 @@ domain-specific rule and rubric activation
 projection field sets
 ```
 
-The current `CompilerTool` ESG-ish defaults are acceptable only as a rebuild
-artifact. The next implementation slice should make domain behavior explicit at
-construction time or through profile/domain-pack fixtures.
+`CompilerTool` should not learn ambient ESG meaning. Domain behavior must be
+explicit at construction time, through a validated `CompilerProfile`, or through
+domain-pack fixtures that are cited by the receipt/replay path.
 
 ## Profile Locking
 
@@ -106,6 +112,12 @@ projection policy id
 The fingerprint must be canonical and deterministic. Changing any active
 behavior input should change the fingerprint digest.
 
+Current implementation should keep profile declarations, domain-pack
+declarations, formula declarations, reference records, and reference catalog
+snapshots as explicit dependency fingerprints when they influence the receipt.
+Readable lock manifests are replay substrate; they help explain the behavior
+universe, but they do not become public authority.
+
 ## Retrieval And Reference Provenance
 
 Retrieval metadata is audit context, not authority. It should still be preserved
@@ -124,13 +136,13 @@ rejected candidate ids and reasons
 canonical reference binding id
 ```
 
-The first implementation should keep this small. It is enough for the canonical
-scenario receipt or replay report to expose the relevant profile and retrieval
-fingerprints. A full candidate graph can wait.
+The first implementation should keep this small. It is enough for scenario
+receipts and replay reports to expose the relevant profile, domain, formula,
+reference, and catalog fingerprints. A full candidate graph can wait.
 
 ## Canonical Trace Product
 
-The canonical scenario should become the representative trace product for the
+The canonical scenario should remain the representative trace product for the
 project. It should show this full loop:
 
 ```text
@@ -145,6 +157,7 @@ raw evidence
 -> CommitReceipt
 -> project_public_row
 -> persistence replay
+-> readable dependency manifests
 ```
 
 The scenario result should remain testable by targeted assertions, not by one
