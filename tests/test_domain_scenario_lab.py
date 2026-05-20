@@ -1,10 +1,13 @@
-from comp import ProjectionSpec
+import pytest
+
+from comp import DependencyFingerprint, ProjectionSpec
 from tests.domain_scenarios.assertions import (
     assert_projection_tamper_blocked,
     assert_receipt_trace,
 )
 from tests.domain_scenarios.core import (
     ScenarioDefinition,
+    ScenarioContract,
     SourceRef,
     assert_scenario_contract,
     run_scenario,
@@ -18,6 +21,9 @@ from tests.domain_scenarios.tiny_pcf.expected import (
     EXPECTED_RESOLVED_OBLIGATION_KINDS,
 )
 from tests.domain_scenarios.tiny_pcf.scenario import run_tiny_pcf_scenario
+from tests.domain_scenarios.l_energy_pcf_governance.scenario import (
+    run_l_energy_pcf_governance_scenario,
+)
 
 
 def test_domain_scenario_cli_lists_registered_scenarios(capsys):
@@ -95,6 +101,22 @@ def test_registered_scenarios_run_through_shared_contract_assertions():
 
         assert_scenario_contract(result, scenario.contract)
         assert result.scenario_id == scenario.scenario_id
+
+
+def test_scenario_contract_rejects_missing_dependency_fingerprint():
+    result = run_l_energy_pcf_governance_scenario()
+    contract = ScenarioContract(
+        required_dependency_fingerprints=(
+            DependencyFingerprint(
+                dependency_kind="compiler_profile",
+                dependency_id="missing-profile",
+                fingerprint="sha256:missing",
+            ),
+        )
+    )
+
+    with pytest.raises(AssertionError):
+        assert_scenario_contract(result, contract)
 
 
 def test_source_ref_serializes_external_scenario_trace_metadata():

@@ -82,6 +82,7 @@ DerivedClaim cannot authorize public projection
 CommitReceipt is required for projection
 open obligations prevent receipt issuance
 receipt traces binding, formula, calculation, and derived-claim evidence
+receipt dependency fingerprints pin replay profile/reference dependencies
 ```
 
 Weak assertions are preferred for surfaces that are still exploratory:

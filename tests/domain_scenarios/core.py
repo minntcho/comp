@@ -11,7 +11,7 @@ from comp.compiler_tool import (
     commit_preparation_to_facts,
     compile_report_to_facts,
 )
-from comp.judgment import Fact, SubjectRef
+from comp.judgment import DependencyFingerprint, Fact, SubjectRef
 
 
 @dataclass(frozen=True)
@@ -40,6 +40,7 @@ class ScenarioContract:
     required_receipt_derived_claim_ids: tuple[str, ...] = ()
     required_receipt_calculation_trace_ids: tuple[str, ...] = ()
     required_receipt_formula_ids: tuple[str, ...] = ()
+    required_dependency_fingerprints: tuple[DependencyFingerprint, ...] = ()
     required_open_obligation_ids: tuple[str, ...] | None = ()
     required_hazard_ids: tuple[str, ...] | None = ()
 
@@ -159,6 +160,10 @@ def assert_scenario_contract(
             citations.formula_ids,
             contract.required_receipt_formula_ids,
         )
+        assert _contains_in_order(
+            citations.dependency_fingerprints,
+            contract.required_dependency_fingerprints,
+        )
 
     if contract.required_open_obligation_ids is not None:
         assert (
@@ -201,6 +206,7 @@ def _requires_receipt_citations(contract: ScenarioContract) -> bool:
             contract.required_receipt_derived_claim_ids,
             contract.required_receipt_calculation_trace_ids,
             contract.required_receipt_formula_ids,
+            contract.required_dependency_fingerprints,
         )
     )
 
