@@ -22,13 +22,18 @@ The compiler does not create public truth directly. Public projection requires a
 
 Read these first:
 
-1. `architecture/retrieval-fabric-north-star.md`
-2. `architecture/obligation-kernel-working-theory.md`
-3. `architecture/trust-kernel-hardening.md`
-4. `architecture/domain-scenario-pack-generation.md`
-5. `architecture/llm-orchestrated-compiler-tool-loop.md`
-6. `architecture/llm-worker-orchestration.md`
-7. `architecture/memory-assisted-compiler-loop.md`
+1. `architecture/trust-kernel-extension-rings.md`
+2. `architecture/retrieval-fabric-north-star.md`
+3. `architecture/obligation-kernel-working-theory.md`
+4. `architecture/trust-kernel-hardening.md`
+5. `architecture/domain-scenario-pack-generation.md`
+6. `architecture/llm-orchestrated-compiler-tool-loop.md`
+7. `architecture/llm-worker-orchestration.md`
+8. `architecture/memory-assisted-compiler-loop.md`
+
+`architecture/trust-kernel-extension-rings.md` is the active architecture frame
+for keeping `comp` small: outer rings submit artifacts or render views, while
+only deterministic gates inside the trust kernel promote authority.
 
 `architecture/retrieval-fabric-north-star.md` is the long-term direction for
 retrieval, embedding, LLM artifact resolution, typed reference authority, and
