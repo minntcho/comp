@@ -80,6 +80,14 @@ from comp.compiler_tool.resolver_tasks import (
     resolver_task_from_obligation,
     resolver_tasks_from_report,
 )
+from comp.compiler_tool.retrieval import (
+    RETRIEVAL_LENSES,
+    EmbeddingResolverStub,
+    ReferenceIndexEntry,
+    ReferenceQuery,
+    ReferenceResolver,
+    RetrievalLens,
+)
 from comp.compiler_tool.semantic import apply_semantic_judgments
 from comp.compiler_tool.tool import CompilerTool
 from comp.compiler_tool.judgment_adapter import (
@@ -142,6 +150,12 @@ __all__ = [
     "ResolverTask",
     "resolver_task_from_obligation",
     "resolver_tasks_from_report",
+    "RETRIEVAL_LENSES",
+    "RetrievalLens",
+    "ReferenceQuery",
+    "ReferenceIndexEntry",
+    "ReferenceResolver",
+    "EmbeddingResolverStub",
     "RuleFamily",
     "SemanticRubric",
     "JudgePolicy",
