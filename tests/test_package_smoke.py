@@ -138,7 +138,13 @@ def test_domain_scenario_generation_guide_tracks_swappable_pack_contract():
 
 def test_pyproject_packages_comp_core_and_agent_layer():
     pyproject = tomllib.loads(Path("pyproject.toml").read_text())
-    from comp.persistence import ArtifactEnvelope, artifact_digest
+    from comp.persistence import (
+        ArtifactEnvelope,
+        InMemoryArtifactStore,
+        InMemoryReceiptLedger,
+        artifact_digest,
+        verify_materialized_public_projection,
+    )
 
     assert pyproject["project"]["description"] == (
         "Receipt-gated proof package compiler for obligation, reference, "
@@ -161,7 +167,10 @@ def test_pyproject_packages_comp_core_and_agent_layer():
     dependencies = pyproject["project"].get("dependencies", [])
     assert not any(dependency.startswith("lark") for dependency in dependencies)
     assert ArtifactEnvelope is not None
+    assert InMemoryArtifactStore is not None
+    assert InMemoryReceiptLedger is not None
     assert artifact_digest is not None
+    assert verify_materialized_public_projection is not None
 
 
 def test_legacy_pipeline_sources_are_not_active_files():
