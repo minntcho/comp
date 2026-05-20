@@ -146,9 +146,12 @@ def test_pyproject_packages_comp_core_and_agent_layer():
     pyproject = tomllib.loads(Path("pyproject.toml").read_text())
     from comp.persistence import (
         ArtifactEnvelope,
+        ArtifactRef,
         InMemoryArtifactStore,
         InMemoryReceiptLedger,
+        ProjectionReplayReport,
         artifact_digest,
+        replay_public_projection,
         verify_materialized_public_projection,
     )
 
@@ -173,9 +176,12 @@ def test_pyproject_packages_comp_core_and_agent_layer():
     dependencies = pyproject["project"].get("dependencies", [])
     assert not any(dependency.startswith("lark") for dependency in dependencies)
     assert ArtifactEnvelope is not None
+    assert ArtifactRef is not None
     assert InMemoryArtifactStore is not None
     assert InMemoryReceiptLedger is not None
+    assert ProjectionReplayReport is not None
     assert artifact_digest is not None
+    assert replay_public_projection is not None
     assert verify_materialized_public_projection is not None
 
 

@@ -59,7 +59,7 @@ class InMemoryArtifactStore:
     _envelopes: dict[str, ArtifactEnvelope] = field(default_factory=dict)
 
     def record(self, envelope: ArtifactEnvelope) -> ArtifactEnvelope:
-        _verify_envelope_digest(envelope)
+        verify_artifact_envelope(envelope)
         existing = self._envelopes.get(envelope.artifact_id)
         if existing is None:
             self._envelopes[envelope.artifact_id] = envelope
@@ -137,7 +137,7 @@ def verify_materialized_public_projection(
     return authorized_row
 
 
-def _verify_envelope_digest(envelope: ArtifactEnvelope) -> None:
+def verify_artifact_envelope(envelope: ArtifactEnvelope) -> None:
     expected_digest = artifact_digest(
         artifact_kind=envelope.artifact_kind,
         schema_version=envelope.schema_version,
@@ -164,4 +164,5 @@ __all__ = [
     "InMemoryArtifactStore",
     "InMemoryReceiptLedger",
     "verify_materialized_public_projection",
+    "verify_artifact_envelope",
 ]
