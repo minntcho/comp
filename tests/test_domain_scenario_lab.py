@@ -20,6 +20,62 @@ from tests.domain_scenarios.tiny_pcf.expected import (
 from tests.domain_scenarios.tiny_pcf.scenario import run_tiny_pcf_scenario
 
 
+def test_domain_scenario_cli_lists_registered_scenarios(capsys):
+    from tests.domain_scenarios.cli import main
+
+    exit_code = main(["list"])
+
+    captured = capsys.readouterr()
+    assert exit_code == 0
+    assert "canonical_working_loop.raw_text_pcf.v1" in captured.out
+    assert "tiny_pcf.location_based_electricity.v1" in captured.out
+    assert "l_energy_pcf_governance.v1" in captured.out
+    assert "Canonical raw text PCF working loop" in captured.out
+
+
+def test_domain_scenario_cli_runs_human_summary(capsys):
+    from tests.domain_scenarios.cli import main
+
+    exit_code = main(["run", "tiny_pcf.location_based_electricity.v1"])
+
+    captured = capsys.readouterr()
+    assert exit_code == 0
+    assert "Scenario: tiny_pcf.location_based_electricity.v1" in captured.out
+    assert "Title: Tiny PCF location-based electricity" in captured.out
+    assert "Status: accepted" in captured.out
+    assert "Commit: commit" in captured.out
+    assert "Projection: present" in captured.out
+    assert "Resolver steps:" in captured.out
+    assert "- deterministic_reference_selection" in captured.out
+    assert "Receipt trace:" in captured.out
+    assert "- reference bindings: 1" in captured.out
+    assert "- derived claims: 1" in captured.out
+
+
+def test_domain_scenario_cli_runs_json_view(capsys):
+    from tests.domain_scenarios.cli import main
+
+    exit_code = main(["run", "tiny_pcf.location_based_electricity.v1", "--json"])
+
+    captured = capsys.readouterr()
+    assert exit_code == 0
+    assert '"scenario_id": "tiny_pcf.location_based_electricity.v1"' in captured.out
+    assert '"projection": {' in captured.out
+    assert captured.err == ""
+
+
+def test_domain_scenario_cli_rejects_unknown_scenario(capsys):
+    from tests.domain_scenarios.cli import main
+
+    exit_code = main(["run", "missing.scenario"])
+
+    captured = capsys.readouterr()
+    assert exit_code == 2
+    assert captured.out == ""
+    assert "unknown scenario id: missing.scenario" in captured.err
+    assert "known scenarios:" in captured.err
+
+
 def test_registered_scenarios_are_explicit_scenario_definitions():
     scenarios = registered_scenarios()
 

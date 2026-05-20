@@ -110,3 +110,28 @@ Use `ScenarioReferencePack` when a scenario needs a swappable reference fixture:
 it bundles the canonical `ReferenceCatalog`, retrieval resolver/index, and their
 fixture version labels so larger domain packs can replace reference data without
 rewiring the scenario runner.
+
+## Local Runner
+
+The scenario registry can also be inspected without opening the pytest files:
+
+```bash
+python -m tests.domain_scenarios list
+```
+
+Run one scenario as a human-readable trace summary:
+
+```bash
+python -m tests.domain_scenarios run canonical_working_loop.raw_text_pcf.v1
+```
+
+Use `--json` when a test, viewer, or debugging script needs the existing
+`DomainScenarioResult` viewer payload:
+
+```bash
+python -m tests.domain_scenarios run l_energy_pcf_governance.v1 --json
+```
+
+The runner is intentionally generic. It only knows about `ScenarioDefinition`,
+`registered_scenarios()`, `run_scenario()`, and `DomainScenarioResult`; scenario
+packs own their domain fixtures and expected contracts.
