@@ -199,6 +199,43 @@ def _verify_dependency_fingerprint_sources(
                 "Projection replay dependency fingerprint algorithm mismatch: "
                 f"{fingerprint.dependency_id}."
             )
+        if envelope.body.get("dependency_kind") != fingerprint.dependency_kind:
+            raise ProjectionReplayBlocked(
+                "Projection replay dependency fingerprint kind mismatch: "
+                f"{fingerprint.dependency_id}."
+            )
+        if envelope.body.get("dependency_id") != fingerprint.dependency_id:
+            raise ProjectionReplayBlocked(
+                "Projection replay dependency fingerprint id mismatch: "
+                f"{fingerprint.dependency_id}."
+            )
+        _verify_profile_lock_body(fingerprint, envelope.body)
+
+
+def _verify_profile_lock_body(
+    fingerprint: DependencyFingerprint,
+    body: Mapping[str, Any],
+) -> None:
+    if fingerprint.dependency_kind != "compiler_profile":
+        return
+    profile_lock = body.get("profile_lock")
+    if profile_lock is None:
+        return
+    if not isinstance(profile_lock, Mapping):
+        raise ProjectionReplayBlocked(
+            "Projection replay profile lock body is malformed: "
+            f"{fingerprint.dependency_id}."
+        )
+    recomputed = DependencyFingerprint.from_payload(
+        dependency_kind=fingerprint.dependency_kind,
+        dependency_id=fingerprint.dependency_id,
+        payload=profile_lock,
+    )
+    if recomputed.fingerprint != fingerprint.fingerprint:
+        raise ProjectionReplayBlocked(
+            "Projection replay profile lock fingerprint mismatch: "
+            f"{fingerprint.dependency_id}."
+        )
 
 
 def _verify_reference_catalog_snapshot_coverage(

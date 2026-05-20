@@ -11,6 +11,7 @@ from comp import (
     ProjectionSpec,
     ProjectionValueCommitment,
 )
+from comp.compiler_tool import CompilerProfile, DomainPack, profile_lock_envelope_body
 from comp.persistence import ArtifactEnvelope, ArtifactRef, InMemoryArtifactStore
 from comp.persistence import receipt_artifact_refs
 
@@ -27,6 +28,7 @@ def receipt_projection_case(
     *,
     amount: int = 100,
     site: str = "plant-a",
+    include_profile_lock: bool = False,
 ) -> PersistenceProjectionCase:
     commitments = (
         ProjectionValueCommitment.from_value(
@@ -42,6 +44,7 @@ def receipt_projection_case(
             value=amount,
         ),
     )
+    profile_dependency = _fixture_profile_fingerprint()
     citations = CommitReceiptCitations(
         governance_decision_id="decision-1",
         governance_status="commit",
@@ -66,11 +69,7 @@ def receipt_projection_case(
         hazard_ids=(),
         projection_value_commitments=commitments,
         dependency_fingerprints=(
-            DependencyFingerprint(
-                dependency_kind="compiler_profile",
-                dependency_id="fixture-profile",
-                fingerprint="sha256:fixture-profile",
-            ),
+            profile_dependency,
             DependencyFingerprint(
                 dependency_kind="reference_record",
                 dependency_id="fixture-factor",
@@ -183,12 +182,7 @@ def _claim_field(ref: ArtifactRef) -> str:
 
 def _dependency_fingerprint_body(ref: ArtifactRef) -> dict[str, Any]:
     if ref.artifact_id == "fixture-profile":
-        return {
-            "dependency_kind": "compiler_profile",
-            "dependency_id": "fixture-profile",
-            "fingerprint": "sha256:fixture-profile",
-            "digest_alg": "sha256",
-        }
+        return _fixture_profile_body(ref)
     if ref.artifact_id == "fixture-factor":
         return {
             "dependency_kind": "reference_record",
@@ -212,6 +206,42 @@ def _dependency_fingerprint_body(ref: ArtifactRef) -> dict[str, Any]:
             ),
         }
     raise AssertionError(f"Unexpected dependency fingerprint ref in test: {ref}")
+
+
+def _fixture_profile() -> CompilerProfile:
+    return CompilerProfile(
+        profile_id="fixture-profile",
+        domain_packs=(
+            DomainPack(
+                domain_id="fixture-domain",
+                version="2026.1",
+            ),
+        ),
+        projection_policy_id="fixture-projection.v1",
+    )
+
+
+def _fixture_profile_fingerprint() -> DependencyFingerprint:
+    body = profile_lock_envelope_body(_fixture_profile())
+    return DependencyFingerprint(
+        dependency_kind=body["dependency_kind"],
+        dependency_id=body["dependency_id"],
+        fingerprint=body["fingerprint"],
+        digest_alg=body["digest_alg"],
+    )
+
+
+def _fixture_profile_body(ref: ArtifactRef) -> dict[str, Any]:
+    if ref.artifact_id == "fixture-profile":
+        return profile_lock_envelope_body(_fixture_profile())
+    if ref.artifact_id == "fixture-profile-generic":
+        return {
+            "dependency_kind": "compiler_profile",
+            "dependency_id": "fixture-profile",
+            "fingerprint": "sha256:fixture-profile",
+            "digest_alg": "sha256",
+        }
+    raise AssertionError(f"Unexpected profile dependency ref in test: {ref}")
 
 
 __all__ = [

@@ -169,24 +169,39 @@ def active_retrieval_query_policies(
 def profile_declaration_fingerprint(
     profile: CompilerProfile,
 ) -> DependencyFingerprint:
-    validate_compiler_profile(profile)
     return DependencyFingerprint.from_payload(
         dependency_kind="compiler_profile",
         dependency_id=profile.profile_id,
-        payload={
-            "profile_id": profile.profile_id,
-            "core_invariant_version": profile.core_invariant_version,
-            "active_rule_ids": profile.active_rule_ids,
-            "active_rubric_ids": profile.active_rubric_ids,
-            "active_retrieval_policy_ids": profile.active_retrieval_policy_ids,
-            "judge_policy_id": profile.judge_policy_id,
-            "projection_policy_id": profile.projection_policy_id,
-            "domain_packs": tuple(
-                _domain_pack_fingerprint_payload(domain)
-                for domain in profile.domain_packs
-            ),
-        },
+        payload=profile_lock_body(profile),
     )
+
+
+def profile_lock_body(profile: CompilerProfile) -> dict[str, Any]:
+    validate_compiler_profile(profile)
+    return {
+        "profile_id": profile.profile_id,
+        "core_invariant_version": profile.core_invariant_version,
+        "active_rule_ids": profile.active_rule_ids,
+        "active_rubric_ids": profile.active_rubric_ids,
+        "active_retrieval_policy_ids": profile.active_retrieval_policy_ids,
+        "judge_policy_id": profile.judge_policy_id,
+        "projection_policy_id": profile.projection_policy_id,
+        "domain_packs": tuple(
+            _domain_pack_fingerprint_payload(domain)
+            for domain in profile.domain_packs
+        ),
+    }
+
+
+def profile_lock_envelope_body(profile: CompilerProfile) -> dict[str, Any]:
+    fingerprint = profile_declaration_fingerprint(profile)
+    return {
+        "dependency_kind": fingerprint.dependency_kind,
+        "dependency_id": fingerprint.dependency_id,
+        "fingerprint": fingerprint.fingerprint,
+        "digest_alg": fingerprint.digest_alg,
+        "profile_lock": profile_lock_body(profile),
+    }
 
 
 def domain_pack_declaration_fingerprint(domain: DomainPack) -> DependencyFingerprint:
@@ -355,6 +370,8 @@ __all__ = [
     "active_rule_families",
     "active_retrieval_query_policies",
     "profile_declaration_fingerprint",
+    "profile_lock_body",
+    "profile_lock_envelope_body",
     "domain_pack_declaration_fingerprint",
     "rule_family_declaration_fingerprint",
     "semantic_rubric_declaration_fingerprint",

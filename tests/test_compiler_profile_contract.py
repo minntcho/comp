@@ -12,6 +12,8 @@ from comp.compiler_tool import (
     active_rule_families,
     active_retrieval_query_policies,
     profile_declaration_fingerprint,
+    profile_lock_body,
+    profile_lock_envelope_body,
     validate_compiler_profile,
 )
 
@@ -287,3 +289,44 @@ def test_profile_declaration_fingerprint_pins_active_behavior_ids():
     assert fingerprint.fingerprint.startswith("sha256:")
     assert fingerprint == same_fingerprint
     assert fingerprint != changed_fingerprint
+
+
+def test_profile_lock_body_exposes_active_behavior_manifest():
+    profile = CompilerProfile(
+        profile_id="fixture-profile",
+        domain_packs=(
+            _domain(
+                rules=(_rule("fixture.rule.v1"),),
+                rubrics=(_rubric("fixture.rubric.v1"),),
+                judge_policies=(_judge_policy("fixture.judge_policy.v1"),),
+                retrieval_query_policies=(
+                    _retrieval_policy("fixture.retrieval_policy.v1"),
+                ),
+            ),
+        ),
+        active_rule_ids=("fixture.rule.v1",),
+        active_rubric_ids=("fixture.rubric.v1",),
+        active_retrieval_policy_ids=("fixture.retrieval_policy.v1",),
+        judge_policy_id="fixture.judge_policy.v1",
+        projection_policy_id="fixture.projection.v1",
+    )
+
+    body = profile_lock_body(profile)
+    envelope_body = profile_lock_envelope_body(profile)
+
+    assert body["profile_id"] == "fixture-profile"
+    assert body["active_rule_ids"] == ("fixture.rule.v1",)
+    assert body["active_rubric_ids"] == ("fixture.rubric.v1",)
+    assert body["active_retrieval_policy_ids"] == (
+        "fixture.retrieval_policy.v1",
+    )
+    assert body["judge_policy_id"] == "fixture.judge_policy.v1"
+    assert body["projection_policy_id"] == "fixture.projection.v1"
+    assert body["domain_packs"][0]["domain_id"] == "fixture"
+    assert envelope_body["dependency_kind"] == "compiler_profile"
+    assert envelope_body["dependency_id"] == "fixture-profile"
+    assert envelope_body["profile_lock"] == body
+    assert (
+        envelope_body["fingerprint"]
+        == profile_declaration_fingerprint(profile).fingerprint
+    )

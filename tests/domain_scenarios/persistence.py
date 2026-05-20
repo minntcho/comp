@@ -91,6 +91,12 @@ def _artifact_body_for_ref(
     result: DomainScenarioResult,
     ref: ArtifactRef,
 ) -> dict[str, Any]:
+    dependency_body = result.dependency_artifact_bodies.get(
+        (ref.artifact_kind, ref.artifact_id)
+    )
+    if dependency_body is not None:
+        return dict(dependency_body)
+
     if ref.artifact_kind == "commit_package":
         package = result.preparation.package
         return {

@@ -110,6 +110,37 @@ def test_replay_blocks_when_dependency_fingerprint_artifact_mismatches():
         )
 
 
+def test_replay_blocks_when_profile_lock_body_mismatches_fingerprint():
+    case = receipt_projection_case(amount=100, include_profile_lock=True)
+    original = artifact_store_for_receipt(
+        case.receipt,
+        committed_values=case.source_values,
+    ).get("fixture-profile")
+    tampered_body = dict(original.body)
+    tampered_body["profile_lock"] = {
+        **tampered_body["profile_lock"],
+        "projection_policy_id": "changed-projection-policy.v1",
+    }
+    artifacts = artifact_store_for_receipt(
+        case.receipt,
+        committed_values=case.source_values,
+        override=ArtifactEnvelope.from_body(
+            artifact_id="fixture-profile",
+            artifact_kind="compiler_profile",
+            schema_version="dependency-fingerprint-v1",
+            body=tampered_body,
+        ),
+    )
+
+    with pytest.raises(ProjectionReplayBlocked, match="profile lock"):
+        replay_public_projection(
+            case.source_values,
+            case.projection,
+            receipt=case.receipt,
+            artifacts=artifacts,
+        )
+
+
 def test_replay_blocks_when_catalog_snapshot_omits_reference_record():
     case = receipt_projection_case(amount=100)
     artifacts = artifact_store_for_receipt(

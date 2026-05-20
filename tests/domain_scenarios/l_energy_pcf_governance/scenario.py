@@ -11,6 +11,7 @@ from comp.compiler_tool import (
     plan_calculation_resolution,
     prepare_commit,
     profile_declaration_fingerprint,
+    profile_lock_envelope_body,
     reference_catalog_snapshot_fingerprint,
     reference_query_for_obligation_from_profile_policy,
     reference_record_fingerprint,
@@ -184,6 +185,11 @@ def run_l_energy_pcf_governance_scenario(
         projection=projection,
         subject=SubjectRef("claim", SUBJECT_ID),
         resolver_steps=RESOLVER_STEPS,
+        dependency_artifact_bodies={
+            ("compiler_profile", scenario_profile.profile_id): (
+                profile_lock_envelope_body(scenario_profile)
+            ),
+        },
     )
 
 
