@@ -1,3 +1,4 @@
+from tests.domain_scenarios.assertions import assert_receipt_trace
 from tests.domain_scenarios.core import assert_scenario_contract, run_scenario
 from tests.domain_scenarios.l_energy_pcf_governance.expected import (
     EXPECTED_DERIVED_CLAIM_IDS,
@@ -42,15 +43,12 @@ def test_l_energy_pcf_governance_scenario_preserves_actor_receipt_trace():
     assert tuple(claim.claim_id for claim in result.report.derived_claims) == (
         EXPECTED_DERIVED_CLAIM_IDS
     )
-    assert result.preparation.receipt is not None
-    assert result.preparation.receipt.citations is not None
-    assert result.preparation.receipt.citations.derived_claim_ids == (
-        EXPECTED_DERIVED_CLAIM_IDS
+    assert_receipt_trace(
+        result,
+        derived_claim_ids=EXPECTED_DERIVED_CLAIM_IDS,
+        calculation_trace_ids=EXPECTED_TRACE_IDS,
+        formula_ids=EXPECTED_FORMULA_IDS,
     )
-    assert result.preparation.receipt.citations.calculation_trace_ids == (
-        EXPECTED_TRACE_IDS
-    )
-    assert result.preparation.receipt.citations.formula_ids == EXPECTED_FORMULA_IDS
 
 
 def test_l_energy_pcf_governance_scenario_exports_targeted_viewer_payload():

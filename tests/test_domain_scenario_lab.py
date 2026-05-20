@@ -1,6 +1,8 @@
-import pytest
-
-from comp import ProjectionBlocked, ProjectionSpec, project_public_row
+from comp import ProjectionSpec
+from tests.domain_scenarios.assertions import (
+    assert_projection_tamper_blocked,
+    assert_receipt_trace,
+)
 from tests.domain_scenarios.core import (
     ScenarioDefinition,
     SourceRef,
@@ -8,6 +10,7 @@ from tests.domain_scenarios.core import (
     run_scenario,
 )
 from tests.domain_scenarios.registry import registered_scenarios
+from tests.domain_scenarios.views import scenario_result_view
 from tests.domain_scenarios.tiny_pcf.expected import (
     EXPECTED_PROJECTION,
     EXPECTED_REFERENCE_CANDIDATE_IDS,
@@ -65,13 +68,12 @@ def test_tiny_pcf_scenario_runs_reference_to_receipt_flow():
 def test_tiny_pcf_scenario_rejects_tampered_projection_value():
     result = run_tiny_pcf_scenario()
 
-    assert result.preparation.receipt is not None
-    with pytest.raises(ProjectionBlocked, match="value commitment"):
-        project_public_row(
-            {"electricity_kwh": 1200, "co2e_kg": 999999},
-            ProjectionSpec("pcf-public-row", ("electricity_kwh", "co2e_kg")),
-            receipt=result.preparation.receipt,
-        )
+    assert_projection_tamper_blocked(
+        result,
+        ProjectionSpec("pcf-public-row", ("electricity_kwh", "co2e_kg")),
+        {"co2e_kg": 999999},
+        match="value commitment",
+    )
 
 
 def test_tiny_pcf_scenario_preserves_traceable_domain_artifacts():
@@ -97,6 +99,57 @@ def test_tiny_pcf_scenario_preserves_traceable_domain_artifacts():
     assert derived.claim_id == "tiny-pcf:co2e_kg"
     assert derived.value == 504.0
     assert derived.trace.reference_binding_ids == ("bind-electricity-factor",)
+
+    assert_receipt_trace(
+        result,
+        reference_binding_ids=("bind-electricity-factor",),
+        derived_claim_ids=("tiny-pcf:co2e_kg",),
+        calculation_trace_ids=("trace:tiny-pcf:co2e_kg",),
+        formula_ids=("pcf.electricity_factor_multiplication.v1",),
+    )
+
+
+def test_scenario_result_view_exposes_receipt_trace_without_raw_values():
+    result = run_tiny_pcf_scenario()
+
+    view = scenario_result_view(result)
+
+    assert view == result.to_dict()
+    assert view["receipt_trace"]["reference_binding_ids"] == (
+        "bind-electricity-factor",
+    )
+    assert view["receipt_trace"]["derived_claim_ids"] == ("tiny-pcf:co2e_kg",)
+    assert view["receipt_trace"]["calculation_trace_ids"] == (
+        "trace:tiny-pcf:co2e_kg",
+    )
+    assert view["receipt_trace"]["formula_ids"] == (
+        "pcf.electricity_factor_multiplication.v1",
+    )
+
+    commitments = view["receipt_trace"]["value_commitments"]
+    assert commitments == [
+        {
+            "field": "electricity_kwh",
+            "source_kind": "checked_claim",
+            "source_id": "checked_claim:electricity_kwh:span-electricity-amount",
+            "value_digest": (
+                "sha256:"
+                "7aa3fcfca9c3b08fbec22b363aa33f2f23d6dbecf3cb935c06c6900cb24d91bb"
+            ),
+            "digest_alg": "sha256",
+        },
+        {
+            "field": "co2e_kg",
+            "source_kind": "derived_claim",
+            "source_id": "tiny-pcf:co2e_kg",
+            "value_digest": (
+                "sha256:"
+                "042ee367826ac0a5248c3e060dbd2466bd9e44a5f11d5ba2dcab18417e888a9b"
+            ),
+            "digest_alg": "sha256",
+        },
+    ]
+    assert all("value" not in commitment for commitment in commitments)
 
 
 def test_tiny_pcf_scenario_exports_json_ready_viewer_payload():

@@ -64,74 +64,9 @@ class DomainScenarioResult:
     resolver_steps: tuple[str, ...]
 
     def to_dict(self) -> dict[str, Any]:
-        return {
-            "scenario_id": self.scenario_id,
-            "resolver_steps": self.resolver_steps,
-            "report": {
-                "status": self.report.status,
-                "open_obligations": [
-                    _obligation_view(obligation)
-                    for obligation in self.report.obligations
-                ],
-                "resolved_obligations": [
-                    _obligation_view(obligation)
-                    for obligation in self.report.resolved_obligations
-                ],
-                "reference_candidates": [
-                    {
-                        "candidate_id": candidate.candidate_id,
-                        "reference_id": candidate.reference_id,
-                        "reference_type": candidate.reference_type,
-                        "retrieval_method": candidate.retrieval_method,
-                        "retrieval_score": candidate.retrieval_score,
-                        "authority": candidate.authority,
-                    }
-                    for candidate in self.report.reference_candidates
-                ],
-                "reference_bindings": [
-                    {
-                        "binding_id": binding.binding_id,
-                        "reference_id": binding.reference_id,
-                        "selected_candidate_id": binding.selected_candidate_id,
-                        "rejected_candidates": [
-                            {
-                                "reference_id": rejected.reference_id,
-                                "reason": rejected.reason,
-                            }
-                            for rejected in binding.rejected_candidates
-                        ],
-                    }
-                    for binding in self.report.reference_bindings
-                ],
-                "derived_claims": [
-                    {
-                        "claim_id": claim.claim_id,
-                        "field": claim.field,
-                        "value": claim.value,
-                        "unit": claim.unit,
-                        "trace_id": claim.trace.trace_id,
-                        "formula_id": claim.formula_id,
-                        "reference_binding_ids": claim.trace.reference_binding_ids,
-                    }
-                    for claim in self.report.derived_claims
-                ],
-            },
-            "commit": {
-                "package_id": self.preparation.package.package_id,
-                "package_complete": self.preparation.package.complete,
-                "governance_status": self.preparation.decision.status,
-                "receipt_id": (
-                    self.preparation.receipt.public_row_id
-                    if self.preparation.receipt is not None
-                    else None
-                ),
-            },
-            "facts": {
-                "report_count": len(self.report_facts),
-                "commit_count": len(self.commit_facts),
-            },
-            "projection": self.projection,
-        }
+        from tests.domain_scenarios.views import scenario_result_view
+
+        return scenario_result_view(self)
 
     def to_json(self) -> str:
         return json.dumps(_json_ready(self.to_dict()), indent=2, sort_keys=True)
@@ -232,15 +167,6 @@ def assert_scenario_contract(
         )
     if contract.required_hazard_ids is not None:
         assert result.preparation.package.hazard_ids == contract.required_hazard_ids
-
-
-def _obligation_view(obligation) -> dict[str, str | None]:
-    return {
-        "obligation_id": obligation.obligation_id,
-        "kind": obligation.kind,
-        "field": obligation.field,
-        "reason": obligation.reason,
-    }
 
 
 def _json_ready(value):
