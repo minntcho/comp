@@ -106,6 +106,20 @@ def test_working_theory_status_section_tracks_current_rebuild_state():
     assert "PR9: SemanticJudgmentObligation Minimal Slice" not in working_theory
 
 
+def test_domain_scenario_generation_guide_tracks_swappable_pack_contract():
+    guide = Path(
+        "docs/architecture/domain-scenario-pack-generation.md"
+    ).read_text(encoding="utf-8")
+
+    assert "Scenario Pack" in guide
+    assert "ScenarioDefinition" in guide
+    assert "ScenarioContract" in guide
+    assert "SourceRef" in guide
+    assert "registered_scenarios()" in guide
+    assert "Do not assert one huge exported JSON blob" in guide
+    assert "minntcho/esg-platform" in guide
+
+
 def test_pyproject_packages_comp_core_and_agent_layer():
     pyproject = tomllib.loads(Path("pyproject.toml").read_text())
 

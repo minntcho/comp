@@ -32,6 +32,10 @@ Domain scenario tests should lock authority boundaries, not implementation shape
 They are pressure tests for the compiler contract, not golden snapshots of a
 final LCA, DPP, UI, or reference database schema.
 
+Scenario creation guidance lives in
+`docs/architecture/domain-scenario-pack-generation.md`. Treat larger scenarios
+as swappable Scenario Pack modules, not hard-coded golden fixtures.
+
 Strong assertions are encouraged for core invariants:
 
 ```text
