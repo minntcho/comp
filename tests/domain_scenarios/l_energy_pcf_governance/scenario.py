@@ -74,6 +74,32 @@ PROJECTION_FIELDS = (
 )
 PROJECTION_ID = "l-energy-pcf-public-row"
 
+
+def _contract_dependency_fingerprints():
+    return _dependency_fingerprints_for_reference_ids(
+        profile(),
+        reference_pack(),
+        EXPECTED_REFERENCE_CANDIDATE_IDS,
+    )
+
+
+def _dependency_fingerprints_for_reference_ids(
+    scenario_profile,
+    pack: ScenarioReferencePack,
+    reference_ids: tuple[str, ...],
+):
+    fingerprints = [profile_declaration_fingerprint(scenario_profile)]
+    seen_reference_ids: set[str] = set()
+    for reference_id in reference_ids:
+        if reference_id in seen_reference_ids:
+            continue
+        seen_reference_ids.add(reference_id)
+        fingerprints.append(
+            reference_record_fingerprint(pack.catalog.get(reference_id))
+        )
+    return tuple(fingerprints)
+
+
 SCENARIO = ScenarioDefinition(
     scenario_id=SCENARIO_ID,
     title="L-Energy PCF Governance",
@@ -90,6 +116,7 @@ SCENARIO = ScenarioDefinition(
         required_receipt_derived_claim_ids=EXPECTED_DERIVED_CLAIM_IDS,
         required_receipt_calculation_trace_ids=EXPECTED_TRACE_IDS,
         required_receipt_formula_ids=EXPECTED_FORMULA_IDS,
+        required_dependency_fingerprints=_contract_dependency_fingerprints(),
     ),
 )
 
@@ -183,16 +210,11 @@ def _dependency_fingerprints(
     pack: ScenarioReferencePack,
     report: CompileReport,
 ):
-    fingerprints = [profile_declaration_fingerprint(scenario_profile)]
-    seen_reference_ids: set[str] = set()
-    for candidate in report.reference_candidates:
-        if candidate.reference_id in seen_reference_ids:
-            continue
-        seen_reference_ids.add(candidate.reference_id)
-        fingerprints.append(
-            reference_record_fingerprint(pack.catalog.get(candidate.reference_id))
-        )
-    return tuple(fingerprints)
+    return _dependency_fingerprints_for_reference_ids(
+        scenario_profile,
+        pack,
+        tuple(candidate.reference_id for candidate in report.reference_candidates),
+    )
 
 
 def _binding_for(
