@@ -23,6 +23,9 @@ from tests.domain_scenarios.tiny_pcf.expected import (
     EXPECTED_RESOLVED_OBLIGATION_KINDS,
 )
 from tests.domain_scenarios.tiny_pcf.scenario import run_tiny_pcf_scenario
+from tests.domain_scenarios.canonical_working_loop.scenario import (
+    run_canonical_working_loop_scenario,
+)
 from tests.domain_scenarios.l_energy_pcf_governance.scenario import (
     run_l_energy_pcf_governance_scenario,
 )
@@ -58,6 +61,9 @@ def test_domain_scenario_cli_runs_human_summary(capsys):
     assert "Receipt trace:" in captured.out
     assert "- reference bindings: 1" in captured.out
     assert "- derived claims: 1" in captured.out
+    assert "Replay trace:" in captured.out
+    assert "- status: replayed" in captured.out
+    assert "- artifacts:" in captured.out
 
 
 def test_domain_scenario_cli_runs_json_view(capsys):
@@ -296,6 +302,52 @@ def test_scenario_result_view_exposes_receipt_trace_without_raw_values():
         },
     ]
     assert all("value" not in commitment for commitment in commitments)
+
+
+def test_scenario_result_view_exposes_replay_trace_manifest_summary():
+    result = run_canonical_working_loop_scenario()
+
+    view = scenario_result_view(result)
+
+    replay_trace = view["replay_trace"]
+    assert replay_trace["status"] == "replayed"
+    assert replay_trace["receipt_key"] == {
+        "public_row_id": "public-row:canonical-raw-pcf-1",
+        "projection_id": "canonical-pcf-public-row",
+        "draft_id": "commit-package:product:canonical-raw-pcf-1",
+    }
+    assert {
+        "artifact_id": "pcf-canonical-loop-v1",
+        "artifact_kind": "compiler_profile",
+    } in replay_trace["artifact_refs"]
+    assert any(
+        item["artifact_id"] == "canonical-raw:co2e_kg"
+        and item["body_digest"].startswith("sha256:")
+        for item in replay_trace["artifact_digests"]
+    )
+    assert replay_trace["dependency_manifests"]["profile_locks"] == [
+        {
+            "profile_id": "pcf-canonical-loop-v1",
+            "active_rule_count": 0,
+            "active_rubric_count": 0,
+            "active_retrieval_policy_count": 1,
+            "domain_pack_count": 1,
+        }
+    ]
+    assert replay_trace["dependency_manifests"]["catalog_snapshots"] == [
+        {
+            "snapshot_id": (
+                "reference_catalog_snapshot:"
+                "pcf-reference-catalog:"
+                "pcf-reference-catalog-v1"
+            ),
+            "catalog_id": "pcf-reference-catalog",
+            "version": "pcf-reference-catalog-v1",
+            "selected_record_count": 1,
+        }
+    ]
+    assert "public_row" not in replay_trace
+    assert "value" not in str(replay_trace["artifact_digests"])
 
 
 def test_tiny_pcf_scenario_exports_json_ready_viewer_payload():

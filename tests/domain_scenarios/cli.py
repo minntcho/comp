@@ -145,7 +145,35 @@ def render_scenario_summary(
                 f"- formulas: {len(citations.formula_ids)}",
             )
         )
+    lines.extend(
+        (
+            "",
+            "Replay trace:",
+        )
+    )
+    replay_trace = result.to_dict().get("replay_trace")
+    if replay_trace is None:
+        lines.append("- status: absent")
+    else:
+        lines.extend(
+            (
+                f"- status: {replay_trace['status']}",
+                f"- artifacts: {len(replay_trace.get('artifact_refs', ()))}",
+                f"- dependency manifests: {_dependency_manifest_count(replay_trace)}",
+            )
+        )
     return "\n".join(lines)
+
+
+def _dependency_manifest_count(replay_trace: dict[str, object]) -> int:
+    manifests = replay_trace.get("dependency_manifests")
+    if not isinstance(manifests, dict):
+        return 0
+    return sum(
+        len(items)
+        for items in manifests.values()
+        if isinstance(items, list)
+    )
 
 
 def _build_parser() -> argparse.ArgumentParser:

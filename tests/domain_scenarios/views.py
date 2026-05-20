@@ -12,6 +12,7 @@ def scenario_result_view(result) -> dict[str, Any]:
         "receipt_trace": receipt_trace_view(
             result.preparation.receipt,
         ),
+        "replay_trace": replay_trace_view(result),
         "facts": {
             "report_count": len(result.report_facts),
             "commit_count": len(result.commit_facts),
@@ -117,6 +118,111 @@ def receipt_trace_view(receipt) -> dict[str, Any] | None:
     }
 
 
+def replay_trace_view(result) -> dict[str, Any] | None:
+    receipt = result.preparation.receipt
+    if receipt is None or result.projection is None:
+        return None
+
+    from comp import ProjectionSpec
+    from comp.persistence import ProjectionReplayBlocked
+    from tests.domain_scenarios.persistence import (
+        replay_scenario_projection,
+        scenario_replay_bundle,
+    )
+
+    bundle = scenario_replay_bundle(result)
+    try:
+        replay = replay_scenario_projection(
+            result,
+            ProjectionSpec(receipt.projection_id, tuple(result.projection.keys())),
+            bundle=bundle,
+        )
+    except ProjectionReplayBlocked as exc:
+        return {
+            "status": "blocked",
+            "reason": str(exc),
+        }
+
+    return {
+        "status": "replayed",
+        "receipt_key": {
+            "public_row_id": replay.receipt_key.public_row_id,
+            "projection_id": replay.receipt_key.projection_id,
+            "draft_id": replay.receipt_key.draft_id,
+        },
+        "projection_id": replay.projection_id,
+        "artifact_refs": [
+            {
+                "artifact_id": ref.artifact_id,
+                "artifact_kind": ref.artifact_kind,
+            }
+            for ref in replay.artifact_refs
+        ],
+        "artifact_digests": [
+            {
+                "artifact_id": artifact_id,
+                "body_digest": body_digest,
+            }
+            for artifact_id, body_digest in replay.artifact_digests
+        ],
+        "dependency_manifests": _dependency_manifests_view(
+            replay.dependency_fingerprints,
+            bundle.artifacts,
+        ),
+    }
+
+
+def _dependency_manifests_view(fingerprints, artifacts) -> dict[str, list[dict[str, Any]]]:
+    profile_locks = []
+    catalog_snapshots = []
+    reference_records = []
+    for fingerprint in fingerprints:
+        envelope = artifacts.get(fingerprint.dependency_id)
+        if fingerprint.dependency_kind == "compiler_profile":
+            profile_lock = envelope.body.get("profile_lock")
+            if isinstance(profile_lock, dict):
+                profile_locks.append(
+                    {
+                        "profile_id": profile_lock["profile_id"],
+                        "active_rule_count": len(profile_lock["active_rule_ids"]),
+                        "active_rubric_count": len(
+                            profile_lock["active_rubric_ids"]
+                        ),
+                        "active_retrieval_policy_count": len(
+                            profile_lock["active_retrieval_policy_ids"]
+                        ),
+                        "domain_pack_count": len(profile_lock["domain_packs"]),
+                    }
+                )
+        elif fingerprint.dependency_kind == "reference_catalog_snapshot":
+            selected = envelope.body.get(
+                "record_fingerprints",
+                envelope.body.get("selected_record_fingerprints", ()),
+            )
+            catalog_snapshots.append(
+                {
+                    "snapshot_id": fingerprint.dependency_id,
+                    "catalog_id": envelope.body.get("catalog_id"),
+                    "version": envelope.body.get(
+                        "catalog_version",
+                        envelope.body.get("version"),
+                    ),
+                    "selected_record_count": len(selected),
+                }
+            )
+        elif fingerprint.dependency_kind == "reference_record":
+            reference_records.append(
+                {
+                    "reference_id": fingerprint.dependency_id,
+                }
+            )
+    return {
+        "profile_locks": profile_locks,
+        "catalog_snapshots": catalog_snapshots,
+        "reference_records": reference_records,
+    }
+
+
 def _obligation_view(obligation) -> dict[str, str | None]:
     return {
         "obligation_id": obligation.obligation_id,
@@ -129,6 +235,7 @@ def _obligation_view(obligation) -> dict[str, str | None]:
 __all__ = [
     "commit_view",
     "receipt_trace_view",
+    "replay_trace_view",
     "report_view",
     "scenario_result_view",
 ]
