@@ -12,6 +12,8 @@ from comp.compiler_tool import (
     UncheckedArea,
 )
 
+TINY_KNOWN_FIELDS = frozenset({"activity", "amount", "unit", "reporting_year"})
+
 
 def _hypothesis(*, claims, witnesses=()):
     return InterpretationHypothesis(
@@ -53,8 +55,28 @@ def test_compiler_tool_contract_model_set_is_exported():
     assert Hazard is not None
 
 
+def test_compiler_tool_has_no_domain_known_fields_by_default():
+    report = CompilerTool().compile_interpretation(
+        _hypothesis(
+            claims=(
+                _claim("activity", "electricity", "w-activity"),
+            ),
+            witnesses=(_witness("w-activity", "activity"),),
+        )
+    )
+
+    assert report.status == "unchecked"
+    assert report.checked_claims == ()
+    assert report.unchecked_areas == (
+        UncheckedArea(field="activity", reason="missing_rule_coverage"),
+    )
+
+
 def test_unsupported_unit_blocks_and_requests_source_witness():
-    report = CompilerTool(allowed_units=frozenset({"kwh"})).compile_interpretation(
+    report = CompilerTool(
+        allowed_units=frozenset({"kwh"}),
+        known_fields=TINY_KNOWN_FIELDS,
+    ).compile_interpretation(
         _hypothesis(
             claims=(
                 _claim("activity", "electricity", "w-activity"),
@@ -80,7 +102,10 @@ def test_unsupported_unit_blocks_and_requests_source_witness():
 
 
 def test_witness_id_must_resolve_to_grounded_matching_witness():
-    tool = CompilerTool(allowed_units=frozenset({"kwh"}))
+    tool = CompilerTool(
+        allowed_units=frozenset({"kwh"}),
+        known_fields=TINY_KNOWN_FIELDS,
+    )
 
     cases = [
         ((), "missing_source_witness"),
@@ -109,7 +134,10 @@ def test_witness_id_must_resolve_to_grounded_matching_witness():
 
 
 def test_unknown_and_unchecked_are_distinct_and_not_pass():
-    report = CompilerTool(allowed_units=frozenset({"kwh"})).compile_interpretation(
+    report = CompilerTool(
+        allowed_units=frozenset({"kwh"}),
+        known_fields=TINY_KNOWN_FIELDS,
+    ).compile_interpretation(
         _hypothesis(
             claims=(
                 _claim("reporting_year", None),
@@ -135,7 +163,10 @@ def test_unknown_and_unchecked_are_distinct_and_not_pass():
 
 
 def test_missing_unit_is_review_required_hazard_not_public_projection():
-    report = CompilerTool(allowed_units=frozenset({"kwh"})).compile_interpretation(
+    report = CompilerTool(
+        allowed_units=frozenset({"kwh"}),
+        known_fields=TINY_KNOWN_FIELDS,
+    ).compile_interpretation(
         _hypothesis(
             claims=(
                 _claim("activity", "electricity", "w-activity"),
@@ -161,7 +192,10 @@ def test_missing_unit_is_review_required_hazard_not_public_projection():
 
 
 def test_accepted_report_is_not_public_projection_authority():
-    report = CompilerTool(allowed_units=frozenset({"kwh"})).compile_interpretation(
+    report = CompilerTool(
+        allowed_units=frozenset({"kwh"}),
+        known_fields=TINY_KNOWN_FIELDS,
+    ).compile_interpretation(
         _hypothesis(
             claims=(
                 _claim("activity", "electricity", "w-activity"),

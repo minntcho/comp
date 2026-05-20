@@ -21,10 +21,8 @@ class CompilerTool:
     def __init__(
         self,
         *,
-        allowed_units: frozenset[str] = frozenset({"kwh"}),
-        known_fields: frozenset[str] = frozenset(
-            {"activity", "amount", "unit", "reporting_year"}
-        ),
+        allowed_units: frozenset[str] = frozenset(),
+        known_fields: frozenset[str] = frozenset(),
     ) -> None:
         self.allowed_units = frozenset(unit.lower() for unit in allowed_units)
         self.known_fields = known_fields
@@ -103,7 +101,7 @@ class CompilerTool:
                 )
             )
 
-        if "unit" not in claim_fields:
+        if "unit" in self.known_fields and "unit" not in claim_fields:
             hazards.append(Hazard(kind="missing_unit", field="unit", severity="review"))
             self._add_find_source_witness(obligations, "unit", "missing_unit")
 

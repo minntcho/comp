@@ -60,7 +60,7 @@ def test_compiler_tool_has_no_domain_known_fields_by_default():
 Run:
 
 ```bash
-pytest tests/test_compiler_tool_contract.py::test_compiler_tool_has_no_domain_known_fields_by_default -q
+python -m pytest tests/test_compiler_tool_contract.py::test_compiler_tool_has_no_domain_known_fields_by_default -q
 ```
 
 Expected: FAIL because default `CompilerTool` currently knows `activity`.
@@ -116,7 +116,7 @@ return CompilerTool(
 Run:
 
 ```bash
-pytest tests/test_compiler_tool_contract.py tests/test_canonical_working_loop_scenario.py -q
+python -m pytest tests/test_compiler_tool_contract.py tests/test_canonical_working_loop_scenario.py -q
 ```
 
 Expected: all selected tests pass.
@@ -189,7 +189,7 @@ def test_profile_fingerprint_changes_when_active_policy_changes():
 Run:
 
 ```bash
-pytest tests/test_compiler_profile_contract.py::test_profile_fingerprint_is_stable_for_same_active_behavior tests/test_compiler_profile_contract.py::test_profile_fingerprint_changes_when_active_policy_changes -q
+python -m pytest tests/test_compiler_profile_contract.py::test_profile_fingerprint_is_stable_for_same_active_behavior tests/test_compiler_profile_contract.py::test_profile_fingerprint_changes_when_active_policy_changes -q
 ```
 
 Expected: import error or attribute error because `profile_fingerprint` does not
@@ -255,7 +255,7 @@ profile_fingerprint,
 Run:
 
 ```bash
-pytest tests/test_compiler_profile_contract.py -q
+python -m pytest tests/test_compiler_profile_contract.py -q
 ```
 
 Expected: all profile contract tests pass.
@@ -308,7 +308,7 @@ checked claim.
 Run:
 
 ```bash
-pytest tests/test_commit_receipt_builder.py::test_commit_receipt_cites_profile_fingerprint -q
+python -m pytest tests/test_commit_receipt_builder.py::test_commit_receipt_cites_profile_fingerprint -q
 ```
 
 Expected: FAIL because package and citations do not carry the field.
@@ -357,7 +357,7 @@ profile_fingerprint_digest=package.profile_fingerprint_digest,
 Run:
 
 ```bash
-pytest tests/test_commit_receipt_builder.py tests/test_receipt_gated_projection.py -q
+python -m pytest tests/test_commit_receipt_builder.py tests/test_receipt_gated_projection.py -q
 ```
 
 Expected: all selected tests pass.
@@ -400,7 +400,7 @@ this task as a frozen optional field with default `None`.
 Run:
 
 ```bash
-pytest tests/test_canonical_working_loop_scenario.py::test_canonical_working_loop_replays_projection_from_receipt_artifacts -q
+python -m pytest tests/test_canonical_working_loop_scenario.py::test_canonical_working_loop_replays_projection_from_receipt_artifacts -q
 ```
 
 Expected: FAIL because the scenario does not yet expose replay.
@@ -467,7 +467,7 @@ Pass `projection_replay=projection_replay` into
 Run:
 
 ```bash
-pytest tests/test_canonical_working_loop_scenario.py tests/test_persistence_projection_replay.py -q
+python -m pytest tests/test_canonical_working_loop_scenario.py tests/test_persistence_projection_replay.py -q
 ```
 
 Expected: all selected tests pass.
@@ -484,7 +484,7 @@ Expected: all selected tests pass.
 Run:
 
 ```bash
-pytest -q
+python -m pytest -q
 ```
 
 Expected: all tests pass.
