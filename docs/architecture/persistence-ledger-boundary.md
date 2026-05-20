@@ -1,5 +1,10 @@
 # Persistence / Ledger Boundary
 
+Status: active-contract
+Owner: persistence
+Last checked against code: 2026-05-20
+Can block PRs: yes
+
 CommitReceipt as the durable explanation root.
 
 This document fixes the persistence boundary for the active `comp` rebuild. It

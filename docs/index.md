@@ -22,15 +22,20 @@ The compiler does not create public truth directly. Public projection requires a
 
 Read these first:
 
-1. `architecture/trust-kernel-extension-rings.md`
-2. `architecture/extension-port-contracts.md`
-3. `architecture/retrieval-fabric-north-star.md`
-4. `architecture/obligation-kernel-working-theory.md`
-5. `architecture/trust-kernel-hardening.md`
-6. `architecture/domain-scenario-pack-generation.md`
-7. `architecture/llm-orchestrated-compiler-tool-loop.md`
-8. `architecture/llm-worker-orchestration.md`
-9. `architecture/memory-assisted-compiler-loop.md`
+1. `architecture/document-governance.md`
+2. `architecture/trust-kernel-extension-rings.md`
+3. `architecture/extension-port-contracts.md`
+4. `architecture/retrieval-fabric-north-star.md`
+5. `architecture/obligation-kernel-working-theory.md`
+6. `architecture/trust-kernel-hardening.md`
+7. `architecture/domain-scenario-pack-generation.md`
+8. `architecture/llm-orchestrated-compiler-tool-loop.md`
+9. `architecture/llm-worker-orchestration.md`
+10. `architecture/memory-assisted-compiler-loop.md`
+
+`architecture/document-governance.md` defines doc authority levels: active
+contracts, implementation maps, north stars, and historical notes. Read it first
+when deciding whether a document can block a PR.
 
 `architecture/trust-kernel-extension-rings.md` is the active architecture frame
 for keeping `comp` small: outer rings submit artifacts or render views, while
