@@ -7,7 +7,7 @@ from comp.compiler_tool.commit_package import CommitPackage, build_commit_packag
 from comp.compiler_tool.governance import GovernanceDecision, decide_governance
 from comp.compiler_tool.models import CompileReport
 from comp.compiler_tool.receipt_builder import build_commit_receipt
-from comp.judgment.receipts import CommitReceipt
+from comp.judgment.receipts import CommitReceipt, DependencyFingerprint
 
 
 @dataclass(frozen=True)
@@ -31,6 +31,7 @@ def prepare_commit(
     decision_id: str | None = None,
     profile_id: str | None = None,
     semantic_judgment_ids: Iterable[str] = (),
+    dependency_fingerprints: Iterable[DependencyFingerprint] = (),
 ) -> CommitPreparation:
     package = build_commit_package(
         report,
@@ -38,6 +39,7 @@ def prepare_commit(
         package_id=package_id,
         profile_id=profile_id,
         semantic_judgment_ids=semantic_judgment_ids,
+        dependency_fingerprints=dependency_fingerprints,
     )
     decision = decide_governance(package, decision_id=decision_id)
     receipt = None

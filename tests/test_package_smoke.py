@@ -5,6 +5,7 @@ import comp
 from comp import (
     CommitReceipt,
     CommitReceiptCitations,
+    DependencyFingerprint,
     Fact,
     FixpointEngine,
     JudgmentState,
@@ -63,6 +64,7 @@ def test_top_level_package_exposes_active_judgment_surface():
     assert SelectionReceipt is not None
     assert CommitReceipt is not None
     assert CommitReceiptCitations is not None
+    assert DependencyFingerprint is not None
 
 
 def test_top_level_package_no_longer_exports_legacy_runner_surface():
@@ -83,11 +85,13 @@ def test_readme_compiler_tool_import_surface_is_exported():
         RetrievalQueryPolicy,
         RetrievalQueryRule,
         active_retrieval_query_policies,
+        profile_declaration_fingerprint,
         reference_query_for_obligation_from_profile_policy,
         reference_query_for_obligation_from_policies,
         reference_query_for_obligation_from_policy,
         reference_query_for_obligation_from_resolver_tasks,
         reference_query_from_resolver_task,
+        reference_record_fingerprint,
         resolve_reference_retrieval_obligations,
         build_commit_receipt,
         compile_report_to_facts,
@@ -108,11 +112,13 @@ def test_readme_compiler_tool_import_surface_is_exported():
     assert RetrievalQueryPolicy is not None
     assert RetrievalQueryRule is not None
     assert active_retrieval_query_policies is not None
+    assert profile_declaration_fingerprint is not None
     assert reference_query_for_obligation_from_policies is not None
     assert reference_query_for_obligation_from_profile_policy is not None
     assert reference_query_for_obligation_from_policy is not None
     assert reference_query_from_resolver_task is not None
     assert reference_query_for_obligation_from_resolver_tasks is not None
+    assert reference_record_fingerprint is not None
     assert resolve_reference_retrieval_obligations is not None
 
 

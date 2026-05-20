@@ -44,6 +44,13 @@ def test_replay_public_projection_explains_row_from_receipt_and_artifacts():
         in report.artifact_refs
     )
     assert dict(report.artifact_digests)["package-1"].startswith("sha256:")
+    assert tuple(
+        (fingerprint.dependency_kind, fingerprint.dependency_id)
+        for fingerprint in report.dependency_fingerprints
+    ) == (
+        ("compiler_profile", "fixture-profile"),
+        ("reference_record", "fixture-factor"),
+    )
 
 
 def test_replay_blocks_when_required_artifact_is_missing():

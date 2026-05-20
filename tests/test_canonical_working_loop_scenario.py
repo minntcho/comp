@@ -155,6 +155,13 @@ def test_canonical_working_loop_replays_projection_from_stored_artifacts():
     assert dict(replay.artifact_digests)[
         "canonical-raw:co2e_kg"
     ].startswith("sha256:")
+    assert tuple(
+        (fingerprint.dependency_kind, fingerprint.dependency_id)
+        for fingerprint in replay.dependency_fingerprints
+    ) == (
+        ("compiler_profile", "pcf-canonical-loop-v1"),
+        ("reference_record", "pcf.factor.kr_grid_2024.location_based"),
+    )
 
 
 def test_canonical_working_loop_replay_blocks_when_cited_artifact_is_missing():

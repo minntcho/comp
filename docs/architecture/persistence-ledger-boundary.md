@@ -457,6 +457,12 @@ tests/domain_scenarios/persistence.py
   records receipt-cited scenario artifacts into an in-memory artifact store,
   records the CommitReceipt into an in-memory receipt ledger, and replays the
   materialized scenario projection from those stored envelopes.
+
+CompilerProfile / ReferenceRecord fingerprints
+  expose stable declaration fingerprints for the active profile and selected
+  canonical reference rows. CommitReceiptCitations can carry these dependency
+  fingerprints, and replay reports surface the profile/reference world the
+  receipt depended on.
 ```
 
 The implemented minimum behavior is:
@@ -473,6 +479,8 @@ Replay verifies committed public values against the cited checked/derived source
 artifact body, not only against the materialized row.
 The canonical raw-input working loop can be replayed from stored scenario
 artifact envelopes and its receipt ledger root.
+Replay reports dependency fingerprints cited by the receipt, starting with the
+compiler profile declaration and selected reference record.
 ```
 
 That completes the original in-memory substrate slice and attaches it to the
@@ -487,28 +495,27 @@ fingerprint manifest exists.
 Recommended next code slice:
 
 ```text
-feat: pin replay dependency fingerprints
+test/feat: extend replay dependencies beyond the canonical scenario
 ```
 
 Candidate files:
 
 ```text
-comp/compiler_tool/profiles.py
-comp/compiler_tool/references.py
-comp/persistence/*.py
-tests/test_persistence_*.py
-tests/test_compiler_profile_contract.py
+tests/domain_scenarios/l_energy_pcf_governance/*
+tests/test_l_energy_pcf_scenario.py
+comp/persistence/*.py, only if the replay API needs a narrow helper
 ```
 
 Minimum behavior:
 
 ```text
-CompilerProfile exposes a stable declaration fingerprint.
-ReferenceRecord or selected ReferenceBinding exposes a replayable record
-fingerprint.
-CommitReceipt citations can include those fingerprints without turning the
-current catalog or profile into replay authority.
-Replay can report which profile/reference world the receipt depended on.
+L-Energy scenario records and replays the same dependency fingerprint shape as
+the canonical scenario.
+The replay harness can include more than one selected reference record.
+Scenario viewer payloads expose dependency fingerprints without raw reference
+record bodies.
+Negative tests block or flag replay when a cited dependency fingerprint is
+missing from the receipt or no longer matches a stored envelope.
 ```
 
 Non-goals for that slice:
@@ -521,11 +528,12 @@ no catalog ingestion pipeline
 no legal retention policy
 no full event sourcing
 no real embedding index persistence
+no production catalog snapshot store
 ```
 
-The goal is to move from "receipt can replay values and cited artifacts" toward
-"receipt can also explain the pinned profile/reference world that made those
-artifacts meaningful."
+The goal is to move from "canonical replay can explain one profile and one
+reference record" toward "larger domain scenarios can carry the same replay
+explanation without hard-coding a single reference shape."
 
 ---
 

@@ -8,6 +8,7 @@ from comp.compiler_tool import (
     CommitReceiptCitations,
     CompileReport,
     DerivedClaim,
+    DependencyFingerprint,
     ProjectionValueCommitment,
     ReceiptBuildBlocked,
     build_commit_package,
@@ -113,6 +114,38 @@ def test_commit_receipt_builder_exposes_typed_citations():
         "ghg.electricity_factor_multiplication.v1",
     )
     assert receipt.citations.to_barrier_snapshot() == receipt.barrier_snapshot
+
+
+def test_commit_receipt_builder_cites_dependency_fingerprints():
+    dependency = DependencyFingerprint(
+        dependency_kind="compiler_profile",
+        dependency_id="esg-ghg-v1",
+        fingerprint="sha256:profile",
+    )
+    package = CommitPackage(
+        package_id="commit-package:facility-1",
+        subject_id="facility-1",
+        report_status="accepted",
+        checked_claim_fields=("amount",),
+        checked_claim_witness_ids=("span-amount",),
+        dependency_fingerprints=(dependency,),
+        profile_id="esg-ghg-v1",
+        complete=True,
+    )
+    decision = decide_governance(package)
+
+    receipt = build_commit_receipt(
+        package,
+        decision,
+        public_row_id="public-row-1",
+        projection_id="public-row",
+    )
+
+    assert receipt.citations is not None
+    assert receipt.citations.dependency_fingerprints == (dependency,)
+    assert dict(receipt.barrier_snapshot)["dependency_fingerprints"] == (
+        dependency,
+    )
 
 
 def test_commit_receipt_builder_commits_checked_and_derived_projection_values():

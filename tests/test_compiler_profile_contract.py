@@ -11,6 +11,7 @@ from comp.compiler_tool import (
     RetrievalQueryRule,
     active_rule_families,
     active_retrieval_query_policies,
+    profile_declaration_fingerprint,
     validate_compiler_profile,
 )
 
@@ -245,3 +246,44 @@ def test_duplicate_retrieval_policy_ids_are_rejected():
 
     with pytest.raises(ProfileValidationError, match="duplicate retrieval policy id"):
         validate_compiler_profile(profile)
+
+
+def test_profile_declaration_fingerprint_pins_active_behavior_ids():
+    profile = CompilerProfile(
+        profile_id="fixture-profile",
+        domain_packs=(
+            _domain(
+                rules=(_rule("fixture.rule.v1"),),
+                rubrics=(_rubric("fixture.rubric.v1"),),
+                judge_policies=(_judge_policy("fixture.judge_policy.v1"),),
+                retrieval_query_policies=(
+                    _retrieval_policy("fixture.retrieval_policy.v1"),
+                ),
+            ),
+        ),
+        active_rule_ids=("fixture.rule.v1",),
+        active_rubric_ids=("fixture.rubric.v1",),
+        active_retrieval_policy_ids=("fixture.retrieval_policy.v1",),
+        judge_policy_id="fixture.judge_policy.v1",
+        projection_policy_id="fixture.projection.v1",
+    )
+
+    fingerprint = profile_declaration_fingerprint(profile)
+    same_fingerprint = profile_declaration_fingerprint(profile)
+    changed_fingerprint = profile_declaration_fingerprint(
+        CompilerProfile(
+            profile_id="fixture-profile",
+            domain_packs=profile.domain_packs,
+            active_rule_ids=(),
+            active_rubric_ids=("fixture.rubric.v1",),
+            active_retrieval_policy_ids=("fixture.retrieval_policy.v1",),
+            judge_policy_id="fixture.judge_policy.v1",
+            projection_policy_id="fixture.projection.v1",
+        )
+    )
+
+    assert fingerprint.dependency_kind == "compiler_profile"
+    assert fingerprint.dependency_id == "fixture-profile"
+    assert fingerprint.fingerprint.startswith("sha256:")
+    assert fingerprint == same_fingerprint
+    assert fingerprint != changed_fingerprint

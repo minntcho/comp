@@ -12,6 +12,7 @@ from comp.judgment import (
     CommitReceiptCitations,
     CommitSpec,
     CompiledJudgmentProgram,
+    DependencyFingerprint,
     DraftSnapshot,
     Fact,
     FactTag,
@@ -63,6 +64,7 @@ __all__ = [
     "project_public_row",
     "SelectionReceipt",
     "ProjectionValueCommitment",
+    "DependencyFingerprint",
     "CommitReceipt",
     "CommitReceiptCitations",
 ]

@@ -5,7 +5,7 @@ from dataclasses import dataclass, field
 
 from comp.compiler_tool.models import CompileReport, Hazard, ProofObligation
 from comp.compiler_tool.report_status import recompute_report_status
-from comp.judgment.receipts import ProjectionValueCommitment
+from comp.judgment.receipts import DependencyFingerprint, ProjectionValueCommitment
 
 
 @dataclass(frozen=True)
@@ -22,6 +22,9 @@ class CommitPackage:
     calculation_trace_ids: tuple[str, ...] = field(default_factory=tuple)
     formula_ids: tuple[str, ...] = field(default_factory=tuple)
     projection_value_commitments: tuple[ProjectionValueCommitment, ...] = field(
+        default_factory=tuple
+    )
+    dependency_fingerprints: tuple[DependencyFingerprint, ...] = field(
         default_factory=tuple
     )
     open_obligation_ids: tuple[str, ...] = field(default_factory=tuple)
@@ -42,6 +45,7 @@ def build_commit_package(
     package_id: str | None = None,
     profile_id: str | None = None,
     semantic_judgment_ids: Iterable[str] = (),
+    dependency_fingerprints: Iterable[DependencyFingerprint] = (),
 ) -> CommitPackage:
     report_status = recompute_report_status(report)
     open_obligation_ids = tuple(
@@ -71,6 +75,7 @@ def build_commit_package(
         ),
         formula_ids=_unique(claim.formula_id for claim in report.derived_claims),
         projection_value_commitments=_projection_value_commitments(report),
+        dependency_fingerprints=tuple(dependency_fingerprints),
         open_obligation_ids=open_obligation_ids,
         resolved_obligation_ids=tuple(
             _obligation_id(obligation)
