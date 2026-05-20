@@ -1,7 +1,13 @@
 import pytest
 
 import comp
-from comp import CommitReceipt, ProjectionBlocked, ProjectionSpec, project_public_row
+from comp import (
+    CommitReceipt,
+    ProjectionBlocked,
+    ProjectionSpec,
+    ProjectionValueCommitment,
+    project_public_row,
+)
 from comp.compiler_tool import CompileReport
 
 
@@ -16,6 +22,20 @@ def test_accepted_compile_report_without_commit_receipt_cannot_project_public_ro
 
 def test_commit_receipt_allows_public_projection():
     projection = ProjectionSpec("public-row", ("site", "amount"))
+    commitments = (
+        ProjectionValueCommitment.from_value(
+            field="site",
+            source_kind="checked_claim",
+            source_id="checked_claim:site:span-site",
+            value="plant-a",
+        ),
+        ProjectionValueCommitment.from_value(
+            field="amount",
+            source_kind="checked_claim",
+            source_id="checked_claim:amount:span-amount",
+            value=100,
+        ),
+    )
     receipt = CommitReceipt(
         draft_id="draft-1",
         winner_receipt_ids=("selection-1",),
@@ -27,6 +47,7 @@ def test_commit_receipt_allows_public_projection():
             projection_id="public-row",
             authorized_fields=("site", "amount"),
             checked_claim_fields=("site", "amount"),
+            projection_value_commitments=commitments,
         ),
     )
 
@@ -37,6 +58,126 @@ def test_commit_receipt_allows_public_projection():
     )
 
     assert row == {"site": "plant-a", "amount": 100}
+
+
+def test_projection_rejects_tampered_committed_value():
+    projection = ProjectionSpec("public-row", ("site", "amount"))
+    receipt = CommitReceipt(
+        draft_id="draft-1",
+        winner_receipt_ids=("selection-1",),
+        barrier_snapshot=(("active_hazards", ()),),
+        public_row_id="public-row-1",
+        projection_id="public-row",
+        authorized_fields=("site", "amount"),
+        citations=_clean_citations(
+            projection_id="public-row",
+            authorized_fields=("site", "amount"),
+            checked_claim_fields=("site", "amount"),
+            projection_value_commitments=(
+                ProjectionValueCommitment.from_value(
+                    field="site",
+                    source_kind="checked_claim",
+                    source_id="checked_claim:site:span-site",
+                    value="plant-a",
+                ),
+                ProjectionValueCommitment.from_value(
+                    field="amount",
+                    source_kind="checked_claim",
+                    source_id="checked_claim:amount:span-amount",
+                    value=100,
+                ),
+            ),
+        ),
+    )
+
+    with pytest.raises(ProjectionBlocked, match="value commitment"):
+        project_public_row(
+            {"site": "plant-a", "amount": 999999},
+            projection,
+            receipt=receipt,
+        )
+
+
+def test_projection_rejects_missing_committed_source_value():
+    projection = ProjectionSpec("public-row", ("site", "amount"))
+    receipt = CommitReceipt(
+        draft_id="draft-1",
+        winner_receipt_ids=("selection-1",),
+        barrier_snapshot=(("active_hazards", ()),),
+        public_row_id="public-row-1",
+        projection_id="public-row",
+        authorized_fields=("site", "amount"),
+        citations=_clean_citations(
+            projection_id="public-row",
+            authorized_fields=("site", "amount"),
+            checked_claim_fields=("site", "amount"),
+            projection_value_commitments=(
+                ProjectionValueCommitment.from_value(
+                    field="site",
+                    source_kind="checked_claim",
+                    source_id="checked_claim:site:span-site",
+                    value="plant-a",
+                ),
+                ProjectionValueCommitment.from_value(
+                    field="amount",
+                    source_kind="checked_claim",
+                    source_id="checked_claim:amount:span-amount",
+                    value=100,
+                ),
+            ),
+        ),
+    )
+
+    with pytest.raises(ProjectionBlocked, match="missing committed value"):
+        project_public_row({"site": "plant-a"}, projection, receipt=receipt)
+
+
+def test_projection_rejects_missing_value_commitment():
+    projection = ProjectionSpec("public-row", ("site",))
+    receipt = CommitReceipt(
+        draft_id="draft-1",
+        winner_receipt_ids=("selection-1",),
+        barrier_snapshot=(("active_hazards", ()),),
+        public_row_id="public-row-1",
+        projection_id="public-row",
+        authorized_fields=("site",),
+        citations=_clean_citations(
+            projection_id="public-row",
+            authorized_fields=("site",),
+            checked_claim_fields=("site",),
+            projection_value_commitments=(),
+        ),
+    )
+
+    with pytest.raises(ProjectionBlocked, match="value commitment"):
+        project_public_row({"site": "plant-a"}, projection, receipt=receipt)
+
+
+def test_projection_rejects_duplicate_value_commitments():
+    projection = ProjectionSpec("public-row", ("site",))
+    duplicate = ProjectionValueCommitment.from_value(
+        field="site",
+        source_kind="checked_claim",
+        source_id="checked_claim:site:span-site",
+        value="plant-a",
+    )
+    receipt = CommitReceipt(
+        draft_id="draft-1",
+        winner_receipt_ids=("selection-1",),
+        barrier_snapshot=(("active_hazards", ()),),
+        public_row_id="public-row-1",
+        projection_id="public-row",
+        authorized_fields=("site",),
+        citations=_clean_citations(
+            projection_id="public-row",
+            authorized_fields=("site",),
+            checked_claim_fields=("site",),
+            projection_value_commitments=(duplicate, duplicate),
+        ),
+    )
+
+    with pytest.raises(ProjectionBlocked, match="duplicate value commitment"):
+        project_public_row({"site": "plant-a"}, projection, receipt=receipt)
 
 
 def test_top_level_projection_surface_is_receipt_gated():
@@ -104,6 +245,7 @@ def _clean_citations(
     projection_id,
     authorized_fields,
     checked_claim_fields,
+    projection_value_commitments=(),
 ):
     return comp.CommitReceiptCitations(
         governance_decision_id="decision-1",
@@ -127,4 +269,5 @@ def _clean_citations(
         resolved_obligation_ids=(),
         open_obligation_ids=(),
         hazard_ids=(),
+        projection_value_commitments=projection_value_commitments,
     )

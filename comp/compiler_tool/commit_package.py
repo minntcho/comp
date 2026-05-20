@@ -5,6 +5,7 @@ from dataclasses import dataclass, field
 
 from comp.compiler_tool.models import CompileReport, Hazard, ProofObligation
 from comp.compiler_tool.report_status import recompute_report_status
+from comp.judgment.receipts import ProjectionValueCommitment
 
 
 @dataclass(frozen=True)
@@ -20,6 +21,9 @@ class CommitPackage:
     derived_claim_ids: tuple[str, ...] = field(default_factory=tuple)
     calculation_trace_ids: tuple[str, ...] = field(default_factory=tuple)
     formula_ids: tuple[str, ...] = field(default_factory=tuple)
+    projection_value_commitments: tuple[ProjectionValueCommitment, ...] = field(
+        default_factory=tuple
+    )
     open_obligation_ids: tuple[str, ...] = field(default_factory=tuple)
     resolved_obligation_ids: tuple[str, ...] = field(default_factory=tuple)
     hazard_ids: tuple[str, ...] = field(default_factory=tuple)
@@ -66,6 +70,7 @@ def build_commit_package(
             claim.trace.trace_id for claim in report.derived_claims
         ),
         formula_ids=_unique(claim.formula_id for claim in report.derived_claims),
+        projection_value_commitments=_projection_value_commitments(report),
         open_obligation_ids=open_obligation_ids,
         resolved_obligation_ids=tuple(
             _obligation_id(obligation)
@@ -92,6 +97,34 @@ def _obligation_id(obligation: ProofObligation) -> str:
 
 def _hazard_id(hazard: Hazard) -> str:
     return _stable_id("hazard", hazard.kind, hazard.field, hazard.severity)
+
+
+def _projection_value_commitments(
+    report: CompileReport,
+) -> tuple[ProjectionValueCommitment, ...]:
+    checked = tuple(
+        ProjectionValueCommitment.from_value(
+            field=claim.field,
+            source_kind="checked_claim",
+            source_id=_checked_claim_source_id(claim.field, claim.witness_id),
+            value=claim.value,
+        )
+        for claim in report.checked_claims
+    )
+    derived = tuple(
+        ProjectionValueCommitment.from_value(
+            field=claim.field,
+            source_kind="derived_claim",
+            source_id=claim.claim_id,
+            value=claim.value,
+        )
+        for claim in report.derived_claims
+    )
+    return checked + derived
+
+
+def _checked_claim_source_id(field: str, witness_id: str) -> str:
+    return _stable_id("checked_claim", field, witness_id)
 
 
 def _stable_id(*parts: str) -> str:

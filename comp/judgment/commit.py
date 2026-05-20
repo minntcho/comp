@@ -49,13 +49,14 @@ def project_public_row(
 ) -> dict[str, Any]:
     if receipt is None:
         raise ProjectionBlocked("Public projection requires a CommitReceipt.")
-    _validate_receipt_authorizes_projection(receipt, projection)
+    _validate_receipt_authorizes_projection(receipt, projection, field_values)
     return {field: field_values.get(field) for field in projection.output_fields}
 
 
 def _validate_receipt_authorizes_projection(
     receipt: CommitReceipt,
     projection: ProjectionSpec,
+    field_values: Mapping[str, Any],
 ) -> None:
     if receipt.projection_id != projection.projection_id:
         raise ProjectionBlocked(
@@ -88,6 +89,43 @@ def _validate_receipt_authorizes_projection(
 
     if citations.authorized_fields != receipt.authorized_fields:
         raise ProjectionBlocked("CommitReceipt citation field scope mismatch.")
+
+    _validate_projection_value_commitments(citations, projection, field_values)
+
+
+def _validate_projection_value_commitments(
+    citations,
+    projection: ProjectionSpec,
+    field_values: Mapping[str, Any],
+) -> None:
+    commitments_by_field = {}
+    for commitment in citations.projection_value_commitments:
+        if commitment.field in commitments_by_field:
+            raise ProjectionBlocked(
+                f"CommitReceipt has duplicate value commitment: {commitment.field}."
+            )
+        commitments_by_field[commitment.field] = commitment
+
+    for field in projection.output_fields:
+        if field not in field_values:
+            raise ProjectionBlocked(
+                f"Public projection missing committed value: {field}."
+            )
+        commitment = commitments_by_field.get(field)
+        if commitment is None:
+            raise ProjectionBlocked(
+                f"CommitReceipt lacks value commitment for field: {field}."
+            )
+        try:
+            matches = commitment.matches_value(field_values[field])
+        except (TypeError, ValueError) as exc:
+            raise ProjectionBlocked(
+                f"Public projection value commitment cannot be verified: {field}."
+            ) from exc
+        if not matches:
+            raise ProjectionBlocked(
+                f"Public projection value commitment mismatch: {field}."
+            )
 
 
 __all__ = [
