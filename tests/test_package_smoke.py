@@ -244,6 +244,7 @@ def test_architecture_docs_are_classified_by_governance_status():
             "limited",
         ),
         "persistence-ledger-boundary.md": ("active-contract", "persistence", "yes"),
+        "receipt-proof-graph.md": ("active-contract", "explanation", "yes"),
         "retrieval-fabric-north-star.md": ("north-star", "retrieval", "limited"),
         "trust-kernel-extension-rings.md": ("active-contract", "trust-kernel", "yes"),
         "trust-kernel-hardening.md": ("active-contract", "trust-kernel", "yes"),

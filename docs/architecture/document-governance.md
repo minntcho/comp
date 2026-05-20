@@ -85,7 +85,7 @@ review:
 
 ```text
 Status: active-contract | implementation-map | north-star | historical-note
-Owner: trust-kernel | persistence | retrieval | scenario-lab | agent-layer | docs
+Owner: trust-kernel | persistence | retrieval | scenario-lab | agent-layer | explanation | docs
 Last checked against code: YYYY-MM-DD
 Can block PRs: yes | limited | no
 ```
