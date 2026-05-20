@@ -62,13 +62,22 @@ def test_canonical_working_loop_runs_raw_text_to_receipt_projection():
         "compiler_tool.compile_interpretation",
         "open_calculation_obligation",
         "plan_calculation_resolution",
-        "reference_search:keyword",
+        "reference_retrieval:embedding_stub:factor",
         "deterministic_reference_selection",
         "retry_calculation",
         "prepare_commit",
         "receipt_gated_projection",
     )
     assert_scenario_contract(result, SCENARIO.contract)
+    assert [
+        candidate.retrieval_method for candidate in result.report.reference_candidates
+    ] == [
+        "embedding_stub:factor",
+        "embedding_stub:factor",
+    ]
+    assert result.report.reference_bindings[0].selected_candidate_id == (
+        "embedding_stub:factor:idx-canonical-kr-grid-2024"
+    )
     assert result.projection == {
         "electricity_kwh": 1200,
         "reporting_year": 2024,
