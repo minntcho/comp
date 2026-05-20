@@ -81,6 +81,9 @@ from comp.compiler_tool.resolver_tasks import (
     resolver_tasks_from_report,
 )
 from comp.compiler_tool.resolver_retrieval import (
+    RetrievalQueryPolicy,
+    RetrievalQueryRule,
+    reference_query_for_obligation_from_policy,
     reference_query_for_obligation_from_resolver_tasks,
     reference_query_from_resolver_task,
 )
@@ -158,6 +161,9 @@ __all__ = [
     "ResolverTask",
     "resolver_task_from_obligation",
     "resolver_tasks_from_report",
+    "RetrievalQueryPolicy",
+    "RetrievalQueryRule",
+    "reference_query_for_obligation_from_policy",
     "reference_query_for_obligation_from_resolver_tasks",
     "reference_query_from_resolver_task",
     "RETRIEVAL_LENSES",

@@ -6,7 +6,7 @@ from comp.compiler_tool import (
     apply_reference_selection,
     plan_calculation_resolution,
     prepare_commit,
-    reference_query_for_obligation_from_resolver_tasks,
+    reference_query_for_obligation_from_policy,
     resolve_reference_retrieval_obligations,
     resolver_tasks_from_report,
     retry_blocked_calculation,
@@ -31,6 +31,8 @@ from tests.domain_scenarios.canonical_working_loop.fixtures import (
     open_calculation_obligation,
     projection_source,
     reference_resolver,
+    retrieval_query_context,
+    retrieval_query_policy,
 )
 from tests.domain_scenarios.core import (
     DomainScenarioResult,
@@ -48,6 +50,7 @@ RESOLVER_STEPS = (
     "open_calculation_obligation",
     "plan_calculation_resolution",
     "resolver_tasks_from_report",
+    "retrieval_query_policy",
     "resolver_task_to_reference_query",
     "reference_retrieval:embedding_stub:factor",
     "deterministic_reference_selection",
@@ -90,11 +93,10 @@ def run_canonical_working_loop_scenario() -> DomainScenarioResult:
     retrieval_report = resolve_reference_retrieval_obligations(
         planned_report,
         reference_resolver(),
-        query_for_obligation=reference_query_for_obligation_from_resolver_tasks(
+        query_for_obligation=reference_query_for_obligation_from_policy(
             resolver_tasks,
-            query_texts=_reference_query_texts(resolver_tasks),
-            lens="factor",
-            reference_type="emission_factor",
+            policy=retrieval_query_policy(),
+            context=retrieval_query_context(compiled_report),
         ),
     )
     selected_report = apply_reference_selection(
@@ -143,14 +145,6 @@ def run_canonical_working_loop_scenario() -> DomainScenarioResult:
         subject=SubjectRef("claim", SUBJECT_ID),
         resolver_steps=RESOLVER_STEPS,
     )
-
-
-def _reference_query_texts(tasks) -> dict[str, str]:
-    return {
-        task.obligation_id: "Korea grid electricity factor 2024"
-        for task in tasks
-        if task.task_type == "reference_search"
-    }
 
 
 def _binding_for(

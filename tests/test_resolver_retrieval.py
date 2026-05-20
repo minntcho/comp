@@ -7,8 +7,11 @@ from comp.compiler_tool import (
     ProofObligation,
     ReferenceIndexEntry,
     ReferenceQuery,
+    RetrievalQueryPolicy,
+    RetrievalQueryRule,
     resolver_tasks_from_report,
     reference_query_for_obligation_from_resolver_tasks,
+    reference_query_for_obligation_from_policy,
     reference_query_from_resolver_task,
     resolve_reference_retrieval_obligations,
 )
@@ -144,6 +147,107 @@ def test_reference_query_builder_from_tasks_leaves_missing_query_open():
             query_texts={},
             lens="factor",
             reference_type="emission_factor",
+        ),
+    )
+
+    assert resolved == report
+
+
+def test_retrieval_query_policy_renders_reference_query_from_task_payload_and_context():
+    task = resolver_tasks_from_report(
+        CompileReport(status="blocked", obligations=(_reference_search_obligation(),))
+    )[0]
+    policy = RetrievalQueryPolicy(
+        policy_id="pcf-retrieval-policy-v1",
+        rules=(
+            RetrievalQueryRule(
+                rule_id="pcf-electricity-factor-query-v1",
+                formula_id="formula-v1",
+                lens="factor",
+                reference_type="emission_factor",
+                text_template="{geography} grid electricity factor {reporting_year}",
+            ),
+        ),
+    )
+
+    query = reference_query_for_obligation_from_policy(
+        (task,),
+        policy=policy,
+        context={"geography": "Korea", "reporting_year": 2024},
+    )(_reference_search_obligation())
+
+    assert query == ReferenceQuery(
+        query_id=(
+            "reference-query:"
+            "resolve:formula-v1:claim-co2e:reference_search_required"
+        ),
+        text="Korea grid electricity factor 2024",
+        lens="factor",
+        reference_type="emission_factor",
+        source_artifact_ids=(
+            "resolver-task:resolve:formula-v1:claim-co2e:"
+            "reference_search_required",
+            "resolve:formula-v1:claim-co2e:reference_search_required",
+        ),
+    )
+
+
+def test_retrieval_query_policy_leaves_obligation_open_without_matching_rule():
+    report = CompileReport(
+        status="blocked",
+        obligations=(_reference_search_obligation(),),
+    )
+    policy = RetrievalQueryPolicy(
+        policy_id="pcf-retrieval-policy-v1",
+        rules=(
+            RetrievalQueryRule(
+                rule_id="other-formula-query-v1",
+                formula_id="other-formula",
+                lens="factor",
+                reference_type="emission_factor",
+                text_template="{geography} grid electricity factor {reporting_year}",
+            ),
+        ),
+    )
+
+    resolved = resolve_reference_retrieval_obligations(
+        report,
+        _resolver(),
+        query_for_obligation=reference_query_for_obligation_from_policy(
+            resolver_tasks_from_report(report),
+            policy=policy,
+            context={"geography": "Korea", "reporting_year": 2024},
+        ),
+    )
+
+    assert resolved == report
+
+
+def test_retrieval_query_policy_leaves_obligation_open_without_required_context():
+    report = CompileReport(
+        status="blocked",
+        obligations=(_reference_search_obligation(),),
+    )
+    policy = RetrievalQueryPolicy(
+        policy_id="pcf-retrieval-policy-v1",
+        rules=(
+            RetrievalQueryRule(
+                rule_id="pcf-electricity-factor-query-v1",
+                formula_id="formula-v1",
+                lens="factor",
+                reference_type="emission_factor",
+                text_template="{geography} grid electricity factor {reporting_year}",
+            ),
+        ),
+    )
+
+    resolved = resolve_reference_retrieval_obligations(
+        report,
+        _resolver(),
+        query_for_obligation=reference_query_for_obligation_from_policy(
+            resolver_tasks_from_report(report),
+            policy=policy,
+            context={"geography": "Korea"},
         ),
     )
 
