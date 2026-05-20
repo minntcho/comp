@@ -24,10 +24,11 @@ Read these first:
 
 1. `architecture/retrieval-fabric-north-star.md`
 2. `architecture/obligation-kernel-working-theory.md`
-3. `architecture/domain-scenario-pack-generation.md`
-4. `architecture/llm-orchestrated-compiler-tool-loop.md`
-5. `architecture/llm-worker-orchestration.md`
-6. `architecture/memory-assisted-compiler-loop.md`
+3. `architecture/trust-kernel-hardening.md`
+4. `architecture/domain-scenario-pack-generation.md`
+5. `architecture/llm-orchestrated-compiler-tool-loop.md`
+6. `architecture/llm-worker-orchestration.md`
+7. `architecture/memory-assisted-compiler-loop.md`
 
 `architecture/retrieval-fabric-north-star.md` is the long-term direction for
 retrieval, embedding, LLM artifact resolution, typed reference authority, and
@@ -37,6 +38,11 @@ compiler/receipt gates.
 for current implementation slices: semantic obligations, reference-grounded
 calculation, commit packages, governance decisions, and receipt-gated
 projection.
+
+`architecture/trust-kernel-hardening.md` is the implementation standard for the
+next hardening slice: remove ambient domain defaults, fingerprint profile-active
+behavior, preserve retrieval/reference provenance, and make the canonical
+scenario persistence-replayable.
 
 `architecture/domain-scenario-pack-generation.md` describes how to add
 replaceable Domain Scenario Lab packs without turning them into hard-coded
