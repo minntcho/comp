@@ -3,6 +3,8 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any, Callable, TypeVar
 
+from comp.judgment.receipts import DependencyFingerprint
+
 if TYPE_CHECKING:
     from comp.compiler_tool.resolver_retrieval import RetrievalQueryPolicy
 
@@ -164,6 +166,29 @@ def active_retrieval_query_policies(
     )
 
 
+def profile_declaration_fingerprint(
+    profile: CompilerProfile,
+) -> DependencyFingerprint:
+    validate_compiler_profile(profile)
+    return DependencyFingerprint.from_payload(
+        dependency_kind="compiler_profile",
+        dependency_id=profile.profile_id,
+        payload={
+            "profile_id": profile.profile_id,
+            "core_invariant_version": profile.core_invariant_version,
+            "active_rule_ids": profile.active_rule_ids,
+            "active_rubric_ids": profile.active_rubric_ids,
+            "active_retrieval_policy_ids": profile.active_retrieval_policy_ids,
+            "judge_policy_id": profile.judge_policy_id,
+            "projection_policy_id": profile.projection_policy_id,
+            "domain_packs": tuple(
+                _domain_pack_fingerprint_payload(domain)
+                for domain in profile.domain_packs
+            ),
+        },
+    )
+
+
 def _catalogs(
     profile: CompilerProfile,
 ) -> tuple[
@@ -225,6 +250,55 @@ def _unique_by_id(items: list[T], *, attr: str, label: str) -> dict[str, T]:
     return out
 
 
+def _domain_pack_fingerprint_payload(domain: DomainPack) -> dict[str, Any]:
+    return {
+        "domain_id": domain.domain_id,
+        "version": domain.version,
+        "rule_families": tuple(
+            {
+                "rule_id": rule.rule_id,
+                "required_rubric_ids": rule.required_rubric_ids,
+            }
+            for rule in domain.rule_families
+        ),
+        "rubrics": tuple(
+            {
+                "rubric_id": rubric.rubric_id,
+                "acceptable_verdicts": rubric.acceptable_verdicts,
+                "required_verdict": rubric.required_verdict,
+            }
+            for rubric in domain.rubrics
+        ),
+        "judge_policies": tuple(
+            {
+                "judge_policy_id": policy.judge_policy_id,
+                "allowed_judges": policy.allowed_judges,
+            }
+            for policy in domain.judge_policies
+        ),
+        "retrieval_query_policies": tuple(
+            {
+                "policy_id": policy.policy_id,
+                "rules": tuple(
+                    {
+                        "rule_id": rule.rule_id,
+                        "lens": rule.lens,
+                        "text_template": rule.text_template,
+                        "reference_type": rule.reference_type,
+                        "task_type": rule.task_type,
+                        "field": rule.field,
+                        "reason": rule.reason,
+                        "formula_id": rule.formula_id,
+                    }
+                    for rule in policy.rules
+                ),
+            }
+            for policy in domain.retrieval_query_policies
+        ),
+        "disabled_core_invariants": domain.disabled_core_invariants,
+    }
+
+
 __all__ = [
     "RuleFamily",
     "SemanticRubric",
@@ -235,4 +309,5 @@ __all__ = [
     "validate_compiler_profile",
     "active_rule_families",
     "active_retrieval_query_policies",
+    "profile_declaration_fingerprint",
 ]

@@ -47,6 +47,28 @@ class ProjectionValueCommitment:
 
 
 @dataclass(frozen=True, slots=True)
+class DependencyFingerprint:
+    dependency_kind: str
+    dependency_id: str
+    fingerprint: str
+    digest_alg: str = "sha256"
+
+    @classmethod
+    def from_payload(
+        cls,
+        *,
+        dependency_kind: str,
+        dependency_id: str,
+        payload: Mapping[str, Any],
+    ) -> "DependencyFingerprint":
+        return cls(
+            dependency_kind=dependency_kind,
+            dependency_id=dependency_id,
+            fingerprint=_value_digest(payload),
+        )
+
+
+@dataclass(frozen=True, slots=True)
 class CommitReceiptCitations:
     governance_decision_id: str
     governance_status: str
@@ -70,6 +92,9 @@ class CommitReceiptCitations:
     open_obligation_ids: tuple[str, ...]
     hazard_ids: tuple[str, ...]
     projection_value_commitments: tuple[ProjectionValueCommitment, ...] = field(
+        default_factory=tuple
+    )
+    dependency_fingerprints: tuple[DependencyFingerprint, ...] = field(
         default_factory=tuple
     )
 
@@ -100,6 +125,7 @@ class CommitReceiptCitations:
                 "projection_value_commitments",
                 self.projection_value_commitments,
             ),
+            ("dependency_fingerprints", self.dependency_fingerprints),
         )
 
 
@@ -169,6 +195,7 @@ def _canonical_value(value: Any) -> Any:
 __all__ = [
     "SelectionReceipt",
     "ProjectionValueCommitment",
+    "DependencyFingerprint",
     "CommitReceipt",
     "CommitReceiptCitations",
 ]

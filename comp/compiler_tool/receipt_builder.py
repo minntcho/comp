@@ -83,6 +83,7 @@ def _receipt_citations(
         open_obligation_ids=package.open_obligation_ids,
         hazard_ids=package.hazard_ids,
         projection_value_commitments=package.projection_value_commitments,
+        dependency_fingerprints=package.dependency_fingerprints,
     )
 
 

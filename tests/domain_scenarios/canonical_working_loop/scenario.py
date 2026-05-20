@@ -6,7 +6,9 @@ from comp.compiler_tool import (
     apply_reference_selection,
     plan_calculation_resolution,
     prepare_commit,
+    profile_declaration_fingerprint,
     reference_query_for_obligation_from_profile_policy,
+    reference_record_fingerprint,
     resolve_reference_retrieval_obligations,
     resolver_tasks_from_report,
     retry_blocked_calculation,
@@ -126,6 +128,10 @@ def run_canonical_working_loop_scenario() -> DomainScenarioResult:
         public_row_id=PUBLIC_ROW_ID,
         projection_id="canonical-pcf-public-row",
         profile_id=scenario_profile.profile_id,
+        dependency_fingerprints=_dependency_fingerprints(
+            scenario_profile,
+            binding,
+        ),
     )
     projection = None
     if preparation.receipt is not None:
@@ -146,6 +152,18 @@ def run_canonical_working_loop_scenario() -> DomainScenarioResult:
         subject=SubjectRef("claim", SUBJECT_ID),
         resolver_steps=RESOLVER_STEPS,
     )
+
+
+def _dependency_fingerprints(
+    scenario_profile,
+    binding: ReferenceBinding | None,
+):
+    fingerprints = [profile_declaration_fingerprint(scenario_profile)]
+    if binding is not None:
+        fingerprints.append(
+            reference_record_fingerprint(catalog().get(binding.reference_id))
+        )
+    return tuple(fingerprints)
 
 
 def _binding_for(

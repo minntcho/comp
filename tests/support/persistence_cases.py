@@ -7,6 +7,7 @@ from typing import Any
 from comp import (
     CommitReceipt,
     CommitReceiptCitations,
+    DependencyFingerprint,
     ProjectionSpec,
     ProjectionValueCommitment,
 )
@@ -64,6 +65,18 @@ def receipt_projection_case(
         open_obligation_ids=(),
         hazard_ids=(),
         projection_value_commitments=commitments,
+        dependency_fingerprints=(
+            DependencyFingerprint(
+                dependency_kind="compiler_profile",
+                dependency_id="fixture-profile",
+                fingerprint="sha256:fixture-profile",
+            ),
+            DependencyFingerprint(
+                dependency_kind="reference_record",
+                dependency_id="fixture-factor",
+                fingerprint="sha256:fixture-factor",
+            ),
+        ),
     )
     receipt = CommitReceipt(
         draft_id="draft-1",

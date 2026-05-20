@@ -5,6 +5,7 @@ from dataclasses import dataclass
 from typing import Any
 
 from comp.judgment import CommitReceipt, ProjectionSpec
+from comp.judgment.receipts import DependencyFingerprint
 from comp.persistence.ledger import (
     ArtifactIntegrityError,
     InMemoryArtifactStore,
@@ -32,6 +33,7 @@ class ProjectionReplayReport:
     public_row: dict[str, Any]
     artifact_refs: tuple[ArtifactRef, ...]
     artifact_digests: tuple[tuple[str, str], ...]
+    dependency_fingerprints: tuple[DependencyFingerprint, ...] = ()
 
 
 def replay_public_projection(
@@ -55,6 +57,7 @@ def replay_public_projection(
         public_row=public_row,
         artifact_refs=refs,
         artifact_digests=artifact_digests,
+        dependency_fingerprints=_dependency_fingerprints(receipt),
     )
 
 
@@ -170,6 +173,14 @@ def _unique_refs(refs: list[ArtifactRef]) -> tuple[ArtifactRef, ...]:
         seen.add(ref)
         unique.append(ref)
     return tuple(unique)
+
+
+def _dependency_fingerprints(
+    receipt: CommitReceipt,
+) -> tuple[DependencyFingerprint, ...]:
+    if receipt.citations is None:
+        return ()
+    return receipt.citations.dependency_fingerprints
 
 
 def _require_non_empty(field: str, value: str) -> None:

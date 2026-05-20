@@ -5,6 +5,7 @@ from dataclasses import dataclass, field
 from typing import Any
 
 from comp.compiler_tool.references import ReferenceCandidate
+from comp.judgment.receipts import DependencyFingerprint
 
 
 class ReferenceLookupError(KeyError):
@@ -91,6 +92,23 @@ class ReferenceCatalog:
         )
 
 
+def reference_record_fingerprint(record: ReferenceRecord) -> DependencyFingerprint:
+    return DependencyFingerprint.from_payload(
+        dependency_kind="reference_record",
+        dependency_id=record.reference_id,
+        payload={
+            "reference_id": record.reference_id,
+            "reference_type": record.reference_type,
+            "labels": record.labels,
+            "aliases": record.aliases,
+            "description": record.description,
+            "attributes": record.attributes,
+            "source": record.source,
+            "witness_ids": record.witness_ids,
+        },
+    )
+
+
 def _match_score(query: str, record: ReferenceRecord) -> float:
     normalized_query = _normalize_text(query)
     names = (*record.labels, *record.aliases)
@@ -122,4 +140,5 @@ __all__ = [
     "ReferenceLookupError",
     "ReferenceRecord",
     "ReferenceCatalog",
+    "reference_record_fingerprint",
 ]

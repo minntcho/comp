@@ -29,6 +29,7 @@ from comp.judgment.program import (
 from comp.judgment.receipts import (
     CommitReceipt,
     CommitReceiptCitations,
+    DependencyFingerprint,
     ProjectionValueCommitment,
     SelectionReceipt,
 )
@@ -60,6 +61,7 @@ __all__ = [
     "project_public_row",
     "SelectionReceipt",
     "ProjectionValueCommitment",
+    "DependencyFingerprint",
     "CommitReceipt",
     "CommitReceiptCitations",
 ]

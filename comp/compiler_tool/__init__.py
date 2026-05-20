@@ -44,6 +44,7 @@ from comp.compiler_tool.profiles import (
     SemanticRubric,
     active_rule_families,
     active_retrieval_query_policies,
+    profile_declaration_fingerprint,
     validate_compiler_profile,
 )
 from comp.compiler_tool.profile_runner import compile_with_profile
@@ -51,6 +52,7 @@ from comp.compiler_tool.reference_db import (
     ReferenceCatalog,
     ReferenceLookupError,
     ReferenceRecord,
+    reference_record_fingerprint,
 )
 from comp.compiler_tool.reference_resolution import (
     ReferenceSearchQuery,
@@ -71,7 +73,11 @@ from comp.compiler_tool.receipt_builder import (
     ReceiptBuildBlocked,
     build_commit_receipt,
 )
-from comp.judgment.receipts import CommitReceiptCitations, ProjectionValueCommitment
+from comp.judgment.receipts import (
+    CommitReceiptCitations,
+    DependencyFingerprint,
+    ProjectionValueCommitment,
+)
 from comp.compiler_tool.report_status import (
     recompute_report_status,
     with_recomputed_status,
@@ -149,10 +155,12 @@ __all__ = [
     "ReceiptBuildBlocked",
     "CommitReceiptCitations",
     "ProjectionValueCommitment",
+    "DependencyFingerprint",
     "build_commit_receipt",
     "ReferenceLookupError",
     "ReferenceRecord",
     "ReferenceCatalog",
+    "reference_record_fingerprint",
     "ReferenceSearchQuery",
     "resolve_reference_search_obligations",
     "apply_reference_selection",
@@ -188,6 +196,7 @@ __all__ = [
     "validate_compiler_profile",
     "active_rule_families",
     "active_retrieval_query_policies",
+    "profile_declaration_fingerprint",
     "compile_with_profile",
     "CompilerTool",
     "apply_semantic_judgments",
