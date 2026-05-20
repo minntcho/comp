@@ -496,6 +496,8 @@ raw evidence
 -> CompilerTool
 -> calculation_blocked
 -> reference_search_required
+-> ResolverTask
+-> ReferenceQuery
 -> retrieval bridge
 -> candidate-only ReferenceCandidate
 -> deterministic ReferenceBinding

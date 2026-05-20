@@ -9,11 +9,14 @@ from comp.compiler_tool import (
     InterpretationHypothesis,
     ProofObligation,
     ReferenceCatalog,
+    ReferenceResolver,
     ResolverTask,
     SemanticJudgment,
     apply_semantic_judgments,
     compile_report_to_facts,
+    reference_query_for_obligation_from_resolver_tasks,
     resolve_reference_search_obligations,
+    resolve_reference_retrieval_obligations,
     resolver_task_from_obligation,
     resolver_tasks_from_report,
 )
@@ -85,7 +88,9 @@ class DeterministicCompResolver:
         semantic_judgments: Iterable[SemanticJudgment] = (),
         available_span_ids: Iterable[str] | None = None,
         reference_catalog: ReferenceCatalog | None = None,
+        reference_resolver: ReferenceResolver | None = None,
         reference_queries: Mapping[str, str] | None = None,
+        reference_lens: str = "factor",
         reference_type: str | None = None,
         reference_limit: int = 10,
         retrieval_method: str = "keyword",
@@ -95,7 +100,9 @@ class DeterministicCompResolver:
             None if available_span_ids is None else tuple(available_span_ids)
         )
         self.reference_catalog = reference_catalog
+        self.reference_resolver = reference_resolver
         self.reference_queries = dict(reference_queries or {})
+        self.reference_lens = reference_lens
         self.reference_type = reference_type
         self.reference_limit = reference_limit
         self.retrieval_method = retrieval_method
@@ -113,7 +120,19 @@ class DeterministicCompResolver:
             )
 
         reference_query_obligation_ids = self._reference_query_obligation_ids(tasks)
-        if self.reference_catalog is not None and reference_query_obligation_ids:
+        if self.reference_resolver is not None and reference_query_obligation_ids:
+            report = resolve_reference_retrieval_obligations(
+                report,
+                self.reference_resolver,
+                query_for_obligation=reference_query_for_obligation_from_resolver_tasks(
+                    tasks,
+                    query_texts=self.reference_queries,
+                    lens=self.reference_lens,
+                    reference_type=self.reference_type,
+                ),
+                limit=self.reference_limit,
+            )
+        elif self.reference_catalog is not None and reference_query_obligation_ids:
             report = resolve_reference_search_obligations(
                 report,
                 self.reference_catalog,

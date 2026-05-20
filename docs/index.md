@@ -71,6 +71,7 @@ calculation
 
 resolver tasks
   ProofObligation -> ResolverTask
+  ResolverTask -> ReferenceQuery
   resolver-facing task type, required artifact, and payload
 
 governance / commit

@@ -6,7 +6,9 @@ from comp.compiler_tool import (
     apply_reference_selection,
     plan_calculation_resolution,
     prepare_commit,
+    reference_query_for_obligation_from_resolver_tasks,
     resolve_reference_retrieval_obligations,
+    resolver_tasks_from_report,
     retry_blocked_calculation,
 )
 from tests.domain_scenarios.canonical_working_loop.expected import (
@@ -28,7 +30,6 @@ from tests.domain_scenarios.canonical_working_loop.fixtures import (
     input_claim_from_report,
     open_calculation_obligation,
     projection_source,
-    reference_query_for_obligation,
     reference_resolver,
 )
 from tests.domain_scenarios.core import (
@@ -46,6 +47,8 @@ RESOLVER_STEPS = (
     "compiler_tool.compile_interpretation",
     "open_calculation_obligation",
     "plan_calculation_resolution",
+    "resolver_tasks_from_report",
+    "resolver_task_to_reference_query",
     "reference_retrieval:embedding_stub:factor",
     "deterministic_reference_selection",
     "retry_calculation",
@@ -83,10 +86,16 @@ def run_canonical_working_loop_scenario() -> DomainScenarioResult:
     compiled_report = compile_raw_evidence(RAW_EVIDENCE)
     blocked_report = open_calculation_obligation(compiled_report)
     planned_report = plan_calculation_resolution(blocked_report)
+    resolver_tasks = resolver_tasks_from_report(planned_report)
     retrieval_report = resolve_reference_retrieval_obligations(
         planned_report,
         reference_resolver(),
-        query_for_obligation=reference_query_for_obligation,
+        query_for_obligation=reference_query_for_obligation_from_resolver_tasks(
+            resolver_tasks,
+            query_texts=_reference_query_texts(resolver_tasks),
+            lens="factor",
+            reference_type="emission_factor",
+        ),
     )
     selected_report = apply_reference_selection(
         retrieval_report,
@@ -134,6 +143,14 @@ def run_canonical_working_loop_scenario() -> DomainScenarioResult:
         subject=SubjectRef("claim", SUBJECT_ID),
         resolver_steps=RESOLVER_STEPS,
     )
+
+
+def _reference_query_texts(tasks) -> dict[str, str]:
+    return {
+        task.obligation_id: "Korea grid electricity factor 2024"
+        for task in tasks
+        if task.task_type == "reference_search"
+    }
 
 
 def _binding_for(
