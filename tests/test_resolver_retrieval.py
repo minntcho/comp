@@ -3,14 +3,18 @@ import pytest
 from comp.compiler_tool import (
     CalculationRequirement,
     CompileReport,
+    CompilerProfile,
+    DomainPack,
     EmbeddingResolverStub,
     ProofObligation,
+    ProfileValidationError,
     ReferenceIndexEntry,
     ReferenceQuery,
     RetrievalQueryPolicy,
     RetrievalQueryRule,
     resolver_tasks_from_report,
     reference_query_for_obligation_from_resolver_tasks,
+    reference_query_for_obligation_from_profile_policy,
     reference_query_for_obligation_from_policy,
     reference_query_from_resolver_task,
     resolve_reference_retrieval_obligations,
@@ -252,3 +256,86 @@ def test_retrieval_query_policy_leaves_obligation_open_without_required_context(
     )
 
     assert resolved == report
+
+
+def test_profile_pinned_retrieval_policy_feeds_query_builder():
+    report = CompileReport(
+        status="blocked",
+        obligations=(_reference_search_obligation(),),
+    )
+    profile = CompilerProfile(
+        profile_id="fixture-profile",
+        domain_packs=(
+            DomainPack(
+                domain_id="fixture",
+                version="2026.1",
+                retrieval_query_policies=(
+                    RetrievalQueryPolicy(
+                        policy_id="fixture.inactive-retrieval-policy.v1",
+                        rules=(),
+                    ),
+                    RetrievalQueryPolicy(
+                        policy_id="fixture.active-retrieval-policy.v1",
+                        rules=(
+                            RetrievalQueryRule(
+                                rule_id="fixture.active-factor-query.v1",
+                                formula_id="formula-v1",
+                                lens="factor",
+                                reference_type="emission_factor",
+                                text_template=(
+                                    "{geography} grid electricity factor "
+                                    "{reporting_year}"
+                                ),
+                            ),
+                        ),
+                    ),
+                ),
+            ),
+        ),
+        active_retrieval_policy_ids=("fixture.active-retrieval-policy.v1",),
+    )
+
+    resolved = resolve_reference_retrieval_obligations(
+        report,
+        _resolver(),
+        query_for_obligation=reference_query_for_obligation_from_profile_policy(
+            resolver_tasks_from_report(report),
+            profile=profile,
+            context={"geography": "Korea", "reporting_year": 2024},
+        ),
+    )
+
+    assert [candidate.reference_id for candidate in resolved.reference_candidates] == [
+        "factor.kr_grid.2024.location_based"
+    ]
+
+
+def test_profile_retrieval_query_builder_rejects_inactive_policy_id():
+    report = CompileReport(
+        status="blocked",
+        obligations=(_reference_search_obligation(),),
+    )
+    profile = CompilerProfile(
+        profile_id="fixture-profile",
+        domain_packs=(
+            DomainPack(
+                domain_id="fixture",
+                version="2026.1",
+                retrieval_query_policies=(
+                    RetrievalQueryPolicy(
+                        policy_id="fixture.inactive-retrieval-policy.v1",
+                        rules=(),
+                    ),
+                ),
+            ),
+        ),
+        active_retrieval_policy_ids=(),
+    )
+
+    with pytest.raises(ProfileValidationError, match="inactive retrieval policy"):
+        reference_query_for_obligation_from_profile_policy(
+            resolver_tasks_from_report(report),
+            profile=profile,
+            policy_id="fixture.inactive-retrieval-policy.v1",
+            context={"geography": "Korea", "reporting_year": 2024},
+        )

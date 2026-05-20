@@ -43,6 +43,7 @@ from comp.compiler_tool.profiles import (
     RuleFamily,
     SemanticRubric,
     active_rule_families,
+    active_retrieval_query_policies,
     validate_compiler_profile,
 )
 from comp.compiler_tool.profile_runner import compile_with_profile
@@ -83,6 +84,8 @@ from comp.compiler_tool.resolver_tasks import (
 from comp.compiler_tool.resolver_retrieval import (
     RetrievalQueryPolicy,
     RetrievalQueryRule,
+    reference_query_for_obligation_from_profile_policy,
+    reference_query_for_obligation_from_policies,
     reference_query_for_obligation_from_policy,
     reference_query_for_obligation_from_resolver_tasks,
     reference_query_from_resolver_task,
@@ -163,6 +166,8 @@ __all__ = [
     "resolver_tasks_from_report",
     "RetrievalQueryPolicy",
     "RetrievalQueryRule",
+    "reference_query_for_obligation_from_policies",
+    "reference_query_for_obligation_from_profile_policy",
     "reference_query_for_obligation_from_policy",
     "reference_query_for_obligation_from_resolver_tasks",
     "reference_query_from_resolver_task",
@@ -182,6 +187,7 @@ __all__ = [
     "ProfileValidationError",
     "validate_compiler_profile",
     "active_rule_families",
+    "active_retrieval_query_policies",
     "compile_with_profile",
     "CompilerTool",
     "apply_semantic_judgments",
