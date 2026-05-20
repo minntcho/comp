@@ -452,6 +452,11 @@ comp/persistence/replay.py
 
 tests/support/persistence_cases.py
   keeps persistence test setup readable without hiding negative mutation cases.
+
+tests/domain_scenarios/persistence.py
+  records receipt-cited scenario artifacts into an in-memory artifact store,
+  records the CommitReceipt into an in-memory receipt ledger, and replays the
+  materialized scenario projection from those stored envelopes.
 ```
 
 The implemented minimum behavior is:
@@ -464,11 +469,16 @@ CommitReceipt can be recorded as an append-only ledger root.
 Materialized public projection is treated as a view, not authority.
 Replay verifies projection values against receipt commitments.
 Replay blocks when an artifact body or projected value no longer matches its digest.
+Replay verifies committed public values against the cited checked/derived source
+artifact body, not only against the materialized row.
+The canonical raw-input working loop can be replayed from stored scenario
+artifact envelopes and its receipt ledger root.
 ```
 
-That completes the original in-memory substrate slice. It does not yet mean
-production persistence exists, nor does it mean scenario runs automatically
-persist every artifact needed for replay.
+That completes the original in-memory substrate slice and attaches it to the
+canonical raw-input scenario harness. It does not yet mean production
+persistence exists, nor does it mean a database, retention policy, or dependency
+fingerprint manifest exists.
 
 ---
 
@@ -477,30 +487,28 @@ persist every artifact needed for replay.
 Recommended next code slice:
 
 ```text
-test/feat: replay canonical scenario from stored artifact envelopes
+feat: pin replay dependency fingerprints
 ```
 
 Candidate files:
 
 ```text
-tests/domain_scenarios/canonical_working_loop/scenario.py
-tests/domain_scenarios/canonical_working_loop/fixtures.py
-tests/test_canonical_working_loop_scenario.py
-tests/test_persistence_projection_replay.py
-comp/persistence/*.py, only if the replay API needs a narrow helper
+comp/compiler_tool/profiles.py
+comp/compiler_tool/references.py
+comp/persistence/*.py
+tests/test_persistence_*.py
+tests/test_compiler_profile_contract.py
 ```
 
 Minimum behavior:
 
 ```text
-Canonical working loop records receipt-cited artifacts in an InMemoryArtifactStore.
-The run records the CommitReceipt as an InMemoryReceiptLedger root.
-The scenario replays its materialized projection through replay_public_projection.
-Replay report includes package, governance decision, checked/derived sources,
-bindings, traces, formulas, and witness refs that are already present in receipt
-citations.
-Negative scenario blocks replay when a cited artifact is missing or its body
-digest drifts.
+CompilerProfile exposes a stable declaration fingerprint.
+ReferenceRecord or selected ReferenceBinding exposes a replayable record
+fingerprint.
+CommitReceipt citations can include those fingerprints without turning the
+current catalog or profile into replay authority.
+Replay can report which profile/reference world the receipt depended on.
 ```
 
 Non-goals for that slice:
@@ -512,11 +520,12 @@ no production storage backend
 no catalog ingestion pipeline
 no legal retention policy
 no full event sourcing
-no profile/domain/reference fingerprint implementation yet
+no real embedding index persistence
 ```
 
-The goal is to prove the replay substrate is not only unit-testable, but also
-attached to the raw-input canonical working loop.
+The goal is to move from "receipt can replay values and cited artifacts" toward
+"receipt can also explain the pinned profile/reference world that made those
+artifacts meaningful."
 
 ---
 
