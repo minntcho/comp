@@ -37,14 +37,14 @@ from tests.domain_scenarios.l_energy_pcf_governance.fixtures import (
     SUBJECT_ID,
     attach_downstream_fixture_artifacts,
     blocked_report,
-    catalog,
     criteria,
     formula,
     input_claim,
     profile,
-    reference_resolver,
+    reference_pack,
     retrieval_query_context,
 )
+from tests.domain_scenarios.reference_packs import ScenarioReferencePack
 
 
 RESOLVER_STEPS = (
@@ -92,8 +92,13 @@ SCENARIO = ScenarioDefinition(
 )
 
 
-def run_l_energy_pcf_governance_scenario() -> DomainScenarioResult:
-    report = _compile_retrieval_backed_report()
+def run_l_energy_pcf_governance_scenario(
+    *,
+    reference_pack_override: ScenarioReferencePack | None = None,
+) -> DomainScenarioResult:
+    report = _compile_retrieval_backed_report(
+        reference_pack_override=reference_pack_override,
+    )
     preparation = prepare_commit(
         report,
         subject_id=SUBJECT_ID,
@@ -125,14 +130,18 @@ def _projection_source(report) -> dict[str, object]:
     return values
 
 
-def _compile_retrieval_backed_report() -> CompileReport:
+def _compile_retrieval_backed_report(
+    *,
+    reference_pack_override: ScenarioReferencePack | None = None,
+) -> CompileReport:
+    pack = reference_pack_override or reference_pack()
     scenario_profile = profile()
     opened_report = blocked_report()
     planned_report = plan_calculation_resolution(opened_report)
     resolver_tasks = resolver_tasks_from_report(planned_report)
     retrieval_report = resolve_reference_retrieval_obligations(
         planned_report,
-        reference_resolver(),
+        pack.resolver,
         query_for_obligation=reference_query_for_obligation_from_profile_policy(
             resolver_tasks,
             profile=scenario_profile,
@@ -141,7 +150,7 @@ def _compile_retrieval_backed_report() -> CompileReport:
     )
     selected_report = apply_reference_selection(
         retrieval_report,
-        catalog(),
+        pack.catalog,
         criteria=criteria(),
         field=formula().output_field,
     )
@@ -150,7 +159,7 @@ def _compile_retrieval_backed_report() -> CompileReport:
     if binding is not None:
         resolved_report = retry_blocked_calculation(
             selected_report,
-            catalog(),
+            pack.catalog,
             input_claim=input_claim(),
             reference_binding=binding,
             formula=formula(),

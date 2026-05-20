@@ -27,6 +27,7 @@ from tests.domain_scenarios.l_energy_pcf_governance.expected import (
     SCENARIO_ID,
     SOURCE_CASE_ID,
 )
+from tests.domain_scenarios.reference_packs import ScenarioReferencePack
 
 
 SUBJECT_ID = f"case:{SOURCE_CASE_ID}"
@@ -216,78 +217,90 @@ def blocked_report() -> CompileReport:
 
 
 def catalog() -> ReferenceCatalog:
-    return ReferenceCatalog(
-        records=(
-            ReferenceRecord(
-                reference_id="platform.factor.electricity_mwh",
-                reference_type="emission_factor",
-                labels=("L-Energy electricity and LNG factor 2025",),
-                aliases=("L-Energy own site energy factor",),
-                description=(
-                    "Platform fixture factor for L-Energy own energy emissions."
-                ),
-                attributes=(
-                    ("concept_id", "platform.concept.l_energy_own_energy"),
-                    ("geography", "KR"),
-                    ("valid_period", "2025"),
-                    ("method", "platform_expected_receipt"),
-                    ("factor_value", 226),
-                    ("input_unit", "GWh"),
-                    ("output_unit", "tCO2e"),
-                ),
-                source="source:dummy-data-mapping",
-                witness_ids=("source:dummy-data-mapping",),
-            ),
-            ReferenceRecord(
-                reference_id="platform.factor.electricity_mwh_2024",
-                reference_type="emission_factor",
-                labels=("L-Energy electricity and LNG factor 2024",),
-                aliases=("L-Energy historical own site energy factor",),
-                description=(
-                    "Near-miss platform fixture factor with the wrong valid period."
-                ),
-                attributes=(
-                    ("concept_id", "platform.concept.l_energy_own_energy"),
-                    ("geography", "KR"),
-                    ("valid_period", "2024"),
-                    ("method", "platform_expected_receipt"),
-                    ("factor_value", 220),
-                    ("input_unit", "GWh"),
-                    ("output_unit", "tCO2e"),
-                ),
-                source="source:dummy-data-mapping",
-                witness_ids=("source:dummy-data-mapping:2024-near-miss",),
-            ),
-        )
-    )
+    return reference_pack().catalog
 
 
 def reference_resolver() -> EmbeddingResolverStub:
-    return EmbeddingResolverStub(
-        entries=(
-            ReferenceIndexEntry(
-                entry_id="idx-l-energy-electricity-mwh-2025",
-                reference_id="platform.factor.electricity_mwh",
-                reference_type="emission_factor",
-                lens="factor",
-                text="Korea L-Energy electricity LNG factor 2025",
-                reference_db_version="l-energy-platform-fixture-v1",
-                index_version="l-energy-embedding-stub-v1",
-                source="source:dummy-data-mapping",
-                witness_ids=("source:dummy-data-mapping",),
+    return reference_pack().resolver
+
+
+def reference_pack() -> ScenarioReferencePack:
+    reference_db_version = "l-energy-platform-fixture-v1"
+    index_version = "l-energy-embedding-stub-v1"
+    return ScenarioReferencePack(
+        pack_id="l-energy-platform-reference-pack-v1",
+        reference_db_version=reference_db_version,
+        index_version=index_version,
+        catalog=ReferenceCatalog(records=_reference_records()),
+        resolver=EmbeddingResolverStub(entries=_reference_index_entries()),
+    )
+
+
+def _reference_records() -> tuple[ReferenceRecord, ...]:
+    return (
+        ReferenceRecord(
+            reference_id="platform.factor.electricity_mwh",
+            reference_type="emission_factor",
+            labels=("L-Energy electricity and LNG factor 2025",),
+            aliases=("L-Energy own site energy factor",),
+            description="Platform fixture factor for L-Energy own energy emissions.",
+            attributes=(
+                ("concept_id", "platform.concept.l_energy_own_energy"),
+                ("geography", "KR"),
+                ("valid_period", "2025"),
+                ("method", "platform_expected_receipt"),
+                ("factor_value", 226),
+                ("input_unit", "GWh"),
+                ("output_unit", "tCO2e"),
             ),
-            ReferenceIndexEntry(
-                entry_id="idx-l-energy-electricity-mwh-2024",
-                reference_id="platform.factor.electricity_mwh_2024",
-                reference_type="emission_factor",
-                lens="factor",
-                text="Korea L-Energy electricity LNG factor 2024",
-                reference_db_version="l-energy-platform-fixture-v1",
-                index_version="l-energy-embedding-stub-v1",
-                source="source:dummy-data-mapping",
-                witness_ids=("source:dummy-data-mapping:2024-near-miss",),
+            source="source:dummy-data-mapping",
+            witness_ids=("source:dummy-data-mapping",),
+        ),
+        ReferenceRecord(
+            reference_id="platform.factor.electricity_mwh_2024",
+            reference_type="emission_factor",
+            labels=("L-Energy electricity and LNG factor 2024",),
+            aliases=("L-Energy historical own site energy factor",),
+            description="Near-miss platform fixture factor with the wrong valid period.",
+            attributes=(
+                ("concept_id", "platform.concept.l_energy_own_energy"),
+                ("geography", "KR"),
+                ("valid_period", "2024"),
+                ("method", "platform_expected_receipt"),
+                ("factor_value", 220),
+                ("input_unit", "GWh"),
+                ("output_unit", "tCO2e"),
             ),
-        )
+            source="source:dummy-data-mapping",
+            witness_ids=("source:dummy-data-mapping:2024-near-miss",),
+        ),
+    )
+
+
+def _reference_index_entries() -> tuple[ReferenceIndexEntry, ...]:
+    return (
+        ReferenceIndexEntry(
+            entry_id="idx-l-energy-electricity-mwh-2025",
+            reference_id="platform.factor.electricity_mwh",
+            reference_type="emission_factor",
+            lens="factor",
+            text="Korea L-Energy electricity LNG factor 2025",
+            reference_db_version="l-energy-platform-fixture-v1",
+            index_version="l-energy-embedding-stub-v1",
+            source="source:dummy-data-mapping",
+            witness_ids=("source:dummy-data-mapping",),
+        ),
+        ReferenceIndexEntry(
+            entry_id="idx-l-energy-electricity-mwh-2024",
+            reference_id="platform.factor.electricity_mwh_2024",
+            reference_type="emission_factor",
+            lens="factor",
+            text="Korea L-Energy electricity LNG factor 2024",
+            reference_db_version="l-energy-platform-fixture-v1",
+            index_version="l-energy-embedding-stub-v1",
+            source="source:dummy-data-mapping",
+            witness_ids=("source:dummy-data-mapping:2024-near-miss",),
+        ),
     )
 
 
@@ -452,6 +465,7 @@ __all__ = [
     "formula",
     "input_claim",
     "profile",
+    "reference_pack",
     "reference_resolver",
     "reference_bindings",
     "retrieval_query_context",
