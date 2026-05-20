@@ -1,8 +1,11 @@
 from __future__ import annotations
 
 import argparse
+import json
 import sys
 from collections.abc import Iterable, Sequence
+from dataclasses import dataclass
+from typing import Any
 
 from tests.domain_scenarios.core import (
     DomainScenarioResult,
@@ -11,6 +14,17 @@ from tests.domain_scenarios.core import (
     run_scenario,
 )
 from tests.domain_scenarios.registry import registered_scenarios
+
+
+@dataclass(frozen=True)
+class ScenarioRunStatus:
+    scenario: ScenarioDefinition
+    result: DomainScenarioResult | None
+    error: str | None = None
+
+    @property
+    def passed(self) -> bool:
+        return self.error is None
 
 
 def main(argv: Sequence[str] | None = None) -> int:
@@ -35,8 +49,63 @@ def main(argv: Sequence[str] | None = None) -> int:
             print(render_scenario_summary(scenario, result))
         return 0
 
+    if args.command == "run-all":
+        statuses = run_all_scenarios()
+        if args.json:
+            print(render_run_all_json(statuses))
+        else:
+            print(render_run_all_summary(statuses))
+        return 0 if all(status.passed for status in statuses) else 1
+
     parser.print_help(sys.stderr)
     return 2
+
+
+def run_all_scenarios() -> tuple[ScenarioRunStatus, ...]:
+    statuses: list[ScenarioRunStatus] = []
+    for scenario in registered_scenarios():
+        try:
+            result = run_scenario(scenario)
+            assert_scenario_contract(result, scenario.contract)
+        except AssertionError as exc:
+            statuses.append(
+                ScenarioRunStatus(
+                    scenario=scenario,
+                    result=None,
+                    error=str(exc) or exc.__class__.__name__,
+                )
+            )
+        else:
+            statuses.append(ScenarioRunStatus(scenario=scenario, result=result))
+    return tuple(statuses)
+
+
+def render_run_all_summary(statuses: Sequence[ScenarioRunStatus]) -> str:
+    passed = sum(1 for status in statuses if status.passed)
+    lines = [
+        "Domain Scenario Run",
+        f"Passed: {passed}/{len(statuses)}",
+        "",
+        "Scenarios:",
+    ]
+    for status in statuses:
+        label = "pass" if status.passed else "fail"
+        detail = _run_status_detail(status)
+        lines.append(f"- {status.scenario.scenario_id}: {label}{detail}")
+    return "\n".join(lines)
+
+
+def render_run_all_json(statuses: Sequence[ScenarioRunStatus]) -> str:
+    passed = sum(1 for status in statuses if status.passed)
+    payload = {
+        "summary": {
+            "total": len(statuses),
+            "passed": passed,
+            "failed": len(statuses) - passed,
+        },
+        "scenarios": [_run_status_payload(status) for status in statuses],
+    }
+    return json.dumps(payload, indent=2, sort_keys=True)
 
 
 def render_scenario_summary(
@@ -95,6 +164,16 @@ def _build_parser() -> argparse.ArgumentParser:
         action="store_true",
         help="Print the scenario result viewer payload as JSON.",
     )
+
+    run_all = subparsers.add_parser(
+        "run-all",
+        help="Run all registered domain scenarios and assert their contracts.",
+    )
+    run_all.add_argument(
+        "--json",
+        action="store_true",
+        help="Print an aggregate scenario run payload as JSON.",
+    )
     return parser
 
 
@@ -117,4 +196,35 @@ def _unknown_scenario_message(scenario_id: str) -> str:
     return f"unknown scenario id: {scenario_id}\nknown scenarios: {known}"
 
 
-__all__ = ["main", "render_scenario_summary"]
+def _run_status_detail(status: ScenarioRunStatus) -> str:
+    if not status.passed:
+        return f" ({status.error})"
+    assert status.result is not None
+    projection = "projection" if status.result.projection is not None else "no projection"
+    return (
+        f" ({status.result.report.status}, "
+        f"{status.result.preparation.decision.status}, {projection})"
+    )
+
+
+def _run_status_payload(status: ScenarioRunStatus) -> dict[str, Any]:
+    payload: dict[str, Any] = {
+        "scenario_id": status.scenario.scenario_id,
+        "title": status.scenario.title,
+        "status": "pass" if status.passed else "fail",
+    }
+    if status.result is None:
+        payload["error"] = status.error
+    else:
+        payload["result"] = status.result.to_dict()
+    return payload
+
+
+__all__ = [
+    "ScenarioRunStatus",
+    "main",
+    "render_run_all_json",
+    "render_run_all_summary",
+    "render_scenario_summary",
+    "run_all_scenarios",
+]
