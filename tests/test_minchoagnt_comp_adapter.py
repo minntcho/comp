@@ -29,6 +29,8 @@ from minchoagnt import (
     SkillStore,
 )
 
+TINY_KNOWN_FIELDS = frozenset({"activity", "amount", "unit", "reporting_year"})
+
 
 def test_minchoagnt_layer_is_available_without_expanding_comp_surface():
     assert MiniAgent is not None
@@ -43,7 +45,10 @@ def test_minchoagnt_layer_is_available_without_expanding_comp_surface():
 
 
 def test_comp_adapter_calls_compiler_tool_without_projection_authority():
-    adapter = CompCompilerAdapter(allowed_units=frozenset({"kwh"}))
+    adapter = CompCompilerAdapter(
+        allowed_units=frozenset({"kwh"}),
+        known_fields=TINY_KNOWN_FIELDS,
+    )
     hypothesis = InterpretationHypothesis(
         hypothesis_id="hyp-1",
         subject_id="claim-1",
@@ -75,7 +80,10 @@ def test_comp_adapter_calls_compiler_tool_without_projection_authority():
 
 
 def test_comp_adapter_can_append_report_facts_without_minting_receipts():
-    adapter = CompCompilerAdapter(allowed_units=frozenset({"kwh"}))
+    adapter = CompCompilerAdapter(
+        allowed_units=frozenset({"kwh"}),
+        known_fields=TINY_KNOWN_FIELDS,
+    )
     hypothesis = InterpretationHypothesis(
         hypothesis_id="hyp-2",
         subject_id="claim-2",
@@ -93,7 +101,10 @@ def test_comp_adapter_can_append_report_facts_without_minting_receipts():
 
 
 def test_comp_adapter_exposes_resolver_tasks_for_agent_loop():
-    adapter = CompCompilerAdapter(allowed_units=frozenset({"kwh"}))
+    adapter = CompCompilerAdapter(
+        allowed_units=frozenset({"kwh"}),
+        known_fields=TINY_KNOWN_FIELDS,
+    )
     result = adapter.compile(
         InterpretationHypothesis(
             hypothesis_id="hyp-3",

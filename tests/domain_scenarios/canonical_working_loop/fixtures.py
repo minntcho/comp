@@ -96,6 +96,7 @@ def extract_raw_evidence(raw_text: str) -> InterpretationHypothesis:
 
 def compile_raw_evidence(raw_text: str) -> CompileReport:
     return CompilerTool(
+        allowed_units=frozenset({"kwh"}),
         known_fields=frozenset(
             {
                 "activity",
