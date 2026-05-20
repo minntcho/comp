@@ -532,13 +532,22 @@ production catalog snapshot store exists.
 Recommended next code slice:
 
 ```text
-feat: export receipt dependency graph
+feat: export receipt proof graph
+```
+
+The graph boundary is now defined in `receipt-proof-graph.md`. The short rule is:
+
+```text
+Receipt authorizes.
+Replay verifies.
+Graph explains.
+UI renders.
 ```
 
 Candidate files:
 
 ```text
-comp/persistence/*.py
+comp/explanation/*.py
 tests/domain_scenarios/*.py
 tests/domain_scenarios/views.py
 tests/test_persistence_projection_replay.py

@@ -27,10 +27,12 @@ Read these first:
 3. `architecture/retrieval-fabric-north-star.md`
 4. `architecture/obligation-kernel-working-theory.md`
 5. `architecture/trust-kernel-hardening.md`
-6. `architecture/domain-scenario-pack-generation.md`
-7. `architecture/llm-orchestrated-compiler-tool-loop.md`
-8. `architecture/llm-worker-orchestration.md`
-9. `architecture/memory-assisted-compiler-loop.md`
+6. `architecture/persistence-ledger-boundary.md`
+7. `architecture/receipt-proof-graph.md`
+8. `architecture/domain-scenario-pack-generation.md`
+9. `architecture/llm-orchestrated-compiler-tool-loop.md`
+10. `architecture/llm-worker-orchestration.md`
+11. `architecture/memory-assisted-compiler-loop.md`
 
 `architecture/trust-kernel-extension-rings.md` is the active architecture frame
 for keeping `comp` small: outer rings submit artifacts or render views, while
@@ -53,6 +55,14 @@ projection.
 trust-kernel hardening: keep domain behavior explicit, fingerprint
 profile-active behavior, preserve retrieval/reference provenance, and keep the
 canonical scenario persistence-replayable.
+
+`architecture/persistence-ledger-boundary.md` defines the replay substrate:
+artifact envelopes, receipt ledgers, replay reports, dependency fingerprints,
+and the distinction between stored views and receipt authority.
+
+`architecture/receipt-proof-graph.md` defines receipt-scoped graph export as an
+explanation-only read model. Receipt authorizes, replay verifies, graph
+explains, and UI renders.
 
 `architecture/domain-scenario-pack-generation.md` describes how to add
 replaceable Domain Scenario Lab packs without turning them into hard-coded
