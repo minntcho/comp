@@ -1,11 +1,12 @@
-import pytest
-
-from comp import ProjectionBlocked, ProjectionSpec, project_public_row
+from comp import ProjectionSpec
+from comp.compiler_tool import active_retrieval_query_policies
+from tests.domain_scenarios.assertions import assert_projection_tamper_blocked
 from tests.domain_scenarios.canonical_working_loop.fixtures import (
     RAW_EVIDENCE,
     compile_raw_evidence,
     extract_raw_evidence,
     open_calculation_obligation,
+    profile,
 )
 from tests.domain_scenarios.canonical_working_loop.scenario import (
     SCENARIO,
@@ -62,13 +63,25 @@ def test_canonical_working_loop_runs_raw_text_to_receipt_projection():
         "compiler_tool.compile_interpretation",
         "open_calculation_obligation",
         "plan_calculation_resolution",
-        "reference_search:keyword",
+        "resolver_tasks_from_report",
+        "profile_active_retrieval_policy",
+        "resolver_task_to_reference_query",
+        "reference_retrieval:embedding_stub:factor",
         "deterministic_reference_selection",
         "retry_calculation",
         "prepare_commit",
         "receipt_gated_projection",
     )
     assert_scenario_contract(result, SCENARIO.contract)
+    assert [
+        candidate.retrieval_method for candidate in result.report.reference_candidates
+    ] == [
+        "embedding_stub:factor",
+        "embedding_stub:factor",
+    ]
+    assert result.report.reference_bindings[0].selected_candidate_id == (
+        "embedding_stub:factor:idx-canonical-kr-grid-2024"
+    )
     assert result.projection == {
         "electricity_kwh": 1200,
         "reporting_year": 2024,
@@ -76,20 +89,27 @@ def test_canonical_working_loop_runs_raw_text_to_receipt_projection():
     }
 
 
+def test_canonical_working_loop_pins_retrieval_policy_in_profile():
+    scenario_profile = profile()
+
+    assert scenario_profile.active_retrieval_policy_ids == (
+        "pcf-canonical-retrieval-query-policy-v1",
+    )
+    assert tuple(
+        policy.policy_id
+        for policy in active_retrieval_query_policies(scenario_profile)
+    ) == ("pcf-canonical-retrieval-query-policy-v1",)
+
+
 def test_canonical_working_loop_receipt_rejects_tampered_projection_value():
     result = run_canonical_working_loop_scenario()
 
-    assert result.preparation.receipt is not None
-    with pytest.raises(ProjectionBlocked, match="value commitment"):
-        project_public_row(
-            {
-                "electricity_kwh": 1200,
-                "reporting_year": 2024,
-                "co2e_kg": 999999,
-            },
-            ProjectionSpec(
-                "canonical-pcf-public-row",
-                ("electricity_kwh", "reporting_year", "co2e_kg"),
-            ),
-            receipt=result.preparation.receipt,
-        )
+    assert_projection_tamper_blocked(
+        result,
+        ProjectionSpec(
+            "canonical-pcf-public-row",
+            ("electricity_kwh", "reporting_year", "co2e_kg"),
+        ),
+        {"co2e_kg": 999999},
+        match="value commitment",
+    )

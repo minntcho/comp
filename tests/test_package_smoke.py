@@ -80,6 +80,15 @@ def test_readme_compiler_tool_import_surface_is_exported():
         ReferenceIndexEntry,
         ReferenceQuery,
         ReferenceResolver,
+        RetrievalQueryPolicy,
+        RetrievalQueryRule,
+        active_retrieval_query_policies,
+        reference_query_for_obligation_from_profile_policy,
+        reference_query_for_obligation_from_policies,
+        reference_query_for_obligation_from_policy,
+        reference_query_for_obligation_from_resolver_tasks,
+        reference_query_from_resolver_task,
+        resolve_reference_retrieval_obligations,
         build_commit_receipt,
         compile_report_to_facts,
         prepare_commit,
@@ -96,6 +105,15 @@ def test_readme_compiler_tool_import_surface_is_exported():
     assert ReferenceIndexEntry is not None
     assert ReferenceResolver is not None
     assert EmbeddingResolverStub is not None
+    assert RetrievalQueryPolicy is not None
+    assert RetrievalQueryRule is not None
+    assert active_retrieval_query_policies is not None
+    assert reference_query_for_obligation_from_policies is not None
+    assert reference_query_for_obligation_from_profile_policy is not None
+    assert reference_query_for_obligation_from_policy is not None
+    assert reference_query_from_resolver_task is not None
+    assert reference_query_for_obligation_from_resolver_tasks is not None
+    assert resolve_reference_retrieval_obligations is not None
 
 
 def test_working_theory_status_section_tracks_current_rebuild_state():
@@ -110,6 +128,8 @@ def test_working_theory_status_section_tracks_current_rebuild_state():
     assert "Domain Scenario Lab" in working_theory
     assert "Retrieval lens interface" in working_theory
     assert "EmbeddingResolverStub" in working_theory
+    assert "retrieval resolver bridge" in working_theory
+    assert "resolve only the search obligation" in working_theory.lower()
     assert "PR8: Core / Domain Boundary Working Theory" not in working_theory
     assert "PR9: SemanticJudgmentObligation Minimal Slice" not in working_theory
 
@@ -130,6 +150,16 @@ def test_domain_scenario_generation_guide_tracks_swappable_pack_contract():
 
 def test_pyproject_packages_comp_core_and_agent_layer():
     pyproject = tomllib.loads(Path("pyproject.toml").read_text())
+    from comp.persistence import (
+        ArtifactEnvelope,
+        ArtifactRef,
+        InMemoryArtifactStore,
+        InMemoryReceiptLedger,
+        ProjectionReplayReport,
+        artifact_digest,
+        replay_public_projection,
+        verify_materialized_public_projection,
+    )
 
     assert pyproject["project"]["description"] == (
         "Receipt-gated proof package compiler for obligation, reference, "
@@ -141,6 +171,7 @@ def test_pyproject_packages_comp_core_and_agent_layer():
         "comp",
         "comp.compiler_tool",
         "comp.judgment",
+        "comp.persistence",
         "minchoagnt",
     ]
     assert "py-modules" not in setuptools_config
@@ -150,6 +181,14 @@ def test_pyproject_packages_comp_core_and_agent_layer():
 
     dependencies = pyproject["project"].get("dependencies", [])
     assert not any(dependency.startswith("lark") for dependency in dependencies)
+    assert ArtifactEnvelope is not None
+    assert ArtifactRef is not None
+    assert InMemoryArtifactStore is not None
+    assert InMemoryReceiptLedger is not None
+    assert ProjectionReplayReport is not None
+    assert artifact_digest is not None
+    assert replay_public_projection is not None
+    assert verify_materialized_public_projection is not None
 
 
 def test_legacy_pipeline_sources_are_not_active_files():

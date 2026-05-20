@@ -43,6 +43,7 @@ from comp.compiler_tool.profiles import (
     RuleFamily,
     SemanticRubric,
     active_rule_families,
+    active_retrieval_query_policies,
     validate_compiler_profile,
 )
 from comp.compiler_tool.profile_runner import compile_with_profile
@@ -80,6 +81,15 @@ from comp.compiler_tool.resolver_tasks import (
     resolver_task_from_obligation,
     resolver_tasks_from_report,
 )
+from comp.compiler_tool.resolver_retrieval import (
+    RetrievalQueryPolicy,
+    RetrievalQueryRule,
+    reference_query_for_obligation_from_profile_policy,
+    reference_query_for_obligation_from_policies,
+    reference_query_for_obligation_from_policy,
+    reference_query_for_obligation_from_resolver_tasks,
+    reference_query_from_resolver_task,
+)
 from comp.compiler_tool.retrieval import (
     RETRIEVAL_LENSES,
     EmbeddingResolverStub,
@@ -87,6 +97,10 @@ from comp.compiler_tool.retrieval import (
     ReferenceQuery,
     ReferenceResolver,
     RetrievalLens,
+)
+from comp.compiler_tool.retrieval_resolution import (
+    ReferenceRetrievalQuery,
+    resolve_reference_retrieval_obligations,
 )
 from comp.compiler_tool.semantic import apply_semantic_judgments
 from comp.compiler_tool.tool import CompilerTool
@@ -150,12 +164,21 @@ __all__ = [
     "ResolverTask",
     "resolver_task_from_obligation",
     "resolver_tasks_from_report",
+    "RetrievalQueryPolicy",
+    "RetrievalQueryRule",
+    "reference_query_for_obligation_from_policies",
+    "reference_query_for_obligation_from_profile_policy",
+    "reference_query_for_obligation_from_policy",
+    "reference_query_for_obligation_from_resolver_tasks",
+    "reference_query_from_resolver_task",
     "RETRIEVAL_LENSES",
     "RetrievalLens",
     "ReferenceQuery",
     "ReferenceIndexEntry",
     "ReferenceResolver",
     "EmbeddingResolverStub",
+    "ReferenceRetrievalQuery",
+    "resolve_reference_retrieval_obligations",
     "RuleFamily",
     "SemanticRubric",
     "JudgePolicy",
@@ -164,6 +187,7 @@ __all__ = [
     "ProfileValidationError",
     "validate_compiler_profile",
     "active_rule_families",
+    "active_retrieval_query_policies",
     "compile_with_profile",
     "CompilerTool",
     "apply_semantic_judgments",

@@ -25,8 +25,11 @@ expected receipt/projection
 Start with `canonical_working_loop`, the raw-input harness for new contributors.
 It begins with a raw evidence sentence, uses a deterministic extractor stub,
 passes through `CompilerTool`, opens a calculation obligation, resolves a
-reference candidate into a canonical binding, calculates a derived claim, mints
-a commit receipt, and projects only through the receipt gate.
+reference search obligation through `ResolverTask`, a profile-active
+`RetrievalQueryPolicy`, and the retrieval bridge, turns candidate-only retrieval
+results into a canonical binding through deterministic selection, calculates a
+derived claim, mints a commit receipt, and projects only through the receipt
+gate.
 
 The smaller scenario `tiny_pcf` is a product-carbon-footprint slice that exercises
 reference search, near-miss rejection, canonical binding, calculation trace,
@@ -34,9 +37,12 @@ commit preparation, and receipt-gated projection.
 
 The first larger source-referenced pack is `l_energy_pcf_governance`, based on
 `minntcho/esg-platform` case `001-l-energy-pcf-governance`. It uses
-fixture-derived claims from the platform expected receipt to test whether a
-realistic PCF governance case can be represented as `comp` authority artifacts
-without adding a full PCF workflow engine.
+fixture-derived downstream claims from the platform expected receipt, but routes
+the L-Energy own-energy factor through a retrieval-backed slice: calculation
+blocked, reference search obligation, `ResolverTask`, profile-active
+`RetrievalQueryPolicy`, candidate-only embedding stub results, deterministic
+reference binding, retry, and receipt-gated projection. This keeps the case
+realistic without adding a full PCF workflow engine.
 
 ## Testing Philosophy
 
@@ -56,6 +62,9 @@ ScenarioContract
 SourceRef
 run_scenario()
 assert_scenario_contract()
+scenario_result_view()
+assert_receipt_trace()
+assert_projection_tamper_blocked()
 registered_scenarios()
 ```
 
@@ -89,3 +98,9 @@ the exact function where profile-aware gating is enforced
 Scenario payloads should stay stable enough for a viewer to explain the run, but
 tests should avoid asserting one huge exported JSON blob. Prefer targeted checks
 that prove the authority boundary and traceability story still hold.
+
+Use `scenario_result_view()` when a test needs the viewer/export payload. Use
+`assert_receipt_trace()` for receipt citation checks, and
+`assert_projection_tamper_blocked()` for receipt value-gate negative tests.
+That keeps scenario tests focused on the contract instead of repeating receipt
+field traversal or projection tamper boilerplate in every pack.

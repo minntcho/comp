@@ -437,11 +437,11 @@ cited_by_receipt
 ```
 
 This is useful for audit and debugging, but it should not be implemented before
-the retrieval lens contract exists.
+the candidate-only retrieval path is stable.
 
-## Next Implementation Slice
+## Near-Term Implementation Slices
 
-The next code PR should be small:
+The first code slice should stay small:
 
 ```text
 feat: add retrieval lens interface and embedding resolver stub
@@ -458,7 +458,66 @@ EmbeddingResolverStub
 candidate-only invariant tests
 ```
 
-It should not add:
+The bridge slice is also intentionally narrow:
+
+```text
+feat: add retrieval resolver bridge
+```
+
+It connects an open retrieval obligation to the resolver interface without
+creating authority:
+
+```text
+ProofObligation(kind="reference_search_required")
+-> ReferenceQuery
+-> ReferenceResolver.search(...)
+-> ReferenceCandidate[]
+-> CompileReport.reference_candidates
+```
+
+The bridge may discharge the search obligation, but it must not create:
+
+```text
+ReferenceBinding
+DerivedClaim
+GovernanceDecision
+CommitReceipt
+PublicProjection
+```
+
+Those remain separate deterministic gates.
+
+Retrieval query policies should be active only when pinned by the compiler
+profile:
+
+```text
+DomainPack declares RetrievalQueryPolicy
+CompilerProfile.active_retrieval_policy_ids locks the active set and order
+Profile-aware query builder turns ResolverTask into ReferenceQuery
+Inactive or unknown policy ids do not run
+```
+
+Once the bridge exists, the canonical raw-input scenario should use it as the
+standard path:
+
+```text
+raw evidence
+-> deterministic extractor stub
+-> CompilerTool
+-> calculation_blocked
+-> reference_search_required
+-> ResolverTask
+-> profile-active RetrievalQueryPolicy
+-> ReferenceQuery
+-> retrieval bridge
+-> candidate-only ReferenceCandidate
+-> deterministic ReferenceBinding
+-> calculation retry
+-> CommitReceipt
+-> receipt-gated projection
+```
+
+These slices should not add:
 
 ```text
 real embedding providers

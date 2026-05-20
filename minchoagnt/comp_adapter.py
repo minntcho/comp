@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from collections.abc import Iterable, Mapping
 from dataclasses import dataclass, field, replace
+from typing import Any
 
 from comp.compiler_tool import (
     CompileReport,
@@ -9,11 +10,16 @@ from comp.compiler_tool import (
     InterpretationHypothesis,
     ProofObligation,
     ReferenceCatalog,
+    ReferenceResolver,
+    RetrievalQueryPolicy,
     ResolverTask,
     SemanticJudgment,
     apply_semantic_judgments,
     compile_report_to_facts,
+    reference_query_for_obligation_from_policy,
+    reference_query_for_obligation_from_resolver_tasks,
     resolve_reference_search_obligations,
+    resolve_reference_retrieval_obligations,
     resolver_task_from_obligation,
     resolver_tasks_from_report,
 )
@@ -85,7 +91,11 @@ class DeterministicCompResolver:
         semantic_judgments: Iterable[SemanticJudgment] = (),
         available_span_ids: Iterable[str] | None = None,
         reference_catalog: ReferenceCatalog | None = None,
+        reference_resolver: ReferenceResolver | None = None,
         reference_queries: Mapping[str, str] | None = None,
+        reference_query_policy: RetrievalQueryPolicy | None = None,
+        reference_query_context: Mapping[str, Any] | None = None,
+        reference_lens: str = "factor",
         reference_type: str | None = None,
         reference_limit: int = 10,
         retrieval_method: str = "keyword",
@@ -95,7 +105,11 @@ class DeterministicCompResolver:
             None if available_span_ids is None else tuple(available_span_ids)
         )
         self.reference_catalog = reference_catalog
+        self.reference_resolver = reference_resolver
         self.reference_queries = dict(reference_queries or {})
+        self.reference_query_policy = reference_query_policy
+        self.reference_query_context = dict(reference_query_context or {})
+        self.reference_lens = reference_lens
         self.reference_type = reference_type
         self.reference_limit = reference_limit
         self.retrieval_method = retrieval_method
@@ -112,8 +126,26 @@ class DeterministicCompResolver:
                 available_span_ids=self.available_span_ids,
             )
 
-        reference_query_obligation_ids = self._reference_query_obligation_ids(tasks)
-        if self.reference_catalog is not None and reference_query_obligation_ids:
+        if self.reference_resolver is not None:
+            query_for_obligation = self._retrieval_query_for_obligation(tasks)
+            reference_query_obligation_ids = (
+                self._retrieval_query_obligation_ids(
+                    report,
+                    query_for_obligation,
+                )
+            )
+            report = resolve_reference_retrieval_obligations(
+                report,
+                self.reference_resolver,
+                query_for_obligation=query_for_obligation,
+                limit=self.reference_limit,
+            )
+        else:
+            reference_query_obligation_ids = self._reference_query_obligation_ids(tasks)
+
+        if self.reference_resolver is None and (
+            self.reference_catalog is not None and reference_query_obligation_ids
+        ):
             report = resolve_reference_search_obligations(
                 report,
                 self.reference_catalog,
@@ -161,6 +193,31 @@ class DeterministicCompResolver:
     def _query_for_obligation(self, obligation: ProofObligation) -> str | None:
         task = resolver_task_from_obligation(obligation)
         return self.reference_queries.get(task.obligation_id)
+
+    def _retrieval_query_for_obligation(self, tasks: tuple[ResolverTask, ...]):
+        if self.reference_query_policy is not None:
+            return reference_query_for_obligation_from_policy(
+                tasks,
+                policy=self.reference_query_policy,
+                context=self.reference_query_context,
+            )
+        return reference_query_for_obligation_from_resolver_tasks(
+            tasks,
+            query_texts=self.reference_queries,
+            lens=self.reference_lens,
+            reference_type=self.reference_type,
+        )
+
+    def _retrieval_query_obligation_ids(
+        self,
+        report: CompileReport,
+        query_for_obligation,
+    ) -> tuple[str, ...]:
+        return tuple(
+            resolver_task_from_obligation(obligation).obligation_id
+            for obligation in report.obligations
+            if query_for_obligation(obligation) is not None
+        )
 
 
 __all__ = [

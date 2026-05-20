@@ -1,0 +1,125 @@
+from __future__ import annotations
+
+from typing import Any
+
+
+def scenario_result_view(result) -> dict[str, Any]:
+    return {
+        "scenario_id": result.scenario_id,
+        "resolver_steps": result.resolver_steps,
+        "report": report_view(result.report),
+        "commit": commit_view(result.preparation),
+        "receipt_trace": receipt_trace_view(
+            result.preparation.receipt,
+        ),
+        "facts": {
+            "report_count": len(result.report_facts),
+            "commit_count": len(result.commit_facts),
+        },
+        "projection": result.projection,
+    }
+
+
+def report_view(report) -> dict[str, Any]:
+    return {
+        "status": report.status,
+        "open_obligations": [
+            _obligation_view(obligation)
+            for obligation in report.obligations
+        ],
+        "resolved_obligations": [
+            _obligation_view(obligation)
+            for obligation in report.resolved_obligations
+        ],
+        "reference_candidates": [
+            {
+                "candidate_id": candidate.candidate_id,
+                "reference_id": candidate.reference_id,
+                "reference_type": candidate.reference_type,
+                "retrieval_method": candidate.retrieval_method,
+                "retrieval_score": candidate.retrieval_score,
+                "authority": candidate.authority,
+            }
+            for candidate in report.reference_candidates
+        ],
+        "reference_bindings": [
+            {
+                "binding_id": binding.binding_id,
+                "reference_id": binding.reference_id,
+                "selected_candidate_id": binding.selected_candidate_id,
+                "rejected_candidates": [
+                    {
+                        "reference_id": rejected.reference_id,
+                        "reason": rejected.reason,
+                    }
+                    for rejected in binding.rejected_candidates
+                ],
+            }
+            for binding in report.reference_bindings
+        ],
+        "derived_claims": [
+            {
+                "claim_id": claim.claim_id,
+                "field": claim.field,
+                "value": claim.value,
+                "unit": claim.unit,
+                "trace_id": claim.trace.trace_id,
+                "formula_id": claim.formula_id,
+                "reference_binding_ids": claim.trace.reference_binding_ids,
+            }
+            for claim in report.derived_claims
+        ],
+    }
+
+
+def commit_view(preparation) -> dict[str, Any]:
+    return {
+        "package_id": preparation.package.package_id,
+        "package_complete": preparation.package.complete,
+        "governance_status": preparation.decision.status,
+        "receipt_id": (
+            preparation.receipt.public_row_id
+            if preparation.receipt is not None
+            else None
+        ),
+    }
+
+
+def receipt_trace_view(receipt) -> dict[str, Any] | None:
+    if receipt is None or receipt.citations is None:
+        return None
+
+    citations = receipt.citations
+    return {
+        "reference_binding_ids": citations.reference_binding_ids,
+        "derived_claim_ids": citations.derived_claim_ids,
+        "calculation_trace_ids": citations.calculation_trace_ids,
+        "formula_ids": citations.formula_ids,
+        "value_commitments": [
+            {
+                "field": commitment.field,
+                "source_kind": commitment.source_kind,
+                "source_id": commitment.source_id,
+                "value_digest": commitment.value_digest,
+                "digest_alg": commitment.digest_alg,
+            }
+            for commitment in citations.projection_value_commitments
+        ],
+    }
+
+
+def _obligation_view(obligation) -> dict[str, str | None]:
+    return {
+        "obligation_id": obligation.obligation_id,
+        "kind": obligation.kind,
+        "field": obligation.field,
+        "reason": obligation.reason,
+    }
+
+
+__all__ = [
+    "commit_view",
+    "receipt_trace_view",
+    "report_view",
+    "scenario_result_view",
+]

@@ -8,12 +8,18 @@ from comp.compiler_tool import (
     ClaimHypothesis,
     CompileReport,
     CompilerTool,
+    CompilerProfile,
+    DomainPack,
     EvidenceWitness,
+    EmbeddingResolverStub,
     InterpretationHypothesis,
     ReferenceBinding,
     ReferenceCatalog,
+    ReferenceIndexEntry,
     ReferenceRecord,
     ReferenceSelectionCriteria,
+    RetrievalQueryPolicy,
+    RetrievalQueryRule,
     apply_calculation_result,
     calculate_derived_claim,
 )
@@ -170,6 +176,72 @@ def catalog() -> ReferenceCatalog:
     )
 
 
+def reference_resolver() -> EmbeddingResolverStub:
+    return EmbeddingResolverStub(
+        entries=(
+            ReferenceIndexEntry(
+                entry_id="idx-canonical-kr-grid-2024",
+                reference_id="pcf.factor.kr_grid_2024.location_based",
+                reference_type="emission_factor",
+                lens="factor",
+                text="Korea grid electricity factor 2024 location based",
+                reference_db_version="pcf-reference-catalog-v1",
+                index_version="canonical-embedding-stub-v1",
+                source="pcf-reference-catalog",
+                witness_ids=("factor-row-kr-grid-2024",),
+            ),
+            ReferenceIndexEntry(
+                entry_id="idx-canonical-kr-grid-2023",
+                reference_id="pcf.factor.kr_grid_2023.location_based",
+                reference_type="emission_factor",
+                lens="factor",
+                text="Korea grid electricity factor 2023 location based",
+                reference_db_version="pcf-reference-catalog-v1",
+                index_version="canonical-embedding-stub-v1",
+                source="pcf-reference-catalog",
+                witness_ids=("factor-row-kr-grid-2023",),
+            ),
+        )
+    )
+
+
+def retrieval_query_policy() -> RetrievalQueryPolicy:
+    return RetrievalQueryPolicy(
+        policy_id="pcf-canonical-retrieval-query-policy-v1",
+        rules=(
+            RetrievalQueryRule(
+                rule_id="pcf-electricity-factor-query-v1",
+                formula_id="pcf.electricity_factor_multiplication.v1",
+                lens="factor",
+                reference_type="emission_factor",
+                text_template="{geography} grid electricity factor {reporting_year}",
+            ),
+        ),
+    )
+
+
+def profile() -> CompilerProfile:
+    return CompilerProfile(
+        profile_id=PROFILE_ID,
+        domain_packs=(
+            DomainPack(
+                domain_id="canonical-pcf",
+                version="2026.1",
+                retrieval_query_policies=(retrieval_query_policy(),),
+            ),
+        ),
+        active_retrieval_policy_ids=("pcf-canonical-retrieval-query-policy-v1",),
+    )
+
+
+def retrieval_query_context(report: CompileReport) -> dict[str, object]:
+    values = {claim.field: claim.value for claim in report.checked_claims}
+    return {
+        "geography": "Korea" if values["geography"] == "KR" else values["geography"],
+        "reporting_year": values["reporting_year"],
+    }
+
+
 def criteria() -> ReferenceSelectionCriteria:
     return ReferenceSelectionCriteria(
         binding_id="bind-canonical-electricity-factor",
@@ -232,5 +304,9 @@ __all__ = [
     "formula",
     "input_claim_from_report",
     "open_calculation_obligation",
+    "profile",
     "projection_source",
+    "reference_resolver",
+    "retrieval_query_context",
+    "retrieval_query_policy",
 ]

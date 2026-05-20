@@ -1,11 +1,27 @@
 from __future__ import annotations
 
+from dataclasses import replace
+
 from comp.compiler_tool import (
+    CalculationFormula,
+    CalculationInput,
     CalculationTrace,
     CheckedClaim,
     CompileReport,
+    CompilerProfile,
     DerivedClaim,
+    DomainPack,
+    EmbeddingResolverStub,
+    ReferenceCatalog,
     ReferenceBinding,
+    ReferenceIndexEntry,
+    ReferenceRecord,
+    ReferenceSelectionCriteria,
+    RetrievalQueryPolicy,
+    RetrievalQueryRule,
+    apply_calculation_result,
+    calculate_derived_claim,
+    with_recomputed_status,
 )
 from tests.domain_scenarios.l_energy_pcf_governance.expected import (
     SCENARIO_ID,
@@ -17,6 +33,9 @@ SUBJECT_ID = f"case:{SOURCE_CASE_ID}"
 PUBLIC_ROW_ID = f"public-row:{SOURCE_CASE_ID}"
 PROFILE_ID = "pcf-governance-platform-fixture-v1"
 FORMULA_ID = "pcf-demo-2025.0"
+INPUT_CLAIM_ID = "l-energy:total_energy_gwh"
+OUTPUT_CLAIM_ID = "l-energy:own_emission_tco2e"
+ELECTRICITY_BINDING_ID = "bind:pcf:electricity_factor"
 
 
 def checked_claims() -> tuple[CheckedClaim, ...]:
@@ -45,7 +64,7 @@ def checked_claims() -> tuple[CheckedClaim, ...]:
 def reference_bindings() -> tuple[ReferenceBinding, ...]:
     return (
         ReferenceBinding(
-            binding_id="bind:pcf:electricity_factor",
+            binding_id=ELECTRICITY_BINDING_ID,
             claim_id=SCENARIO_ID,
             reference_id="platform.factor.electricity_mwh",
             reference_type="emission_factor",
@@ -87,14 +106,22 @@ def reference_bindings() -> tuple[ReferenceBinding, ...]:
     )
 
 
+def downstream_reference_bindings() -> tuple[ReferenceBinding, ...]:
+    return tuple(
+        binding
+        for binding in reference_bindings()
+        if binding.binding_id != ELECTRICITY_BINDING_ID
+    )
+
+
 def derived_claims() -> tuple[DerivedClaim, ...]:
     return (
         _derived_claim(
-            claim_id="l-energy:own_emission_tco2e",
+            claim_id=OUTPUT_CLAIM_ID,
             field="l_energy_own_emission_tco2e",
             value=1695,
             reference_binding_ids=(
-                "bind:pcf:electricity_factor",
+                ELECTRICITY_BINDING_ID,
                 "bind:pcf:lng_factor",
             ),
         ),
@@ -161,6 +188,196 @@ def derived_claims() -> tuple[DerivedClaim, ...]:
     )
 
 
+def downstream_derived_claims() -> tuple[DerivedClaim, ...]:
+    return tuple(
+        claim for claim in derived_claims() if claim.claim_id != OUTPUT_CLAIM_ID
+    )
+
+
+def blocked_report() -> CompileReport:
+    result = calculate_derived_claim(
+        output_claim_id=OUTPUT_CLAIM_ID,
+        input_claim=input_claim(),
+        reference_binding=ReferenceBinding(
+            binding_id=ELECTRICITY_BINDING_ID,
+            claim_id=SCENARIO_ID,
+            reference_id="platform.factor.unresolved_l_energy_energy",
+            reference_type="emission_factor",
+        ),
+        catalog=ReferenceCatalog(records=()),
+        formula=formula(),
+    )
+    return apply_calculation_result(
+        CompileReport(status="accepted", checked_claims=checked_claims()),
+        result,
+        output_claim_id=OUTPUT_CLAIM_ID,
+        formula=formula(),
+    )
+
+
+def catalog() -> ReferenceCatalog:
+    return ReferenceCatalog(
+        records=(
+            ReferenceRecord(
+                reference_id="platform.factor.electricity_mwh",
+                reference_type="emission_factor",
+                labels=("L-Energy electricity and LNG factor 2025",),
+                aliases=("L-Energy own site energy factor",),
+                description=(
+                    "Platform fixture factor for L-Energy own energy emissions."
+                ),
+                attributes=(
+                    ("concept_id", "platform.concept.l_energy_own_energy"),
+                    ("geography", "KR"),
+                    ("valid_period", "2025"),
+                    ("method", "platform_expected_receipt"),
+                    ("factor_value", 226),
+                    ("input_unit", "GWh"),
+                    ("output_unit", "tCO2e"),
+                ),
+                source="source:dummy-data-mapping",
+                witness_ids=("source:dummy-data-mapping",),
+            ),
+            ReferenceRecord(
+                reference_id="platform.factor.electricity_mwh_2024",
+                reference_type="emission_factor",
+                labels=("L-Energy electricity and LNG factor 2024",),
+                aliases=("L-Energy historical own site energy factor",),
+                description=(
+                    "Near-miss platform fixture factor with the wrong valid period."
+                ),
+                attributes=(
+                    ("concept_id", "platform.concept.l_energy_own_energy"),
+                    ("geography", "KR"),
+                    ("valid_period", "2024"),
+                    ("method", "platform_expected_receipt"),
+                    ("factor_value", 220),
+                    ("input_unit", "GWh"),
+                    ("output_unit", "tCO2e"),
+                ),
+                source="source:dummy-data-mapping",
+                witness_ids=("source:dummy-data-mapping:2024-near-miss",),
+            ),
+        )
+    )
+
+
+def reference_resolver() -> EmbeddingResolverStub:
+    return EmbeddingResolverStub(
+        entries=(
+            ReferenceIndexEntry(
+                entry_id="idx-l-energy-electricity-mwh-2025",
+                reference_id="platform.factor.electricity_mwh",
+                reference_type="emission_factor",
+                lens="factor",
+                text="Korea L-Energy electricity LNG factor 2025",
+                reference_db_version="l-energy-platform-fixture-v1",
+                index_version="l-energy-embedding-stub-v1",
+                source="source:dummy-data-mapping",
+                witness_ids=("source:dummy-data-mapping",),
+            ),
+            ReferenceIndexEntry(
+                entry_id="idx-l-energy-electricity-mwh-2024",
+                reference_id="platform.factor.electricity_mwh_2024",
+                reference_type="emission_factor",
+                lens="factor",
+                text="Korea L-Energy electricity LNG factor 2024",
+                reference_db_version="l-energy-platform-fixture-v1",
+                index_version="l-energy-embedding-stub-v1",
+                source="source:dummy-data-mapping",
+                witness_ids=("source:dummy-data-mapping:2024-near-miss",),
+            ),
+        )
+    )
+
+
+def retrieval_query_policy() -> RetrievalQueryPolicy:
+    return RetrievalQueryPolicy(
+        policy_id="l-energy-pcf-retrieval-query-policy-v1",
+        rules=(
+            RetrievalQueryRule(
+                rule_id="l-energy-own-energy-factor-query-v1",
+                formula_id=FORMULA_ID,
+                lens="factor",
+                reference_type="emission_factor",
+                text_template=(
+                    "{geography} L-Energy electricity LNG factor {reporting_year}"
+                ),
+            ),
+        ),
+    )
+
+
+def profile() -> CompilerProfile:
+    return CompilerProfile(
+        profile_id=PROFILE_ID,
+        domain_packs=(
+            DomainPack(
+                domain_id="l-energy-pcf-governance",
+                version="2026.1",
+                retrieval_query_policies=(retrieval_query_policy(),),
+            ),
+        ),
+        active_retrieval_policy_ids=("l-energy-pcf-retrieval-query-policy-v1",),
+    )
+
+
+def retrieval_query_context() -> dict[str, object]:
+    return {
+        "geography": "Korea",
+        "reporting_year": "2025",
+    }
+
+
+def criteria() -> ReferenceSelectionCriteria:
+    return ReferenceSelectionCriteria(
+        binding_id=ELECTRICITY_BINDING_ID,
+        claim_id=SCENARIO_ID,
+        reference_type="emission_factor",
+        selector_rule_id="pcf.factor_selector.v1",
+        required_attributes=(
+            ("concept_id", "platform.concept.l_energy_own_energy"),
+            ("geography", "KR"),
+            ("valid_period", "2025"),
+            ("method", "platform_expected_receipt"),
+        ),
+    )
+
+
+def input_claim() -> CalculationInput:
+    return CalculationInput(
+        claim_id=INPUT_CLAIM_ID,
+        field="total_energy_gwh",
+        value=7.5,
+        unit="GWh",
+    )
+
+
+def formula() -> CalculationFormula:
+    return CalculationFormula(
+        formula_id=FORMULA_ID,
+        output_field="l_energy_own_emission_tco2e",
+        output_unit="tCO2e",
+    )
+
+
+def attach_downstream_fixture_artifacts(report: CompileReport) -> CompileReport:
+    return with_recomputed_status(
+        replace(
+            report,
+            reference_bindings=_append_missing_reference_bindings(
+                report.reference_bindings,
+                downstream_reference_bindings(),
+            ),
+            derived_claims=_append_missing_derived_claims(
+                report.derived_claims,
+                downstream_derived_claims(),
+            ),
+            can_project_public_row=False,
+        )
+    )
+
+
 def compile_report() -> CompileReport:
     return CompileReport(
         status="accepted",
@@ -193,13 +410,50 @@ def _derived_claim(
     )
 
 
+def _append_missing_reference_bindings(
+    existing: tuple[ReferenceBinding, ...],
+    additions: tuple[ReferenceBinding, ...],
+) -> tuple[ReferenceBinding, ...]:
+    binding_ids = {binding.binding_id for binding in existing}
+    return (
+        *existing,
+        *(binding for binding in additions if binding.binding_id not in binding_ids),
+    )
+
+
+def _append_missing_derived_claims(
+    existing: tuple[DerivedClaim, ...],
+    additions: tuple[DerivedClaim, ...],
+) -> tuple[DerivedClaim, ...]:
+    claim_ids = {claim.claim_id for claim in existing}
+    return (
+        *existing,
+        *(claim for claim in additions if claim.claim_id not in claim_ids),
+    )
+
+
 __all__ = [
+    "ELECTRICITY_BINDING_ID",
     "FORMULA_ID",
+    "INPUT_CLAIM_ID",
+    "OUTPUT_CLAIM_ID",
     "PROFILE_ID",
     "PUBLIC_ROW_ID",
     "SUBJECT_ID",
+    "attach_downstream_fixture_artifacts",
+    "blocked_report",
+    "catalog",
     "checked_claims",
     "compile_report",
+    "criteria",
     "derived_claims",
+    "downstream_derived_claims",
+    "downstream_reference_bindings",
+    "formula",
+    "input_claim",
+    "profile",
+    "reference_resolver",
     "reference_bindings",
+    "retrieval_query_context",
+    "retrieval_query_policy",
 ]

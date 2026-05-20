@@ -56,6 +56,9 @@ semantic
   SemanticJudgment protocol validation
 
 reference
+  ReferenceQuery
+  ReferenceResolver / EmbeddingResolverStub
+  reference_search_required -> candidate-only ReferenceCandidate
   ReferenceCandidate
   ReferenceBinding
   deterministic reference selection
@@ -67,6 +70,8 @@ calculation
 
 resolver tasks
   ProofObligation -> ResolverTask
+  RetrievalQueryPolicy
+  ResolverTask -> ReferenceQuery
   resolver-facing task type, required artifact, and payload
 
 governance / commit
