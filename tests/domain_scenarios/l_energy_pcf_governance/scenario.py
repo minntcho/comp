@@ -41,6 +41,7 @@ PROJECTION_FIELDS = (
     "kgco2e_per_pack",
     "kgco2e_per_kwh",
 )
+PROJECTION_ID = "l-energy-pcf-public-row"
 
 SCENARIO = ScenarioDefinition(
     scenario_id=SCENARIO_ID,
@@ -66,13 +67,14 @@ def run_l_energy_pcf_governance_scenario() -> DomainScenarioResult:
         report,
         subject_id=SUBJECT_ID,
         public_row_id=PUBLIC_ROW_ID,
+        projection_id=PROJECTION_ID,
         profile_id=PROFILE_ID,
     )
     projection = None
     if preparation.receipt is not None:
         projection = project_public_row(
             _projection_source(report),
-            ProjectionSpec("l-energy-pcf-public-row", PROJECTION_FIELDS),
+            ProjectionSpec(PROJECTION_ID, PROJECTION_FIELDS),
             receipt=preparation.receipt,
         )
 

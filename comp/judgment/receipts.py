@@ -21,12 +21,15 @@ class CommitReceiptCitations:
     commit_package_id: str
     commit_package_complete: bool
     subject_id: str
+    projection_id: str
+    authorized_fields: tuple[str, ...]
     profile_id: str | None
     report_status: str
     checked_claim_fields: tuple[str, ...]
     checked_claim_witness_ids: tuple[str, ...]
     semantic_judgment_ids: tuple[str, ...]
     reference_binding_ids: tuple[str, ...]
+    derived_claim_fields: tuple[str, ...]
     derived_claim_ids: tuple[str, ...]
     calculation_trace_ids: tuple[str, ...]
     formula_ids: tuple[str, ...]
@@ -42,12 +45,15 @@ class CommitReceiptCitations:
             ("commit_package_id", self.commit_package_id),
             ("commit_package_complete", self.commit_package_complete),
             ("subject_id", self.subject_id),
+            ("projection_id", self.projection_id),
+            ("authorized_fields", self.authorized_fields),
             ("profile_id", self.profile_id),
             ("report_status", self.report_status),
             ("checked_claim_fields", self.checked_claim_fields),
             ("checked_claim_witness_ids", self.checked_claim_witness_ids),
             ("semantic_judgment_ids", self.semantic_judgment_ids),
             ("reference_binding_ids", self.reference_binding_ids),
+            ("derived_claim_fields", self.derived_claim_fields),
             ("derived_claim_ids", self.derived_claim_ids),
             ("calculation_trace_ids", self.calculation_trace_ids),
             ("formula_ids", self.formula_ids),
@@ -63,6 +69,8 @@ class CommitReceipt:
     winner_receipt_ids: tuple[str, ...]
     barrier_snapshot: tuple[tuple[str, Any], ...]
     public_row_id: str
+    projection_id: str
+    authorized_fields: tuple[str, ...]
     citations: CommitReceiptCitations | None = None
 
 

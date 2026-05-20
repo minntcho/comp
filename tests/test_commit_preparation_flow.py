@@ -52,6 +52,7 @@ def test_prepare_commit_builds_package_decision_and_receipt_for_accepted_report(
         report,
         subject_id="facility-1",
         public_row_id="public-row-1",
+        projection_id="public-row",
         profile_id="esg-ghg-v1",
         semantic_judgment_ids=("judgment-scope2",),
     )
@@ -65,7 +66,10 @@ def test_prepare_commit_builds_package_decision_and_receipt_for_accepted_report(
     assert snapshot["checked_claim_witness_ids"] == ("span-amount",)
     assert snapshot["semantic_judgment_ids"] == ("judgment-scope2",)
     assert snapshot["reference_binding_ids"] == ("bind-amount-factor",)
+    assert snapshot["derived_claim_fields"] == ("co2e_emission",)
     assert snapshot["formula_ids"] == ("ghg.electricity_factor_multiplication.v1",)
+    assert preparation.receipt.projection_id == "public-row"
+    assert preparation.receipt.authorized_fields == ("amount", "co2e_emission")
 
     row = project_public_row(
         {"amount": 1200, "co2e_emission": 0.48, "internal_note": "hidden"},
@@ -92,6 +96,7 @@ def test_prepare_commit_returns_hold_without_receipt_for_open_obligations():
         report,
         subject_id="facility-1",
         public_row_id="public-row-1",
+        projection_id="public-row",
     )
 
     assert preparation.package.open_obligation_ids == (
@@ -125,6 +130,7 @@ def test_prepare_commit_returns_reject_without_receipt_for_terminal_failures():
         report,
         subject_id="facility-1",
         public_row_id="public-row-1",
+        projection_id="public-row",
     )
 
     assert preparation.package.report_status == "blocked"
