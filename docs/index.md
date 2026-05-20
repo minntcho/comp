@@ -32,9 +32,10 @@ without explicitly updating the contract.
 1. `architecture/document-governance.md`
 2. `architecture/trust-kernel-extension-rings.md`
 3. `architecture/extension-port-contracts.md`
-4. `architecture/persistence-ledger-boundary.md`
-5. `architecture/trust-kernel-hardening.md`
-6. `architecture/memory-assisted-compiler-loop.md`
+4. `architecture/artifact-envelope-builder.md`
+5. `architecture/persistence-ledger-boundary.md`
+6. `architecture/trust-kernel-hardening.md`
+7. `architecture/memory-assisted-compiler-loop.md`
 
 ### Implementation Maps
 

@@ -22,6 +22,9 @@ Artifact envelopes are the replay substrate.
 Fingerprints pin the world that made the receipt meaningful.
 ```
 
+`artifact-envelope-builder.md` defines the active contract for constructing the
+envelope set required by receipt replay.
+
 The current implementation now has the first in-memory replay substrate:
 
 ```text
