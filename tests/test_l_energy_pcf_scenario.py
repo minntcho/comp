@@ -1,7 +1,7 @@
-from tests.domain_scenarios.assertions import assert_receipt_trace
 from comp.compiler_tool import active_retrieval_query_policies
+
+from tests.domain_scenarios.assertions import assert_receipt_trace
 from tests.domain_scenarios.core import assert_scenario_contract, run_scenario
-from tests.domain_scenarios.l_energy_pcf_governance.fixtures import profile
 from tests.domain_scenarios.l_energy_pcf_governance.expected import (
     EXPECTED_DERIVED_CLAIM_IDS,
     EXPECTED_FORMULA_IDS,
@@ -11,10 +11,15 @@ from tests.domain_scenarios.l_energy_pcf_governance.expected import (
     EXPECTED_SOURCE_REFS,
     EXPECTED_TRACE_IDS,
 )
+from tests.domain_scenarios.l_energy_pcf_governance.fixtures import (
+    profile,
+    reference_pack,
+)
 from tests.domain_scenarios.l_energy_pcf_governance.scenario import (
     SCENARIO as L_ENERGY_SCENARIO,
     run_l_energy_pcf_governance_scenario,
 )
+from tests.domain_scenarios.reference_packs import ScenarioReferencePack
 from tests.domain_scenarios.registry import registered_scenarios
 
 
@@ -102,6 +107,47 @@ def test_l_energy_pcf_governance_pins_retrieval_policy_in_profile():
         policy.policy_id
         for policy in active_retrieval_query_policies(scenario_profile)
     ) == ("l-energy-pcf-retrieval-query-policy-v1",)
+
+
+def test_l_energy_reference_pack_bundles_catalog_and_retrieval_index():
+    pack = reference_pack()
+
+    assert isinstance(pack, ScenarioReferencePack)
+    assert pack.pack_id == "l-energy-platform-reference-pack-v1"
+    assert pack.reference_db_version == "l-energy-platform-fixture-v1"
+    assert pack.index_version == "l-energy-embedding-stub-v1"
+    assert (
+        frozenset(record.reference_id for record in pack.catalog.records)
+        == frozenset(EXPECTED_REFERENCE_CANDIDATE_IDS)
+    )
+    assert (
+        frozenset(entry.reference_id for entry in pack.resolver.entries)
+        == frozenset(EXPECTED_REFERENCE_CANDIDATE_IDS)
+    )
+
+
+def test_l_energy_scenario_accepts_swappable_reference_pack():
+    base_pack = reference_pack()
+    minimal_pack = ScenarioReferencePack(
+        pack_id="l-energy-minimal-reference-pack-v1",
+        reference_db_version=base_pack.reference_db_version,
+        index_version=base_pack.index_version,
+        catalog=type(base_pack.catalog)(
+            records=(base_pack.catalog.get("platform.factor.electricity_mwh"),),
+        ),
+        resolver=type(base_pack.resolver)(
+            entries=(base_pack.resolver.entries[0],),
+        ),
+    )
+
+    result = run_l_energy_pcf_governance_scenario(
+        reference_pack_override=minimal_pack,
+    )
+
+    assert result.projection == EXPECTED_PROJECTION
+    assert tuple(
+        candidate.reference_id for candidate in result.report.reference_candidates
+    ) == ("platform.factor.electricity_mwh",)
 
 
 def test_l_energy_pcf_governance_scenario_preserves_actor_receipt_trace():

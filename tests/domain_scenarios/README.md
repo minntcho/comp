@@ -60,6 +60,7 @@ The shared test-support layer now exposes:
 ScenarioDefinition
 ScenarioContract
 SourceRef
+ScenarioReferencePack
 run_scenario()
 assert_scenario_contract()
 scenario_result_view()
@@ -104,3 +105,8 @@ Use `scenario_result_view()` when a test needs the viewer/export payload. Use
 `assert_projection_tamper_blocked()` for receipt value-gate negative tests.
 That keeps scenario tests focused on the contract instead of repeating receipt
 field traversal or projection tamper boilerplate in every pack.
+
+Use `ScenarioReferencePack` when a scenario needs a swappable reference fixture:
+it bundles the canonical `ReferenceCatalog`, retrieval resolver/index, and their
+fixture version labels so larger domain packs can replace reference data without
+rewiring the scenario runner.
