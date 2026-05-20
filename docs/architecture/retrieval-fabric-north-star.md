@@ -497,6 +497,7 @@ raw evidence
 -> calculation_blocked
 -> reference_search_required
 -> ResolverTask
+-> RetrievalQueryPolicy
 -> ReferenceQuery
 -> retrieval bridge
 -> candidate-only ReferenceCandidate

@@ -63,6 +63,7 @@ def test_canonical_working_loop_runs_raw_text_to_receipt_projection():
         "open_calculation_obligation",
         "plan_calculation_resolution",
         "resolver_tasks_from_report",
+        "retrieval_query_policy",
         "resolver_task_to_reference_query",
         "reference_retrieval:embedding_stub:factor",
         "deterministic_reference_selection",

@@ -13,6 +13,8 @@ from comp.compiler_tool import (
     ReferenceCatalog,
     ReferenceIndexEntry,
     ReferenceRecord,
+    RetrievalQueryPolicy,
+    RetrievalQueryRule,
     SemanticJudgment,
     SemanticJudgmentRequirement,
 )
@@ -269,4 +271,122 @@ def test_deterministic_comp_resolver_runs_reference_retrieval_from_task_query():
     assert resolution.result.report.resolved_obligations == (obligation,)
     assert resolution.result.report.reference_bindings == ()
     assert resolution.result.report.derived_claims == ()
+    assert resolution.result.receipt is None
+
+
+def test_deterministic_comp_resolver_runs_reference_retrieval_from_query_policy():
+    obligation_id = (
+        "resolve:ghg.electricity_factor_multiplication.v1:"
+        "hyp-1:co2e_emission:reference_search_required"
+    )
+    requirement = CalculationRequirement(
+        reason="unknown_reference",
+        formula_id="ghg.electricity_factor_multiplication.v1",
+        output_claim_id="hyp-1:co2e_emission",
+        input_claim_id="hyp-1:amount",
+        reference_binding_id="bind-amount-factor",
+        reference_id="factor.missing",
+    )
+    obligation = ProofObligation(
+        kind="reference_search_required",
+        field="co2e_emission",
+        reason="unknown_reference",
+        obligation_id=obligation_id,
+        claim_id="hyp-1:co2e_emission",
+        calculation_requirement=requirement,
+    )
+    compile_result = CompCompileResult(
+        hypothesis=InterpretationHypothesis("hyp-ref", "facility-1"),
+        subject=SubjectRef("claim", "hyp-ref"),
+        report=CompileReport(status="blocked", obligations=(obligation,)),
+    )
+    resolver = DeterministicCompResolver(
+        reference_resolver=EmbeddingResolverStub(
+            entries=(
+                ReferenceIndexEntry(
+                    entry_id="idx-factor-kr-grid-2024",
+                    reference_id="factor.kr_grid.2024.location_based",
+                    reference_type="emission_factor",
+                    lens="factor",
+                    text="Korea grid electricity factor 2024 location based",
+                    reference_db_version="refdb-v1",
+                    index_version="embedding-stub-v1",
+                ),
+            )
+        ),
+        reference_query_policy=RetrievalQueryPolicy(
+            policy_id="ghg-reference-query-policy-v1",
+            rules=(
+                RetrievalQueryRule(
+                    rule_id="electricity-factor-query-v1",
+                    formula_id="ghg.electricity_factor_multiplication.v1",
+                    lens="factor",
+                    reference_type="emission_factor",
+                    text_template=(
+                        "{geography} grid electricity factor {reporting_year}"
+                    ),
+                ),
+            ),
+        ),
+        reference_query_context={"geography": "Korea", "reporting_year": 2024},
+    )
+
+    resolution = resolver.resolve(compile_result)
+
+    assert resolution.reference_query_obligation_ids == (obligation_id,)
+    assert [
+        candidate.reference_id
+        for candidate in resolution.result.report.reference_candidates
+    ] == ["factor.kr_grid.2024.location_based"]
+    assert resolution.result.report.resolved_obligations == (obligation,)
+    assert resolution.result.report.reference_bindings == ()
+    assert resolution.result.report.derived_claims == ()
+    assert resolution.result.receipt is None
+
+
+def test_deterministic_comp_resolver_leaves_reference_policy_task_open_without_context():
+    obligation_id = (
+        "resolve:ghg.electricity_factor_multiplication.v1:"
+        "hyp-1:co2e_emission:reference_search_required"
+    )
+    obligation = ProofObligation(
+        kind="reference_search_required",
+        field="co2e_emission",
+        reason="unknown_reference",
+        obligation_id=obligation_id,
+        claim_id="hyp-1:co2e_emission",
+        calculation_requirement=CalculationRequirement(
+            reason="unknown_reference",
+            formula_id="ghg.electricity_factor_multiplication.v1",
+            output_claim_id="hyp-1:co2e_emission",
+        ),
+    )
+    compile_result = CompCompileResult(
+        hypothesis=InterpretationHypothesis("hyp-ref", "facility-1"),
+        subject=SubjectRef("claim", "hyp-ref"),
+        report=CompileReport(status="blocked", obligations=(obligation,)),
+    )
+    resolver = DeterministicCompResolver(
+        reference_resolver=EmbeddingResolverStub(entries=()),
+        reference_query_policy=RetrievalQueryPolicy(
+            policy_id="ghg-reference-query-policy-v1",
+            rules=(
+                RetrievalQueryRule(
+                    rule_id="electricity-factor-query-v1",
+                    formula_id="ghg.electricity_factor_multiplication.v1",
+                    lens="factor",
+                    reference_type="emission_factor",
+                    text_template=(
+                        "{geography} grid electricity factor {reporting_year}"
+                    ),
+                ),
+            ),
+        ),
+        reference_query_context={"geography": "Korea"},
+    )
+
+    resolution = resolver.resolve(compile_result)
+
+    assert resolution.reference_query_obligation_ids == ()
+    assert resolution.result.report == compile_result.report
     assert resolution.result.receipt is None

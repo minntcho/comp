@@ -16,6 +16,8 @@ from comp.compiler_tool import (
     ReferenceIndexEntry,
     ReferenceRecord,
     ReferenceSelectionCriteria,
+    RetrievalQueryPolicy,
+    RetrievalQueryRule,
     apply_calculation_result,
     calculate_derived_claim,
 )
@@ -201,6 +203,29 @@ def reference_resolver() -> EmbeddingResolverStub:
     )
 
 
+def retrieval_query_policy() -> RetrievalQueryPolicy:
+    return RetrievalQueryPolicy(
+        policy_id="pcf-canonical-retrieval-query-policy-v1",
+        rules=(
+            RetrievalQueryRule(
+                rule_id="pcf-electricity-factor-query-v1",
+                formula_id="pcf.electricity_factor_multiplication.v1",
+                lens="factor",
+                reference_type="emission_factor",
+                text_template="{geography} grid electricity factor {reporting_year}",
+            ),
+        ),
+    )
+
+
+def retrieval_query_context(report: CompileReport) -> dict[str, object]:
+    values = {claim.field: claim.value for claim in report.checked_claims}
+    return {
+        "geography": "Korea" if values["geography"] == "KR" else values["geography"],
+        "reporting_year": values["reporting_year"],
+    }
+
+
 def criteria() -> ReferenceSelectionCriteria:
     return ReferenceSelectionCriteria(
         binding_id="bind-canonical-electricity-factor",
@@ -265,4 +290,6 @@ __all__ = [
     "open_calculation_obligation",
     "projection_source",
     "reference_resolver",
+    "retrieval_query_context",
+    "retrieval_query_policy",
 ]
