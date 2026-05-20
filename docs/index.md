@@ -26,7 +26,8 @@ Read these first:
 2. `architecture/obligation-kernel-working-theory.md`
 3. `architecture/domain-scenario-pack-generation.md`
 4. `architecture/llm-orchestrated-compiler-tool-loop.md`
-5. `architecture/memory-assisted-compiler-loop.md`
+5. `architecture/llm-worker-orchestration.md`
+6. `architecture/memory-assisted-compiler-loop.md`
 
 `architecture/retrieval-fabric-north-star.md` is the long-term direction for
 retrieval, embedding, LLM artifact resolution, typed reference authority, and
@@ -40,6 +41,10 @@ projection.
 `architecture/domain-scenario-pack-generation.md` describes how to add
 replaceable Domain Scenario Lab packs without turning them into hard-coded
 golden fixtures.
+
+`architecture/llm-worker-orchestration.md` captures the intended background LLM
+worker architecture: work orders, allowed tool menus, typed artifact submission,
+abstention, and scoreless embedding-informed routing.
 
 ## Compiler Tool Layers
 
