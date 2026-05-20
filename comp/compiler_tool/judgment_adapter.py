@@ -179,6 +179,7 @@ def commit_preparation_to_facts(
                 ("checked_claim_witness_ids", package.checked_claim_witness_ids),
                 ("calculation_trace_ids", package.calculation_trace_ids),
                 ("complete", package.complete),
+                ("derived_claim_fields", package.derived_claim_fields),
                 ("derived_claim_ids", package.derived_claim_ids),
                 ("formula_ids", package.formula_ids),
                 ("hazard_ids", package.hazard_ids),
@@ -237,6 +238,8 @@ def commit_preparation_to_facts(
                 witness=decision.decision_id,
                 meta=(
                     ("commit_package_id", package.package_id),
+                    ("projection_id", preparation.receipt.projection_id),
+                    ("authorized_fields", preparation.receipt.authorized_fields),
                     ("receipt_snapshot", preparation.receipt.barrier_snapshot),
                 ),
             )

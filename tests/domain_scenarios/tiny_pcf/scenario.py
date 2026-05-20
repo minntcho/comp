@@ -74,6 +74,7 @@ def run_tiny_pcf_scenario() -> DomainScenarioResult:
         resolved_report,
         subject_id=SUBJECT_ID,
         public_row_id=PUBLIC_ROW_ID,
+        projection_id="pcf-public-row",
         profile_id=scenario_profile.profile_id,
     )
     projection = None

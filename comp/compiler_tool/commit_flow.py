@@ -26,6 +26,7 @@ def prepare_commit(
     *,
     subject_id: str,
     public_row_id: str,
+    projection_id: str,
     package_id: str | None = None,
     decision_id: str | None = None,
     profile_id: str | None = None,
@@ -45,6 +46,7 @@ def prepare_commit(
             package,
             decision,
             public_row_id=public_row_id,
+            projection_id=projection_id,
         )
     return CommitPreparation(package=package, decision=decision, receipt=receipt)
 

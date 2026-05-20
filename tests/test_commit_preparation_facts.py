@@ -24,6 +24,7 @@ def test_commit_preparation_to_facts_records_package_decision_and_receipt():
         ),
         subject_id="facility-1",
         public_row_id="public-row-1",
+        projection_id="public-row",
         profile_id="esg-ghg-v1",
         semantic_judgment_ids=("judgment-scope2",),
     )
@@ -68,6 +69,7 @@ def test_commit_preparation_to_facts_keeps_hold_visible_without_receipt_fact():
         ),
         subject_id="facility-1",
         public_row_id="public-row-1",
+        projection_id="public-row",
     )
 
     subject = SubjectRef("draft", "facility-1")
@@ -97,6 +99,7 @@ def test_add_commit_preparation_facts_updates_judgment_state_once():
         CompileReport(status="accepted"),
         subject_id="facility-1",
         public_row_id="public-row-1",
+        projection_id="public-row",
     )
     subject = SubjectRef("draft", "facility-1")
     state = JudgmentState()

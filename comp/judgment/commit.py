@@ -49,7 +49,45 @@ def project_public_row(
 ) -> dict[str, Any]:
     if receipt is None:
         raise ProjectionBlocked("Public projection requires a CommitReceipt.")
+    _validate_receipt_authorizes_projection(receipt, projection)
     return {field: field_values.get(field) for field in projection.output_fields}
+
+
+def _validate_receipt_authorizes_projection(
+    receipt: CommitReceipt,
+    projection: ProjectionSpec,
+) -> None:
+    if receipt.projection_id != projection.projection_id:
+        raise ProjectionBlocked(
+            "CommitReceipt does not authorize this projection."
+        )
+
+    unauthorized_fields = tuple(
+        field
+        for field in projection.output_fields
+        if field not in receipt.authorized_fields
+    )
+    if unauthorized_fields:
+        fields = ", ".join(unauthorized_fields)
+        raise ProjectionBlocked(f"CommitReceipt has unauthorized field(s): {fields}.")
+
+    if receipt.citations is None:
+        raise ProjectionBlocked("Public projection requires a clean commit receipt.")
+
+    citations = receipt.citations
+    if (
+        citations.governance_status != "commit"
+        or not citations.commit_package_complete
+        or citations.open_obligation_ids
+        or citations.hazard_ids
+    ):
+        raise ProjectionBlocked("Public projection requires a clean commit receipt.")
+
+    if citations.projection_id != receipt.projection_id:
+        raise ProjectionBlocked("CommitReceipt citation projection mismatch.")
+
+    if citations.authorized_fields != receipt.authorized_fields:
+        raise ProjectionBlocked("CommitReceipt citation field scope mismatch.")
 
 
 __all__ = [

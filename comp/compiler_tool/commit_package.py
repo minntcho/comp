@@ -16,6 +16,7 @@ class CommitPackage:
     checked_claim_witness_ids: tuple[str, ...] = field(default_factory=tuple)
     semantic_judgment_ids: tuple[str, ...] = field(default_factory=tuple)
     reference_binding_ids: tuple[str, ...] = field(default_factory=tuple)
+    derived_claim_fields: tuple[str, ...] = field(default_factory=tuple)
     derived_claim_ids: tuple[str, ...] = field(default_factory=tuple)
     calculation_trace_ids: tuple[str, ...] = field(default_factory=tuple)
     formula_ids: tuple[str, ...] = field(default_factory=tuple)
@@ -59,6 +60,7 @@ def build_commit_package(
         reference_binding_ids=tuple(
             binding.binding_id for binding in report.reference_bindings
         ),
+        derived_claim_fields=tuple(claim.field for claim in report.derived_claims),
         derived_claim_ids=tuple(claim.claim_id for claim in report.derived_claims),
         calculation_trace_ids=tuple(
             claim.trace.trace_id for claim in report.derived_claims
