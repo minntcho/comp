@@ -14,7 +14,6 @@ from comp.compiler_tool import (
     ReferenceBinding,
     ReferenceCatalog,
     ReferenceIndexEntry,
-    ReferenceQuery,
     ReferenceRecord,
     ReferenceSelectionCriteria,
     apply_calculation_result,
@@ -202,18 +201,6 @@ def reference_resolver() -> EmbeddingResolverStub:
     )
 
 
-def reference_query_for_obligation(obligation) -> ReferenceQuery | None:
-    if obligation.kind != "reference_search_required":
-        return None
-    return ReferenceQuery(
-        query_id=f"canonical-reference-query:{obligation.obligation_id}",
-        text="Korea grid electricity factor 2024",
-        lens="factor",
-        reference_type="emission_factor",
-        source_artifact_ids=(obligation.obligation_id or "reference_search_required",),
-    )
-
-
 def criteria() -> ReferenceSelectionCriteria:
     return ReferenceSelectionCriteria(
         binding_id="bind-canonical-electricity-factor",
@@ -277,6 +264,5 @@ __all__ = [
     "input_claim_from_report",
     "open_calculation_obligation",
     "projection_source",
-    "reference_query_for_obligation",
     "reference_resolver",
 ]

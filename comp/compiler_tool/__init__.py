@@ -80,6 +80,10 @@ from comp.compiler_tool.resolver_tasks import (
     resolver_task_from_obligation,
     resolver_tasks_from_report,
 )
+from comp.compiler_tool.resolver_retrieval import (
+    reference_query_for_obligation_from_resolver_tasks,
+    reference_query_from_resolver_task,
+)
 from comp.compiler_tool.retrieval import (
     RETRIEVAL_LENSES,
     EmbeddingResolverStub,
@@ -154,6 +158,8 @@ __all__ = [
     "ResolverTask",
     "resolver_task_from_obligation",
     "resolver_tasks_from_report",
+    "reference_query_for_obligation_from_resolver_tasks",
+    "reference_query_from_resolver_task",
     "RETRIEVAL_LENSES",
     "RetrievalLens",
     "ReferenceQuery",

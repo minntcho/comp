@@ -80,6 +80,8 @@ def test_readme_compiler_tool_import_surface_is_exported():
         ReferenceIndexEntry,
         ReferenceQuery,
         ReferenceResolver,
+        reference_query_for_obligation_from_resolver_tasks,
+        reference_query_from_resolver_task,
         resolve_reference_retrieval_obligations,
         build_commit_receipt,
         compile_report_to_facts,
@@ -97,6 +99,8 @@ def test_readme_compiler_tool_import_surface_is_exported():
     assert ReferenceIndexEntry is not None
     assert ReferenceResolver is not None
     assert EmbeddingResolverStub is not None
+    assert reference_query_from_resolver_task is not None
+    assert reference_query_for_obligation_from_resolver_tasks is not None
     assert resolve_reference_retrieval_obligations is not None
 
 
