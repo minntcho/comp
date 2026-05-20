@@ -39,6 +39,8 @@ def test_replay_public_projection_explains_row_from_receipt_and_artifacts():
     assert report.artifact_refs == receipt_artifact_refs(case.receipt)
     assert ArtifactRef("package-1", "commit_package") in report.artifact_refs
     assert ArtifactRef("decision-1", "governance_decision") in report.artifact_refs
+    assert ArtifactRef("fixture-profile", "compiler_profile") in report.artifact_refs
+    assert ArtifactRef("fixture-factor", "reference_record") in report.artifact_refs
     assert (
         ArtifactRef("checked_claim:amount:span-amount", "checked_claim")
         in report.artifact_refs
@@ -51,6 +53,50 @@ def test_replay_public_projection_explains_row_from_receipt_and_artifacts():
         ("compiler_profile", "fixture-profile"),
         ("reference_record", "fixture-factor"),
     )
+
+
+def test_replay_blocks_when_dependency_fingerprint_artifact_is_missing():
+    case = receipt_projection_case(amount=100)
+    artifacts = artifact_store_for_receipt(
+        case.receipt,
+        committed_values=case.source_values,
+        skip=ArtifactRef("fixture-profile", "compiler_profile"),
+    )
+
+    with pytest.raises(ProjectionReplayBlocked, match="missing artifact"):
+        replay_public_projection(
+            case.source_values,
+            case.projection,
+            receipt=case.receipt,
+            artifacts=artifacts,
+        )
+
+
+def test_replay_blocks_when_dependency_fingerprint_artifact_mismatches():
+    case = receipt_projection_case(amount=100)
+    artifacts = artifact_store_for_receipt(
+        case.receipt,
+        committed_values=case.source_values,
+        override=ArtifactEnvelope.from_body(
+            artifact_id="fixture-factor",
+            artifact_kind="reference_record",
+            schema_version="dependency-fingerprint-v1",
+            body={
+                "dependency_kind": "reference_record",
+                "dependency_id": "fixture-factor",
+                "fingerprint": "sha256:wrong",
+                "digest_alg": "sha256",
+            },
+        ),
+    )
+
+    with pytest.raises(ProjectionReplayBlocked, match="dependency fingerprint"):
+        replay_public_projection(
+            case.source_values,
+            case.projection,
+            receipt=case.receipt,
+            artifacts=artifacts,
+        )
 
 
 def test_replay_blocks_when_required_artifact_is_missing():

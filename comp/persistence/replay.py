@@ -51,6 +51,7 @@ def replay_public_projection(
     refs = receipt_artifact_refs(receipt)
     artifact_digests = _verified_artifact_digests(refs, artifacts)
     _verify_projection_value_sources(receipt, artifacts)
+    _verify_dependency_fingerprint_sources(receipt, artifacts)
     return ProjectionReplayReport(
         receipt_key=ReceiptLedgerKey.from_receipt(receipt),
         projection_id=projection.projection_id,
@@ -97,6 +98,10 @@ def receipt_artifact_refs(receipt: CommitReceipt) -> tuple[ArtifactRef, ...]:
     refs.extend(
         ArtifactRef(formula_id, "formula")
         for formula_id in citations.formula_ids
+    )
+    refs.extend(
+        ArtifactRef(fingerprint.dependency_id, fingerprint.dependency_kind)
+        for fingerprint in citations.dependency_fingerprints
     )
     return _unique_refs(refs)
 
@@ -161,6 +166,37 @@ def _verify_projection_value_sources(
             raise ProjectionReplayBlocked(
                 "Projection replay source artifact value commitment mismatch: "
                 f"{commitment.field}."
+            )
+
+
+def _verify_dependency_fingerprint_sources(
+    receipt: CommitReceipt,
+    artifacts: InMemoryArtifactStore,
+) -> None:
+    if receipt.citations is None:
+        return
+
+    for fingerprint in receipt.citations.dependency_fingerprints:
+        try:
+            envelope = artifacts.get(fingerprint.dependency_id)
+        except KeyError as exc:
+            raise ProjectionReplayBlocked(
+                f"Projection replay missing artifact: {fingerprint.dependency_id}."
+            ) from exc
+        if envelope.artifact_kind != fingerprint.dependency_kind:
+            raise ProjectionReplayBlocked(
+                "Projection replay artifact kind mismatch: "
+                f"{fingerprint.dependency_id}."
+            )
+        if envelope.body.get("fingerprint") != fingerprint.fingerprint:
+            raise ProjectionReplayBlocked(
+                "Projection replay dependency fingerprint mismatch: "
+                f"{fingerprint.dependency_id}."
+            )
+        if envelope.body.get("digest_alg") != fingerprint.digest_alg:
+            raise ProjectionReplayBlocked(
+                "Projection replay dependency fingerprint algorithm mismatch: "
+                f"{fingerprint.dependency_id}."
             )
 
 
