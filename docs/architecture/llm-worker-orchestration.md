@@ -519,6 +519,20 @@ abstain artifact model
 deterministic fake LLM worker for tests
 ```
 
+Current implemented subset:
+
+```text
+LLMWorkOrder model
+semantic-judgment work-order creation from ResolverTask
+AbstentionArtifact
+DeterministicLLMWorker fixture
+apply_llm_worker_results for submitted SemanticJudgment artifacts
+```
+
+This subset is intentionally semantic-only. It gives the agent layer a typed
+artifact-submission loop without adding a real LLM provider, a reading candidate
+model, or projection authority.
+
 Acceptance criteria:
 
 ```text
