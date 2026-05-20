@@ -7,7 +7,10 @@ from comp.compiler_tool import (
     ProfileValidationError,
     RuleFamily,
     SemanticRubric,
+    RetrievalQueryPolicy,
+    RetrievalQueryRule,
     active_rule_families,
+    active_retrieval_query_policies,
     validate_compiler_profile,
 )
 
@@ -34,11 +37,27 @@ def _judge_policy(policy_id):
     )
 
 
+def _retrieval_policy(policy_id):
+    return RetrievalQueryPolicy(
+        policy_id=policy_id,
+        rules=(
+            RetrievalQueryRule(
+                rule_id=f"{policy_id}.rule",
+                formula_id="fixture.formula.v1",
+                lens="factor",
+                reference_type="emission_factor",
+                text_template="{geography} factor {reporting_year}",
+            ),
+        ),
+    )
+
+
 def _domain(
     *,
     rules,
     rubrics=(),
     judge_policies=(),
+    retrieval_query_policies=(),
     disabled_core_invariants=(),
 ):
     return DomainPack(
@@ -47,6 +66,7 @@ def _domain(
         rule_families=tuple(rules),
         rubrics=tuple(rubrics),
         judge_policies=tuple(judge_policies),
+        retrieval_query_policies=tuple(retrieval_query_policies),
         disabled_core_invariants=tuple(disabled_core_invariants),
     )
 
@@ -57,8 +77,11 @@ def test_compiler_profile_model_set_is_exported():
     assert RuleFamily is not None
     assert SemanticRubric is not None
     assert JudgePolicy is not None
+    assert RetrievalQueryPolicy is not None
+    assert RetrievalQueryRule is not None
     assert ProfileValidationError is not None
     assert active_rule_families is not None
+    assert active_retrieval_query_policies is not None
     assert validate_compiler_profile is not None
 
 
@@ -113,6 +136,46 @@ def test_profile_validation_rejects_unknown_judge_policy_id():
         validate_compiler_profile(profile)
 
 
+def test_profile_only_activates_named_retrieval_policies_in_profile_order():
+    inactive = _retrieval_policy("fixture.inactive_retrieval_policy.v1")
+    first = _retrieval_policy("fixture.first_retrieval_policy.v1")
+    second = _retrieval_policy("fixture.second_retrieval_policy.v1")
+    domain = _domain(
+        rules=(),
+        retrieval_query_policies=(inactive, first, second),
+    )
+    profile = CompilerProfile(
+        profile_id="fixture-profile",
+        domain_packs=(domain,),
+        active_retrieval_policy_ids=(
+            "fixture.second_retrieval_policy.v1",
+            "fixture.first_retrieval_policy.v1",
+        ),
+    )
+
+    validate_compiler_profile(profile)
+
+    assert active_retrieval_query_policies(profile) == (second, first)
+
+
+def test_profile_validation_rejects_unknown_active_retrieval_policy_id():
+    profile = CompilerProfile(
+        profile_id="fixture-profile",
+        domain_packs=(
+            _domain(
+                rules=(),
+                retrieval_query_policies=(
+                    _retrieval_policy("fixture.known_retrieval_policy.v1"),
+                ),
+            ),
+        ),
+        active_retrieval_policy_ids=("fixture.missing_retrieval_policy.v1",),
+    )
+
+    with pytest.raises(ProfileValidationError, match="unknown active retrieval policy"):
+        validate_compiler_profile(profile)
+
+
 def test_rule_required_rubrics_must_be_active_in_profile():
     rule = _rule(
         "fixture.semantic_rule.v1",
@@ -163,4 +226,22 @@ def test_duplicate_rule_ids_are_rejected():
     )
 
     with pytest.raises(ProfileValidationError, match="duplicate rule id"):
+        validate_compiler_profile(profile)
+
+
+def test_duplicate_retrieval_policy_ids_are_rejected():
+    profile = CompilerProfile(
+        profile_id="fixture-profile",
+        domain_packs=(
+            _domain(
+                rules=(),
+                retrieval_query_policies=(
+                    _retrieval_policy("fixture.duplicate_retrieval_policy.v1"),
+                    _retrieval_policy("fixture.duplicate_retrieval_policy.v1"),
+                ),
+            ),
+        ),
+    )
+
+    with pytest.raises(ProfileValidationError, match="duplicate retrieval policy id"):
         validate_compiler_profile(profile)

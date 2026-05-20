@@ -1,7 +1,10 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Any, Callable, TypeVar
+from typing import TYPE_CHECKING, Any, Callable, TypeVar
+
+if TYPE_CHECKING:
+    from comp.compiler_tool.resolver_retrieval import RetrievalQueryPolicy
 
 RuleEvaluator = Callable[[Any, Any, "CompilerProfile"], tuple[Any, ...]]
 
@@ -60,6 +63,9 @@ class DomainPack:
     rule_families: tuple[RuleFamily, ...] = field(default_factory=tuple)
     rubrics: tuple[SemanticRubric, ...] = field(default_factory=tuple)
     judge_policies: tuple[JudgePolicy, ...] = field(default_factory=tuple)
+    retrieval_query_policies: tuple["RetrievalQueryPolicy", ...] = field(
+        default_factory=tuple
+    )
     disabled_core_invariants: tuple[str, ...] = field(default_factory=tuple)
 
 
@@ -69,12 +75,13 @@ class CompilerProfile:
     domain_packs: tuple[DomainPack, ...] = field(default_factory=tuple)
     active_rule_ids: tuple[str, ...] = field(default_factory=tuple)
     active_rubric_ids: tuple[str, ...] = field(default_factory=tuple)
+    active_retrieval_policy_ids: tuple[str, ...] = field(default_factory=tuple)
     judge_policy_id: str | None = None
     projection_policy_id: str | None = None
     core_invariant_version: str = "core-invariants-v1"
 
     def rubric(self, rubric_id: str) -> SemanticRubric:
-        _, rubrics, _ = _catalogs(self)
+        _, rubrics, _, _ = _catalogs(self)
         try:
             return rubrics[rubric_id]
         except KeyError as exc:
@@ -83,7 +90,7 @@ class CompilerProfile:
     def judge_policy(self) -> JudgePolicy:
         if self.judge_policy_id is None:
             return JudgePolicy(judge_policy_id="default-empty-judge-policy")
-        _, _, judge_policies = _catalogs(self)
+        _, _, judge_policies, _ = _catalogs(self)
         try:
             return judge_policies[self.judge_policy_id]
         except KeyError as exc:
@@ -93,7 +100,7 @@ class CompilerProfile:
 
 
 def validate_compiler_profile(profile: CompilerProfile) -> None:
-    rules, rubrics, judge_policies = _catalogs(profile)
+    rules, rubrics, judge_policies, retrieval_policies = _catalogs(profile)
 
     for domain in profile.domain_packs:
         if domain.disabled_core_invariants:
@@ -109,6 +116,12 @@ def validate_compiler_profile(profile: CompilerProfile) -> None:
     for rubric_id in profile.active_rubric_ids:
         if rubric_id not in rubrics:
             raise ProfileValidationError(f"unknown active rubric id: {rubric_id}")
+
+    for policy_id in profile.active_retrieval_policy_ids:
+        if policy_id not in retrieval_policies:
+            raise ProfileValidationError(
+                f"unknown active retrieval policy id: {policy_id}"
+            )
 
     if profile.judge_policy_id is not None and profile.judge_policy_id not in judge_policies:
         raise ProfileValidationError(f"unknown judge policy id: {profile.judge_policy_id}")
@@ -133,13 +146,32 @@ def active_rule_families(
 ) -> tuple[RuleFamily, ...]:
     if validate:
         validate_compiler_profile(profile)
-    rules, _, _ = _catalogs(profile)
+    rules, _, _, _ = _catalogs(profile)
     return tuple(rules[rule_id] for rule_id in profile.active_rule_ids)
+
+
+def active_retrieval_query_policies(
+    profile: CompilerProfile,
+    *,
+    validate: bool = True,
+) -> tuple["RetrievalQueryPolicy", ...]:
+    if validate:
+        validate_compiler_profile(profile)
+    _, _, _, retrieval_policies = _catalogs(profile)
+    return tuple(
+        retrieval_policies[policy_id]
+        for policy_id in profile.active_retrieval_policy_ids
+    )
 
 
 def _catalogs(
     profile: CompilerProfile,
-) -> tuple[dict[str, RuleFamily], dict[str, SemanticRubric], dict[str, JudgePolicy]]:
+) -> tuple[
+    dict[str, RuleFamily],
+    dict[str, SemanticRubric],
+    dict[str, JudgePolicy],
+    dict[str, "RetrievalQueryPolicy"],
+]:
     return (
         _unique_by_id(
             [
@@ -168,6 +200,15 @@ def _catalogs(
             attr="judge_policy_id",
             label="judge policy id",
         ),
+        _unique_by_id(
+            [
+                policy
+                for domain in profile.domain_packs
+                for policy in domain.retrieval_query_policies
+            ],
+            attr="policy_id",
+            label="retrieval policy id",
+        ),
     )
 
 
@@ -193,4 +234,5 @@ __all__ = [
     "ProfileValidationError",
     "validate_compiler_profile",
     "active_rule_families",
+    "active_retrieval_query_policies",
 ]

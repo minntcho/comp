@@ -1001,6 +1001,30 @@ No vector DB dependency is introduced.
 No real LLM call is introduced.
 ```
 
+The profile-pinning slice is:
+
+```text
+feat: pin retrieval query policies in CompilerProfile
+```
+
+Purpose:
+
+```text
+Make RetrievalQueryPolicy part of the active profile behavior lock.
+Reject unknown active retrieval policy ids during profile validation.
+Let resolver query builders use only profile-active retrieval policies.
+Keep retrieved candidates non-authoritative until deterministic selection.
+```
+
+Acceptance criteria:
+
+```text
+DomainPack can declare retrieval query policies.
+CompilerProfile can activate retrieval query policies by id and order.
+Unknown or duplicate retrieval policy ids are rejected.
+Profile-aware query builders reject inactive policy ids.
+```
+
 Non-goals:
 
 ```text
@@ -1040,7 +1064,6 @@ Should ReferenceCandidate / ReferenceBinding / DerivedClaim live in core or comp
 Should reference DB rows be part of DomainPack, external resources, or both?
 How should reference DB versions and vector index versions be pinned in CompilerProfile?
 How should evidence quality vectors map to scalar UI indicators without becoming authority?
-How should retrieval lens versions be pinned in CompilerProfile?
 How should embedding model ids and reference index versions appear in receipts?
 Should candidate graph edges become Fact records or a separate trace artifact?
 When should Domain Scenario Lab JSON become a stable fixture contract?
@@ -1062,4 +1085,6 @@ When should Domain Scenario Lab JSON become a stable fixture contract?
   and Domain Scenario Lab slices landed.
   Aligns next implementation direction with Retrieval lens interface and
   EmbeddingResolverStub.
+  Adds retrieval query policy pinning to CompilerProfile so resolver search
+  behavior is profile-active rather than ambient.
 ```

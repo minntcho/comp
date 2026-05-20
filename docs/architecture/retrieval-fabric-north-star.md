@@ -487,6 +487,16 @@ PublicProjection
 
 Those remain separate deterministic gates.
 
+Retrieval query policies should be active only when pinned by the compiler
+profile:
+
+```text
+DomainPack declares RetrievalQueryPolicy
+CompilerProfile.active_retrieval_policy_ids locks the active set and order
+Profile-aware query builder turns ResolverTask into ReferenceQuery
+Inactive or unknown policy ids do not run
+```
+
 Once the bridge exists, the canonical raw-input scenario should use it as the
 standard path:
 
@@ -497,7 +507,7 @@ raw evidence
 -> calculation_blocked
 -> reference_search_required
 -> ResolverTask
--> RetrievalQueryPolicy
+-> profile-active RetrievalQueryPolicy
 -> ReferenceQuery
 -> retrieval bridge
 -> candidate-only ReferenceCandidate
