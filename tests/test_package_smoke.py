@@ -76,6 +76,10 @@ def test_readme_compiler_tool_import_surface_is_exported():
     from comp.compiler_tool import (
         CompileReport,
         CompilerTool,
+        EmbeddingResolverStub,
+        ReferenceIndexEntry,
+        ReferenceQuery,
+        ReferenceResolver,
         build_commit_receipt,
         compile_report_to_facts,
         prepare_commit,
@@ -88,6 +92,10 @@ def test_readme_compiler_tool_import_surface_is_exported():
     assert prepare_commit is not None
     assert build_commit_receipt is not None
     assert compile_report_to_facts is not None
+    assert ReferenceQuery is not None
+    assert ReferenceIndexEntry is not None
+    assert ReferenceResolver is not None
+    assert EmbeddingResolverStub is not None
 
 
 def test_working_theory_status_section_tracks_current_rebuild_state():
