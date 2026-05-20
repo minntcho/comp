@@ -1,10 +1,12 @@
 from comp import ProjectionSpec
+from comp.compiler_tool import active_retrieval_query_policies
 from tests.domain_scenarios.assertions import assert_projection_tamper_blocked
 from tests.domain_scenarios.canonical_working_loop.fixtures import (
     RAW_EVIDENCE,
     compile_raw_evidence,
     extract_raw_evidence,
     open_calculation_obligation,
+    profile,
 )
 from tests.domain_scenarios.canonical_working_loop.scenario import (
     SCENARIO,
@@ -62,7 +64,7 @@ def test_canonical_working_loop_runs_raw_text_to_receipt_projection():
         "open_calculation_obligation",
         "plan_calculation_resolution",
         "resolver_tasks_from_report",
-        "retrieval_query_policy",
+        "profile_active_retrieval_policy",
         "resolver_task_to_reference_query",
         "reference_retrieval:embedding_stub:factor",
         "deterministic_reference_selection",
@@ -85,6 +87,18 @@ def test_canonical_working_loop_runs_raw_text_to_receipt_projection():
         "reporting_year": 2024,
         "co2e_kg": 504.0,
     }
+
+
+def test_canonical_working_loop_pins_retrieval_policy_in_profile():
+    scenario_profile = profile()
+
+    assert scenario_profile.active_retrieval_policy_ids == (
+        "pcf-canonical-retrieval-query-policy-v1",
+    )
+    assert tuple(
+        policy.policy_id
+        for policy in active_retrieval_query_policies(scenario_profile)
+    ) == ("pcf-canonical-retrieval-query-policy-v1",)
 
 
 def test_canonical_working_loop_receipt_rejects_tampered_projection_value():

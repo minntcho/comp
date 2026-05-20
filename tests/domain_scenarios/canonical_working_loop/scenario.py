@@ -6,7 +6,7 @@ from comp.compiler_tool import (
     apply_reference_selection,
     plan_calculation_resolution,
     prepare_commit,
-    reference_query_for_obligation_from_policy,
+    reference_query_for_obligation_from_profile_policy,
     resolve_reference_retrieval_obligations,
     resolver_tasks_from_report,
     retry_blocked_calculation,
@@ -29,10 +29,10 @@ from tests.domain_scenarios.canonical_working_loop.fixtures import (
     formula,
     input_claim_from_report,
     open_calculation_obligation,
+    profile,
     projection_source,
     reference_resolver,
     retrieval_query_context,
-    retrieval_query_policy,
 )
 from tests.domain_scenarios.core import (
     DomainScenarioResult,
@@ -50,7 +50,7 @@ RESOLVER_STEPS = (
     "open_calculation_obligation",
     "plan_calculation_resolution",
     "resolver_tasks_from_report",
-    "retrieval_query_policy",
+    "profile_active_retrieval_policy",
     "resolver_task_to_reference_query",
     "reference_retrieval:embedding_stub:factor",
     "deterministic_reference_selection",
@@ -86,6 +86,7 @@ SCENARIO = ScenarioDefinition(
 
 
 def run_canonical_working_loop_scenario() -> DomainScenarioResult:
+    scenario_profile = profile()
     compiled_report = compile_raw_evidence(RAW_EVIDENCE)
     blocked_report = open_calculation_obligation(compiled_report)
     planned_report = plan_calculation_resolution(blocked_report)
@@ -93,9 +94,9 @@ def run_canonical_working_loop_scenario() -> DomainScenarioResult:
     retrieval_report = resolve_reference_retrieval_obligations(
         planned_report,
         reference_resolver(),
-        query_for_obligation=reference_query_for_obligation_from_policy(
+        query_for_obligation=reference_query_for_obligation_from_profile_policy(
             resolver_tasks,
-            policy=retrieval_query_policy(),
+            profile=scenario_profile,
             context=retrieval_query_context(compiled_report),
         ),
     )
@@ -124,7 +125,7 @@ def run_canonical_working_loop_scenario() -> DomainScenarioResult:
         subject_id=SUBJECT_ID,
         public_row_id=PUBLIC_ROW_ID,
         projection_id="canonical-pcf-public-row",
-        profile_id=PROFILE_ID,
+        profile_id=scenario_profile.profile_id,
     )
     projection = None
     if preparation.receipt is not None:

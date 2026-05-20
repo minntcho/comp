@@ -25,8 +25,8 @@ Read these first:
 1. `architecture/retrieval-fabric-north-star.md`
 2. `architecture/obligation-kernel-working-theory.md`
 3. `architecture/domain-scenario-pack-generation.md`
-4. `architecture/persistence-ledger-boundary.md`
-5. `architecture/llm-orchestrated-compiler-tool-loop.md`
+4. `architecture/llm-orchestrated-compiler-tool-loop.md`
+5. `architecture/llm-worker-orchestration.md`
 6. `architecture/memory-assisted-compiler-loop.md`
 
 `architecture/retrieval-fabric-north-star.md` is the long-term direction for
@@ -42,10 +42,9 @@ projection.
 replaceable Domain Scenario Lab packs without turning them into hard-coded
 golden fixtures.
 
-`architecture/persistence-ledger-boundary.md` defines what must be persisted so
-a receipt-authorized projection can be replayed and explained later without
-turning public rows, retrieval caches, or resolver scratch output into
-authority.
+`architecture/llm-worker-orchestration.md` records a provisional background LLM
+worker hypothesis: work orders, allowed tool menus, typed artifact submission,
+abstention, and scoreless embedding-informed routing.
 
 ## Compiler Tool Layers
 
