@@ -3,6 +3,7 @@ from __future__ import annotations
 from comp import ProjectionSpec, SubjectRef, project_public_row
 from comp.compiler_tool import (
     CompileReport,
+    ReferenceCatalogSnapshot,
     ReferenceBinding,
     apply_reference_selection,
     calculation_formula_declaration_fingerprint,
@@ -10,6 +11,7 @@ from comp.compiler_tool import (
     plan_calculation_resolution,
     prepare_commit,
     profile_declaration_fingerprint,
+    reference_catalog_snapshot_fingerprint,
     reference_query_for_obligation_from_profile_policy,
     reference_record_fingerprint,
     resolve_reference_retrieval_obligations,
@@ -98,14 +100,29 @@ def _dependency_fingerprints_for_reference_ids(
         ),
         calculation_formula_declaration_fingerprint(formula()),
     ]
+    selected_reference_ids = []
+    record_fingerprints = []
     seen_reference_ids: set[str] = set()
     for reference_id in reference_ids:
         if reference_id in seen_reference_ids:
             continue
         seen_reference_ids.add(reference_id)
-        fingerprints.append(
+        selected_reference_ids.append(reference_id)
+        record_fingerprints.append(
             reference_record_fingerprint(pack.catalog.get(reference_id))
         )
+    if selected_reference_ids:
+        fingerprints.append(
+            reference_catalog_snapshot_fingerprint(
+                ReferenceCatalogSnapshot.from_catalog(
+                    pack.catalog,
+                    catalog_id=pack.pack_id,
+                    catalog_version=pack.reference_db_version,
+                    selected_reference_ids=tuple(selected_reference_ids),
+                )
+            )
+        )
+        fingerprints.extend(record_fingerprints)
     return tuple(fingerprints)
 
 
