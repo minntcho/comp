@@ -92,6 +92,36 @@ class ReferenceCatalog:
         )
 
 
+@dataclass(frozen=True)
+class ReferenceCatalogSnapshot:
+    snapshot_id: str
+    catalog_id: str
+    catalog_version: str
+    record_fingerprints: tuple[DependencyFingerprint, ...] = field(default_factory=tuple)
+
+    @classmethod
+    def from_catalog(
+        cls,
+        catalog: ReferenceCatalog,
+        *,
+        catalog_id: str,
+        catalog_version: str,
+        selected_reference_ids: tuple[str, ...] = (),
+    ) -> "ReferenceCatalogSnapshot":
+        selected_ids = selected_reference_ids or tuple(
+            record.reference_id for record in catalog.records
+        )
+        return cls(
+            snapshot_id=f"reference_catalog_snapshot:{catalog_id}:{catalog_version}",
+            catalog_id=catalog_id,
+            catalog_version=catalog_version,
+            record_fingerprints=tuple(
+                reference_record_fingerprint(catalog.get(reference_id))
+                for reference_id in selected_ids
+            ),
+        )
+
+
 def reference_record_fingerprint(record: ReferenceRecord) -> DependencyFingerprint:
     return DependencyFingerprint.from_payload(
         dependency_kind="reference_record",
@@ -107,6 +137,35 @@ def reference_record_fingerprint(record: ReferenceRecord) -> DependencyFingerpri
             "witness_ids": record.witness_ids,
         },
     )
+
+
+def reference_catalog_snapshot_fingerprint(
+    snapshot: ReferenceCatalogSnapshot,
+) -> DependencyFingerprint:
+    return DependencyFingerprint.from_payload(
+        dependency_kind="reference_catalog_snapshot",
+        dependency_id=snapshot.snapshot_id,
+        payload={
+            "snapshot_id": snapshot.snapshot_id,
+            "catalog_id": snapshot.catalog_id,
+            "catalog_version": snapshot.catalog_version,
+            "record_fingerprints": tuple(
+                _dependency_fingerprint_payload(fingerprint)
+                for fingerprint in snapshot.record_fingerprints
+            ),
+        },
+    )
+
+
+def _dependency_fingerprint_payload(
+    fingerprint: DependencyFingerprint,
+) -> dict[str, str]:
+    return {
+        "dependency_kind": fingerprint.dependency_kind,
+        "dependency_id": fingerprint.dependency_id,
+        "fingerprint": fingerprint.fingerprint,
+        "digest_alg": fingerprint.digest_alg,
+    }
 
 
 def _match_score(query: str, record: ReferenceRecord) -> float:
@@ -140,5 +199,7 @@ __all__ = [
     "ReferenceLookupError",
     "ReferenceRecord",
     "ReferenceCatalog",
+    "ReferenceCatalogSnapshot",
     "reference_record_fingerprint",
+    "reference_catalog_snapshot_fingerprint",
 ]
