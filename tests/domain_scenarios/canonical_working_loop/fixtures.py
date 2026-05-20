@@ -9,9 +9,12 @@ from comp.compiler_tool import (
     CompileReport,
     CompilerTool,
     EvidenceWitness,
+    EmbeddingResolverStub,
     InterpretationHypothesis,
     ReferenceBinding,
     ReferenceCatalog,
+    ReferenceIndexEntry,
+    ReferenceQuery,
     ReferenceRecord,
     ReferenceSelectionCriteria,
     apply_calculation_result,
@@ -170,6 +173,47 @@ def catalog() -> ReferenceCatalog:
     )
 
 
+def reference_resolver() -> EmbeddingResolverStub:
+    return EmbeddingResolverStub(
+        entries=(
+            ReferenceIndexEntry(
+                entry_id="idx-canonical-kr-grid-2024",
+                reference_id="pcf.factor.kr_grid_2024.location_based",
+                reference_type="emission_factor",
+                lens="factor",
+                text="Korea grid electricity factor 2024 location based",
+                reference_db_version="pcf-reference-catalog-v1",
+                index_version="canonical-embedding-stub-v1",
+                source="pcf-reference-catalog",
+                witness_ids=("factor-row-kr-grid-2024",),
+            ),
+            ReferenceIndexEntry(
+                entry_id="idx-canonical-kr-grid-2023",
+                reference_id="pcf.factor.kr_grid_2023.location_based",
+                reference_type="emission_factor",
+                lens="factor",
+                text="Korea grid electricity factor 2023 location based",
+                reference_db_version="pcf-reference-catalog-v1",
+                index_version="canonical-embedding-stub-v1",
+                source="pcf-reference-catalog",
+                witness_ids=("factor-row-kr-grid-2023",),
+            ),
+        )
+    )
+
+
+def reference_query_for_obligation(obligation) -> ReferenceQuery | None:
+    if obligation.kind != "reference_search_required":
+        return None
+    return ReferenceQuery(
+        query_id=f"canonical-reference-query:{obligation.obligation_id}",
+        text="Korea grid electricity factor 2024",
+        lens="factor",
+        reference_type="emission_factor",
+        source_artifact_ids=(obligation.obligation_id or "reference_search_required",),
+    )
+
+
 def criteria() -> ReferenceSelectionCriteria:
     return ReferenceSelectionCriteria(
         binding_id="bind-canonical-electricity-factor",
@@ -233,4 +277,6 @@ __all__ = [
     "input_claim_from_report",
     "open_calculation_obligation",
     "projection_source",
+    "reference_query_for_obligation",
+    "reference_resolver",
 ]

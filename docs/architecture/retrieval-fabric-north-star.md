@@ -487,6 +487,23 @@ PublicProjection
 
 Those remain separate deterministic gates.
 
+Once the bridge exists, the canonical raw-input scenario should use it as the
+standard path:
+
+```text
+raw evidence
+-> deterministic extractor stub
+-> CompilerTool
+-> calculation_blocked
+-> reference_search_required
+-> retrieval bridge
+-> candidate-only ReferenceCandidate
+-> deterministic ReferenceBinding
+-> calculation retry
+-> CommitReceipt
+-> receipt-gated projection
+```
+
 These slices should not add:
 
 ```text
