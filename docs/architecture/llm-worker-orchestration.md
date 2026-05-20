@@ -1,6 +1,9 @@
 # LLM Worker Orchestration
 
-Status: provisional design note, not final architecture.
+Status: north-star
+Owner: agent-layer
+Last checked against code: 2026-05-20
+Can block PRs: limited
 
 This document captures the current working hypothesis for LLM orchestration in
 the `comp` rebuild. It builds on the existing authority boundary:

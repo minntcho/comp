@@ -1,6 +1,9 @@
 # Extension Port Contracts
 
-Status: active architecture contract.
+Status: active-contract
+Owner: trust-kernel
+Last checked against code: 2026-05-20
+Can block PRs: yes
 
 This document defines how outer-ring extensions attach to the `comp` trust
 kernel without gaining authority. It is a companion to

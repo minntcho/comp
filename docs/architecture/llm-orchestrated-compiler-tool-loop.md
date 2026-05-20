@@ -1,5 +1,10 @@
 # LLM-Orchestrated Compiler Tool Loop
 
+Status: historical-note
+Owner: agent-layer
+Last checked against code: 2026-05-20
+Can block PRs: no
+
 이 문서는 `comp`의 장기 방향 중 하나인 **LLM 주도 해석 루프와 compiler tool 검증 구조**를 계획 수준에서 고정한다.
 
 핵심 아이디어는 컴파일러가 전체 루프를 직접 주도하는 것이 아니라, **LLM agent가 컴파일러를 하나의 tool로 반복 호출하면서 해석을 안정화한다**는 점이다.

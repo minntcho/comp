@@ -1,6 +1,9 @@
 # Trust Kernel Hardening Standard
 
-Status: active standard for trust-kernel hardening PRs.
+Status: active-contract
+Owner: trust-kernel
+Last checked against code: 2026-05-20
+Can block PRs: yes
 
 This document fixes the implementation standard for the next slice of the
 `comp` rebuild. The goal is to keep `comp` as a small trust kernel rather than
