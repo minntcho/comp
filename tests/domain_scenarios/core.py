@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import json
 from collections.abc import Callable, Mapping
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Any
 
 from comp.compiler_tool import (
@@ -63,6 +63,9 @@ class DomainScenarioResult:
     report_facts: frozenset[Fact]
     commit_facts: frozenset[Fact]
     resolver_steps: tuple[str, ...]
+    dependency_artifact_bodies: Mapping[tuple[str, str], Mapping[str, Any]] = field(
+        default_factory=dict
+    )
 
     def to_dict(self) -> dict[str, Any]:
         from tests.domain_scenarios.views import scenario_result_view
@@ -81,6 +84,8 @@ def build_domain_scenario_result(
     projection: dict[str, Any] | None,
     subject: SubjectRef,
     resolver_steps: tuple[str, ...],
+    dependency_artifact_bodies: Mapping[tuple[str, str], Mapping[str, Any]]
+    | None = None,
 ) -> DomainScenarioResult:
     return DomainScenarioResult(
         scenario_id=scenario_id,
@@ -90,6 +95,7 @@ def build_domain_scenario_result(
         report_facts=frozenset(compile_report_to_facts(report, subject)),
         commit_facts=frozenset(commit_preparation_to_facts(preparation, subject)),
         resolver_steps=resolver_steps,
+        dependency_artifact_bodies=dependency_artifact_bodies or {},
     )
 
 

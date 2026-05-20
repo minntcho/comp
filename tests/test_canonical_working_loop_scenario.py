@@ -186,3 +186,21 @@ def test_canonical_working_loop_replay_blocks_when_cited_artifact_is_missing():
 
     with pytest.raises(ProjectionReplayBlocked, match="missing artifact"):
         replay_scenario_projection(result, projection, bundle=bundle)
+
+
+def test_canonical_working_loop_records_readable_profile_lock_manifest():
+    result = run_canonical_working_loop_scenario()
+    bundle = scenario_replay_bundle(result)
+
+    profile_envelope = bundle.artifacts.get("pcf-canonical-loop-v1")
+
+    assert profile_envelope.artifact_kind == "compiler_profile"
+    assert profile_envelope.body["dependency_kind"] == "compiler_profile"
+    assert profile_envelope.body["dependency_id"] == "pcf-canonical-loop-v1"
+    assert profile_envelope.body["fingerprint"].startswith("sha256:")
+    assert profile_envelope.body["profile_lock"]["profile_id"] == (
+        "pcf-canonical-loop-v1"
+    )
+    assert profile_envelope.body["profile_lock"]["active_retrieval_policy_ids"] == (
+        "pcf-canonical-retrieval-query-policy-v1",
+    )
