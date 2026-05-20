@@ -1,5 +1,8 @@
+import pytest
+
 from comp import ProjectionSpec
 from comp.compiler_tool import active_retrieval_query_policies
+from comp.persistence import ArtifactRef, ProjectionReplayBlocked
 from tests.domain_scenarios.assertions import assert_projection_tamper_blocked
 from tests.domain_scenarios.canonical_working_loop.fixtures import (
     RAW_EVIDENCE,
@@ -13,6 +16,10 @@ from tests.domain_scenarios.canonical_working_loop.scenario import (
     run_canonical_working_loop_scenario,
 )
 from tests.domain_scenarios.core import assert_scenario_contract, run_scenario
+from tests.domain_scenarios.persistence import (
+    replay_scenario_projection,
+    scenario_replay_bundle,
+)
 
 
 def test_canonical_working_loop_extracts_and_compiles_raw_text():
@@ -113,3 +120,53 @@ def test_canonical_working_loop_receipt_rejects_tampered_projection_value():
         {"co2e_kg": 999999},
         match="value commitment",
     )
+
+
+def test_canonical_working_loop_replays_projection_from_stored_artifacts():
+    result = run_canonical_working_loop_scenario()
+    projection = ProjectionSpec(
+        "canonical-pcf-public-row",
+        ("electricity_kwh", "reporting_year", "co2e_kg"),
+    )
+
+    replay = replay_scenario_projection(result, projection)
+
+    assert replay.public_row == result.projection
+    assert ArtifactRef(
+        "commit-package:product:canonical-raw-pcf-1",
+        "commit_package",
+    ) in replay.artifact_refs
+    assert ArtifactRef(
+        "governance-decision:commit-package:product:canonical-raw-pcf-1",
+        "governance_decision",
+    ) in replay.artifact_refs
+    assert ArtifactRef(
+        "checked_claim:electricity_kwh:w-electricity-kwh",
+        "checked_claim",
+    ) in replay.artifact_refs
+    assert ArtifactRef(
+        "canonical-raw:co2e_kg",
+        "derived_claim",
+    ) in replay.artifact_refs
+    assert ArtifactRef(
+        "trace:canonical-raw:co2e_kg",
+        "calculation_trace",
+    ) in replay.artifact_refs
+    assert dict(replay.artifact_digests)[
+        "canonical-raw:co2e_kg"
+    ].startswith("sha256:")
+
+
+def test_canonical_working_loop_replay_blocks_when_cited_artifact_is_missing():
+    result = run_canonical_working_loop_scenario()
+    projection = ProjectionSpec(
+        "canonical-pcf-public-row",
+        ("electricity_kwh", "reporting_year", "co2e_kg"),
+    )
+    bundle = scenario_replay_bundle(
+        result,
+        skip=ArtifactRef("canonical-raw:co2e_kg", "derived_claim"),
+    )
+
+    with pytest.raises(ProjectionReplayBlocked, match="missing artifact"):
+        replay_scenario_projection(result, projection, bundle=bundle)

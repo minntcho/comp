@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from collections.abc import Mapping
 from dataclasses import dataclass
 from typing import Any
 
@@ -99,6 +100,7 @@ def claim_envelope(
 def artifact_store_for_receipt(
     receipt: CommitReceipt,
     *,
+    committed_values: Mapping[str, Any] | None = None,
     skip: ArtifactRef | None = None,
     override: ArtifactEnvelope | None = None,
 ) -> InMemoryArtifactStore:
@@ -109,26 +111,39 @@ def artifact_store_for_receipt(
         if override is not None and override.artifact_id == ref.artifact_id:
             store.record(override)
             continue
-        store.record(artifact_for_ref(ref))
+        store.record(artifact_for_ref(ref, committed_values=committed_values))
     return store
 
 
-def artifact_for_ref(ref: ArtifactRef) -> ArtifactEnvelope:
+def artifact_for_ref(
+    ref: ArtifactRef,
+    *,
+    committed_values: Mapping[str, Any] | None = None,
+) -> ArtifactEnvelope:
     return ArtifactEnvelope.from_body(
         artifact_id=ref.artifact_id,
         artifact_kind=ref.artifact_kind,
         schema_version="v1",
-        body=artifact_body_for_ref(ref),
+        body=artifact_body_for_ref(ref, committed_values=committed_values),
     )
 
 
-def artifact_body_for_ref(ref: ArtifactRef) -> dict[str, Any]:
+def artifact_body_for_ref(
+    ref: ArtifactRef,
+    *,
+    committed_values: Mapping[str, Any] | None = None,
+) -> dict[str, Any]:
     if ref.artifact_kind == "commit_package":
         return {"package_id": ref.artifact_id, "complete": True}
     if ref.artifact_kind == "governance_decision":
         return {"decision_id": ref.artifact_id, "status": "commit"}
     if ref.artifact_kind == "checked_claim":
-        return {"claim_id": ref.artifact_id, "field": _claim_field(ref)}
+        field = _claim_field(ref)
+        body = {"claim_id": ref.artifact_id, "field": field}
+        values = committed_values or {}
+        if field in values:
+            body["value"] = values[field]
+        return body
     if ref.artifact_kind == "evidence_witness":
         return {"witness_id": ref.artifact_id, "source": "fixture"}
     raise AssertionError(f"Unexpected artifact ref in test: {ref}")

@@ -47,12 +47,14 @@ def replay_public_projection(
         receipt=receipt,
     )
     refs = receipt_artifact_refs(receipt)
+    artifact_digests = _verified_artifact_digests(refs, artifacts)
+    _verify_projection_value_sources(receipt, artifacts)
     return ProjectionReplayReport(
         receipt_key=ReceiptLedgerKey.from_receipt(receipt),
         projection_id=projection.projection_id,
         public_row=public_row,
         artifact_refs=refs,
-        artifact_digests=_verified_artifact_digests(refs, artifacts),
+        artifact_digests=artifact_digests,
     )
 
 
@@ -120,6 +122,43 @@ def _verified_artifact_digests(
             ) from exc
         digests.append((envelope.artifact_id, envelope.body_digest))
     return tuple(digests)
+
+
+def _verify_projection_value_sources(
+    receipt: CommitReceipt,
+    artifacts: InMemoryArtifactStore,
+) -> None:
+    if receipt.citations is None:
+        return
+
+    for commitment in receipt.citations.projection_value_commitments:
+        try:
+            envelope = artifacts.get(commitment.source_id)
+        except KeyError as exc:
+            raise ProjectionReplayBlocked(
+                f"Projection replay missing artifact: {commitment.source_id}."
+            ) from exc
+        if envelope.artifact_kind != commitment.source_kind:
+            raise ProjectionReplayBlocked(
+                f"Projection replay artifact kind mismatch: {commitment.source_id}."
+            )
+        if "value" not in envelope.body:
+            raise ProjectionReplayBlocked(
+                "Projection replay source artifact lacks committed value: "
+                f"{commitment.source_id}."
+            )
+        try:
+            matches = commitment.matches_value(envelope.body["value"])
+        except (TypeError, ValueError) as exc:
+            raise ProjectionReplayBlocked(
+                "Projection replay source artifact value cannot be verified: "
+                f"{commitment.source_id}."
+            ) from exc
+        if not matches:
+            raise ProjectionReplayBlocked(
+                "Projection replay source artifact value commitment mismatch: "
+                f"{commitment.field}."
+            )
 
 
 def _unique_refs(refs: list[ArtifactRef]) -> tuple[ArtifactRef, ...]:
