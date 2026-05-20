@@ -189,6 +189,32 @@ def profile_declaration_fingerprint(
     )
 
 
+def domain_pack_declaration_fingerprint(domain: DomainPack) -> DependencyFingerprint:
+    return DependencyFingerprint.from_payload(
+        dependency_kind="domain_pack",
+        dependency_id=f"domain_pack:{domain.domain_id}:{domain.version}",
+        payload=_domain_pack_fingerprint_payload(domain),
+    )
+
+
+def rule_family_declaration_fingerprint(rule: RuleFamily) -> DependencyFingerprint:
+    return DependencyFingerprint.from_payload(
+        dependency_kind="rule_family",
+        dependency_id=rule.rule_id,
+        payload=_rule_family_fingerprint_payload(rule),
+    )
+
+
+def semantic_rubric_declaration_fingerprint(
+    rubric: SemanticRubric,
+) -> DependencyFingerprint:
+    return DependencyFingerprint.from_payload(
+        dependency_kind="semantic_rubric",
+        dependency_id=rubric.rubric_id,
+        payload=_semantic_rubric_fingerprint_payload(rubric),
+    )
+
+
 def _catalogs(
     profile: CompilerProfile,
 ) -> tuple[
@@ -255,47 +281,66 @@ def _domain_pack_fingerprint_payload(domain: DomainPack) -> dict[str, Any]:
         "domain_id": domain.domain_id,
         "version": domain.version,
         "rule_families": tuple(
-            {
-                "rule_id": rule.rule_id,
-                "required_rubric_ids": rule.required_rubric_ids,
-            }
+            _rule_family_fingerprint_payload(rule)
             for rule in domain.rule_families
         ),
         "rubrics": tuple(
-            {
-                "rubric_id": rubric.rubric_id,
-                "acceptable_verdicts": rubric.acceptable_verdicts,
-                "required_verdict": rubric.required_verdict,
-            }
+            _semantic_rubric_fingerprint_payload(rubric)
             for rubric in domain.rubrics
         ),
         "judge_policies": tuple(
-            {
-                "judge_policy_id": policy.judge_policy_id,
-                "allowed_judges": policy.allowed_judges,
-            }
+            _judge_policy_fingerprint_payload(policy)
             for policy in domain.judge_policies
         ),
         "retrieval_query_policies": tuple(
-            {
-                "policy_id": policy.policy_id,
-                "rules": tuple(
-                    {
-                        "rule_id": rule.rule_id,
-                        "lens": rule.lens,
-                        "text_template": rule.text_template,
-                        "reference_type": rule.reference_type,
-                        "task_type": rule.task_type,
-                        "field": rule.field,
-                        "reason": rule.reason,
-                        "formula_id": rule.formula_id,
-                    }
-                    for rule in policy.rules
-                ),
-            }
+            _retrieval_query_policy_fingerprint_payload(policy)
             for policy in domain.retrieval_query_policies
         ),
         "disabled_core_invariants": domain.disabled_core_invariants,
+    }
+
+
+def _rule_family_fingerprint_payload(rule: RuleFamily) -> dict[str, Any]:
+    return {
+        "rule_id": rule.rule_id,
+        "required_rubric_ids": rule.required_rubric_ids,
+        "description": rule.description,
+    }
+
+
+def _semantic_rubric_fingerprint_payload(rubric: SemanticRubric) -> dict[str, Any]:
+    return {
+        "rubric_id": rubric.rubric_id,
+        "acceptable_verdicts": rubric.acceptable_verdicts,
+        "required_verdict": rubric.required_verdict,
+        "description": rubric.description,
+    }
+
+
+def _judge_policy_fingerprint_payload(policy: JudgePolicy) -> dict[str, Any]:
+    return {
+        "judge_policy_id": policy.judge_policy_id,
+        "allowed_judges": policy.allowed_judges,
+        "description": policy.description,
+    }
+
+
+def _retrieval_query_policy_fingerprint_payload(policy) -> dict[str, Any]:
+    return {
+        "policy_id": policy.policy_id,
+        "rules": tuple(
+            {
+                "rule_id": rule.rule_id,
+                "lens": rule.lens,
+                "text_template": rule.text_template,
+                "reference_type": rule.reference_type,
+                "task_type": rule.task_type,
+                "field": rule.field,
+                "reason": rule.reason,
+                "formula_id": rule.formula_id,
+            }
+            for rule in policy.rules
+        ),
     }
 
 
@@ -310,4 +355,7 @@ __all__ = [
     "active_rule_families",
     "active_retrieval_query_policies",
     "profile_declaration_fingerprint",
+    "domain_pack_declaration_fingerprint",
+    "rule_family_declaration_fingerprint",
+    "semantic_rubric_declaration_fingerprint",
 ]

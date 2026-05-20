@@ -461,11 +461,16 @@ tests/domain_scenarios/persistence.py
   records the CommitReceipt into an in-memory receipt ledger, and replays the
   materialized scenario projection from those stored envelopes.
 
-CompilerProfile / ReferenceRecord fingerprints
-  expose stable declaration fingerprints for the active profile and selected
-  canonical reference rows. CommitReceiptCitations can carry these dependency
-  fingerprints, and replay reports surface the profile/reference world the
+CompilerProfile / DomainPack / RuleFamily / SemanticRubric fingerprints
+  expose stable declaration fingerprints for the active profile and domain
+  declaration world. CommitReceiptCitations can carry these dependency
+  fingerprints, and replay reports surface the profile/domain/rule world the
   receipt depended on.
+
+CalculationFormula / ReferenceRecord fingerprints
+  expose stable declaration fingerprints for formulas and selected canonical
+  reference rows. This lets replay explain both the calculation formula world
+  and the reference world behind derived claims.
 
 Dependency fingerprint envelopes
   replay treats dependency fingerprints as receipt-cited artifact refs. The
@@ -495,13 +500,15 @@ artifact body, not only against the materialized row.
 The canonical raw-input working loop can be replayed from stored scenario
 artifact envelopes and its receipt ledger root.
 Replay reports dependency fingerprints cited by the receipt, starting with the
-compiler profile declaration and selected reference record.
+compiler profile declaration, domain pack declarations, calculation formula
+declarations, and selected reference records.
 Replay blocks when a cited dependency fingerprint envelope is missing or its
 stored fingerprint no longer matches the receipt citation.
 Replay blocks when a cited reference catalog snapshot omits a selected
 reference record fingerprint required by the receipt.
 The L-Energy scenario records and replays the same dependency fingerprint shape,
-including the retrieval-backed reference world and near-miss candidates.
+including the retrieval-backed reference world, formula declaration world, domain
+pack declaration world, and near-miss candidates.
 ```
 
 That completes the original in-memory substrate slice and attaches it to the
@@ -516,30 +523,27 @@ production catalog snapshot store exists.
 Recommended next code slice:
 
 ```text
-feat: add broader dependency declaration fingerprints
+feat: add source evidence span integrity fingerprints
 ```
 
 Candidate files:
 
 ```text
-comp/compiler_tool/profiles.py
-comp/compiler_tool/calculations.py
 comp/persistence/*.py
-tests/test_*fingerprint*.py
+tests/domain_scenarios/*.py
+tests/test_*source*.py
 tests/test_persistence_projection_replay.py
 ```
 
 Minimum behavior:
 
 ```text
-DomainPack, active rule/rubric declarations, and formula declarations expose
-stable dependency fingerprints.
-CommitReceipt can cite these declaration fingerprints alongside profile,
-reference record, and catalog snapshot fingerprints.
-Replay verifies the matching dependency fingerprint envelopes when they are
-cited.
-Scenario replay reports show which profile, reference world, formula world, and
-domain rule world made the receipt meaningful.
+EvidenceWitness or source span artifacts expose stable source text/container
+digests.
+CommitReceipt can cite source evidence fingerprints alongside checked claim
+witness ids.
+Replay verifies cited source span envelopes when they are present.
+Scenario replay reports show which raw source spans grounded the checked claims.
 ```
 
 Non-goals for that slice:
@@ -556,21 +560,21 @@ no production catalog snapshot store
 no real DB ingestion
 ```
 
-The goal is to move from "receipt pins profile and reference-world dependencies"
-toward "receipt also pins the formula and domain declaration world that made the
-compiler decision meaningful."
+The goal is to move from "receipt pins the profile, formula, domain, and
+reference worlds" toward "receipt also pins the raw evidence spans that grounded
+checked claims."
 
 ---
 
 ## 13. Following Slice
 
-After broader dependency fingerprints, the next likely slice is source evidence
-span integrity:
+After source evidence span integrity, the next likely slice is dependency graph
+export:
 
 ```text
-Source evidence span digests
-EvidenceWitness source container fingerprints
-Replay verification for cited source span digests
+receipt dependency graph export
+source -> witness -> checked claim -> derived claim -> receipt edges
+viewer-friendly replay explanation payload
 ```
 
 That slice should keep the document's rule: replay explains the old receipt,

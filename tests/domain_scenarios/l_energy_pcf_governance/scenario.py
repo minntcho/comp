@@ -5,6 +5,8 @@ from comp.compiler_tool import (
     CompileReport,
     ReferenceBinding,
     apply_reference_selection,
+    calculation_formula_declaration_fingerprint,
+    domain_pack_declaration_fingerprint,
     plan_calculation_resolution,
     prepare_commit,
     profile_declaration_fingerprint,
@@ -88,7 +90,14 @@ def _dependency_fingerprints_for_reference_ids(
     pack: ScenarioReferencePack,
     reference_ids: tuple[str, ...],
 ):
-    fingerprints = [profile_declaration_fingerprint(scenario_profile)]
+    fingerprints = [
+        profile_declaration_fingerprint(scenario_profile),
+        *(
+            domain_pack_declaration_fingerprint(domain)
+            for domain in scenario_profile.domain_packs
+        ),
+        calculation_formula_declaration_fingerprint(formula()),
+    ]
     seen_reference_ids: set[str] = set()
     for reference_id in reference_ids:
         if reference_id in seen_reference_ids:

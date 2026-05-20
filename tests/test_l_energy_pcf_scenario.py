@@ -29,6 +29,8 @@ from tests.domain_scenarios.registry import registered_scenarios
 
 EXPECTED_DEPENDENCY_FINGERPRINT_IDS = (
     ("compiler_profile", "pcf-governance-platform-fixture-v1"),
+    ("domain_pack", "domain_pack:l-energy-pcf-governance:2026.1"),
+    ("calculation_formula", "calculation_formula:pcf-demo-2025.0"),
     ("reference_record", "platform.factor.a_supplier_electricity_mwh_2025"),
     ("reference_record", "platform.factor.electricity_mwh"),
     ("reference_record", "platform.factor.electricity_mwh_2024"),

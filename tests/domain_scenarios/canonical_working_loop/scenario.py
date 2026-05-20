@@ -4,6 +4,8 @@ from comp import ProjectionSpec, SubjectRef, project_public_row
 from comp.compiler_tool import (
     ReferenceBinding,
     apply_reference_selection,
+    calculation_formula_declaration_fingerprint,
+    domain_pack_declaration_fingerprint,
     plan_calculation_resolution,
     prepare_commit,
     profile_declaration_fingerprint,
@@ -158,7 +160,14 @@ def _dependency_fingerprints(
     scenario_profile,
     binding: ReferenceBinding | None,
 ):
-    fingerprints = [profile_declaration_fingerprint(scenario_profile)]
+    fingerprints = [
+        profile_declaration_fingerprint(scenario_profile),
+        *(
+            domain_pack_declaration_fingerprint(domain)
+            for domain in scenario_profile.domain_packs
+        ),
+        calculation_formula_declaration_fingerprint(formula()),
+    ]
     if binding is not None:
         fingerprints.append(
             reference_record_fingerprint(catalog().get(binding.reference_id))
