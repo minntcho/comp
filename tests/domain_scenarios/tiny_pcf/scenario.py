@@ -4,7 +4,14 @@ from comp import ProjectionSpec, SubjectRef, project_public_row
 from comp.compiler_tool import prepare_commit, resolve_reference_grounded_calculation
 from tests.domain_scenarios.core import (
     DomainScenarioResult,
+    ScenarioContract,
+    ScenarioDefinition,
     build_domain_scenario_result,
+)
+from tests.domain_scenarios.tiny_pcf.expected import (
+    EXPECTED_PROJECTION,
+    EXPECTED_REFERENCE_CANDIDATE_IDS,
+    EXPECTED_RESOLVED_OBLIGATION_KINDS,
 )
 from tests.domain_scenarios.tiny_pcf.fixtures import (
     OUTPUT_CLAIM_ID,
@@ -27,6 +34,24 @@ RESOLVER_STEPS = (
     "retry_calculation",
     "prepare_commit",
     "receipt_gated_projection",
+)
+
+SCENARIO = ScenarioDefinition(
+    scenario_id=SCENARIO_ID,
+    title="Tiny PCF location-based electricity",
+    run=lambda: run_tiny_pcf_scenario(),
+    contract=ScenarioContract(
+        must_commit=True,
+        required_projection=EXPECTED_PROJECTION,
+        required_resolved_obligation_kinds=EXPECTED_RESOLVED_OBLIGATION_KINDS,
+        required_reference_candidate_ids=EXPECTED_REFERENCE_CANDIDATE_IDS,
+        required_reference_binding_ids=("bind-electricity-factor",),
+        required_derived_claim_ids=("tiny-pcf:co2e_kg",),
+        required_receipt_reference_binding_ids=("bind-electricity-factor",),
+        required_receipt_derived_claim_ids=("tiny-pcf:co2e_kg",),
+        required_receipt_calculation_trace_ids=("trace:tiny-pcf:co2e_kg",),
+        required_receipt_formula_ids=("pcf.electricity_factor_multiplication.v1",),
+    ),
 )
 
 
@@ -75,4 +100,4 @@ def _projection_source(report) -> dict[str, object]:
     return values
 
 
-__all__ = ["run_tiny_pcf_scenario"]
+__all__ = ["SCENARIO", "run_tiny_pcf_scenario"]
