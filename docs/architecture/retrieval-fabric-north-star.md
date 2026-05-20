@@ -1,5 +1,10 @@
 # Retrieval Fabric North Star
 
+Status: north-star
+Owner: retrieval
+Last checked against code: 2026-05-20
+Can block PRs: limited
+
 This document fixes the long-term direction for retrieval, LLM resolution,
 typed reference authority, compiler gates, and receipt-gated projection.
 

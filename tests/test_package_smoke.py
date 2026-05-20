@@ -168,6 +168,49 @@ def test_domain_scenario_generation_guide_tracks_swappable_pack_contract():
     assert "minntcho/esg-platform" in guide
 
 
+def test_document_governance_classifies_architecture_doc_authority():
+    governance = Path(
+        "docs/architecture/document-governance.md"
+    ).read_text(encoding="utf-8")
+    docs_index = Path("docs/index.md").read_text(encoding="utf-8")
+
+    assert "Status: active-contract" in governance
+    assert "Can block PRs: yes" in governance
+    assert "Active Contract" in governance
+    assert "Implementation Map" in governance
+    assert "North Star" in governance
+    assert "Historical / Exploratory Note" in governance
+    assert "Can this document block a PR?" in governance
+    assert "document-governance.md" in docs_index
+
+    required_headers = {
+        "docs/architecture/trust-kernel-extension-rings.md": (
+            "Status: active-contract",
+            "Can block PRs: yes",
+        ),
+        "docs/architecture/persistence-ledger-boundary.md": (
+            "Status: active-contract",
+            "Can block PRs: yes",
+        ),
+        "docs/architecture/retrieval-fabric-north-star.md": (
+            "Status: north-star",
+            "Can block PRs: limited",
+        ),
+        "docs/architecture/obligation-kernel-working-theory.md": (
+            "Status: implementation-map",
+            "Can block PRs: limited",
+        ),
+        "docs/architecture/domain-scenario-pack-generation.md": (
+            "Status: implementation-map",
+            "Can block PRs: limited",
+        ),
+    }
+    for path, expected_lines in required_headers.items():
+        text = Path(path).read_text(encoding="utf-8")
+        for line in expected_lines:
+            assert line in text
+
+
 def test_pyproject_packages_comp_core_and_agent_layer():
     pyproject = tomllib.loads(Path("pyproject.toml").read_text())
     from comp.persistence import (

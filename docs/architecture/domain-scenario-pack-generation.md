@@ -1,6 +1,9 @@
 # Domain Scenario Pack Generation
 
-Status: active guidance for Domain Scenario Lab growth.
+Status: implementation-map
+Owner: scenario-lab
+Last checked against code: 2026-05-20
+Can block PRs: limited
 
 This document defines how to add larger domain scenarios without turning them
 into hard-coded golden blobs. A scenario is not a one-off test file. It is a
