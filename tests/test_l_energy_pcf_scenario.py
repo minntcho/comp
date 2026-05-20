@@ -4,6 +4,8 @@ from tests.domain_scenarios.l_energy_pcf_governance.expected import (
     EXPECTED_DERIVED_CLAIM_IDS,
     EXPECTED_FORMULA_IDS,
     EXPECTED_PROJECTION,
+    EXPECTED_REFERENCE_CANDIDATE_IDS,
+    EXPECTED_REJECTED_ELECTRICITY_CANDIDATES,
     EXPECTED_SOURCE_REFS,
     EXPECTED_TRACE_IDS,
 )
@@ -48,9 +50,16 @@ def test_l_energy_pcf_governance_scenario_resolves_energy_factor_through_retriev
         candidate.candidate_id for candidate in result.report.reference_candidates
     )
     assert candidate_ids == (
+        "embedding_stub:factor:idx-l-energy-supplier-electricity-mwh-2025",
         "embedding_stub:factor:idx-l-energy-electricity-mwh-2025",
         "embedding_stub:factor:idx-l-energy-electricity-mwh-2024",
+        "embedding_stub:factor:idx-l-energy-electricity-residual-mix-2025",
+        "embedding_stub:factor:idx-l-energy-global-average-electricity-mwh-2025",
+        "embedding_stub:factor:idx-l-energy-us-electricity-mwh-2025",
     )
+    assert tuple(
+        candidate.reference_id for candidate in result.report.reference_candidates
+    ) == EXPECTED_REFERENCE_CANDIDATE_IDS
     assert all(
         candidate.authority == "candidate_only"
         for candidate in result.report.reference_candidates
@@ -68,9 +77,7 @@ def test_l_energy_pcf_governance_scenario_resolves_energy_factor_through_retriev
     assert tuple(
         (rejected.reference_id, rejected.reason)
         for rejected in electricity_binding.rejected_candidates
-    ) == (
-        ("platform.factor.electricity_mwh_2024", "attribute_mismatch:valid_period"),
-    )
+    ) == EXPECTED_REJECTED_ELECTRICITY_CANDIDATES
 
     own_emission_claim = next(
         claim

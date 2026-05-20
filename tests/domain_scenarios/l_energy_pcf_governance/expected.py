@@ -46,8 +46,26 @@ EXPECTED_REFERENCE_BINDING_IDS = (
 )
 
 EXPECTED_REFERENCE_CANDIDATE_IDS = (
+    "platform.factor.a_supplier_electricity_mwh_2025",
     "platform.factor.electricity_mwh",
     "platform.factor.electricity_mwh_2024",
+    "platform.factor.electricity_residual_mix_2025",
+    "platform.factor.global_average_electricity_mwh_2025",
+    "platform.factor.us_electricity_mwh_2025",
+)
+
+EXPECTED_REJECTED_ELECTRICITY_CANDIDATES = (
+    (
+        "platform.factor.a_supplier_electricity_mwh_2025",
+        "attribute_mismatch:method",
+    ),
+    ("platform.factor.electricity_mwh_2024", "attribute_mismatch:valid_period"),
+    ("platform.factor.electricity_residual_mix_2025", "attribute_mismatch:method"),
+    (
+        "platform.factor.global_average_electricity_mwh_2025",
+        "attribute_mismatch:geography",
+    ),
+    ("platform.factor.us_electricity_mwh_2025", "attribute_mismatch:geography"),
 )
 
 EXPECTED_RESOLVED_OBLIGATION_KINDS = (
@@ -80,6 +98,7 @@ __all__ = [
     "EXPECTED_REFERENCE_CANDIDATE_IDS",
     "EXPECTED_REFERENCE_BINDING_IDS",
     "EXPECTED_RESOLVED_OBLIGATION_KINDS",
+    "EXPECTED_REJECTED_ELECTRICITY_CANDIDATES",
     "EXPECTED_SOURCE_REFS",
     "EXPECTED_TRACE_IDS",
     "SCENARIO_ID",

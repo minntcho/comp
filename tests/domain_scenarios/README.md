@@ -39,9 +39,9 @@ The first larger source-referenced pack is `l_energy_pcf_governance`, based on
 fixture-derived downstream claims from the platform expected receipt, but routes
 the L-Energy own-energy factor through a retrieval-backed slice: calculation
 blocked, reference search obligation, `ResolverTask`, `RetrievalQueryPolicy`,
-candidate-only embedding stub results, deterministic reference binding, retry,
-and receipt-gated projection. This keeps the case realistic without adding a
-full PCF workflow engine.
+candidate-only embedding stub results with near-miss reference rows,
+deterministic reference binding, retry, and receipt-gated projection. This keeps
+the case realistic without adding a full PCF workflow engine.
 
 ## Testing Philosophy
 
