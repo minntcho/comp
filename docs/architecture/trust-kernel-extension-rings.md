@@ -207,6 +207,7 @@ inputs to the gates, but they do not own the promotion.
 ## Extension Ports
 
 Ports should keep backend expansion from changing authority semantics.
+The detailed contracts live in `extension-port-contracts.md`.
 
 Recommended port shapes:
 

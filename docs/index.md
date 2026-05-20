@@ -23,17 +23,22 @@ The compiler does not create public truth directly. Public projection requires a
 Read these first:
 
 1. `architecture/trust-kernel-extension-rings.md`
-2. `architecture/retrieval-fabric-north-star.md`
-3. `architecture/obligation-kernel-working-theory.md`
-4. `architecture/trust-kernel-hardening.md`
-5. `architecture/domain-scenario-pack-generation.md`
-6. `architecture/llm-orchestrated-compiler-tool-loop.md`
-7. `architecture/llm-worker-orchestration.md`
-8. `architecture/memory-assisted-compiler-loop.md`
+2. `architecture/extension-port-contracts.md`
+3. `architecture/retrieval-fabric-north-star.md`
+4. `architecture/obligation-kernel-working-theory.md`
+5. `architecture/trust-kernel-hardening.md`
+6. `architecture/domain-scenario-pack-generation.md`
+7. `architecture/llm-orchestrated-compiler-tool-loop.md`
+8. `architecture/llm-worker-orchestration.md`
+9. `architecture/memory-assisted-compiler-loop.md`
 
 `architecture/trust-kernel-extension-rings.md` is the active architecture frame
 for keeping `comp` small: outer rings submit artifacts or render views, while
 only deterministic gates inside the trust kernel promote authority.
+
+`architecture/extension-port-contracts.md` defines how extractors, resolvers,
+retrieval backends, profile providers, persistence stores, replay engines, and
+product shells attach without gaining authority.
 
 `architecture/retrieval-fabric-north-star.md` is the long-term direction for
 retrieval, embedding, LLM artifact resolution, typed reference authority, and
@@ -44,10 +49,10 @@ for current implementation slices: semantic obligations, reference-grounded
 calculation, commit packages, governance decisions, and receipt-gated
 projection.
 
-`architecture/trust-kernel-hardening.md` is the implementation standard for the
-next hardening slice: remove ambient domain defaults, fingerprint profile-active
-behavior, preserve retrieval/reference provenance, and make the canonical
-scenario persistence-replayable.
+`architecture/trust-kernel-hardening.md` is the implementation standard for
+trust-kernel hardening: keep domain behavior explicit, fingerprint
+profile-active behavior, preserve retrieval/reference provenance, and keep the
+canonical scenario persistence-replayable.
 
 `architecture/domain-scenario-pack-generation.md` describes how to add
 replaceable Domain Scenario Lab packs without turning them into hard-coded
