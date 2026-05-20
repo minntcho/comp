@@ -472,6 +472,11 @@ CalculationFormula / ReferenceRecord fingerprints
   reference rows. This lets replay explain both the calculation formula world
   and the reference world behind derived claims.
 
+EvidenceWitness fingerprints
+  expose stable source evidence fingerprints for checked claim witnesses. Replay
+  can recompute the witness source/span/text fingerprint from the stored
+  evidence witness artifact and block if the source span drifts.
+
 Dependency fingerprint envelopes
   replay treats dependency fingerprints as receipt-cited artifact refs. The
   stored dependency envelope must exist, match the dependency kind/id, pass body
@@ -506,9 +511,13 @@ Replay blocks when a cited dependency fingerprint envelope is missing or its
 stored fingerprint no longer matches the receipt citation.
 Replay blocks when a cited reference catalog snapshot omits a selected
 reference record fingerprint required by the receipt.
+Replay blocks when a cited evidence witness artifact no longer matches the
+source/span/text fingerprint cited by the receipt.
 The L-Energy scenario records and replays the same dependency fingerprint shape,
 including the retrieval-backed reference world, formula declaration world, domain
 pack declaration world, and near-miss candidates.
+The canonical raw-input working loop records and replays evidence witness
+fingerprints for the raw text spans that grounded checked claims.
 ```
 
 That completes the original in-memory substrate slice and attaches it to the
@@ -523,7 +532,7 @@ production catalog snapshot store exists.
 Recommended next code slice:
 
 ```text
-feat: add source evidence span integrity fingerprints
+feat: export receipt dependency graph
 ```
 
 Candidate files:
@@ -531,19 +540,18 @@ Candidate files:
 ```text
 comp/persistence/*.py
 tests/domain_scenarios/*.py
-tests/test_*source*.py
+tests/domain_scenarios/views.py
 tests/test_persistence_projection_replay.py
 ```
 
 Minimum behavior:
 
 ```text
-EvidenceWitness or source span artifacts expose stable source text/container
-digests.
-CommitReceipt can cite source evidence fingerprints alongside checked claim
-witness ids.
-Replay verifies cited source span envelopes when they are present.
-Scenario replay reports show which raw source spans grounded the checked claims.
+Replay reports or scenario views expose a graph-friendly edge list:
+source evidence -> evidence witness -> checked claim -> derived claim -> receipt.
+Dependency fingerprints appear as typed nodes with digest metadata.
+Viewer payloads can answer why a public field exists without re-running the
+compiler.
 ```
 
 Non-goals for that slice:
@@ -560,21 +568,20 @@ no production catalog snapshot store
 no real DB ingestion
 ```
 
-The goal is to move from "receipt pins the profile, formula, domain, and
-reference worlds" toward "receipt also pins the raw evidence spans that grounded
-checked claims."
+The goal is to move from "receipt pins all major dependency worlds" toward
+"receipt replay can be rendered as a readable proof graph."
 
 ---
 
 ## 13. Following Slice
 
-After source evidence span integrity, the next likely slice is dependency graph
-export:
+After dependency graph export, the next likely slice is source container
+fingerprints:
 
 ```text
-receipt dependency graph export
-source -> witness -> checked claim -> derived claim -> receipt edges
-viewer-friendly replay explanation payload
+source container fingerprints
+source document/version ids
+replay verification for source container digests
 ```
 
 That slice should keep the document's rule: replay explains the old receipt,

@@ -71,6 +71,7 @@ def apply_semantic_judgments(
     return with_recomputed_status(
         CompileReport(
             status=report.status,
+            evidence_witnesses=report.evidence_witnesses,
             checked_claims=report.checked_claims,
             failed_claims=report.failed_claims,
             unknowns=report.unknowns,

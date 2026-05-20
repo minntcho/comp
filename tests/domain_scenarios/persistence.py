@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from typing import Any
 
 from comp.judgment import ProjectionSpec
+from comp.compiler_tool import evidence_witness_fingerprint
 from comp.persistence import (
     ArtifactEnvelope,
     ArtifactRef,
@@ -131,7 +132,21 @@ def _artifact_body_for_ref(
             "origin": claim.origin,
         }
     if ref.artifact_kind == "evidence_witness":
-        return {"witness_id": ref.artifact_id, "source": "domain_scenario"}
+        witness = _evidence_witness_by_id(result, ref.artifact_id)
+        if witness is None:
+            return {"witness_id": ref.artifact_id, "source": "domain_scenario"}
+        fingerprint = evidence_witness_fingerprint(witness)
+        return {
+            "dependency_kind": fingerprint.dependency_kind,
+            "dependency_id": fingerprint.dependency_id,
+            "witness_id": witness.witness_id,
+            "field": witness.field,
+            "source": witness.source,
+            "span": witness.span,
+            "text": witness.text,
+            "fingerprint": fingerprint.fingerprint,
+            "digest_alg": fingerprint.digest_alg,
+        }
     if ref.artifact_kind == "reference_binding":
         binding = _by_id(
             result.report.reference_bindings,
@@ -203,6 +218,13 @@ def _checked_claim_by_source_id(result: DomainScenarioResult, source_id: str):
         if source_id == f"checked_claim:{claim.field}:{claim.witness_id}":
             return claim
     raise AssertionError(f"Scenario checked claim not found: {source_id}.")
+
+
+def _evidence_witness_by_id(result: DomainScenarioResult, witness_id: str):
+    for witness in result.report.evidence_witnesses:
+        if witness.witness_id == witness_id:
+            return witness
+    return None
 
 
 def _trace_by_id(result: DomainScenarioResult, trace_id: str):

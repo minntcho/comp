@@ -52,6 +52,7 @@ def replay_public_projection(
     artifact_digests = _verified_artifact_digests(refs, artifacts)
     _verify_projection_value_sources(receipt, artifacts)
     _verify_dependency_fingerprint_sources(receipt, artifacts)
+    _verify_source_evidence_span_fingerprints(receipt, artifacts)
     _verify_reference_catalog_snapshot_coverage(receipt, artifacts)
     return ProjectionReplayReport(
         receipt_key=ReceiptLedgerKey.from_receipt(receipt),
@@ -236,6 +237,41 @@ def _verify_profile_lock_body(
             "Projection replay profile lock fingerprint mismatch: "
             f"{fingerprint.dependency_id}."
         )
+
+
+def _verify_source_evidence_span_fingerprints(
+    receipt: CommitReceipt,
+    artifacts: InMemoryArtifactStore,
+) -> None:
+    if receipt.citations is None:
+        return
+
+    for fingerprint in receipt.citations.dependency_fingerprints:
+        if fingerprint.dependency_kind != "evidence_witness":
+            continue
+        envelope = artifacts.get(fingerprint.dependency_id)
+        actual = _evidence_witness_fingerprint_from_body(envelope.body)
+        if actual.fingerprint != fingerprint.fingerprint:
+            raise ProjectionReplayBlocked(
+                "Projection replay source evidence fingerprint mismatch: "
+                f"{fingerprint.dependency_id}."
+            )
+
+
+def _evidence_witness_fingerprint_from_body(
+    body: Mapping[str, Any],
+) -> DependencyFingerprint:
+    return DependencyFingerprint.from_payload(
+        dependency_kind="evidence_witness",
+        dependency_id=str(body.get("witness_id", "")),
+        payload={
+            "witness_id": body.get("witness_id"),
+            "field": body.get("field"),
+            "source": body.get("source"),
+            "span": body.get("span"),
+            "text": body.get("text"),
+        },
+    )
 
 
 def _verify_reference_catalog_snapshot_coverage(

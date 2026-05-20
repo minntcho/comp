@@ -7,6 +7,7 @@ from comp.compiler_tool import (
     apply_reference_selection,
     calculation_formula_declaration_fingerprint,
     domain_pack_declaration_fingerprint,
+    evidence_witness_fingerprint,
     plan_calculation_resolution,
     prepare_commit,
     profile_declaration_fingerprint,
@@ -135,6 +136,7 @@ def run_canonical_working_loop_scenario() -> DomainScenarioResult:
         profile_id=scenario_profile.profile_id,
         dependency_fingerprints=_dependency_fingerprints(
             scenario_profile,
+            resolved_report,
             binding,
         ),
     )
@@ -166,6 +168,7 @@ def run_canonical_working_loop_scenario() -> DomainScenarioResult:
 
 def _dependency_fingerprints(
     scenario_profile,
+    report,
     binding: ReferenceBinding | None,
 ):
     fingerprints = [
@@ -175,6 +178,11 @@ def _dependency_fingerprints(
             for domain in scenario_profile.domain_packs
         ),
         calculation_formula_declaration_fingerprint(formula()),
+        *tuple(
+            evidence_witness_fingerprint(witness)
+            for witness in report.evidence_witnesses
+            if witness.witness_id in _checked_claim_witness_ids(report)
+        ),
     ]
     if binding is not None:
         record_fingerprint = reference_record_fingerprint(
@@ -192,6 +200,10 @@ def _dependency_fingerprints(
         )
         fingerprints.append(record_fingerprint)
     return tuple(fingerprints)
+
+
+def _checked_claim_witness_ids(report) -> set[str]:
+    return {claim.witness_id for claim in report.checked_claims}
 
 
 def _binding_for(
