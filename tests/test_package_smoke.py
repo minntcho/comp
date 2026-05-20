@@ -86,6 +86,8 @@ def test_readme_compiler_tool_import_surface_is_exported():
         RetrievalQueryPolicy,
         RetrievalQueryRule,
         active_retrieval_query_policies,
+        calculation_formula_declaration_fingerprint,
+        domain_pack_declaration_fingerprint,
         profile_declaration_fingerprint,
         reference_catalog_snapshot_fingerprint,
         reference_query_for_obligation_from_profile_policy,
@@ -95,6 +97,8 @@ def test_readme_compiler_tool_import_surface_is_exported():
         reference_query_from_resolver_task,
         reference_record_fingerprint,
         resolve_reference_retrieval_obligations,
+        rule_family_declaration_fingerprint,
+        semantic_rubric_declaration_fingerprint,
         build_commit_receipt,
         compile_report_to_facts,
         prepare_commit,
@@ -114,6 +118,8 @@ def test_readme_compiler_tool_import_surface_is_exported():
     assert EmbeddingResolverStub is not None
     assert RetrievalQueryPolicy is not None
     assert RetrievalQueryRule is not None
+    assert calculation_formula_declaration_fingerprint is not None
+    assert domain_pack_declaration_fingerprint is not None
     assert active_retrieval_query_policies is not None
     assert profile_declaration_fingerprint is not None
     assert reference_query_for_obligation_from_policies is not None
@@ -123,6 +129,8 @@ def test_readme_compiler_tool_import_surface_is_exported():
     assert reference_query_for_obligation_from_resolver_tasks is not None
     assert reference_catalog_snapshot_fingerprint is not None
     assert reference_record_fingerprint is not None
+    assert rule_family_declaration_fingerprint is not None
+    assert semantic_rubric_declaration_fingerprint is not None
     assert resolve_reference_retrieval_obligations is not None
 
 

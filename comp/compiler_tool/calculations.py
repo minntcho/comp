@@ -7,6 +7,7 @@ from typing import Any
 
 from comp.compiler_tool.reference_db import ReferenceCatalog, ReferenceLookupError
 from comp.compiler_tool.references import ReferenceBinding
+from comp.judgment.receipts import DependencyFingerprint
 
 
 @dataclass(frozen=True)
@@ -191,6 +192,23 @@ def calculate_derived_claim(
     )
 
 
+def calculation_formula_declaration_fingerprint(
+    formula: CalculationFormula,
+) -> DependencyFingerprint:
+    return DependencyFingerprint.from_payload(
+        dependency_kind="calculation_formula",
+        dependency_id=f"calculation_formula:{formula.formula_id}",
+        payload={
+            "formula_id": formula.formula_id,
+            "output_field": formula.output_field,
+            "output_unit": formula.output_unit,
+            "factor_value_attribute": formula.factor_value_attribute,
+            "input_unit_attribute": formula.input_unit_attribute,
+            "output_unit_attribute": formula.output_unit_attribute,
+        },
+    )
+
+
 def _blocked(requirement: CalculationRequirement) -> CalculationResult:
     return CalculationResult(
         status="blocked",
@@ -240,6 +258,7 @@ __all__ = [
     "DerivedClaim",
     "CalculationInput",
     "CalculationFormula",
+    "calculation_formula_declaration_fingerprint",
     "CalculationRequirement",
     "CalculationResult",
     "calculate_derived_claim",

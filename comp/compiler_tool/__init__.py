@@ -8,6 +8,7 @@ from comp.compiler_tool.calculations import (
     CalculationStep,
     CalculationTrace,
     DerivedClaim,
+    calculation_formula_declaration_fingerprint,
     calculate_derived_claim,
 )
 from comp.compiler_tool.calculation_flow import resolve_reference_grounded_calculation
@@ -44,7 +45,10 @@ from comp.compiler_tool.profiles import (
     SemanticRubric,
     active_rule_families,
     active_retrieval_query_policies,
+    domain_pack_declaration_fingerprint,
     profile_declaration_fingerprint,
+    rule_family_declaration_fingerprint,
+    semantic_rubric_declaration_fingerprint,
     validate_compiler_profile,
 )
 from comp.compiler_tool.profile_runner import compile_with_profile
@@ -139,6 +143,7 @@ __all__ = [
     "CalculationStep",
     "CalculationTrace",
     "DerivedClaim",
+    "calculation_formula_declaration_fingerprint",
     "calculate_derived_claim",
     "resolve_reference_grounded_calculation",
     "apply_calculation_result",
@@ -201,6 +206,9 @@ __all__ = [
     "active_rule_families",
     "active_retrieval_query_policies",
     "profile_declaration_fingerprint",
+    "domain_pack_declaration_fingerprint",
+    "rule_family_declaration_fingerprint",
+    "semantic_rubric_declaration_fingerprint",
     "compile_with_profile",
     "CompilerTool",
     "apply_semantic_judgments",
