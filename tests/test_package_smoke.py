@@ -192,6 +192,10 @@ def test_document_governance_classifies_architecture_doc_authority():
             "Status: active-contract",
             "Can block PRs: yes",
         ),
+        "docs/architecture/artifact-envelope-builder.md": (
+            "Status: active-contract",
+            "Can block PRs: yes",
+        ),
         "docs/architecture/retrieval-fabric-north-star.md": (
             "Status: north-star",
             "Can block PRs: limited",
@@ -214,6 +218,7 @@ def test_document_governance_classifies_architecture_doc_authority():
 def test_architecture_docs_are_classified_by_governance_status():
     expected_status = {
         "active-surface-cutover.md": ("historical-note", "docs", "no"),
+        "artifact-envelope-builder.md": ("active-contract", "persistence", "yes"),
         "document-governance.md": ("active-contract", "trust-kernel", "yes"),
         "domain-scenario-pack-generation.md": (
             "implementation-map",

@@ -218,6 +218,8 @@ should cite the profile/domain behavior that influenced the projection.
 ## ArtifactStore
 
 Artifact stores persist replay substrate. They do not interpret authority.
+The builder contract for producing replay substrate lives in
+`artifact-envelope-builder.md`.
 
 ```python
 class ArtifactStore(Protocol):
