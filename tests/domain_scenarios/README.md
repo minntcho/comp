@@ -61,6 +61,9 @@ ScenarioContract
 SourceRef
 run_scenario()
 assert_scenario_contract()
+scenario_result_view()
+assert_receipt_trace()
+assert_projection_tamper_blocked()
 registered_scenarios()
 ```
 
@@ -94,3 +97,9 @@ the exact function where profile-aware gating is enforced
 Scenario payloads should stay stable enough for a viewer to explain the run, but
 tests should avoid asserting one huge exported JSON blob. Prefer targeted checks
 that prove the authority boundary and traceability story still hold.
+
+Use `scenario_result_view()` when a test needs the viewer/export payload. Use
+`assert_receipt_trace()` for receipt citation checks, and
+`assert_projection_tamper_blocked()` for receipt value-gate negative tests.
+That keeps scenario tests focused on the contract instead of repeating receipt
+field traversal or projection tamper boilerplate in every pack.
