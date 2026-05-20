@@ -17,6 +17,16 @@ from minchoagnt.review import (
 )
 from minchoagnt.skills import SkillStore
 from minchoagnt.workbench import ReviewWorkbench, WorkbenchRun
+from minchoagnt.work_orders import (
+    AbstentionArtifact,
+    DeterministicLLMWorker,
+    LLMWorkerResult,
+    LLMWorkerSubmission,
+    LLMWorkOrder,
+    apply_llm_worker_results,
+    semantic_work_orders_from_result,
+    semantic_work_orders_from_tasks,
+)
 
 __all__ = [
     "ChatResult",
@@ -36,4 +46,12 @@ __all__ = [
     "ReviewWorkbench",
     "SkillStore",
     "WorkbenchRun",
+    "LLMWorkOrder",
+    "LLMWorkerSubmission",
+    "LLMWorkerResult",
+    "AbstentionArtifact",
+    "DeterministicLLMWorker",
+    "semantic_work_orders_from_result",
+    "semantic_work_orders_from_tasks",
+    "apply_llm_worker_results",
 ]
