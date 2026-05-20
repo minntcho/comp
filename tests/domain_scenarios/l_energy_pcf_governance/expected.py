@@ -45,6 +45,16 @@ EXPECTED_REFERENCE_BINDING_IDS = (
     "bind:pcf:ncm811_factor",
 )
 
+EXPECTED_REFERENCE_CANDIDATE_IDS = (
+    "platform.factor.electricity_mwh",
+    "platform.factor.electricity_mwh_2024",
+)
+
+EXPECTED_RESOLVED_OBLIGATION_KINDS = (
+    "reference_search_required",
+    "calculation_blocked",
+)
+
 EXPECTED_DERIVED_CLAIM_IDS = (
     "l-energy:own_emission_tco2e",
     "alpha-metal:final_emission_tco2e",
@@ -67,7 +77,9 @@ __all__ = [
     "EXPECTED_DERIVED_CLAIM_IDS",
     "EXPECTED_FORMULA_IDS",
     "EXPECTED_PROJECTION",
+    "EXPECTED_REFERENCE_CANDIDATE_IDS",
     "EXPECTED_REFERENCE_BINDING_IDS",
+    "EXPECTED_RESOLVED_OBLIGATION_KINDS",
     "EXPECTED_SOURCE_REFS",
     "EXPECTED_TRACE_IDS",
     "SCENARIO_ID",

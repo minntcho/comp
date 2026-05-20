@@ -33,6 +33,55 @@ def test_l_energy_pcf_governance_scenario_reproduces_platform_summary():
     assert result.projection == EXPECTED_PROJECTION
 
 
+def test_l_energy_pcf_governance_scenario_resolves_energy_factor_through_retrieval():
+    result = run_l_energy_pcf_governance_scenario()
+
+    assert "resolver_tasks_from_report" in result.resolver_steps
+    assert "retrieval_query_policy" in result.resolver_steps
+    assert "reference_retrieval:embedding_stub:factor" in result.resolver_steps
+    assert tuple(
+        obligation.kind for obligation in result.report.resolved_obligations
+    ) == ("reference_search_required", "calculation_blocked")
+
+    candidate_ids = tuple(
+        candidate.candidate_id for candidate in result.report.reference_candidates
+    )
+    assert candidate_ids == (
+        "embedding_stub:factor:idx-l-energy-electricity-mwh-2025",
+        "embedding_stub:factor:idx-l-energy-electricity-mwh-2024",
+    )
+    assert all(
+        candidate.authority == "candidate_only"
+        for candidate in result.report.reference_candidates
+    )
+
+    electricity_binding = next(
+        binding
+        for binding in result.report.reference_bindings
+        if binding.binding_id == "bind:pcf:electricity_factor"
+    )
+    assert (
+        electricity_binding.selected_candidate_id
+        == "embedding_stub:factor:idx-l-energy-electricity-mwh-2025"
+    )
+    assert tuple(
+        (rejected.reference_id, rejected.reason)
+        for rejected in electricity_binding.rejected_candidates
+    ) == (
+        ("platform.factor.electricity_mwh_2024", "attribute_mismatch:valid_period"),
+    )
+
+    own_emission_claim = next(
+        claim
+        for claim in result.report.derived_claims
+        if claim.claim_id == "l-energy:own_emission_tco2e"
+    )
+    assert own_emission_claim.origin == "calculated"
+    assert own_emission_claim.trace.reference_binding_ids == (
+        "bind:pcf:electricity_factor",
+    )
+
+
 def test_l_energy_pcf_governance_scenario_preserves_actor_receipt_trace():
     result = run_scenario(L_ENERGY_SCENARIO)
 
