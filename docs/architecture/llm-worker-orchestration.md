@@ -1,9 +1,9 @@
 # LLM Worker Orchestration
 
-Status: design note, not final architecture.
+Status: provisional design note, not final architecture.
 
-This document captures the intended LLM architecture for the `comp` rebuild.
-It builds on the existing authority boundary:
+This document captures the current working hypothesis for LLM orchestration in
+the `comp` rebuild. It builds on the existing authority boundary:
 
 ```text
 LLM proposes.
@@ -17,6 +17,11 @@ The central claim is:
 LLM tool calling is not an output-format trick.
 It is an orchestration step for submitting typed, non-authoritative artifacts.
 ```
+
+This is not a lockfile for future implementation. It should guide experiments,
+make current assumptions visible, and give future work something concrete to
+revise. If implementation evidence or domain scenarios contradict this note,
+the note should change.
 
 ---
 
@@ -571,4 +576,3 @@ What is the minimum trace needed to replay a neighborhood-informed work order?
 How should privacy-sensitive source spans be represented in embedding indexes?
 How should human answers become resolver artifacts without becoming receipts?
 ```
-

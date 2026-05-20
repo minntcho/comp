@@ -42,8 +42,8 @@ projection.
 replaceable Domain Scenario Lab packs without turning them into hard-coded
 golden fixtures.
 
-`architecture/llm-worker-orchestration.md` captures the intended background LLM
-worker architecture: work orders, allowed tool menus, typed artifact submission,
+`architecture/llm-worker-orchestration.md` records a provisional background LLM
+worker hypothesis: work orders, allowed tool menus, typed artifact submission,
 abstention, and scoreless embedding-informed routing.
 
 ## Compiler Tool Layers
