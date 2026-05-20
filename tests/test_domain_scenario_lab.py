@@ -19,6 +19,7 @@ def test_registered_scenarios_are_explicit_scenario_definitions():
 
     assert tuple(scenario.scenario_id for scenario in scenarios) == (
         "tiny_pcf.location_based_electricity.v1",
+        "l_energy_pcf_governance.v1",
     )
     assert all(isinstance(scenario, ScenarioDefinition) for scenario in scenarios)
     assert scenarios[0].contract.must_commit is True
