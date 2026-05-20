@@ -387,16 +387,19 @@ Do not try to hash arbitrary Python callables as the first implementation. Rule
 and rubric ids, domain pack versions, package versions, and git revisions are
 more realistic first pins.
 
-Later layers may add:
+Current additional layer:
 
 ```text
 ReferenceCatalogSnapshot
   catalog_id
   catalog_version
-  record_digests
-  source
-  effective_date
+  selected reference record fingerprints
+  replay coverage check for cited reference records
+```
 
+Later layers may add:
+
+```text
 DomainPackFingerprint
   domain_id
   version
@@ -469,6 +472,12 @@ Dependency fingerprint envelopes
   stored dependency envelope must exist, match the dependency kind/id, pass body
   digest verification, and carry the same fingerprint and digest algorithm as
   the receipt citation.
+
+ReferenceCatalogSnapshot manifests
+  replay treats catalog snapshots as receipt-cited dependency artifacts. When a
+  receipt cites both a catalog snapshot and selected reference record
+  fingerprints, the snapshot envelope must include those selected record
+  fingerprints in its manifest.
 ```
 
 The implemented minimum behavior is:
@@ -489,6 +498,8 @@ Replay reports dependency fingerprints cited by the receipt, starting with the
 compiler profile declaration and selected reference record.
 Replay blocks when a cited dependency fingerprint envelope is missing or its
 stored fingerprint no longer matches the receipt citation.
+Replay blocks when a cited reference catalog snapshot omits a selected
+reference record fingerprint required by the receipt.
 The L-Energy scenario records and replays the same dependency fingerprint shape,
 including the retrieval-backed reference world and near-miss candidates.
 ```
@@ -496,7 +507,7 @@ including the retrieval-backed reference world and near-miss candidates.
 That completes the original in-memory substrate slice and attaches it to the
 canonical raw-input and L-Energy scenario harnesses. It does not yet mean
 production persistence exists, nor does it mean a database, retention policy, or
-catalog snapshot manifest exists.
+production catalog snapshot store exists.
 
 ---
 
@@ -505,30 +516,30 @@ catalog snapshot manifest exists.
 Recommended next code slice:
 
 ```text
-feat: add ReferenceCatalogSnapshot manifest
+feat: add broader dependency declaration fingerprints
 ```
 
 Candidate files:
 
 ```text
-comp/compiler_tool/reference_db.py
+comp/compiler_tool/profiles.py
+comp/compiler_tool/calculations.py
 comp/persistence/*.py
-tests/test_reference_*fingerprint*.py
+tests/test_*fingerprint*.py
 tests/test_persistence_projection_replay.py
 ```
 
 Minimum behavior:
 
 ```text
-ReferenceCatalogSnapshot records catalog id/version plus selected record
-fingerprints.
-CommitReceipt can cite a catalog snapshot dependency alongside individual
-reference records, or replace individual record citations when the snapshot
-manifest is sufficient.
-Replay verifies the catalog snapshot envelope and can report which selected
-records were covered by the snapshot.
-Negative tests block replay when a selected record fingerprint is absent from the
-snapshot manifest.
+DomainPack, active rule/rubric declarations, and formula declarations expose
+stable dependency fingerprints.
+CommitReceipt can cite these declaration fingerprints alongside profile,
+reference record, and catalog snapshot fingerprints.
+Replay verifies the matching dependency fingerprint envelopes when they are
+cited.
+Scenario replay reports show which profile, reference world, formula world, and
+domain rule world made the receipt meaningful.
 ```
 
 Non-goals for that slice:
@@ -545,22 +556,21 @@ no production catalog snapshot store
 no real DB ingestion
 ```
 
-The goal is to move from "receipt lists dependency fingerprints individually"
-toward "receipt can cite a compact reference-world manifest that still explains
-which canonical rows made the calculation meaningful."
+The goal is to move from "receipt pins profile and reference-world dependencies"
+toward "receipt also pins the formula and domain declaration world that made the
+compiler decision meaningful."
 
 ---
 
 ## 13. Following Slice
 
-After reference catalog snapshots, the next likely slice is broader dependency
-pinning:
+After broader dependency fingerprints, the next likely slice is source evidence
+span integrity:
 
 ```text
-DomainPack fingerprint
-Rule/rubric declaration fingerprints
-Formula fingerprints backed by formula declaration envelopes
 Source evidence span digests
+EvidenceWitness source container fingerprints
+Replay verification for cited source span digests
 ```
 
 That slice should keep the document's rule: replay explains the old receipt,

@@ -52,6 +52,7 @@ def replay_public_projection(
     artifact_digests = _verified_artifact_digests(refs, artifacts)
     _verify_projection_value_sources(receipt, artifacts)
     _verify_dependency_fingerprint_sources(receipt, artifacts)
+    _verify_reference_catalog_snapshot_coverage(receipt, artifacts)
     return ProjectionReplayReport(
         receipt_key=ReceiptLedgerKey.from_receipt(receipt),
         projection_id=projection.projection_id,
@@ -198,6 +199,55 @@ def _verify_dependency_fingerprint_sources(
                 "Projection replay dependency fingerprint algorithm mismatch: "
                 f"{fingerprint.dependency_id}."
             )
+
+
+def _verify_reference_catalog_snapshot_coverage(
+    receipt: CommitReceipt,
+    artifacts: InMemoryArtifactStore,
+) -> None:
+    if receipt.citations is None:
+        return
+
+    reference_records = tuple(
+        fingerprint
+        for fingerprint in receipt.citations.dependency_fingerprints
+        if fingerprint.dependency_kind == "reference_record"
+    )
+    catalog_snapshots = tuple(
+        fingerprint
+        for fingerprint in receipt.citations.dependency_fingerprints
+        if fingerprint.dependency_kind == "reference_catalog_snapshot"
+    )
+    if not reference_records or not catalog_snapshots:
+        return
+
+    covered_records: set[tuple[str, str]] = set()
+    for snapshot in catalog_snapshots:
+        envelope = artifacts.get(snapshot.dependency_id)
+        covered_records.update(_catalog_snapshot_record_keys(envelope.body))
+
+    for fingerprint in reference_records:
+        record_key = (fingerprint.dependency_id, fingerprint.fingerprint)
+        if record_key not in covered_records:
+            raise ProjectionReplayBlocked(
+                "Projection replay catalog snapshot missing reference record: "
+                f"{fingerprint.dependency_id}."
+            )
+
+
+def _catalog_snapshot_record_keys(
+    snapshot_body: Mapping[str, Any],
+) -> set[tuple[str, str]]:
+    records = snapshot_body.get("record_fingerprints", ())
+    record_keys: set[tuple[str, str]] = set()
+    for record in records:
+        if not isinstance(record, Mapping):
+            continue
+        dependency_id = record.get("dependency_id")
+        fingerprint = record.get("fingerprint")
+        if isinstance(dependency_id, str) and isinstance(fingerprint, str):
+            record_keys.add((dependency_id, fingerprint))
+    return record_keys
 
 
 def _unique_refs(refs: list[ArtifactRef]) -> tuple[ArtifactRef, ...]:

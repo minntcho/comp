@@ -42,6 +42,13 @@ def test_replay_public_projection_explains_row_from_receipt_and_artifacts():
     assert ArtifactRef("fixture-profile", "compiler_profile") in report.artifact_refs
     assert ArtifactRef("fixture-factor", "reference_record") in report.artifact_refs
     assert (
+        ArtifactRef(
+            "reference_catalog_snapshot:fixture-catalog:2026.1",
+            "reference_catalog_snapshot",
+        )
+        in report.artifact_refs
+    )
+    assert (
         ArtifactRef("checked_claim:amount:span-amount", "checked_claim")
         in report.artifact_refs
     )
@@ -52,6 +59,10 @@ def test_replay_public_projection_explains_row_from_receipt_and_artifacts():
     ) == (
         ("compiler_profile", "fixture-profile"),
         ("reference_record", "fixture-factor"),
+        (
+            "reference_catalog_snapshot",
+            "reference_catalog_snapshot:fixture-catalog:2026.1",
+        ),
     )
 
 
@@ -91,6 +102,36 @@ def test_replay_blocks_when_dependency_fingerprint_artifact_mismatches():
     )
 
     with pytest.raises(ProjectionReplayBlocked, match="dependency fingerprint"):
+        replay_public_projection(
+            case.source_values,
+            case.projection,
+            receipt=case.receipt,
+            artifacts=artifacts,
+        )
+
+
+def test_replay_blocks_when_catalog_snapshot_omits_reference_record():
+    case = receipt_projection_case(amount=100)
+    artifacts = artifact_store_for_receipt(
+        case.receipt,
+        committed_values=case.source_values,
+        override=ArtifactEnvelope.from_body(
+            artifact_id="reference_catalog_snapshot:fixture-catalog:2026.1",
+            artifact_kind="reference_catalog_snapshot",
+            schema_version="dependency-fingerprint-v1",
+            body={
+                "dependency_kind": "reference_catalog_snapshot",
+                "dependency_id": "reference_catalog_snapshot:fixture-catalog:2026.1",
+                "fingerprint": (
+                    "sha256:fixture-reference-catalog-snapshot"
+                ),
+                "digest_alg": "sha256",
+                "record_fingerprints": (),
+            },
+        ),
+    )
+
+    with pytest.raises(ProjectionReplayBlocked, match="catalog snapshot"):
         replay_public_projection(
             case.source_values,
             case.projection,

@@ -76,6 +76,11 @@ def receipt_projection_case(
                 dependency_id="fixture-factor",
                 fingerprint="sha256:fixture-factor",
             ),
+            DependencyFingerprint(
+                dependency_kind="reference_catalog_snapshot",
+                dependency_id="reference_catalog_snapshot:fixture-catalog:2026.1",
+                fingerprint="sha256:fixture-reference-catalog-snapshot",
+            ),
         ),
     )
     receipt = CommitReceipt(
@@ -159,7 +164,11 @@ def artifact_body_for_ref(
         return body
     if ref.artifact_kind == "evidence_witness":
         return {"witness_id": ref.artifact_id, "source": "fixture"}
-    if ref.artifact_kind in {"compiler_profile", "reference_record"}:
+    if ref.artifact_kind in {
+        "compiler_profile",
+        "reference_record",
+        "reference_catalog_snapshot",
+    }:
         return _dependency_fingerprint_body(ref)
     raise AssertionError(f"Unexpected artifact ref in test: {ref}")
 
@@ -172,7 +181,7 @@ def _claim_field(ref: ArtifactRef) -> str:
     return "unknown"
 
 
-def _dependency_fingerprint_body(ref: ArtifactRef) -> dict[str, str]:
+def _dependency_fingerprint_body(ref: ArtifactRef) -> dict[str, Any]:
     if ref.artifact_id == "fixture-profile":
         return {
             "dependency_kind": "compiler_profile",
@@ -186,6 +195,21 @@ def _dependency_fingerprint_body(ref: ArtifactRef) -> dict[str, str]:
             "dependency_id": "fixture-factor",
             "fingerprint": "sha256:fixture-factor",
             "digest_alg": "sha256",
+        }
+    if ref.artifact_id == "reference_catalog_snapshot:fixture-catalog:2026.1":
+        return {
+            "dependency_kind": "reference_catalog_snapshot",
+            "dependency_id": "reference_catalog_snapshot:fixture-catalog:2026.1",
+            "fingerprint": "sha256:fixture-reference-catalog-snapshot",
+            "digest_alg": "sha256",
+            "record_fingerprints": (
+                {
+                    "dependency_kind": "reference_record",
+                    "dependency_id": "fixture-factor",
+                    "fingerprint": "sha256:fixture-factor",
+                    "digest_alg": "sha256",
+                },
+            ),
         }
     raise AssertionError(f"Unexpected dependency fingerprint ref in test: {ref}")
 

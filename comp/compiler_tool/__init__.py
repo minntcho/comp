@@ -50,8 +50,10 @@ from comp.compiler_tool.profiles import (
 from comp.compiler_tool.profile_runner import compile_with_profile
 from comp.compiler_tool.reference_db import (
     ReferenceCatalog,
+    ReferenceCatalogSnapshot,
     ReferenceLookupError,
     ReferenceRecord,
+    reference_catalog_snapshot_fingerprint,
     reference_record_fingerprint,
 )
 from comp.compiler_tool.reference_resolution import (
@@ -160,7 +162,9 @@ __all__ = [
     "ReferenceLookupError",
     "ReferenceRecord",
     "ReferenceCatalog",
+    "ReferenceCatalogSnapshot",
     "reference_record_fingerprint",
+    "reference_catalog_snapshot_fingerprint",
     "ReferenceSearchQuery",
     "resolve_reference_search_obligations",
     "apply_reference_selection",

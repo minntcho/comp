@@ -82,10 +82,12 @@ def test_readme_compiler_tool_import_surface_is_exported():
         ReferenceIndexEntry,
         ReferenceQuery,
         ReferenceResolver,
+        ReferenceCatalogSnapshot,
         RetrievalQueryPolicy,
         RetrievalQueryRule,
         active_retrieval_query_policies,
         profile_declaration_fingerprint,
+        reference_catalog_snapshot_fingerprint,
         reference_query_for_obligation_from_profile_policy,
         reference_query_for_obligation_from_policies,
         reference_query_for_obligation_from_policy,
@@ -108,6 +110,7 @@ def test_readme_compiler_tool_import_surface_is_exported():
     assert ReferenceQuery is not None
     assert ReferenceIndexEntry is not None
     assert ReferenceResolver is not None
+    assert ReferenceCatalogSnapshot is not None
     assert EmbeddingResolverStub is not None
     assert RetrievalQueryPolicy is not None
     assert RetrievalQueryRule is not None
@@ -118,6 +121,7 @@ def test_readme_compiler_tool_import_surface_is_exported():
     assert reference_query_for_obligation_from_policy is not None
     assert reference_query_from_resolver_task is not None
     assert reference_query_for_obligation_from_resolver_tasks is not None
+    assert reference_catalog_snapshot_fingerprint is not None
     assert reference_record_fingerprint is not None
     assert resolve_reference_retrieval_obligations is not None
 
