@@ -7,7 +7,9 @@ from comp.compiler_tool import (
     apply_reference_selection,
     plan_calculation_resolution,
     prepare_commit,
+    profile_declaration_fingerprint,
     reference_query_for_obligation_from_profile_policy,
+    reference_record_fingerprint,
     resolve_reference_retrieval_obligations,
     resolver_tasks_from_report,
     retry_blocked_calculation,
@@ -96,8 +98,11 @@ def run_l_energy_pcf_governance_scenario(
     *,
     reference_pack_override: ScenarioReferencePack | None = None,
 ) -> DomainScenarioResult:
+    pack = reference_pack_override or reference_pack()
+    scenario_profile = profile()
     report = _compile_retrieval_backed_report(
-        reference_pack_override=reference_pack_override,
+        reference_pack_override=pack,
+        scenario_profile=scenario_profile,
     )
     preparation = prepare_commit(
         report,
@@ -105,6 +110,11 @@ def run_l_energy_pcf_governance_scenario(
         public_row_id=PUBLIC_ROW_ID,
         projection_id=PROJECTION_ID,
         profile_id=PROFILE_ID,
+        dependency_fingerprints=_dependency_fingerprints(
+            scenario_profile,
+            pack,
+            report,
+        ),
     )
     projection = None
     if preparation.receipt is not None:
@@ -132,10 +142,10 @@ def _projection_source(report) -> dict[str, object]:
 
 def _compile_retrieval_backed_report(
     *,
-    reference_pack_override: ScenarioReferencePack | None = None,
+    reference_pack_override: ScenarioReferencePack,
+    scenario_profile,
 ) -> CompileReport:
-    pack = reference_pack_override or reference_pack()
-    scenario_profile = profile()
+    pack = reference_pack_override
     opened_report = blocked_report()
     planned_report = plan_calculation_resolution(opened_report)
     resolver_tasks = resolver_tasks_from_report(planned_report)
@@ -166,6 +176,23 @@ def _compile_retrieval_backed_report(
             output_claim_id=OUTPUT_CLAIM_ID,
         )
     return attach_downstream_fixture_artifacts(resolved_report)
+
+
+def _dependency_fingerprints(
+    scenario_profile,
+    pack: ScenarioReferencePack,
+    report: CompileReport,
+):
+    fingerprints = [profile_declaration_fingerprint(scenario_profile)]
+    seen_reference_ids: set[str] = set()
+    for candidate in report.reference_candidates:
+        if candidate.reference_id in seen_reference_ids:
+            continue
+        seen_reference_ids.add(candidate.reference_id)
+        fingerprints.append(
+            reference_record_fingerprint(pack.catalog.get(candidate.reference_id))
+        )
+    return tuple(fingerprints)
 
 
 def _binding_for(

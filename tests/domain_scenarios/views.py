@@ -105,6 +105,15 @@ def receipt_trace_view(receipt) -> dict[str, Any] | None:
             }
             for commitment in citations.projection_value_commitments
         ],
+        "dependency_fingerprints": [
+            {
+                "dependency_kind": fingerprint.dependency_kind,
+                "dependency_id": fingerprint.dependency_id,
+                "fingerprint": fingerprint.fingerprint,
+                "digest_alg": fingerprint.digest_alg,
+            }
+            for fingerprint in citations.dependency_fingerprints
+        ],
     }
 
 

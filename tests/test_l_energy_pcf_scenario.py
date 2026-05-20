@@ -1,3 +1,4 @@
+from comp import ProjectionSpec
 from comp.compiler_tool import active_retrieval_query_policies
 
 from tests.domain_scenarios.assertions import assert_receipt_trace
@@ -16,9 +17,12 @@ from tests.domain_scenarios.l_energy_pcf_governance.fixtures import (
     reference_pack,
 )
 from tests.domain_scenarios.l_energy_pcf_governance.scenario import (
+    PROJECTION_FIELDS,
+    PROJECTION_ID,
     SCENARIO as L_ENERGY_SCENARIO,
     run_l_energy_pcf_governance_scenario,
 )
+from tests.domain_scenarios.persistence import replay_scenario_projection
 from tests.domain_scenarios.reference_packs import ScenarioReferencePack
 from tests.domain_scenarios.registry import registered_scenarios
 
@@ -175,4 +179,56 @@ def test_l_energy_pcf_governance_scenario_exports_targeted_viewer_payload():
     assert exported["projection"] == EXPECTED_PROJECTION
     assert len(exported["report"]["derived_claims"]) == len(
         EXPECTED_DERIVED_CLAIM_IDS
+    )
+
+
+def test_l_energy_pcf_governance_replays_projection_with_dependency_fingerprints():
+    result = run_l_energy_pcf_governance_scenario()
+
+    replay = replay_scenario_projection(
+        result,
+        ProjectionSpec(PROJECTION_ID, PROJECTION_FIELDS),
+    )
+
+    assert replay.public_row == EXPECTED_PROJECTION
+    assert tuple(
+        (fingerprint.dependency_kind, fingerprint.dependency_id)
+        for fingerprint in replay.dependency_fingerprints
+    ) == (
+        ("compiler_profile", "pcf-governance-platform-fixture-v1"),
+        (
+            "reference_record",
+            "platform.factor.a_supplier_electricity_mwh_2025",
+        ),
+        ("reference_record", "platform.factor.electricity_mwh"),
+        ("reference_record", "platform.factor.electricity_mwh_2024"),
+        ("reference_record", "platform.factor.electricity_residual_mix_2025"),
+        (
+            "reference_record",
+            "platform.factor.global_average_electricity_mwh_2025",
+        ),
+        ("reference_record", "platform.factor.us_electricity_mwh_2025"),
+    )
+
+
+def test_l_energy_pcf_governance_viewer_exports_dependency_fingerprints():
+    exported = run_l_energy_pcf_governance_scenario().to_dict()
+
+    assert tuple(
+        (item["dependency_kind"], item["dependency_id"])
+        for item in exported["receipt_trace"]["dependency_fingerprints"]
+    ) == (
+        ("compiler_profile", "pcf-governance-platform-fixture-v1"),
+        (
+            "reference_record",
+            "platform.factor.a_supplier_electricity_mwh_2025",
+        ),
+        ("reference_record", "platform.factor.electricity_mwh"),
+        ("reference_record", "platform.factor.electricity_mwh_2024"),
+        ("reference_record", "platform.factor.electricity_residual_mix_2025"),
+        (
+            "reference_record",
+            "platform.factor.global_average_electricity_mwh_2025",
+        ),
+        ("reference_record", "platform.factor.us_electricity_mwh_2025"),
     )
