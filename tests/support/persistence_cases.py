@@ -159,6 +159,8 @@ def artifact_body_for_ref(
         return body
     if ref.artifact_kind == "evidence_witness":
         return {"witness_id": ref.artifact_id, "source": "fixture"}
+    if ref.artifact_kind in {"compiler_profile", "reference_record"}:
+        return _dependency_fingerprint_body(ref)
     raise AssertionError(f"Unexpected artifact ref in test: {ref}")
 
 
@@ -168,6 +170,24 @@ def _claim_field(ref: ArtifactRef) -> str:
     if ":amount:" in ref.artifact_id:
         return "amount"
     return "unknown"
+
+
+def _dependency_fingerprint_body(ref: ArtifactRef) -> dict[str, str]:
+    if ref.artifact_id == "fixture-profile":
+        return {
+            "dependency_kind": "compiler_profile",
+            "dependency_id": "fixture-profile",
+            "fingerprint": "sha256:fixture-profile",
+            "digest_alg": "sha256",
+        }
+    if ref.artifact_id == "fixture-factor":
+        return {
+            "dependency_kind": "reference_record",
+            "dependency_id": "fixture-factor",
+            "fingerprint": "sha256:fixture-factor",
+            "digest_alg": "sha256",
+        }
+    raise AssertionError(f"Unexpected dependency fingerprint ref in test: {ref}")
 
 
 __all__ = [

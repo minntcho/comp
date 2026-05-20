@@ -463,6 +463,12 @@ CompilerProfile / ReferenceRecord fingerprints
   canonical reference rows. CommitReceiptCitations can carry these dependency
   fingerprints, and replay reports surface the profile/reference world the
   receipt depended on.
+
+Dependency fingerprint envelopes
+  replay treats dependency fingerprints as receipt-cited artifact refs. The
+  stored dependency envelope must exist, match the dependency kind/id, pass body
+  digest verification, and carry the same fingerprint and digest algorithm as
+  the receipt citation.
 ```
 
 The implemented minimum behavior is:
@@ -481,12 +487,16 @@ The canonical raw-input working loop can be replayed from stored scenario
 artifact envelopes and its receipt ledger root.
 Replay reports dependency fingerprints cited by the receipt, starting with the
 compiler profile declaration and selected reference record.
+Replay blocks when a cited dependency fingerprint envelope is missing or its
+stored fingerprint no longer matches the receipt citation.
+The L-Energy scenario records and replays the same dependency fingerprint shape,
+including the retrieval-backed reference world and near-miss candidates.
 ```
 
 That completes the original in-memory substrate slice and attaches it to the
-canonical raw-input scenario harness. It does not yet mean production
-persistence exists, nor does it mean a database, retention policy, or dependency
-fingerprint manifest exists.
+canonical raw-input and L-Energy scenario harnesses. It does not yet mean
+production persistence exists, nor does it mean a database, retention policy, or
+catalog snapshot manifest exists.
 
 ---
 
@@ -495,27 +505,30 @@ fingerprint manifest exists.
 Recommended next code slice:
 
 ```text
-test/feat: extend replay dependencies beyond the canonical scenario
+feat: add ReferenceCatalogSnapshot manifest
 ```
 
 Candidate files:
 
 ```text
-tests/domain_scenarios/l_energy_pcf_governance/*
-tests/test_l_energy_pcf_scenario.py
-comp/persistence/*.py, only if the replay API needs a narrow helper
+comp/compiler_tool/reference_db.py
+comp/persistence/*.py
+tests/test_reference_*fingerprint*.py
+tests/test_persistence_projection_replay.py
 ```
 
 Minimum behavior:
 
 ```text
-L-Energy scenario records and replays the same dependency fingerprint shape as
-the canonical scenario.
-The replay harness can include more than one selected reference record.
-Scenario viewer payloads expose dependency fingerprints without raw reference
-record bodies.
-Negative tests block or flag replay when a cited dependency fingerprint is
-missing from the receipt or no longer matches a stored envelope.
+ReferenceCatalogSnapshot records catalog id/version plus selected record
+fingerprints.
+CommitReceipt can cite a catalog snapshot dependency alongside individual
+reference records, or replace individual record citations when the snapshot
+manifest is sufficient.
+Replay verifies the catalog snapshot envelope and can report which selected
+records were covered by the snapshot.
+Negative tests block replay when a selected record fingerprint is absent from the
+snapshot manifest.
 ```
 
 Non-goals for that slice:
@@ -529,24 +542,25 @@ no legal retention policy
 no full event sourcing
 no real embedding index persistence
 no production catalog snapshot store
+no real DB ingestion
 ```
 
-The goal is to move from "canonical replay can explain one profile and one
-reference record" toward "larger domain scenarios can carry the same replay
-explanation without hard-coding a single reference shape."
+The goal is to move from "receipt lists dependency fingerprints individually"
+toward "receipt can cite a compact reference-world manifest that still explains
+which canonical rows made the calculation meaningful."
 
 ---
 
 ## 13. Following Slice
 
-After the canonical scenario emits and replays stored envelopes, the next likely
-slice is dependency pinning:
+After reference catalog snapshots, the next likely slice is broader dependency
+pinning:
 
 ```text
-CompilerProfile declaration fingerprint
 DomainPack fingerprint
-selected ReferenceRecord envelope or digest
-ReferenceCatalogSnapshot manifest, later
+Rule/rubric declaration fingerprints
+Formula fingerprints backed by formula declaration envelopes
+Source evidence span digests
 ```
 
 That slice should keep the document's rule: replay explains the old receipt,

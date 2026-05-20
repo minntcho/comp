@@ -184,6 +184,8 @@ def _artifact_body_for_ref(
         return {"formula_id": ref.artifact_id}
     if ref.artifact_kind == "semantic_judgment":
         return {"judgment_id": ref.artifact_id}
+    if ref.artifact_kind in {"compiler_profile", "reference_record"}:
+        return _dependency_fingerprint_body(result, ref)
     raise AssertionError(f"Unsupported scenario artifact ref: {ref}.")
 
 
@@ -206,6 +208,27 @@ def _by_id(items, item_id: str, field: str):
         if getattr(item, field) == item_id:
             return item
     raise AssertionError(f"Scenario artifact not found: {item_id}.")
+
+
+def _dependency_fingerprint_body(
+    result: DomainScenarioResult,
+    ref: ArtifactRef,
+) -> dict[str, str]:
+    receipt = result.preparation.receipt
+    if receipt is None or receipt.citations is None:
+        raise AssertionError("Scenario dependency fingerprint requires a receipt.")
+    for fingerprint in receipt.citations.dependency_fingerprints:
+        if (
+            fingerprint.dependency_kind == ref.artifact_kind
+            and fingerprint.dependency_id == ref.artifact_id
+        ):
+            return {
+                "dependency_kind": fingerprint.dependency_kind,
+                "dependency_id": fingerprint.dependency_id,
+                "fingerprint": fingerprint.fingerprint,
+                "digest_alg": fingerprint.digest_alg,
+            }
+    raise AssertionError(f"Scenario dependency fingerprint not found: {ref}.")
 
 
 __all__ = [
