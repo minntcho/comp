@@ -2,7 +2,7 @@ import pytest
 
 from comp import ProjectionSpec
 from comp.compiler_tool import active_retrieval_query_policies
-from comp.persistence import ArtifactRef, ProjectionReplayBlocked
+from comp.persistence import ArtifactEnvelope, ArtifactRef, ProjectionReplayBlocked
 from tests.domain_scenarios.assertions import assert_projection_tamper_blocked
 from tests.domain_scenarios.canonical_working_loop.fixtures import (
     RAW_EVIDENCE,
@@ -44,6 +44,13 @@ def test_canonical_working_loop_extracts_and_compiles_raw_text():
         "unit",
         "reporting_year",
         "geography",
+    ]
+    assert [witness.witness_id for witness in report.evidence_witnesses] == [
+        "w-activity",
+        "w-electricity-kwh",
+        "w-unit",
+        "w-reporting-year",
+        "w-geography",
     ]
     assert report.obligations == ()
     assert report.can_project_public_row is False
@@ -161,16 +168,61 @@ def test_canonical_working_loop_replays_projection_from_stored_artifacts():
     ) == (
         ("compiler_profile", "pcf-canonical-loop-v1"),
         ("domain_pack", "domain_pack:canonical-pcf:2026.1"),
-          (
-              "calculation_formula",
-              "calculation_formula:pcf.electricity_factor_multiplication.v1",
-          ),
-          (
-              "reference_catalog_snapshot",
-              "reference_catalog_snapshot:pcf-reference-catalog:pcf-reference-catalog-v1",
-          ),
-          ("reference_record", "pcf.factor.kr_grid_2024.location_based"),
-      )
+        (
+            "calculation_formula",
+            "calculation_formula:pcf.electricity_factor_multiplication.v1",
+        ),
+        ("evidence_witness", "w-activity"),
+        ("evidence_witness", "w-electricity-kwh"),
+        ("evidence_witness", "w-unit"),
+        ("evidence_witness", "w-reporting-year"),
+        ("evidence_witness", "w-geography"),
+        (
+            "reference_catalog_snapshot",
+            "reference_catalog_snapshot:pcf-reference-catalog:pcf-reference-catalog-v1",
+        ),
+        ("reference_record", "pcf.factor.kr_grid_2024.location_based"),
+    )
+
+
+def test_canonical_working_loop_replay_blocks_when_source_span_drifts():
+    result = run_canonical_working_loop_scenario()
+    projection = ProjectionSpec(
+        "canonical-pcf-public-row",
+        ("electricity_kwh", "reporting_year", "co2e_kg"),
+    )
+    assert result.preparation.receipt is not None
+    assert result.preparation.receipt.citations is not None
+    fingerprint = next(
+        fingerprint
+        for fingerprint in result.preparation.receipt.citations.dependency_fingerprints
+        if (
+            fingerprint.dependency_kind == "evidence_witness"
+            and fingerprint.dependency_id == "w-electricity-kwh"
+        )
+    )
+    bundle = scenario_replay_bundle(
+        result,
+        override=ArtifactEnvelope.from_body(
+            artifact_id="w-electricity-kwh",
+            artifact_kind="evidence_witness",
+            schema_version="domain-scenario-v1",
+            body={
+                "dependency_kind": "evidence_witness",
+                "dependency_id": "w-electricity-kwh",
+                "witness_id": "w-electricity-kwh",
+                "field": "electricity_kwh",
+                "source": "raw-evidence:canonical-working-loop",
+                "span": "9999kWh",
+                "text": RAW_EVIDENCE,
+                "fingerprint": fingerprint.fingerprint,
+                "digest_alg": fingerprint.digest_alg,
+            },
+        ),
+    )
+
+    with pytest.raises(ProjectionReplayBlocked, match="source evidence"):
+        replay_scenario_projection(result, projection, bundle=bundle)
 
 
 def test_canonical_working_loop_replay_blocks_when_cited_artifact_is_missing():

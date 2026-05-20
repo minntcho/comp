@@ -35,6 +35,7 @@ from comp.compiler_tool.models import (
     SemanticJudgmentRequirement,
     UncheckedArea,
     UnknownClaim,
+    evidence_witness_fingerprint,
 )
 from comp.compiler_tool.profiles import (
     CompilerProfile,
@@ -129,6 +130,7 @@ __all__ = [
     "InterpretationHypothesis",
     "ClaimHypothesis",
     "EvidenceWitness",
+    "evidence_witness_fingerprint",
     "CompileReport",
     "CheckedClaim",
     "FailedClaim",

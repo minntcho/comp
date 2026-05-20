@@ -88,6 +88,7 @@ def test_readme_compiler_tool_import_surface_is_exported():
         active_retrieval_query_policies,
         calculation_formula_declaration_fingerprint,
         domain_pack_declaration_fingerprint,
+        evidence_witness_fingerprint,
         profile_declaration_fingerprint,
         reference_catalog_snapshot_fingerprint,
         reference_query_for_obligation_from_profile_policy,
@@ -120,6 +121,7 @@ def test_readme_compiler_tool_import_surface_is_exported():
     assert RetrievalQueryRule is not None
     assert calculation_formula_declaration_fingerprint is not None
     assert domain_pack_declaration_fingerprint is not None
+    assert evidence_witness_fingerprint is not None
     assert active_retrieval_query_policies is not None
     assert profile_declaration_fingerprint is not None
     assert reference_query_for_obligation_from_policies is not None

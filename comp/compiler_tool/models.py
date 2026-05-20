@@ -5,6 +5,7 @@ from typing import Any, Literal
 
 from comp.compiler_tool.calculations import CalculationRequirement, DerivedClaim
 from comp.compiler_tool.references import ReferenceBinding, ReferenceCandidate
+from comp.judgment.receipts import DependencyFingerprint
 
 CompileStatus = Literal[
     "accepted",
@@ -34,6 +35,20 @@ class EvidenceWitness:
     @property
     def grounded(self) -> bool:
         return self.source is not None or self.span is not None
+
+
+def evidence_witness_fingerprint(witness: EvidenceWitness) -> DependencyFingerprint:
+    return DependencyFingerprint.from_payload(
+        dependency_kind="evidence_witness",
+        dependency_id=witness.witness_id,
+        payload={
+            "witness_id": witness.witness_id,
+            "field": witness.field,
+            "source": witness.source,
+            "span": witness.span,
+            "text": witness.text,
+        },
+    )
 
 
 @dataclass(frozen=True)
@@ -118,6 +133,7 @@ class Hazard:
 @dataclass(frozen=True)
 class CompileReport:
     status: CompileStatus
+    evidence_witnesses: tuple[EvidenceWitness, ...] = field(default_factory=tuple)
     checked_claims: tuple[CheckedClaim, ...] = field(default_factory=tuple)
     failed_claims: tuple[FailedClaim, ...] = field(default_factory=tuple)
     unknowns: tuple[UnknownClaim, ...] = field(default_factory=tuple)

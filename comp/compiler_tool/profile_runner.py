@@ -23,6 +23,7 @@ def compile_with_profile(
     return with_recomputed_status(
         CompileReport(
             status="accepted",
+            evidence_witnesses=hypothesis.witnesses,
             obligations=tuple(obligations),
             can_project_public_row=False,
         )

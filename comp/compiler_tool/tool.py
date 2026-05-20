@@ -108,6 +108,7 @@ class CompilerTool:
         return with_recomputed_status(
             CompileReport(
                 status="accepted",
+                evidence_witnesses=tuple(hypothesis.witnesses),
                 checked_claims=tuple(checked),
                 failed_claims=tuple(failed),
                 unknowns=tuple(unknowns),
