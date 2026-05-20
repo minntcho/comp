@@ -8,6 +8,8 @@ from comp.compiler_tool import (
     ClaimHypothesis,
     CompileReport,
     CompilerTool,
+    CompilerProfile,
+    DomainPack,
     EvidenceWitness,
     EmbeddingResolverStub,
     InterpretationHypothesis,
@@ -218,6 +220,20 @@ def retrieval_query_policy() -> RetrievalQueryPolicy:
     )
 
 
+def profile() -> CompilerProfile:
+    return CompilerProfile(
+        profile_id=PROFILE_ID,
+        domain_packs=(
+            DomainPack(
+                domain_id="canonical-pcf",
+                version="2026.1",
+                retrieval_query_policies=(retrieval_query_policy(),),
+            ),
+        ),
+        active_retrieval_policy_ids=("pcf-canonical-retrieval-query-policy-v1",),
+    )
+
+
 def retrieval_query_context(report: CompileReport) -> dict[str, object]:
     values = {claim.field: claim.value for claim in report.checked_claims}
     return {
@@ -288,6 +304,7 @@ __all__ = [
     "formula",
     "input_claim_from_report",
     "open_calculation_obligation",
+    "profile",
     "projection_source",
     "reference_resolver",
     "retrieval_query_context",
