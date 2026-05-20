@@ -1,10 +1,50 @@
-from tests.domain_scenarios.tiny_pcf.scenario import run_tiny_pcf_scenario
+from tests.domain_scenarios.core import (
+    ScenarioDefinition,
+    SourceRef,
+    assert_scenario_contract,
+    run_scenario,
+)
+from tests.domain_scenarios.registry import registered_scenarios
 from tests.domain_scenarios.tiny_pcf.expected import (
     EXPECTED_PROJECTION,
     EXPECTED_REFERENCE_CANDIDATE_IDS,
     EXPECTED_REJECTED_CANDIDATES,
     EXPECTED_RESOLVED_OBLIGATION_KINDS,
 )
+from tests.domain_scenarios.tiny_pcf.scenario import run_tiny_pcf_scenario
+
+
+def test_registered_scenarios_are_explicit_scenario_definitions():
+    scenarios = registered_scenarios()
+
+    assert tuple(scenario.scenario_id for scenario in scenarios) == (
+        "tiny_pcf.location_based_electricity.v1",
+    )
+    assert all(isinstance(scenario, ScenarioDefinition) for scenario in scenarios)
+    assert scenarios[0].contract.must_commit is True
+    assert scenarios[0].contract.required_projection == EXPECTED_PROJECTION
+
+
+def test_registered_scenarios_run_through_shared_contract_assertions():
+    for scenario in registered_scenarios():
+        result = run_scenario(scenario)
+
+        assert_scenario_contract(result, scenario.contract)
+        assert result.scenario_id == scenario.scenario_id
+
+
+def test_source_ref_serializes_external_scenario_trace_metadata():
+    source = SourceRef(
+        repo="minntcho/esg-platform",
+        commit="618c44dfcea1ee1e235550776acb78d8f20a7e0c",
+        path="tests/e2e/cases/001-l-energy-pcf-governance.yaml",
+    )
+
+    assert source.to_dict() == {
+        "repo": "minntcho/esg-platform",
+        "commit": "618c44dfcea1ee1e235550776acb78d8f20a7e0c",
+        "path": "tests/e2e/cases/001-l-energy-pcf-governance.yaml",
+    }
 
 
 def test_tiny_pcf_scenario_runs_reference_to_receipt_flow():

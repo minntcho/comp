@@ -36,6 +36,20 @@ Scenario creation guidance lives in
 `docs/architecture/domain-scenario-pack-generation.md`. Treat larger scenarios
 as swappable Scenario Pack modules, not hard-coded golden fixtures.
 
+The shared test-support layer now exposes:
+
+```text
+ScenarioDefinition
+ScenarioContract
+SourceRef
+run_scenario()
+assert_scenario_contract()
+registered_scenarios()
+```
+
+New scenarios should enter through explicit registry registration instead of
+being auto-discovered from the filesystem.
+
 Strong assertions are encouraged for core invariants:
 
 ```text
