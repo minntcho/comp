@@ -161,12 +161,16 @@ def test_canonical_working_loop_replays_projection_from_stored_artifacts():
     ) == (
         ("compiler_profile", "pcf-canonical-loop-v1"),
         ("domain_pack", "domain_pack:canonical-pcf:2026.1"),
-        (
-            "calculation_formula",
-            "calculation_formula:pcf.electricity_factor_multiplication.v1",
-        ),
-        ("reference_record", "pcf.factor.kr_grid_2024.location_based"),
-    )
+          (
+              "calculation_formula",
+              "calculation_formula:pcf.electricity_factor_multiplication.v1",
+          ),
+          (
+              "reference_catalog_snapshot",
+              "reference_catalog_snapshot:pcf-reference-catalog:pcf-reference-catalog-v1",
+          ),
+          ("reference_record", "pcf.factor.kr_grid_2024.location_based"),
+      )
 
 
 def test_canonical_working_loop_replay_blocks_when_cited_artifact_is_missing():

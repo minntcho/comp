@@ -184,6 +184,8 @@ def _artifact_body_for_ref(
         return {"formula_id": ref.artifact_id}
     if ref.artifact_kind == "semantic_judgment":
         return {"judgment_id": ref.artifact_id}
+    if ref.artifact_kind == "reference_catalog_snapshot":
+        return _reference_catalog_snapshot_body(result, ref)
     dependency_body = _dependency_fingerprint_body(result, ref)
     if dependency_body is not None:
         return dependency_body
@@ -230,6 +232,58 @@ def _dependency_fingerprint_body(
                 "digest_alg": fingerprint.digest_alg,
             }
     return None
+
+
+def _reference_catalog_snapshot_body(
+    result: DomainScenarioResult,
+    ref: ArtifactRef,
+) -> dict[str, Any]:
+    dependency_body = _dependency_fingerprint_body(result, ref)
+    if dependency_body is None:
+        raise AssertionError(f"Scenario dependency fingerprint not found: {ref}.")
+    catalog_id, catalog_version = _catalog_snapshot_parts(ref.artifact_id)
+    body = dict(dependency_body)
+    body.update(
+        {
+            "snapshot_id": ref.artifact_id,
+            "catalog_id": catalog_id,
+            "catalog_version": catalog_version,
+            "record_fingerprints": tuple(
+                record_body
+                for record_body in (
+                    _dependency_fingerprint_body(
+                        result,
+                        ArtifactRef(
+                            fingerprint.dependency_id,
+                            fingerprint.dependency_kind,
+                        ),
+                    )
+                    for fingerprint in _dependency_fingerprints(result)
+                    if fingerprint.dependency_kind == "reference_record"
+                )
+                if record_body is not None
+            ),
+        }
+    )
+    return body
+
+
+def _catalog_snapshot_parts(snapshot_id: str) -> tuple[str, str]:
+    prefix = "reference_catalog_snapshot:"
+    if not snapshot_id.startswith(prefix):
+        return snapshot_id, ""
+    rest = snapshot_id[len(prefix):]
+    if ":" not in rest:
+        return rest, ""
+    catalog_id, catalog_version = rest.rsplit(":", 1)
+    return catalog_id, catalog_version
+
+
+def _dependency_fingerprints(result: DomainScenarioResult):
+    receipt = result.preparation.receipt
+    if receipt is None or receipt.citations is None:
+        return ()
+    return receipt.citations.dependency_fingerprints
 
 
 __all__ = [

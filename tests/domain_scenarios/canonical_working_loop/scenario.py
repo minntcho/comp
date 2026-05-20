@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from comp import ProjectionSpec, SubjectRef, project_public_row
 from comp.compiler_tool import (
+    ReferenceCatalogSnapshot,
     ReferenceBinding,
     apply_reference_selection,
     calculation_formula_declaration_fingerprint,
@@ -9,6 +10,7 @@ from comp.compiler_tool import (
     plan_calculation_resolution,
     prepare_commit,
     profile_declaration_fingerprint,
+    reference_catalog_snapshot_fingerprint,
     reference_query_for_obligation_from_profile_policy,
     reference_record_fingerprint,
     resolve_reference_retrieval_obligations,
@@ -169,9 +171,20 @@ def _dependency_fingerprints(
         calculation_formula_declaration_fingerprint(formula()),
     ]
     if binding is not None:
-        fingerprints.append(
-            reference_record_fingerprint(catalog().get(binding.reference_id))
+        record_fingerprint = reference_record_fingerprint(
+            catalog().get(binding.reference_id)
         )
+        fingerprints.append(
+            reference_catalog_snapshot_fingerprint(
+                ReferenceCatalogSnapshot.from_catalog(
+                    catalog(),
+                    catalog_id="pcf-reference-catalog",
+                    catalog_version="pcf-reference-catalog-v1",
+                    selected_reference_ids=(binding.reference_id,),
+                )
+            )
+        )
+        fingerprints.append(record_fingerprint)
     return tuple(fingerprints)
 
 

@@ -31,6 +31,10 @@ EXPECTED_DEPENDENCY_FINGERPRINT_IDS = (
     ("compiler_profile", "pcf-governance-platform-fixture-v1"),
     ("domain_pack", "domain_pack:l-energy-pcf-governance:2026.1"),
     ("calculation_formula", "calculation_formula:pcf-demo-2025.0"),
+    (
+        "reference_catalog_snapshot",
+        "reference_catalog_snapshot:l-energy-platform-reference-pack-v1:l-energy-platform-fixture-v1",
+    ),
     ("reference_record", "platform.factor.a_supplier_electricity_mwh_2025"),
     ("reference_record", "platform.factor.electricity_mwh"),
     ("reference_record", "platform.factor.electricity_mwh_2024"),
