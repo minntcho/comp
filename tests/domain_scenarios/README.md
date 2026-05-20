@@ -126,11 +126,18 @@ Run one scenario as a human-readable trace summary:
 python -m tests.domain_scenarios run canonical_working_loop.raw_text_pcf.v1
 ```
 
+Run every registered scenario through the same contract assertion path:
+
+```bash
+python -m tests.domain_scenarios run-all
+```
+
 Use `--json` when a test, viewer, or debugging script needs the existing
-`DomainScenarioResult` viewer payload:
+`DomainScenarioResult` viewer payload or an aggregate run payload:
 
 ```bash
 python -m tests.domain_scenarios run l_energy_pcf_governance.v1 --json
+python -m tests.domain_scenarios run-all --json
 ```
 
 The runner is intentionally generic. It only knows about `ScenarioDefinition`,

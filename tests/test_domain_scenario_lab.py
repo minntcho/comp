@@ -1,3 +1,5 @@
+import json
+
 import pytest
 
 from comp import DependencyFingerprint, ProjectionSpec
@@ -80,6 +82,72 @@ def test_domain_scenario_cli_rejects_unknown_scenario(capsys):
     assert captured.out == ""
     assert "unknown scenario id: missing.scenario" in captured.err
     assert "known scenarios:" in captured.err
+
+
+def test_domain_scenario_cli_runs_all_registered_scenarios(capsys):
+    from tests.domain_scenarios.cli import main
+
+    exit_code = main(["run-all"])
+
+    captured = capsys.readouterr()
+    assert exit_code == 0
+    assert "Domain Scenario Run" in captured.out
+    assert "Passed: 3/3" in captured.out
+    assert "- canonical_working_loop.raw_text_pcf.v1: pass" in captured.out
+    assert "- tiny_pcf.location_based_electricity.v1: pass" in captured.out
+    assert "- l_energy_pcf_governance.v1: pass" in captured.out
+    assert captured.err == ""
+
+
+def test_domain_scenario_cli_runs_all_as_json(capsys):
+    from tests.domain_scenarios.cli import main
+
+    exit_code = main(["run-all", "--json"])
+
+    captured = capsys.readouterr()
+    payload = json.loads(captured.out)
+    assert exit_code == 0
+    assert payload["summary"] == {"total": 3, "passed": 3, "failed": 0}
+    assert tuple(item["status"] for item in payload["scenarios"]) == (
+        "pass",
+        "pass",
+        "pass",
+    )
+    assert tuple(item["scenario_id"] for item in payload["scenarios"]) == (
+        "canonical_working_loop.raw_text_pcf.v1",
+        "tiny_pcf.location_based_electricity.v1",
+        "l_energy_pcf_governance.v1",
+    )
+    assert "result" in payload["scenarios"][0]
+    assert captured.err == ""
+
+
+def test_domain_scenario_cli_run_all_reports_contract_failure(capsys, monkeypatch):
+    from tests.domain_scenarios import cli
+
+    failing_scenario = ScenarioDefinition(
+        scenario_id="tiny_pcf.failure_fixture.v1",
+        title="Tiny PCF failure fixture",
+        run=run_tiny_pcf_scenario,
+        contract=ScenarioContract(
+            required_dependency_fingerprints=(
+                DependencyFingerprint(
+                    dependency_kind="compiler_profile",
+                    dependency_id="missing-profile",
+                    fingerprint="sha256:missing",
+                ),
+            )
+        ),
+    )
+    monkeypatch.setattr(cli, "registered_scenarios", lambda: (failing_scenario,))
+
+    exit_code = cli.main(["run-all"])
+
+    captured = capsys.readouterr()
+    assert exit_code == 1
+    assert "Passed: 0/1" in captured.out
+    assert "- tiny_pcf.failure_fixture.v1: fail" in captured.out
+    assert captured.err == ""
 
 
 def test_registered_scenarios_are_explicit_scenario_definitions():
