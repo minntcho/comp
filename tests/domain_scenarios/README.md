@@ -22,7 +22,13 @@ expected derived claims
 expected receipt/projection
 ```
 
-The first scenario is `tiny_pcf`, a product-carbon-footprint slice that exercises
+Start with `canonical_working_loop`, the raw-input harness for new contributors.
+It begins with a raw evidence sentence, uses a deterministic extractor stub,
+passes through `CompilerTool`, opens a calculation obligation, resolves a
+reference candidate into a canonical binding, calculates a derived claim, mints
+a commit receipt, and projects only through the receipt gate.
+
+The smaller scenario `tiny_pcf` is a product-carbon-footprint slice that exercises
 reference search, near-miss rejection, canonical binding, calculation trace,
 commit preparation, and receipt-gated projection.
 
