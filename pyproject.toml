@@ -9,6 +9,9 @@ description = "Receipt-gated proof package compiler for obligation, reference, c
 readme = "README.md"
 requires-python = ">=3.11"
 
+[project.optional-dependencies]
+test = ["pytest>=8"]
+
 [tool.setuptools]
 packages = [
   "comp",

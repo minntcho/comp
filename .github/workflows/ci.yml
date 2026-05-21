@@ -1,0 +1,39 @@
+name: Contract CI
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  contract:
+    name: Python contract suite
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6.0.2
+
+      - name: Set up Python
+        uses: actions/setup-python@v6.2.0
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Install package
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e ".[test]"
+
+      - name: Run unit and scenario tests
+        run: python -m pytest -q
+
+      - name: List registered domain scenarios
+        run: python -m tests.domain_scenarios list
+
+      - name: Run domain scenario contract gate
+        run: python -m tests.domain_scenarios run-all
