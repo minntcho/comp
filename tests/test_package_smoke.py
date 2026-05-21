@@ -195,6 +195,9 @@ def test_domain_scenario_generation_guide_tracks_swappable_pack_contract():
     assert "ScenarioDefinition" in guide
     assert "ScenarioContract" in guide
     assert "SourceRef" in guide
+    assert "media_type" in guide
+    assert "schema_id" in guide
+    assert "Oracle files remain test expectations" in guide
     assert "registered_scenarios()" in guide
     assert "Do not assert one huge exported JSON blob" in guide
     assert "minntcho/esg-platform" in guide

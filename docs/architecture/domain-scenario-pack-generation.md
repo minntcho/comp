@@ -186,6 +186,21 @@ SourceRef(
 Source refs are trace metadata. They are not runtime dependencies. The `comp`
 test suite should not need to clone `minntcho/esg-platform` to run.
 
+Synthetic or generated scenario packs should describe disk inputs through a
+manifest source descriptor rather than by file extension alone:
+
+```text
+source_ref
+role
+path
+media_type
+schema_id
+```
+
+Loader dispatch should use `media_type` plus `schema_id`; path suffixes are only
+storage hints. Oracle files remain test expectations and must not be required to
+build the compiler input bundle.
+
 For the first L-Energy PCF scenario, copy only the minimal values required for
 the scenario contract into the pack and keep source refs to the original
 platform documents:

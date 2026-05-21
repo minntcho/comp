@@ -40,6 +40,36 @@ def build_manifest(
             "config_hash": build_config_hash(payload),
         },
         "config": payload,
+        "sources": [
+            {
+                "source_ref": "reference_catalog.csv",
+                "role": "master_reference_catalog",
+                "path": "master/reference_catalog.csv",
+                "media_type": "text/csv",
+                "schema_id": "synthetic.master_reference_catalog.v1",
+            },
+            {
+                "source_ref": "sites.csv",
+                "role": "master_sites",
+                "path": "master/sites.csv",
+                "media_type": "text/csv",
+                "schema_id": "synthetic.master_sites.v1",
+            },
+            {
+                "source_ref": "products.csv",
+                "role": "master_products",
+                "path": "master/products.csv",
+                "media_type": "text/csv",
+                "schema_id": "synthetic.master_products.v1",
+            },
+            {
+                "source_ref": config.source_ref,
+                "role": "raw_source",
+                "path": f"raw_sources/{config.source_ref}",
+                "media_type": "text/csv",
+                "schema_id": "synthetic.erp_electricity.v1",
+            },
+        ],
     }
 
 
