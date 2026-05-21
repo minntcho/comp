@@ -197,6 +197,7 @@ class _ReceiptProofGraphBuilder:
         self._add_dependency_fingerprint_nodes()
         self._add_receipt_citation_edges()
         self._add_public_projection_edges()
+        self._add_artifact_body_edges()
         return ReceiptProofGraph(
             public_row_id=self._receipt.public_row_id,
             projection_id=self._receipt.projection_id,
@@ -362,6 +363,186 @@ class _ReceiptProofGraphBuilder:
                     path.insert(0, source_node_id)
             self._field_paths[field] = tuple(path)
 
+    def _add_artifact_body_edges(self) -> None:
+        for (artifact_kind, artifact_id), envelope in tuple(
+            self._artifact_envelopes.items()
+        ):
+            source_node_id = artifact_node_id(artifact_kind, artifact_id)
+            body = envelope.body
+            if artifact_kind == "checked_claim":
+                self._connect_checked_claim(source_node_id, body)
+            elif artifact_kind == "derived_claim":
+                self._connect_derived_claim(source_node_id, body)
+            elif artifact_kind == "calculation_trace":
+                self._connect_calculation_trace(source_node_id, body)
+            elif artifact_kind == "reference_binding":
+                self._connect_reference_binding(source_node_id, body)
+            elif artifact_kind == "reference_catalog_snapshot":
+                self._connect_reference_catalog_snapshot(source_node_id, body)
+            elif artifact_kind == "compiler_profile":
+                self._connect_compiler_profile(source_node_id, body)
+
+    def _connect_checked_claim(
+        self,
+        checked_claim_node_id: str,
+        body: Mapping[str, Any],
+    ) -> None:
+        witness_id = _str_or_none(body.get("witness_id"))
+        if witness_id is None:
+            return
+        witness_node_id = artifact_node_id("evidence_witness", witness_id)
+        if witness_node_id in self._nodes:
+            self._add_edge(
+                witness_node_id,
+                checked_claim_node_id,
+                "checked_from",
+                field=_str_or_none(body.get("field")),
+            )
+
+    def _connect_derived_claim(
+        self,
+        derived_claim_node_id: str,
+        body: Mapping[str, Any],
+    ) -> None:
+        trace_id = _str_or_none(body.get("trace_id"))
+        if trace_id is not None:
+            trace_node_id = artifact_node_id("calculation_trace", trace_id)
+            if trace_node_id in self._nodes:
+                self._add_edge(
+                    trace_node_id,
+                    derived_claim_node_id,
+                    "derived_from",
+                    field=_str_or_none(body.get("field")),
+                )
+        formula_id = _str_or_none(body.get("formula_id"))
+        if formula_id is not None:
+            self._connect_formula_like_dependency(
+                formula_id,
+                derived_claim_node_id,
+                edge_kind="uses_formula",
+            )
+
+    def _connect_calculation_trace(
+        self,
+        trace_node_id: str,
+        body: Mapping[str, Any],
+    ) -> None:
+        formula_id = _str_or_none(body.get("formula_id"))
+        if formula_id is not None:
+            self._connect_formula_like_dependency(
+                formula_id,
+                trace_node_id,
+                edge_kind="uses_formula",
+            )
+        for input_claim_id in _string_sequence(body.get("input_claim_ids")):
+            for claim_node_id in _candidate_claim_node_ids(input_claim_id):
+                if claim_node_id in self._nodes:
+                    self._add_edge(
+                        claim_node_id,
+                        trace_node_id,
+                        "calculated_with",
+                        role="input_claim",
+                    )
+                    break
+        for binding_id in _string_sequence(body.get("reference_binding_ids")):
+            binding_node_id = artifact_node_id("reference_binding", binding_id)
+            if binding_node_id in self._nodes:
+                self._add_edge(
+                    binding_node_id,
+                    trace_node_id,
+                    "calculated_with",
+                    role="reference_binding",
+                )
+
+    def _connect_reference_binding(
+        self,
+        binding_node_id: str,
+        body: Mapping[str, Any],
+    ) -> None:
+        for witness_id in _string_sequence(body.get("source_witness_ids")):
+            witness_node_id = artifact_node_id("evidence_witness", witness_id)
+            if witness_node_id in self._nodes:
+                self._add_edge(
+                    witness_node_id,
+                    binding_node_id,
+                    "grounded_by",
+                    role="reference_source",
+                )
+        reference_id = _str_or_none(body.get("reference_id"))
+        if reference_id is None:
+            return
+        record_node_id = artifact_node_id("reference_record", reference_id)
+        if record_node_id in self._nodes:
+            self._add_edge(
+                record_node_id,
+                binding_node_id,
+                "selected_reference",
+                reference_type=_str_or_none(body.get("reference_type")),
+            )
+
+    def _connect_reference_catalog_snapshot(
+        self,
+        snapshot_node_id: str,
+        body: Mapping[str, Any],
+    ) -> None:
+        for record in _mapping_sequence(body.get("record_fingerprints")):
+            reference_id = _str_or_none(record.get("dependency_id"))
+            if reference_id is None:
+                continue
+            record_node_id = artifact_node_id("reference_record", reference_id)
+            if record_node_id in self._nodes:
+                self._add_edge(
+                    record_node_id,
+                    snapshot_node_id,
+                    "covered_by_snapshot",
+                    fingerprint=_str_or_none(record.get("fingerprint")),
+                )
+
+    def _connect_compiler_profile(
+        self,
+        profile_node_id: str,
+        body: Mapping[str, Any],
+    ) -> None:
+        profile_lock = body.get("profile_lock")
+        if not isinstance(profile_lock, Mapping):
+            return
+        for domain_pack in _mapping_sequence(profile_lock.get("domain_packs")):
+            domain_id = _str_or_none(domain_pack.get("domain_id"))
+            version = _str_or_none(domain_pack.get("version"))
+            if domain_id is None or version is None:
+                continue
+            domain_pack_node_id = artifact_node_id(
+                "domain_pack",
+                f"domain_pack:{domain_id}:{version}",
+            )
+            if domain_pack_node_id in self._nodes:
+                self._add_edge(
+                    domain_pack_node_id,
+                    profile_node_id,
+                    "uses_domain_pack",
+                    domain_id=domain_id,
+                    version=version,
+                )
+
+    def _connect_formula_like_dependency(
+        self,
+        formula_id: str,
+        target_node_id: str,
+        *,
+        edge_kind: str,
+    ) -> None:
+        candidate_node_ids = (
+            artifact_node_id("formula", formula_id),
+            artifact_node_id("calculation_formula", formula_id),
+            artifact_node_id(
+                "calculation_formula",
+                f"calculation_formula:{formula_id}",
+            ),
+        )
+        for candidate_node_id in candidate_node_ids:
+            if candidate_node_id in self._nodes:
+                self._add_edge(candidate_node_id, target_node_id, edge_kind)
+
     def _artifact_envelope(self, ref: ArtifactRef) -> ArtifactEnvelope:
         key = (ref.artifact_kind, ref.artifact_id)
         envelope = self._artifact_envelopes.get(key)
@@ -427,8 +608,11 @@ def _artifact_label(ref: ArtifactRef, envelope: ArtifactEnvelope) -> str:
         return f"{ref.artifact_kind}: {field}"
     for key in (
         "claim_id",
+        "trace_id",
+        "binding_id",
         "decision_id",
         "package_id",
+        "formula_id",
         "dependency_id",
         "snapshot_id",
         "witness_id",
@@ -496,6 +680,13 @@ def _commitments_by_field(receipt: CommitReceipt):
     }
 
 
+def _candidate_claim_node_ids(claim_id: str) -> tuple[str, ...]:
+    return (
+        artifact_node_id("checked_claim", claim_id),
+        artifact_node_id("derived_claim", claim_id),
+    )
+
+
 def _metadata(**items: Any) -> tuple[tuple[str, Any], ...]:
     return tuple(
         (key, value)
@@ -522,6 +713,26 @@ def _sequence_or_empty(value: Any) -> tuple[Any, ...]:
     if isinstance(value, Sequence) and not isinstance(value, (str, bytes, bytearray)):
         return tuple(value)
     return ()
+
+
+def _string_sequence(value: Any) -> tuple[str, ...]:
+    if isinstance(value, str):
+        return (value,)
+    if isinstance(value, Sequence) and not isinstance(value, (str, bytes, bytearray)):
+        return tuple(item for item in value if isinstance(item, str))
+    return ()
+
+
+def _mapping_sequence(value: Any) -> tuple[Mapping[str, Any], ...]:
+    if isinstance(value, Mapping):
+        return (value,)
+    if isinstance(value, Sequence) and not isinstance(value, (str, bytes, bytearray)):
+        return tuple(item for item in value if isinstance(item, Mapping))
+    return ()
+
+
+def _str_or_none(value: Any) -> str | None:
+    return value if isinstance(value, str) else None
 
 
 def _require_non_empty(field: str, value: str) -> None:

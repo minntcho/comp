@@ -1,5 +1,6 @@
 from dataclasses import replace
 
+from comp import ProjectionSpec
 from comp.explanation import (
     ProofGraphExportError,
     ReceiptProofGraph,
@@ -10,7 +11,14 @@ from comp.explanation import (
     public_projection_node_id,
     receipt_node_id,
 )
-from comp.persistence import replay_public_projection
+from comp.persistence import ArtifactRef, replay_public_projection
+from tests.domain_scenarios.canonical_working_loop.scenario import (
+    run_canonical_working_loop_scenario,
+)
+from tests.domain_scenarios.persistence import (
+    replay_scenario_projection,
+    scenario_replay_bundle,
+)
 from tests.support.persistence_cases import (
     artifact_store_for_receipt,
     receipt_projection_case,
@@ -167,6 +175,42 @@ def test_graph_export_rejects_replay_for_different_receipt_scope():
         assert "receipt key" in str(exc)
     else:
         raise AssertionError("Expected replay scope mismatch to block graph export.")
+
+
+def test_canonical_scenario_replay_exports_claim_reference_calculation_edges():
+    result = run_canonical_working_loop_scenario()
+    projection = ProjectionSpec(
+        "canonical-pcf-public-row",
+        ("electricity_kwh", "reporting_year", "co2e_kg"),
+    )
+    bundle = scenario_replay_bundle(result)
+    replay = replay_scenario_projection(result, projection, bundle=bundle)
+    assert result.preparation.receipt is not None
+
+    graph = export_receipt_proof_graph(
+        receipt=result.preparation.receipt,
+        replay=replay,
+        artifacts=bundle.artifacts,
+    )
+
+    derived = result.report.derived_claims[0]
+    binding = result.report.reference_bindings[0]
+    trace_id = derived.trace.trace_id
+    derived_node_id = artifact_node_id("derived_claim", derived.claim_id)
+    trace_node_id = artifact_node_id("calculation_trace", trace_id)
+    binding_node_id = artifact_node_id("reference_binding", binding.binding_id)
+    reference_node_id = artifact_node_id("reference_record", binding.reference_id)
+    checked_claim_node_id = artifact_node_id(
+        "checked_claim",
+        "checked_claim:electricity_kwh:w-electricity-kwh",
+    )
+    witness_node_id = artifact_node_id("evidence_witness", "w-electricity-kwh")
+
+    assert graph.artifact_node(ArtifactRef(derived.claim_id, "derived_claim")) is not None
+    assert _has_edge(graph, trace_node_id, derived_node_id, "derived_from")
+    assert _has_edge(graph, binding_node_id, trace_node_id, "calculated_with")
+    assert _has_edge(graph, reference_node_id, binding_node_id, "selected_reference")
+    assert _has_edge(graph, witness_node_id, checked_claim_node_id, "checked_from")
 
 
 def test_graph_export_does_not_import_authority_or_compiler_functions():
