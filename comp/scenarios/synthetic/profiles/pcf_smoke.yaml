@@ -1,0 +1,9 @@
+scenario_id: synthetic_pcf.smoke.v1
+seed: 7
+profile_id: synthetic-pcf-smoke-profile-v1
+reporting_period: 2024
+electricity_kwh: 1200
+electricity_unit: kWh
+geography: KR
+factor_value: 0.42
+factor_output_unit: kgCO2e

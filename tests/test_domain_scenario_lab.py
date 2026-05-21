@@ -29,6 +29,9 @@ from tests.domain_scenarios.canonical_working_loop.scenario import (
 from tests.domain_scenarios.l_energy_pcf_governance.scenario import (
     run_l_energy_pcf_governance_scenario,
 )
+from tests.domain_scenarios.synthetic_pcf_smoke.scenario import (
+    run_synthetic_pcf_smoke_scenario,
+)
 
 
 def test_domain_scenario_cli_lists_registered_scenarios(capsys):
@@ -48,6 +51,7 @@ def test_domain_scenario_cli_lists_registered_scenarios(capsys):
     assert "l_energy.c_pack_yield_rollup.v1" in captured.out
     assert "l_energy.tier0_physical_allocation.v1" in captured.out
     assert "l_energy_pcf_governance.v1" in captured.out
+    assert "synthetic_pcf.smoke.v1" in captured.out
     assert "Canonical raw text PCF working loop" in captured.out
 
 
@@ -105,7 +109,7 @@ def test_domain_scenario_cli_runs_all_registered_scenarios(capsys):
     captured = capsys.readouterr()
     assert exit_code == 0
     assert "Domain Scenario Run" in captured.out
-    assert "Passed: 10/10" in captured.out
+    assert "Passed: 11/11" in captured.out
     assert "- canonical_working_loop.raw_text_pcf.v1: pass" in captured.out
     assert "- tiny_pcf.location_based_electricity.v1: pass" in captured.out
     assert "- l_energy.alpha_invalid_allocation_rfi.v1: pass" in captured.out
@@ -119,6 +123,7 @@ def test_domain_scenario_cli_runs_all_registered_scenarios(capsys):
     assert "- l_energy.c_pack_yield_rollup.v1: pass" in captured.out
     assert "- l_energy.tier0_physical_allocation.v1: pass" in captured.out
     assert "- l_energy_pcf_governance.v1: pass" in captured.out
+    assert "- synthetic_pcf.smoke.v1: pass" in captured.out
     assert captured.err == ""
 
 
@@ -130,8 +135,9 @@ def test_domain_scenario_cli_runs_all_as_json(capsys):
     captured = capsys.readouterr()
     payload = json.loads(captured.out)
     assert exit_code == 0
-    assert payload["summary"] == {"total": 10, "passed": 10, "failed": 0}
+    assert payload["summary"] == {"total": 11, "passed": 11, "failed": 0}
     assert tuple(item["status"] for item in payload["scenarios"]) == (
+        "pass",
         "pass",
         "pass",
         "pass",
@@ -154,6 +160,7 @@ def test_domain_scenario_cli_runs_all_as_json(capsys):
         "l_energy.c_pack_yield_rollup.v1",
         "l_energy.tier0_physical_allocation.v1",
         "l_energy_pcf_governance.v1",
+        "synthetic_pcf.smoke.v1",
     )
     assert "result" in payload["scenarios"][0]
     assert captured.err == ""
@@ -201,6 +208,7 @@ def test_registered_scenarios_are_explicit_scenario_definitions():
         "l_energy.c_pack_yield_rollup.v1",
         "l_energy.tier0_physical_allocation.v1",
         "l_energy_pcf_governance.v1",
+        "synthetic_pcf.smoke.v1",
     )
     assert all(isinstance(scenario, ScenarioDefinition) for scenario in scenarios)
     assert scenarios[1].contract.must_commit is True
@@ -253,6 +261,26 @@ def test_tiny_pcf_scenario_runs_reference_to_receipt_flow():
     assert result.preparation.decision.status == "commit"
     assert result.preparation.receipt is not None
     assert result.projection == EXPECTED_PROJECTION
+
+
+def test_synthetic_pcf_smoke_scenario_runs_generated_raw_to_receipt_flow():
+    result = run_synthetic_pcf_smoke_scenario()
+
+    assert result.scenario_id == "synthetic_pcf.smoke.v1"
+    assert result.report.status == "accepted"
+    assert result.preparation.decision.status == "commit"
+    assert result.preparation.receipt is not None
+    assert result.projection == {
+        "electricity_kwh": 1200,
+        "co2e_kg": 504.0,
+    }
+    assert result.report.evidence_witnesses[0].source == (
+        "raw_sources/erp_electricity.csv"
+    )
+    assert tuple(
+        fingerprint.dependency_kind
+        for fingerprint in result.preparation.receipt.citations.dependency_fingerprints
+    ) == ("synthetic_manifest",)
 
 
 def test_tiny_pcf_scenario_rejects_tampered_projection_value():

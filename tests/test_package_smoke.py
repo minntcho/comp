@@ -287,7 +287,7 @@ def test_docs_index_groups_architecture_docs_by_governance_authority():
     assert "architecture/llm-orchestrated-compiler-tool-loop.md" in docs_index
 
 
-def test_pyproject_packages_comp_core_and_agent_layer():
+def test_pyproject_packages_comp_core_scenarios_and_agent_layer():
     pyproject = tomllib.loads(Path("pyproject.toml").read_text())
     from comp.persistence import (
         ArtifactEnvelope,
@@ -311,8 +311,13 @@ def test_pyproject_packages_comp_core_and_agent_layer():
         "comp.compiler_tool",
         "comp.judgment",
         "comp.persistence",
+        "comp.scenarios",
+        "comp.scenarios.synthetic",
         "minchoagnt",
     ]
+    assert pyproject["tool"]["setuptools"]["package-data"] == {
+        "comp.scenarios.synthetic": ["profiles/*.yaml"],
+    }
     assert "py-modules" not in setuptools_config
 
     scripts = pyproject["project"].get("scripts", {})
