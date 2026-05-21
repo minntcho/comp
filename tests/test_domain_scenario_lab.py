@@ -50,6 +50,7 @@ def test_domain_scenario_cli_lists_registered_scenarios(capsys):
     assert "l_energy.l_materials_composition_rollup.v1" in captured.out
     assert "l_energy.c_pack_yield_rollup.v1" in captured.out
     assert "l_energy.tier0_physical_allocation.v1" in captured.out
+    assert "l_energy.final_bottom_up_pcf_rollup.v1" in captured.out
     assert "l_energy_pcf_governance.v1" in captured.out
     assert "synthetic_pcf.smoke.v1" in captured.out
     assert "Canonical raw text PCF working loop" in captured.out
@@ -109,7 +110,7 @@ def test_domain_scenario_cli_runs_all_registered_scenarios(capsys):
     captured = capsys.readouterr()
     assert exit_code == 0
     assert "Domain Scenario Run" in captured.out
-    assert "Passed: 11/11" in captured.out
+    assert "Passed: 12/12" in captured.out
     assert "- canonical_working_loop.raw_text_pcf.v1: pass" in captured.out
     assert "- tiny_pcf.location_based_electricity.v1: pass" in captured.out
     assert "- l_energy.alpha_invalid_allocation_rfi.v1: pass" in captured.out
@@ -122,6 +123,7 @@ def test_domain_scenario_cli_runs_all_registered_scenarios(capsys):
     assert "- l_energy.l_materials_composition_rollup.v1: pass" in captured.out
     assert "- l_energy.c_pack_yield_rollup.v1: pass" in captured.out
     assert "- l_energy.tier0_physical_allocation.v1: pass" in captured.out
+    assert "- l_energy.final_bottom_up_pcf_rollup.v1: pass" in captured.out
     assert "- l_energy_pcf_governance.v1: pass" in captured.out
     assert "- synthetic_pcf.smoke.v1: pass" in captured.out
     assert captured.err == ""
@@ -135,8 +137,9 @@ def test_domain_scenario_cli_runs_all_as_json(capsys):
     captured = capsys.readouterr()
     payload = json.loads(captured.out)
     assert exit_code == 0
-    assert payload["summary"] == {"total": 11, "passed": 11, "failed": 0}
+    assert payload["summary"] == {"total": 12, "passed": 12, "failed": 0}
     assert tuple(item["status"] for item in payload["scenarios"]) == (
+        "pass",
         "pass",
         "pass",
         "pass",
@@ -159,6 +162,7 @@ def test_domain_scenario_cli_runs_all_as_json(capsys):
         "l_energy.l_materials_composition_rollup.v1",
         "l_energy.c_pack_yield_rollup.v1",
         "l_energy.tier0_physical_allocation.v1",
+        "l_energy.final_bottom_up_pcf_rollup.v1",
         "l_energy_pcf_governance.v1",
         "synthetic_pcf.smoke.v1",
     )
@@ -207,6 +211,7 @@ def test_registered_scenarios_are_explicit_scenario_definitions():
         "l_energy.l_materials_composition_rollup.v1",
         "l_energy.c_pack_yield_rollup.v1",
         "l_energy.tier0_physical_allocation.v1",
+        "l_energy.final_bottom_up_pcf_rollup.v1",
         "l_energy_pcf_governance.v1",
         "synthetic_pcf.smoke.v1",
     )
