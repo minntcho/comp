@@ -46,6 +46,7 @@ def test_domain_scenario_cli_lists_registered_scenarios(capsys):
     assert "l_energy.carbon_tech_certificate_submission.v1" in captured.out
     assert "l_energy.l_materials_composition_rollup.v1" in captured.out
     assert "l_energy.c_pack_yield_rollup.v1" in captured.out
+    assert "l_energy.tier0_physical_allocation.v1" in captured.out
     assert "l_energy_pcf_governance.v1" in captured.out
     assert "Canonical raw text PCF working loop" in captured.out
 
@@ -104,7 +105,7 @@ def test_domain_scenario_cli_runs_all_registered_scenarios(capsys):
     captured = capsys.readouterr()
     assert exit_code == 0
     assert "Domain Scenario Run" in captured.out
-    assert "Passed: 9/9" in captured.out
+    assert "Passed: 10/10" in captured.out
     assert "- canonical_working_loop.raw_text_pcf.v1: pass" in captured.out
     assert "- tiny_pcf.location_based_electricity.v1: pass" in captured.out
     assert "- l_energy.alpha_invalid_allocation_rfi.v1: pass" in captured.out
@@ -116,6 +117,7 @@ def test_domain_scenario_cli_runs_all_registered_scenarios(capsys):
     assert "- l_energy.carbon_tech_certificate_submission.v1: pass" in captured.out
     assert "- l_energy.l_materials_composition_rollup.v1: pass" in captured.out
     assert "- l_energy.c_pack_yield_rollup.v1: pass" in captured.out
+    assert "- l_energy.tier0_physical_allocation.v1: pass" in captured.out
     assert "- l_energy_pcf_governance.v1: pass" in captured.out
     assert captured.err == ""
 
@@ -128,8 +130,9 @@ def test_domain_scenario_cli_runs_all_as_json(capsys):
     captured = capsys.readouterr()
     payload = json.loads(captured.out)
     assert exit_code == 0
-    assert payload["summary"] == {"total": 9, "passed": 9, "failed": 0}
+    assert payload["summary"] == {"total": 10, "passed": 10, "failed": 0}
     assert tuple(item["status"] for item in payload["scenarios"]) == (
+        "pass",
         "pass",
         "pass",
         "pass",
@@ -149,6 +152,7 @@ def test_domain_scenario_cli_runs_all_as_json(capsys):
         "l_energy.carbon_tech_certificate_submission.v1",
         "l_energy.l_materials_composition_rollup.v1",
         "l_energy.c_pack_yield_rollup.v1",
+        "l_energy.tier0_physical_allocation.v1",
         "l_energy_pcf_governance.v1",
     )
     assert "result" in payload["scenarios"][0]
@@ -195,6 +199,7 @@ def test_registered_scenarios_are_explicit_scenario_definitions():
         "l_energy.carbon_tech_certificate_submission.v1",
         "l_energy.l_materials_composition_rollup.v1",
         "l_energy.c_pack_yield_rollup.v1",
+        "l_energy.tier0_physical_allocation.v1",
         "l_energy_pcf_governance.v1",
     )
     assert all(isinstance(scenario, ScenarioDefinition) for scenario in scenarios)
