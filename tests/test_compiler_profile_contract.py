@@ -55,6 +55,10 @@ def _retrieval_policy(policy_id):
     )
 
 
+def _noop_rule_evaluator(claim, hypothesis, profile):
+    return ()
+
+
 def _domain(
     *,
     rules,
@@ -212,6 +216,26 @@ def test_domain_pack_cannot_disable_core_invariants():
     )
 
     with pytest.raises(ProfileValidationError, match="cannot disable core invariant"):
+        validate_compiler_profile(profile)
+
+
+def test_active_callable_rule_requires_evaluator_lock_identity():
+    profile = CompilerProfile(
+        profile_id="fixture-profile",
+        domain_packs=(
+            _domain(
+                rules=(
+                    RuleFamily(
+                        rule_id="fixture.callable_rule.v1",
+                        evaluate=_noop_rule_evaluator,
+                    ),
+                ),
+            ),
+        ),
+        active_rule_ids=("fixture.callable_rule.v1",),
+    )
+
+    with pytest.raises(ProfileValidationError, match="evaluator identity"):
         validate_compiler_profile(profile)
 
 

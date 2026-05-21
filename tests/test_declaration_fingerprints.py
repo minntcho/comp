@@ -52,6 +52,13 @@ def test_rule_and_rubric_declaration_fingerprints_pin_semantic_contracts():
         required_rubric_ids=("pcf.scope2_method_support.rubric.v2",),
         description="Opens a semantic judgment for Scope 2 method support.",
     )
+    changed_rule_evaluator = RuleFamily(
+        rule_id="pcf.scope2_method_support.v1",
+        required_rubric_ids=("pcf.scope2_method_support.rubric.v1",),
+        description="Opens a semantic judgment for Scope 2 method support.",
+        evaluator_id="pcf.scope2_method_support.evaluator",
+        implementation_version="2026.2",
+    )
     rubric = SemanticRubric(
         rubric_id="pcf.scope2_method_support.rubric.v1",
         acceptable_verdicts=("supports", "refutes", "ambiguous"),
@@ -71,6 +78,9 @@ def test_rule_and_rubric_declaration_fingerprints_pin_semantic_contracts():
     assert rule_fingerprint.dependency_kind == "rule_family"
     assert rule_fingerprint.dependency_id == "pcf.scope2_method_support.v1"
     assert rule_fingerprint != rule_family_declaration_fingerprint(changed_rule)
+    assert rule_fingerprint != rule_family_declaration_fingerprint(
+        changed_rule_evaluator
+    )
     assert rubric_fingerprint.dependency_kind == "semantic_rubric"
     assert rubric_fingerprint.dependency_id == "pcf.scope2_method_support.rubric.v1"
     assert rubric_fingerprint != semantic_rubric_declaration_fingerprint(

@@ -39,6 +39,12 @@ class Fact:
     weight: float | None = None
     meta: tuple[tuple[str, Any], ...] = ()
 
+    def __post_init__(self) -> None:
+        _require_hashable("Fact value", self.value)
+        for key, value in self.meta:
+            _require_hashable("Fact meta key", key)
+            _require_hashable("Fact meta value", value)
+
 
 @dataclass
 class JudgmentState:
@@ -77,6 +83,13 @@ class JudgmentState:
             if fact.tag == "hazard_discharge" and fact.subject == subject
         }
         return opened - discharged
+
+
+def _require_hashable(label: str, value: Any) -> None:
+    try:
+        hash(value)
+    except TypeError as exc:
+        raise TypeError(f"{label} must be hashable.") from exc
 
 
 __all__ = [

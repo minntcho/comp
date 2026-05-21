@@ -137,6 +137,31 @@ def test_reference_query_builder_from_tasks_feeds_retrieval_bridge():
     assert resolved.derived_claims == ()
 
 
+def test_reference_retrieval_resolution_recomputes_status_after_resolving_only_blocker():
+    report = CompileReport(
+        status="blocked",
+        obligations=(_reference_search_obligation(),),
+    )
+
+    resolved = resolve_reference_retrieval_obligations(
+        report,
+        _resolver(),
+        query_for_obligation=reference_query_for_obligation_from_resolver_tasks(
+            resolver_tasks_from_report(report),
+            query_texts={
+                "resolve:formula-v1:claim-co2e:reference_search_required": (
+                    "Korea grid electricity factor 2024"
+                )
+            },
+            lens="factor",
+            reference_type="emission_factor",
+        ),
+    )
+
+    assert resolved.obligations == ()
+    assert resolved.status == "accepted"
+
+
 def test_reference_query_builder_from_tasks_leaves_missing_query_open():
     report = CompileReport(
         status="blocked",
