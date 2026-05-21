@@ -1,9 +1,16 @@
 import os
+from dataclasses import replace
 from decimal import Decimal
 
 import pytest
 
-from comp.persistence import ArtifactEnvelope, verify_artifact_envelope
+from comp.persistence import (
+    ArtifactConflict,
+    ArtifactEnvelope,
+    ArtifactIntegrityError,
+    verify_artifact_envelope,
+)
+from tests.support.persistence_cases import claim_envelope
 
 
 pytestmark = pytest.mark.mysql
@@ -22,6 +29,26 @@ def _database_config() -> dict[str, object]:
         "charset": "utf8mb4",
         "autocommit": False,
     }
+
+
+def _connect_mysql():
+    pymysql = pytest.importorskip("pymysql")
+    return pymysql.connect(**_database_config())
+
+
+def _reset_spine(connection):
+    with connection.cursor() as cursor:
+        cursor.execute("set foreign_key_checks = 0")
+        for table in (
+            "ledger_receipt_artifact_refs",
+            "ledger_receipt_dependency_fingerprints",
+            "ledger_receipt_value_commitments",
+            "ledger_commit_receipts",
+            "artifact_envelopes",
+        ):
+            cursor.execute(f"truncate table {table}")
+        cursor.execute("set foreign_key_checks = 1")
+    connection.commit()
 
 
 def test_mysql_spine_module_exists():
@@ -89,3 +116,54 @@ def test_apply_trust_spine_schema_creates_v1_tables():
     assert "ledger_receipt_value_commitments" in tables
     assert "ledger_receipt_dependency_fingerprints" in tables
     assert "ledger_receipt_artifact_refs" in tables
+
+
+def test_mysql_artifact_store_records_envelopes_idempotently():
+    from comp.persistence.mysql import MySQLArtifactStore, apply_trust_spine_schema
+
+    connection = _connect_mysql()
+    try:
+        apply_trust_spine_schema(connection)
+        _reset_spine(connection)
+        store = MySQLArtifactStore(connection)
+        envelope = claim_envelope(value=1200)
+
+        assert store.record(envelope) == envelope
+        assert store.record(envelope) == envelope
+        assert store.get("artifact:claim:1") == envelope
+        assert store.envelopes() == (envelope,)
+    finally:
+        connection.close()
+
+
+def test_mysql_artifact_store_rejects_conflicting_content():
+    from comp.persistence.mysql import MySQLArtifactStore, apply_trust_spine_schema
+
+    connection = _connect_mysql()
+    try:
+        apply_trust_spine_schema(connection)
+        _reset_spine(connection)
+        store = MySQLArtifactStore(connection)
+        store.record(claim_envelope(value=1200))
+
+        with pytest.raises(ArtifactConflict, match="artifact:claim:1"):
+            store.record(claim_envelope(value=1201))
+    finally:
+        connection.close()
+
+
+def test_mysql_artifact_store_rejects_invalid_digest():
+    from comp.persistence.mysql import MySQLArtifactStore, apply_trust_spine_schema
+
+    connection = _connect_mysql()
+    try:
+        apply_trust_spine_schema(connection)
+        _reset_spine(connection)
+        store = MySQLArtifactStore(connection)
+        envelope = claim_envelope(value=1200)
+        tampered = replace(envelope, body={"field": "amount", "value": 999})
+
+        with pytest.raises(ArtifactIntegrityError, match="body digest"):
+            store.record(tampered)
+    finally:
+        connection.close()
