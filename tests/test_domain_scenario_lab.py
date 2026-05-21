@@ -48,6 +48,7 @@ def test_domain_scenario_cli_lists_registered_scenarios(capsys):
     assert "l_energy.steel_frame_proxy_assignment.v1" in captured.out
     assert "l_energy.carbon_tech_certificate_submission.v1" in captured.out
     assert "l_energy.l_materials_composition_rollup.v1" in captured.out
+    assert "l_energy.c_pack_yield_rollup.v1" in captured.out
     assert "l_energy_pcf_governance.v1" in captured.out
     assert "synthetic_pcf.smoke.v1" in captured.out
     assert "Canonical raw text PCF working loop" in captured.out
@@ -118,6 +119,7 @@ def test_domain_scenario_cli_runs_all_registered_scenarios(capsys):
     assert "- l_energy.steel_frame_proxy_assignment.v1: pass" in captured.out
     assert "- l_energy.carbon_tech_certificate_submission.v1: pass" in captured.out
     assert "- l_energy.l_materials_composition_rollup.v1: pass" in captured.out
+    assert "- l_energy.c_pack_yield_rollup.v1: pass" in captured.out
     assert "- l_energy_pcf_governance.v1: pass" in captured.out
     assert "- synthetic_pcf.smoke.v1: pass" in captured.out
     assert captured.err == ""
@@ -151,6 +153,7 @@ def test_domain_scenario_cli_runs_all_as_json(capsys):
         "l_energy.steel_frame_proxy_assignment.v1",
         "l_energy.carbon_tech_certificate_submission.v1",
         "l_energy.l_materials_composition_rollup.v1",
+        "l_energy.c_pack_yield_rollup.v1",
         "l_energy_pcf_governance.v1",
         "synthetic_pcf.smoke.v1",
     )
@@ -197,6 +200,7 @@ def test_registered_scenarios_are_explicit_scenario_definitions():
         "l_energy.steel_frame_proxy_assignment.v1",
         "l_energy.carbon_tech_certificate_submission.v1",
         "l_energy.l_materials_composition_rollup.v1",
+        "l_energy.c_pack_yield_rollup.v1",
         "l_energy_pcf_governance.v1",
         "synthetic_pcf.smoke.v1",
     )

@@ -13,6 +13,9 @@ from tests.domain_scenarios.l_energy_pcf_governance.alpha_invalid_allocation_rfi
 from tests.domain_scenarios.l_energy_pcf_governance.alpha_physical_allocation_correction import (
     ALPHA_PHYSICAL_ALLOCATION_SCENARIO,
 )
+from tests.domain_scenarios.l_energy_pcf_governance.c_pack_yield_rollup import (
+    C_PACK_YIELD_ROLLUP_SCENARIO,
+)
 from tests.domain_scenarios.l_energy_pcf_governance.carbon_tech_certificate_submission import (
     CARBON_TECH_CERTIFICATE_SCENARIO,
 )
@@ -37,6 +40,7 @@ def registered_scenarios() -> tuple[ScenarioDefinition, ...]:
         STEEL_FRAME_PROXY_SCENARIO,
         CARBON_TECH_CERTIFICATE_SCENARIO,
         L_MATERIALS_COMPOSITION_SCENARIO,
+        C_PACK_YIELD_ROLLUP_SCENARIO,
         L_ENERGY_PCF_GOVERNANCE_SCENARIO,
         SYNTHETIC_PCF_SMOKE_SCENARIO,
     )
