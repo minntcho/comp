@@ -10,6 +10,9 @@ from tests.domain_scenarios.l_energy_pcf_governance.scenario import (
 from tests.domain_scenarios.l_energy_pcf_governance.alpha_invalid_allocation_rfi import (
     ALPHA_INVALID_ALLOCATION_SCENARIO,
 )
+from tests.domain_scenarios.l_energy_pcf_governance.alpha_physical_allocation_correction import (
+    ALPHA_PHYSICAL_ALLOCATION_SCENARIO,
+)
 from tests.domain_scenarios.tiny_pcf.scenario import SCENARIO as TINY_PCF_SCENARIO
 
 
@@ -18,6 +21,7 @@ def registered_scenarios() -> tuple[ScenarioDefinition, ...]:
         CANONICAL_WORKING_LOOP_SCENARIO,
         TINY_PCF_SCENARIO,
         ALPHA_INVALID_ALLOCATION_SCENARIO,
+        ALPHA_PHYSICAL_ALLOCATION_SCENARIO,
         L_ENERGY_PCF_GOVERNANCE_SCENARIO,
     )
 
