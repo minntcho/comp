@@ -195,10 +195,110 @@ def test_synthetic_input_loader_roundtrips_disk_sources_without_oracle(
 
     assert input_bundle.raw_sources == run.input_bundle.raw_sources
     assert input_bundle.master == run.input_bundle.master
+    assert [
+        (source.role, source.source_ref, source.row_count)
+        for source in input_bundle.loaded_sources
+    ] == [
+        ("master_reference_catalog", "reference_catalog.csv", 1),
+        ("master_sites", "sites.csv", 1),
+        ("master_products", "products.csv", 1),
+        ("raw_source", "erp_electricity.csv", 1),
+    ]
+    assert all(
+        source.content_digest.startswith("sha256:")
+        for source in input_bundle.loaded_sources
+    )
     assert report.status == "accepted"
     assert {witness.source for witness in report.evidence_witnesses} == {
         "raw_sources/erp_electricity.csv",
     }
+
+
+def test_synthetic_input_loader_fingerprints_loaded_source_content(
+    tmp_path: Path,
+) -> None:
+    run = generate_synthetic_pcf_run(SyntheticScenarioConfig.pcf_smoke(seed=7))
+    run_dir = write_synthetic_run(run, tmp_path / "synthetic-pcf-smoke")
+    first = load_synthetic_input_bundle(run_dir)
+
+    raw_path = run_dir / "raw_sources" / "erp_electricity.csv"
+    rows = _read_csv(raw_path)
+    rows[0]["amount"] = "1300"
+    _write_csv(raw_path, list(rows[0]), rows)
+
+    second = load_synthetic_input_bundle(run_dir)
+
+    first_raw = next(
+        source for source in first.loaded_sources if source.role == "raw_source"
+    )
+    second_raw = next(
+        source for source in second.loaded_sources if source.role == "raw_source"
+    )
+    assert first_raw.content_digest != second_raw.content_digest
+
+
+def test_synthetic_generated_and_disk_loaded_sources_share_fingerprints(
+    tmp_path: Path,
+) -> None:
+    run = generate_synthetic_pcf_run(SyntheticScenarioConfig.pcf_smoke(seed=7))
+    run_dir = write_synthetic_run(run, tmp_path / "synthetic-pcf-smoke")
+
+    input_bundle = load_synthetic_input_bundle(run_dir)
+
+    assert input_bundle.loaded_sources == run.input_bundle.loaded_sources
+
+
+def test_synthetic_adapter_cites_loaded_sources_as_dependencies(
+    tmp_path: Path,
+) -> None:
+    run = generate_synthetic_pcf_run(SyntheticScenarioConfig.pcf_smoke(seed=7))
+    run_dir = write_synthetic_run(run, tmp_path / "synthetic-pcf-smoke")
+    adapter = SyntheticPcfAdapter(load_synthetic_input_bundle(run_dir))
+
+    fingerprints = adapter.dependency_fingerprints()
+    bodies = adapter.dependency_artifact_bodies()
+
+    assert [
+        (fingerprint.dependency_kind, fingerprint.dependency_id)
+        for fingerprint in fingerprints
+    ] == [
+        (
+            "synthetic_manifest",
+            "synthetic_manifest:synthetic_pcf.smoke.v1:seed-7",
+        ),
+        (
+            "synthetic_source_input",
+            (
+                "synthetic_source_input:synthetic_pcf.smoke.v1:"
+                "seed-7:master_reference_catalog:reference_catalog.csv"
+            ),
+        ),
+        (
+            "synthetic_source_input",
+            (
+                "synthetic_source_input:synthetic_pcf.smoke.v1:"
+                "seed-7:master_sites:sites.csv"
+            ),
+        ),
+        (
+            "synthetic_source_input",
+            (
+                "synthetic_source_input:synthetic_pcf.smoke.v1:"
+                "seed-7:master_products:products.csv"
+            ),
+        ),
+        (
+            "synthetic_source_input",
+            (
+                "synthetic_source_input:synthetic_pcf.smoke.v1:"
+                "seed-7:raw_source:erp_electricity.csv"
+            ),
+        ),
+    ]
+    for fingerprint in fingerprints:
+        body = bodies[(fingerprint.dependency_kind, fingerprint.dependency_id)]
+        assert body["fingerprint"] == fingerprint.fingerprint
+        assert body["digest_alg"] == fingerprint.digest_alg
 
 
 def test_synthetic_input_loader_uses_manifest_media_type_not_file_extension(
@@ -265,3 +365,14 @@ def _write_json(path: Path, payload: dict[str, object]) -> None:
         json.dumps(payload, ensure_ascii=True, indent=2, sort_keys=True) + "\n",
         encoding="utf-8",
     )
+
+
+def _write_csv(
+    path: Path,
+    headers: list[str],
+    rows: list[dict[str, str]],
+) -> None:
+    with path.open("w", encoding="utf-8", newline="") as handle:
+        writer = csv.DictWriter(handle, fieldnames=headers)
+        writer.writeheader()
+        writer.writerows(rows)
