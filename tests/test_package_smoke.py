@@ -136,6 +136,14 @@ def test_readme_compiler_tool_import_surface_is_exported():
     assert resolve_reference_retrieval_obligations is not None
 
 
+def test_readme_tracks_persistence_active_surface():
+    readme = Path("README.md").read_text(encoding="utf-8")
+
+    assert "comp.persistence" in readme
+    assert "ArtifactEnvelope" in readme
+    assert "replay_public_projection" in readme
+
+
 def test_working_theory_status_section_tracks_current_rebuild_state():
     working_theory = Path(
         "docs/architecture/obligation-kernel-working-theory.md"

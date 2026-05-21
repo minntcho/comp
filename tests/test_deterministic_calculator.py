@@ -1,3 +1,5 @@
+from decimal import Decimal
+
 from comp.compiler_tool import (
     CalculationFormula,
     CalculationInput,
@@ -85,6 +87,54 @@ def test_calculator_generates_derived_claim_from_binding_and_formula():
     )
     assert result.derived_claim.trace.steps[0].output_value == 0.48
     assert result.derived_claim.trace.steps[0].output_unit == "tCO2e"
+    assert result.derived_claim.trace.steps[0].exact_output_value == Decimal("0.4800")
+
+
+def test_calculator_records_rounding_policy_in_trace_when_formula_declares_it():
+    catalog = ReferenceCatalog(
+        records=(
+            ReferenceRecord(
+                reference_id="factor.rounding",
+                reference_type="emission_factor",
+                attributes=(("factor_value", 2.345),),
+            ),
+        )
+    )
+    formula = CalculationFormula(
+        formula_id="fixture.rounded_multiplication.v1",
+        output_field="rounded_output",
+        output_unit="kgCO2e",
+        rounding_quantum="0.01",
+        rounding_mode="ROUND_HALF_UP",
+    )
+
+    result = calculate_derived_claim(
+        output_claim_id="hyp-1:rounded_output",
+        input_claim=_input(value=1, unit=None),
+        reference_binding=_binding(reference_id="factor.rounding"),
+        catalog=catalog,
+        formula=formula,
+    )
+
+    assert result.status == "calculated"
+    assert result.derived_claim.value == 2.35
+    assert result.derived_claim.trace.steps[0].exact_output_value == Decimal("2.35")
+    assert result.derived_claim.trace.steps[0].rounding_quantum == "0.01"
+    assert result.derived_claim.trace.steps[0].rounding_mode == "ROUND_HALF_UP"
+
+
+def test_calculator_blocks_boolean_numeric_inputs():
+    result = calculate_derived_claim(
+        output_claim_id="hyp-1:co2e_emission",
+        input_claim=_input(value=True),
+        reference_binding=_binding(),
+        catalog=_catalog(),
+        formula=_formula(),
+    )
+
+    assert result.status == "blocked"
+    assert result.reason == "non_numeric_input"
+    assert result.derived_claim is None
 
 
 def test_calculator_blocks_unit_mismatch():

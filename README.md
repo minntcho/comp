@@ -62,6 +62,16 @@ from comp.compiler_tool import prepare_commit, build_commit_receipt
 from comp.compiler_tool import compile_report_to_facts
 ```
 
+`comp.persistence`는 replayable artifact record와 receipt ledger surface를
+노출한다. persisted row는 authority가 아니라 receipt로 재검증되어야 하는
+view다.
+
+```python
+from comp.persistence import ArtifactEnvelope, InMemoryArtifactStore
+from comp.persistence import InMemoryReceiptLedger
+from comp.persistence import replay_public_projection
+```
+
 legacy pipeline runner, pass-pipeline module, compatibility facade는 active
 package source가 아니다. 필요하면 archive reference material로만 취급한다.
 
