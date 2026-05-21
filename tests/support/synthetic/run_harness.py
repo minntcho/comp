@@ -47,7 +47,7 @@ def materialize_synthetic_run(
         base_dir / f"{config.scenario_id}-seed-{config.seed}",
     )
     oracle = load_synthetic_oracle(run_dir / "oracle")
-    adapter = SyntheticPcfAdapter(run)
+    adapter = SyntheticPcfAdapter(run.input_bundle)
     report = _compile_report(adapter)
     preparation = prepare_commit(
         report,
