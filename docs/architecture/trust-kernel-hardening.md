@@ -94,6 +94,13 @@ projection field sets
 explicit at construction time, through a validated `CompilerProfile`, or through
 domain-pack fixtures that are cited by the receipt/replay path.
 
+When a `CompilerProfile` is used as the behavior lock, domain packs may declare
+the `CompilerTool` baseline policy that would otherwise be constructor input:
+known claim fields and allowed units. `compile_with_profile` must apply that
+profile-declared baseline before merging profile-active rule obligations.
+`run_profile_rules` remains the profile-only obligation runner and must not be
+treated as a complete compiler baseline.
+
 ## Profile Locking
 
 A receipt should cite more than `profile_id`. It should preserve enough behavior
@@ -110,6 +117,7 @@ active rubric ids
 judge policy id
 active retrieval policy ids
 projection policy id
+domain-pack compiler baseline known fields and allowed units
 ```
 
 The fingerprint must be canonical and deterministic. Changing any active

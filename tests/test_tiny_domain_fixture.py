@@ -43,10 +43,12 @@ def _scope2_method_rule(claim, hypothesis, profile):
     )
 
 
-def _tiny_domain():
+def _tiny_domain(*, known_fields=("scope2_method",), allowed_units=()):
     return DomainPack(
         domain_id="fixture-ghg",
         version="2026.1",
+        known_fields=tuple(known_fields),
+        allowed_units=tuple(allowed_units),
         rule_families=(
             RuleFamily(
                 rule_id=SCOPE2_RULE_ID,
@@ -73,10 +75,17 @@ def _tiny_domain():
     )
 
 
-def _profile(*, active_rule_ids=(SCOPE2_RULE_ID,)):
+def _profile(
+    *,
+    active_rule_ids=(SCOPE2_RULE_ID,),
+    known_fields=("scope2_method",),
+    allowed_units=(),
+):
     return CompilerProfile(
         profile_id="fixture-ghg-profile",
-        domain_packs=(_tiny_domain(),),
+        domain_packs=(
+            _tiny_domain(known_fields=known_fields, allowed_units=allowed_units),
+        ),
         active_rule_ids=active_rule_ids,
         active_rubric_ids=(SCOPE2_RUBRIC_ID,),
         judge_policy_id=JUDGE_POLICY_ID,
@@ -101,6 +110,41 @@ def _hypothesis():
                 field="scope2_method",
                 source="report.pdf",
                 span="p12",
+            ),
+        ),
+    )
+
+
+def _hypothesis_with_unsupported_unit():
+    return InterpretationHypothesis(
+        hypothesis_id="hyp-scope2",
+        subject_id="claim-scope2",
+        claims=(
+            ClaimHypothesis(
+                field="scope2_method",
+                value="market_based",
+                witness_id="span-17",
+                origin="llm_inferred",
+            ),
+            ClaimHypothesis(
+                field="unit",
+                value="mwh",
+                witness_id="span-unit",
+                origin="llm_inferred",
+            ),
+        ),
+        witnesses=(
+            EvidenceWitness(
+                witness_id="span-17",
+                field="scope2_method",
+                source="report.pdf",
+                span="p12",
+            ),
+            EvidenceWitness(
+                witness_id="span-unit",
+                field="unit",
+                source="report.pdf",
+                span="p13",
             ),
         ),
     )
@@ -155,8 +199,29 @@ def test_profile_rule_runner_surface_matches_compat_compile_with_profile():
     report = run_profile_rules(_hypothesis(), _profile())
     compat_report = compile_with_profile(_hypothesis(), _profile())
 
-    assert report == compat_report
+    assert report.obligations == compat_report.obligations
     assert report.status == "review_required"
+
+
+def test_compile_with_profile_merges_profile_baseline_and_rule_obligations():
+    report = compile_with_profile(
+        _hypothesis_with_unsupported_unit(),
+        _profile(
+            known_fields=("scope2_method", "unit"),
+            allowed_units=("kwh",),
+        ),
+    )
+
+    assert report.status == "blocked"
+    assert any(
+        failed.field == "unit" and failed.reason == "unsupported_unit"
+        for failed in report.failed_claims
+    )
+    assert any(
+        obligation.kind == "semantic_judgment_required"
+        and obligation.field == "scope2_method"
+        for obligation in report.obligations
+    )
 
 
 def test_profile_runner_blocks_claim_without_source_witness():

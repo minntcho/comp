@@ -64,6 +64,8 @@ class JudgePolicy:
 class DomainPack:
     domain_id: str
     version: str
+    known_fields: tuple[str, ...] = field(default_factory=tuple)
+    allowed_units: tuple[str, ...] = field(default_factory=tuple)
     rule_families: tuple[RuleFamily, ...] = field(default_factory=tuple)
     rubrics: tuple[SemanticRubric, ...] = field(default_factory=tuple)
     judge_policies: tuple[JudgePolicy, ...] = field(default_factory=tuple)
@@ -172,6 +174,34 @@ def active_retrieval_query_policies(
     return tuple(
         retrieval_policies[policy_id]
         for policy_id in profile.active_retrieval_policy_ids
+    )
+
+
+def profile_known_fields(
+    profile: CompilerProfile,
+    *,
+    validate: bool = True,
+) -> frozenset[str]:
+    if validate:
+        validate_compiler_profile(profile)
+    return frozenset(
+        field
+        for domain in profile.domain_packs
+        for field in domain.known_fields
+    )
+
+
+def profile_allowed_units(
+    profile: CompilerProfile,
+    *,
+    validate: bool = True,
+) -> frozenset[str]:
+    if validate:
+        validate_compiler_profile(profile)
+    return frozenset(
+        unit.lower()
+        for domain in profile.domain_packs
+        for unit in domain.allowed_units
     )
 
 
@@ -304,6 +334,8 @@ def _domain_pack_fingerprint_payload(domain: DomainPack) -> dict[str, Any]:
     return {
         "domain_id": domain.domain_id,
         "version": domain.version,
+        "known_fields": domain.known_fields,
+        "allowed_units": domain.allowed_units,
         "rule_families": tuple(
             _rule_family_fingerprint_payload(rule)
             for rule in domain.rule_families
@@ -380,6 +412,8 @@ __all__ = [
     "validate_compiler_profile",
     "active_rule_families",
     "active_retrieval_query_policies",
+    "profile_known_fields",
+    "profile_allowed_units",
     "profile_declaration_fingerprint",
     "profile_lock_body",
     "profile_lock_envelope_body",

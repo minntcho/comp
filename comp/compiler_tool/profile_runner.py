@@ -1,5 +1,8 @@
 from __future__ import annotations
 
+from dataclasses import replace
+from typing import TypeVar
+
 from comp.compiler_tool.models import (
     ClaimHypothesis,
     CompileReport,
@@ -8,8 +11,18 @@ from comp.compiler_tool.models import (
     InterpretationHypothesis,
     ProofObligation,
 )
-from comp.compiler_tool.profiles import CompilerProfile, active_rule_families, validate_compiler_profile
+from comp.compiler_tool.profiles import (
+    CompilerProfile,
+    active_rule_families,
+    profile_allowed_units,
+    profile_known_fields,
+    validate_compiler_profile,
+)
 from comp.compiler_tool.report_status import with_recomputed_status
+from comp.compiler_tool.tool import CompilerTool
+
+
+T = TypeVar("T")
 
 
 def run_profile_rules(
@@ -64,9 +77,15 @@ def compile_with_profile(
     hypothesis: InterpretationHypothesis,
     profile: CompilerProfile,
 ) -> CompileReport:
-    """Compatibility wrapper for the profile-only rule runner."""
+    """Compile with profile-declared CompilerTool baseline plus active rules."""
 
-    return run_profile_rules(hypothesis, profile)
+    validate_compiler_profile(profile)
+    baseline_report = CompilerTool(
+        allowed_units=profile_allowed_units(profile, validate=False),
+        known_fields=profile_known_fields(profile, validate=False),
+    ).compile_interpretation(hypothesis)
+    profile_rule_report = run_profile_rules(hypothesis, profile)
+    return _merge_compile_reports(baseline_report, profile_rule_report)
 
 
 def _validate_core_witness(
@@ -122,6 +141,73 @@ def _add_obligation(
 ) -> None:
     if obligation not in obligations:
         obligations.append(obligation)
+
+
+def _merge_compile_reports(
+    baseline_report: CompileReport,
+    profile_rule_report: CompileReport,
+) -> CompileReport:
+    return with_recomputed_status(
+        replace(
+            baseline_report,
+            evidence_witnesses=_merge_unique(
+                baseline_report.evidence_witnesses,
+                profile_rule_report.evidence_witnesses,
+            ),
+            checked_claims=_merge_unique(
+                baseline_report.checked_claims,
+                profile_rule_report.checked_claims,
+            ),
+            failed_claims=_merge_unique(
+                baseline_report.failed_claims,
+                profile_rule_report.failed_claims,
+            ),
+            unknowns=_merge_unique(
+                baseline_report.unknowns,
+                profile_rule_report.unknowns,
+            ),
+            unchecked_areas=_merge_unique(
+                baseline_report.unchecked_areas,
+                profile_rule_report.unchecked_areas,
+            ),
+            obligations=_merge_unique(
+                baseline_report.obligations,
+                profile_rule_report.obligations,
+            ),
+            resolved_obligations=_merge_unique(
+                baseline_report.resolved_obligations,
+                profile_rule_report.resolved_obligations,
+            ),
+            hazards=_merge_unique(
+                baseline_report.hazards,
+                profile_rule_report.hazards,
+            ),
+            reference_candidates=_merge_unique(
+                baseline_report.reference_candidates,
+                profile_rule_report.reference_candidates,
+            ),
+            reference_bindings=_merge_unique(
+                baseline_report.reference_bindings,
+                profile_rule_report.reference_bindings,
+            ),
+            derived_claims=_merge_unique(
+                baseline_report.derived_claims,
+                profile_rule_report.derived_claims,
+            ),
+            can_project_public_row=(
+                baseline_report.can_project_public_row
+                and profile_rule_report.can_project_public_row
+            ),
+        )
+    )
+
+
+def _merge_unique(first: tuple[T, ...], second: tuple[T, ...]) -> tuple[T, ...]:
+    merged = list(first)
+    for item in second:
+        if item not in merged:
+            merged.append(item)
+    return tuple(merged)
 
 
 __all__ = ["compile_with_profile", "run_profile_rules"]

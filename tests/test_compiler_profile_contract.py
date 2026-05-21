@@ -75,10 +75,14 @@ def _domain(
     judge_policies=(),
     retrieval_query_policies=(),
     disabled_core_invariants=(),
+    known_fields=(),
+    allowed_units=(),
 ):
     return DomainPack(
         domain_id="fixture",
         version="2026.1",
+        known_fields=tuple(known_fields),
+        allowed_units=tuple(allowed_units),
         rule_families=tuple(rules),
         rubrics=tuple(rubrics),
         judge_policies=tuple(judge_policies),
@@ -359,6 +363,35 @@ def test_profile_declaration_fingerprint_pins_rule_implementation_version():
     )
 
 
+def test_profile_declaration_fingerprint_pins_domain_compiler_baseline_policy():
+    profile = CompilerProfile(
+        profile_id="fixture-profile",
+        domain_packs=(
+            _domain(
+                rules=(_rule("fixture.rule.v1"),),
+                known_fields=("activity", "amount", "unit"),
+                allowed_units=("kwh",),
+            ),
+        ),
+        active_rule_ids=("fixture.rule.v1",),
+    )
+    changed_profile = CompilerProfile(
+        profile_id="fixture-profile",
+        domain_packs=(
+            _domain(
+                rules=(_rule("fixture.rule.v1"),),
+                known_fields=("activity", "amount", "unit"),
+                allowed_units=("mwh",),
+            ),
+        ),
+        active_rule_ids=("fixture.rule.v1",),
+    )
+
+    assert profile_declaration_fingerprint(profile) != profile_declaration_fingerprint(
+        changed_profile
+    )
+
+
 def test_profile_lock_body_exposes_active_behavior_manifest():
     profile = CompilerProfile(
         profile_id="fixture-profile",
@@ -370,6 +403,8 @@ def test_profile_lock_body_exposes_active_behavior_manifest():
                 retrieval_query_policies=(
                     _retrieval_policy("fixture.retrieval_policy.v1"),
                 ),
+                known_fields=("activity", "amount", "unit"),
+                allowed_units=("kwh",),
             ),
         ),
         active_rule_ids=("fixture.rule.v1",),
@@ -391,6 +426,12 @@ def test_profile_lock_body_exposes_active_behavior_manifest():
     assert body["judge_policy_id"] == "fixture.judge_policy.v1"
     assert body["projection_policy_id"] == "fixture.projection.v1"
     assert body["domain_packs"][0]["domain_id"] == "fixture"
+    assert body["domain_packs"][0]["known_fields"] == (
+        "activity",
+        "amount",
+        "unit",
+    )
+    assert body["domain_packs"][0]["allowed_units"] == ("kwh",)
     assert envelope_body["dependency_kind"] == "compiler_profile"
     assert envelope_body["dependency_id"] == "fixture-profile"
     assert envelope_body["profile_lock"] == body
