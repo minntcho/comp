@@ -148,6 +148,18 @@ def test_readme_tracks_persistence_active_surface():
     assert "replay_public_projection" in readme
 
 
+def test_persistence_exports_mysql_backend_surface():
+    from comp.persistence import (
+        MySQLArtifactStore,
+        MySQLReceiptLedger,
+        apply_trust_spine_schema,
+    )
+
+    assert MySQLArtifactStore is not None
+    assert MySQLReceiptLedger is not None
+    assert apply_trust_spine_schema is not None
+
+
 def test_trust_kernel_hardening_documents_projection_numeric_policy():
     hardening = Path("docs/architecture/trust-kernel-hardening.md").read_text(
         encoding="utf-8"
