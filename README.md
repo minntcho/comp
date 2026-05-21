@@ -146,3 +146,16 @@ module을 옮기거나 키우기 전에 먼저 답해야 한다.
 ```
 
 답이 흐리면 relocation보다 architecture correction이 먼저다.
+
+## PR contract gate
+
+PR에서 확인해야 하는 최소 gate는 package smoke, unit tests, domain scenario
+contract다. 로컬에서는 아래 명령으로 GitHub Actions와 같은 핵심 검증을
+재현한다.
+
+```bash
+python -m pip install -e ".[test]"
+python -m pytest -q
+python -m tests.domain_scenarios list
+python -m tests.domain_scenarios run-all
+```
