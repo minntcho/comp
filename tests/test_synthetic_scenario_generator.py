@@ -9,6 +9,9 @@ from comp.scenarios.synthetic import (
     generate_synthetic_pcf_run,
     write_synthetic_run,
 )
+from tests.support.synthetic.oracle_assertions import (
+    assert_synthetic_oracle_matches_report,
+)
 
 
 def test_synthetic_pcf_generator_writes_oracle_not_truth(tmp_path: Path) -> None:
@@ -119,24 +122,8 @@ def test_synthetic_pcf_anomaly_adapter_reports_raw_source_pressure() -> None:
 
     report = adapter.anomaly_report()
 
+    assert_synthetic_oracle_matches_report(run.oracle, report)
     assert report.status == "blocked"
-    assert tuple((claim.field, claim.reason) for claim in report.failed_claims) == (
-        ("unit", "unsupported_unit"),
-        ("electricity_kwh", "negative_amount"),
-    )
-    assert tuple(obligation.obligation_id for obligation in report.obligations) == (
-        "synthetic-obligation:missing_unit",
-        "synthetic-obligation:wrong_unit",
-        "synthetic-obligation:period_mismatch",
-        "synthetic-obligation:negative_amount",
-        "synthetic-obligation:site_alias",
-    )
-    assert tuple((hazard.kind, hazard.field, hazard.severity) for hazard in report.hazards) == (
-        ("missing_unit", "unit", "review"),
-        ("period_mismatch", "period", "review"),
-        ("invalid_activity_amount", "electricity_kwh", "block"),
-        ("site_alias", "site_id", "review"),
-    )
     assert {witness.source for witness in report.evidence_witnesses} == {
         "raw_sources/erp_electricity.csv",
     }
