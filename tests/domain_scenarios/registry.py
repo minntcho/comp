@@ -40,6 +40,9 @@ from tests.domain_scenarios.l_energy_pcf_governance.final_bottom_up_rollup impor
 from tests.domain_scenarios.synthetic_raw_claim_hypothesis_gate.scenario import (
     RAW_CLAIM_HYPOTHESIS_GATE_SCENARIO,
 )
+from tests.domain_scenarios.synthetic_raw_claim_hypothesis_acceptance.scenario import (
+    RAW_CLAIM_HYPOTHESIS_ACCEPTANCE_SCENARIO,
+)
 from tests.domain_scenarios.synthetic_pcf_smoke.scenario import (
     SCENARIO as SYNTHETIC_PCF_SMOKE_SCENARIO,
 )
@@ -60,6 +63,7 @@ def registered_scenarios() -> tuple[ScenarioDefinition, ...]:
         FINAL_BOTTOM_UP_ROLLUP_SCENARIO,
         L_ENERGY_PCF_GOVERNANCE_SCENARIO,
         RAW_CLAIM_HYPOTHESIS_GATE_SCENARIO,
+        RAW_CLAIM_HYPOTHESIS_ACCEPTANCE_SCENARIO,
         SYNTHETIC_PCF_SMOKE_SCENARIO,
         SYNTHETIC_PCF_ANOMALY_SCENARIO,
         SYNTHETIC_PCF_RESOLUTION_SCENARIO,

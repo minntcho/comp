@@ -59,6 +59,7 @@ def test_domain_scenario_cli_lists_registered_scenarios(capsys):
     assert "l_energy.final_bottom_up_pcf_rollup.v1" in captured.out
     assert "l_energy_pcf_governance.v1" in captured.out
     assert "synthetic.raw_claim_hypothesis_gate.v1" in captured.out
+    assert "synthetic.raw_claim_hypothesis_acceptance.v1" in captured.out
     assert "synthetic_pcf.smoke.v1" in captured.out
     assert "synthetic_pcf.anomaly.v1" in captured.out
     assert "synthetic_pcf.resolution.v1" in captured.out
@@ -135,6 +136,7 @@ def test_domain_scenario_cli_runs_all_registered_scenarios(capsys):
     assert "- l_energy.final_bottom_up_pcf_rollup.v1: pass" in captured.out
     assert "- l_energy_pcf_governance.v1: pass" in captured.out
     assert "- synthetic.raw_claim_hypothesis_gate.v1: pass" in captured.out
+    assert "- synthetic.raw_claim_hypothesis_acceptance.v1: pass" in captured.out
     assert "- synthetic_pcf.smoke.v1: pass" in captured.out
     assert "- synthetic_pcf.anomaly.v1: pass" in captured.out
     assert "- synthetic_pcf.resolution.v1: pass" in captured.out
@@ -180,6 +182,7 @@ def test_domain_scenario_cli_runs_all_as_json(capsys):
         "l_energy.final_bottom_up_pcf_rollup.v1",
         "l_energy_pcf_governance.v1",
         "synthetic.raw_claim_hypothesis_gate.v1",
+        "synthetic.raw_claim_hypothesis_acceptance.v1",
         "synthetic_pcf.smoke.v1",
         "synthetic_pcf.anomaly.v1",
         "synthetic_pcf.resolution.v1",
@@ -232,6 +235,7 @@ def test_registered_scenarios_are_explicit_scenario_definitions():
         "l_energy.final_bottom_up_pcf_rollup.v1",
         "l_energy_pcf_governance.v1",
         "synthetic.raw_claim_hypothesis_gate.v1",
+        "synthetic.raw_claim_hypothesis_acceptance.v1",
         "synthetic_pcf.smoke.v1",
         "synthetic_pcf.anomaly.v1",
         "synthetic_pcf.resolution.v1",
