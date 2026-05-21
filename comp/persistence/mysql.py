@@ -1,0 +1,525 @@
+from __future__ import annotations
+
+import json
+import hashlib
+from collections.abc import Mapping
+from typing import Any
+
+from comp.judgment.receipts import (
+    CommitReceipt,
+    CommitReceiptCitations,
+    DependencyFingerprint,
+    ProjectionValueCommitment,
+)
+from comp.persistence.codec import decode_persistence_json, encode_persistence_json
+from comp.persistence.envelope import ArtifactEnvelope
+from comp.persistence.ledger import (
+    ArtifactConflict,
+    ReceiptConflict,
+    ReceiptLedgerKey,
+    verify_artifact_envelope,
+)
+from comp.persistence.replay import receipt_artifact_refs
+
+
+TRUST_SPINE_SCHEMA_STATEMENTS = (
+    """
+    create table if not exists artifact_envelopes (
+      artifact_id varchar(255) primary key,
+      artifact_kind varchar(128) not null,
+      schema_version varchar(64) not null,
+      body_digest varchar(96) not null,
+      body json not null,
+      source_refs json not null,
+      meta json not null,
+      created_at timestamp(6) not null default current_timestamp(6),
+      unique key artifact_envelope_identity (
+        artifact_id, artifact_kind, schema_version, body_digest
+      )
+    ) engine=InnoDB default charset=utf8mb4 collate=utf8mb4_0900_bin
+    """,
+    """
+    create table if not exists ledger_commit_receipts (
+      receipt_id varchar(255) primary key,
+      public_row_id varchar(255) not null,
+      projection_id varchar(255) not null,
+      draft_id varchar(255) not null,
+      receipt_digest varchar(96) not null,
+      receipt_body json not null,
+      issued_at timestamp(6) not null default current_timestamp(6),
+      unique key receipt_ledger_key (public_row_id, projection_id, draft_id)
+    ) engine=InnoDB default charset=utf8mb4 collate=utf8mb4_0900_bin
+    """,
+    """
+    create table if not exists ledger_receipt_value_commitments (
+      receipt_id varchar(255) not null,
+      field varchar(255) not null,
+      source_kind varchar(128) not null,
+      source_id varchar(255) not null,
+      value_digest varchar(96) not null,
+      digest_alg varchar(32) not null,
+      primary key (receipt_id, field),
+      constraint fk_receipt_value_commitments_receipt
+        foreign key (receipt_id) references ledger_commit_receipts(receipt_id)
+    ) engine=InnoDB default charset=utf8mb4 collate=utf8mb4_0900_bin
+    """,
+    """
+    create table if not exists ledger_receipt_dependency_fingerprints (
+      receipt_id varchar(255) not null,
+      dependency_kind varchar(128) not null,
+      dependency_id varchar(255) not null,
+      fingerprint varchar(96) not null,
+      digest_alg varchar(32) not null,
+      primary key (receipt_id, dependency_kind, dependency_id),
+      constraint fk_receipt_dependency_fingerprints_receipt
+        foreign key (receipt_id) references ledger_commit_receipts(receipt_id)
+    ) engine=InnoDB default charset=utf8mb4 collate=utf8mb4_0900_bin
+    """,
+    """
+    create table if not exists ledger_receipt_artifact_refs (
+      receipt_id varchar(255) not null,
+      artifact_id varchar(255) not null,
+      artifact_kind varchar(128) not null,
+      role varchar(128) not null,
+      primary key (receipt_id, artifact_id, artifact_kind, role),
+      constraint fk_receipt_artifact_refs_receipt
+        foreign key (receipt_id) references ledger_commit_receipts(receipt_id)
+    ) engine=InnoDB default charset=utf8mb4 collate=utf8mb4_0900_bin
+    """,
+)
+
+
+def apply_trust_spine_schema(connection: Any) -> None:
+    with connection.cursor() as cursor:
+        for statement in TRUST_SPINE_SCHEMA_STATEMENTS:
+            cursor.execute(statement)
+    connection.commit()
+
+
+class MySQLArtifactStore:
+    def __init__(self, connection: Any):
+        self.connection = connection
+
+    def record(self, envelope: ArtifactEnvelope) -> ArtifactEnvelope:
+        verify_artifact_envelope(envelope)
+        existing = self._get_optional(envelope.artifact_id)
+        if existing is None:
+            with self.connection.cursor() as cursor:
+                cursor.execute(
+                    """
+                    insert into artifact_envelopes (
+                      artifact_id, artifact_kind, schema_version, body_digest,
+                      body, source_refs, meta
+                    )
+                    values (%s, %s, %s, %s, %s, %s, %s)
+                    """,
+                    (
+                        envelope.artifact_id,
+                        envelope.artifact_kind,
+                        envelope.schema_version,
+                        envelope.body_digest,
+                        _json_dump(encode_persistence_json(envelope.body)),
+                        _json_dump(encode_persistence_json(envelope.source_refs)),
+                        _json_dump(encode_persistence_json(envelope.meta)),
+                    ),
+                )
+            self.connection.commit()
+            return envelope
+        if (
+            existing.artifact_kind != envelope.artifact_kind
+            or existing.schema_version != envelope.schema_version
+            or existing.body_digest != envelope.body_digest
+        ):
+            raise ArtifactConflict(
+                f"Artifact already recorded with different content: "
+                f"{envelope.artifact_id}."
+            )
+        return existing
+
+    def get(self, artifact_id: str) -> ArtifactEnvelope:
+        existing = self._get_optional(artifact_id)
+        if existing is None:
+            raise KeyError(artifact_id)
+        return existing
+
+    def envelopes(self) -> tuple[ArtifactEnvelope, ...]:
+        with self.connection.cursor() as cursor:
+            cursor.execute(
+                """
+                select artifact_id, artifact_kind, schema_version, body_digest,
+                       body, source_refs, meta
+                from artifact_envelopes
+                order by artifact_id
+                """
+            )
+            return tuple(_artifact_envelope_from_row(row) for row in cursor.fetchall())
+
+    def _get_optional(self, artifact_id: str) -> ArtifactEnvelope | None:
+        with self.connection.cursor() as cursor:
+            cursor.execute(
+                """
+                select artifact_id, artifact_kind, schema_version, body_digest,
+                       body, source_refs, meta
+                from artifact_envelopes
+                where artifact_id = %s
+                """,
+                (artifact_id,),
+            )
+            row = cursor.fetchone()
+        if row is None:
+            return None
+        return _artifact_envelope_from_row(row)
+
+
+class MySQLReceiptLedger:
+    def __init__(self, connection: Any):
+        self.connection = connection
+
+    def record(self, receipt: CommitReceipt) -> CommitReceipt:
+        key = ReceiptLedgerKey.from_receipt(receipt)
+        existing = self._get_optional(key)
+        if existing is None:
+            rid = receipt_id(receipt)
+            body = commit_receipt_to_body(receipt)
+            with self.connection.cursor() as cursor:
+                cursor.execute(
+                    """
+                    insert into ledger_commit_receipts (
+                      receipt_id, public_row_id, projection_id, draft_id,
+                      receipt_digest, receipt_body
+                    )
+                    values (%s, %s, %s, %s, %s, %s)
+                    """,
+                    (
+                        rid,
+                        receipt.public_row_id,
+                        receipt.projection_id,
+                        receipt.draft_id,
+                        rid.removeprefix("receipt:"),
+                        _json_dump(encode_persistence_json(body)),
+                    ),
+                )
+                _insert_receipt_indexes(cursor, rid, receipt)
+            self.connection.commit()
+            return receipt
+        if existing != receipt:
+            raise ReceiptConflict(
+                f"CommitReceipt ledger root already recorded with different "
+                f"content: {key.public_row_id}."
+            )
+        return existing
+
+    def get(
+        self,
+        *,
+        public_row_id: str,
+        projection_id: str,
+        draft_id: str,
+    ) -> CommitReceipt:
+        key = ReceiptLedgerKey(public_row_id, projection_id, draft_id)
+        existing = self._get_optional(key)
+        if existing is None:
+            raise KeyError(key)
+        return existing
+
+    def receipts(self) -> tuple[CommitReceipt, ...]:
+        with self.connection.cursor() as cursor:
+            cursor.execute(
+                """
+                select receipt_body
+                from ledger_commit_receipts
+                order by public_row_id, projection_id, draft_id
+                """
+            )
+            return tuple(_commit_receipt_from_row(row) for row in cursor.fetchall())
+
+    def _get_optional(self, key: ReceiptLedgerKey) -> CommitReceipt | None:
+        with self.connection.cursor() as cursor:
+            cursor.execute(
+                """
+                select receipt_body
+                from ledger_commit_receipts
+                where public_row_id = %s and projection_id = %s and draft_id = %s
+                """,
+                (key.public_row_id, key.projection_id, key.draft_id),
+            )
+            row = cursor.fetchone()
+        if row is None:
+            return None
+        return _commit_receipt_from_row(row)
+
+
+def receipt_id(receipt: CommitReceipt) -> str:
+    body = commit_receipt_to_body(receipt)
+    canonical = _json_dump(encode_persistence_json(body))
+    digest = hashlib.sha256(canonical.encode("utf-8")).hexdigest()
+    return f"receipt:sha256:{digest}"
+
+
+def commit_receipt_to_body(receipt: CommitReceipt) -> dict[str, Any]:
+    citations = None
+    if receipt.citations is not None:
+        citations = {
+            "governance_decision_id": receipt.citations.governance_decision_id,
+            "governance_status": receipt.citations.governance_status,
+            "governance_reasons": receipt.citations.governance_reasons,
+            "commit_package_id": receipt.citations.commit_package_id,
+            "commit_package_complete": receipt.citations.commit_package_complete,
+            "subject_id": receipt.citations.subject_id,
+            "projection_id": receipt.citations.projection_id,
+            "authorized_fields": receipt.citations.authorized_fields,
+            "profile_id": receipt.citations.profile_id,
+            "report_status": receipt.citations.report_status,
+            "checked_claim_fields": receipt.citations.checked_claim_fields,
+            "checked_claim_witness_ids": receipt.citations.checked_claim_witness_ids,
+            "semantic_judgment_ids": receipt.citations.semantic_judgment_ids,
+            "reference_binding_ids": receipt.citations.reference_binding_ids,
+            "derived_claim_fields": receipt.citations.derived_claim_fields,
+            "derived_claim_ids": receipt.citations.derived_claim_ids,
+            "calculation_trace_ids": receipt.citations.calculation_trace_ids,
+            "formula_ids": receipt.citations.formula_ids,
+            "resolved_obligation_ids": receipt.citations.resolved_obligation_ids,
+            "open_obligation_ids": receipt.citations.open_obligation_ids,
+            "hazard_ids": receipt.citations.hazard_ids,
+            "projection_value_commitments": tuple(
+                _projection_value_commitment_to_body(item)
+                for item in receipt.citations.projection_value_commitments
+            ),
+            "dependency_fingerprints": tuple(
+                _dependency_fingerprint_to_body(item)
+                for item in receipt.citations.dependency_fingerprints
+            ),
+        }
+    return {
+        "draft_id": receipt.draft_id,
+        "winner_receipt_ids": receipt.winner_receipt_ids,
+        "barrier_snapshot": _receipt_value_to_body(receipt.barrier_snapshot),
+        "public_row_id": receipt.public_row_id,
+        "projection_id": receipt.projection_id,
+        "authorized_fields": receipt.authorized_fields,
+        "citations": citations,
+    }
+
+
+def commit_receipt_from_body(body: Mapping[str, Any]) -> CommitReceipt:
+    citations_body = body["citations"]
+    citations = None
+    if citations_body is not None:
+        citations = CommitReceiptCitations(
+            governance_decision_id=citations_body["governance_decision_id"],
+            governance_status=citations_body["governance_status"],
+            governance_reasons=tuple(citations_body["governance_reasons"]),
+            commit_package_id=citations_body["commit_package_id"],
+            commit_package_complete=citations_body["commit_package_complete"],
+            subject_id=citations_body["subject_id"],
+            projection_id=citations_body["projection_id"],
+            authorized_fields=tuple(citations_body["authorized_fields"]),
+            profile_id=citations_body["profile_id"],
+            report_status=citations_body["report_status"],
+            checked_claim_fields=tuple(citations_body["checked_claim_fields"]),
+            checked_claim_witness_ids=tuple(
+                citations_body["checked_claim_witness_ids"]
+            ),
+            semantic_judgment_ids=tuple(citations_body["semantic_judgment_ids"]),
+            reference_binding_ids=tuple(citations_body["reference_binding_ids"]),
+            derived_claim_fields=tuple(citations_body["derived_claim_fields"]),
+            derived_claim_ids=tuple(citations_body["derived_claim_ids"]),
+            calculation_trace_ids=tuple(citations_body["calculation_trace_ids"]),
+            formula_ids=tuple(citations_body["formula_ids"]),
+            resolved_obligation_ids=tuple(citations_body["resolved_obligation_ids"]),
+            open_obligation_ids=tuple(citations_body["open_obligation_ids"]),
+            hazard_ids=tuple(citations_body["hazard_ids"]),
+            projection_value_commitments=tuple(
+                _projection_value_commitment_from_body(item)
+                for item in citations_body["projection_value_commitments"]
+            ),
+            dependency_fingerprints=tuple(
+                _dependency_fingerprint_from_body(item)
+                for item in citations_body["dependency_fingerprints"]
+            ),
+        )
+    return CommitReceipt(
+        draft_id=body["draft_id"],
+        winner_receipt_ids=tuple(body["winner_receipt_ids"]),
+        barrier_snapshot=_receipt_value_from_body(body["barrier_snapshot"]),
+        public_row_id=body["public_row_id"],
+        projection_id=body["projection_id"],
+        authorized_fields=tuple(body["authorized_fields"]),
+        citations=citations,
+    )
+
+
+def _insert_receipt_indexes(cursor: Any, rid: str, receipt: CommitReceipt) -> None:
+    if receipt.citations is None:
+        return
+    for commitment in receipt.citations.projection_value_commitments:
+        cursor.execute(
+            """
+            insert into ledger_receipt_value_commitments (
+              receipt_id, field, source_kind, source_id, value_digest, digest_alg
+            )
+            values (%s, %s, %s, %s, %s, %s)
+            """,
+            (
+                rid,
+                commitment.field,
+                commitment.source_kind,
+                commitment.source_id,
+                commitment.value_digest,
+                commitment.digest_alg,
+            ),
+        )
+    for fingerprint in receipt.citations.dependency_fingerprints:
+        cursor.execute(
+            """
+            insert into ledger_receipt_dependency_fingerprints (
+              receipt_id, dependency_kind, dependency_id, fingerprint, digest_alg
+            )
+            values (%s, %s, %s, %s, %s)
+            """,
+            (
+                rid,
+                fingerprint.dependency_kind,
+                fingerprint.dependency_id,
+                fingerprint.fingerprint,
+                fingerprint.digest_alg,
+            ),
+        )
+    for ref in receipt_artifact_refs(receipt):
+        cursor.execute(
+            """
+            insert into ledger_receipt_artifact_refs (
+              receipt_id, artifact_id, artifact_kind, role
+            )
+            values (%s, %s, %s, %s)
+            """,
+            (rid, ref.artifact_id, ref.artifact_kind, "receipt_artifact_ref"),
+        )
+
+
+def _artifact_envelope_from_row(row: Any) -> ArtifactEnvelope:
+    return ArtifactEnvelope(
+        artifact_id=row[0],
+        artifact_kind=row[1],
+        schema_version=row[2],
+        body_digest=row[3],
+        body=decode_persistence_json(_json_load(row[4])),
+        source_refs=decode_persistence_json(_json_load(row[5])),
+        meta=decode_persistence_json(_json_load(row[6])),
+    )
+
+
+def _commit_receipt_from_row(row: Any) -> CommitReceipt:
+    return commit_receipt_from_body(decode_persistence_json(_json_load(row[0])))
+
+
+def _projection_value_commitment_to_body(
+    commitment: ProjectionValueCommitment,
+) -> dict[str, Any]:
+    return {
+        "field": commitment.field,
+        "source_kind": commitment.source_kind,
+        "source_id": commitment.source_id,
+        "value_digest": commitment.value_digest,
+        "digest_alg": commitment.digest_alg,
+    }
+
+
+def _projection_value_commitment_from_body(
+    body: Mapping[str, Any],
+) -> ProjectionValueCommitment:
+    return ProjectionValueCommitment(
+        field=body["field"],
+        source_kind=body["source_kind"],
+        source_id=body["source_id"],
+        value_digest=body["value_digest"],
+        digest_alg=body["digest_alg"],
+    )
+
+
+def _dependency_fingerprint_to_body(
+    fingerprint: DependencyFingerprint,
+) -> dict[str, Any]:
+    return {
+        "dependency_kind": fingerprint.dependency_kind,
+        "dependency_id": fingerprint.dependency_id,
+        "fingerprint": fingerprint.fingerprint,
+        "digest_alg": fingerprint.digest_alg,
+    }
+
+
+def _dependency_fingerprint_from_body(
+    body: Mapping[str, Any],
+) -> DependencyFingerprint:
+    return DependencyFingerprint(
+        dependency_kind=body["dependency_kind"],
+        dependency_id=body["dependency_id"],
+        fingerprint=body["fingerprint"],
+        digest_alg=body["digest_alg"],
+    )
+
+
+def _receipt_value_to_body(value: Any) -> Any:
+    if isinstance(value, ProjectionValueCommitment):
+        return {
+            "__receipt_type__": "projection_value_commitment",
+            "value": _projection_value_commitment_to_body(value),
+        }
+    if isinstance(value, DependencyFingerprint):
+        return {
+            "__receipt_type__": "dependency_fingerprint",
+            "value": _dependency_fingerprint_to_body(value),
+        }
+    if isinstance(value, Mapping):
+        return {
+            str(key): _receipt_value_to_body(item)
+            for key, item in sorted(value.items(), key=lambda pair: str(pair[0]))
+        }
+    if isinstance(value, tuple):
+        return tuple(_receipt_value_to_body(item) for item in value)
+    if isinstance(value, list):
+        return [_receipt_value_to_body(item) for item in value]
+    return value
+
+
+def _receipt_value_from_body(value: Any) -> Any:
+    if isinstance(value, Mapping):
+        receipt_type = value.get("__receipt_type__")
+        if receipt_type == "projection_value_commitment":
+            return _projection_value_commitment_from_body(value["value"])
+        if receipt_type == "dependency_fingerprint":
+            return _dependency_fingerprint_from_body(value["value"])
+        return {key: _receipt_value_from_body(item) for key, item in value.items()}
+    if isinstance(value, tuple):
+        return tuple(_receipt_value_from_body(item) for item in value)
+    if isinstance(value, list):
+        return [_receipt_value_from_body(item) for item in value]
+    return value
+
+
+def _json_dump(value: Any) -> str:
+    return json.dumps(
+        value,
+        ensure_ascii=True,
+        separators=(",", ":"),
+        sort_keys=True,
+    )
+
+
+def _json_load(value: Any) -> Any:
+    if isinstance(value, (bytes, bytearray)):
+        value = value.decode("utf-8")
+    if isinstance(value, str):
+        return json.loads(value)
+    return value
+
+
+__all__ = [
+    "MySQLReceiptLedger",
+    "MySQLArtifactStore",
+    "TRUST_SPINE_SCHEMA_STATEMENTS",
+    "apply_trust_spine_schema",
+    "commit_receipt_from_body",
+    "commit_receipt_to_body",
+    "receipt_id",
+]
