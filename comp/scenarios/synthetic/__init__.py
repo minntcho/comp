@@ -36,8 +36,18 @@ from comp.scenarios.synthetic.loaders import (
     SyntheticSourceDescriptor,
     load_synthetic_input_bundle,
 )
+from comp.scenarios.synthetic.raw_claim_promotion import (
+    AllocationSupport,
+    PromotionClaimIds,
+    ReportingPeriodSupport,
+    SiteAliasSupport,
+    SyntheticRawClaimPromotionProfile,
+    UnitConversionSupport,
+    promote_raw_claim_hypothesis,
+)
 
 __all__ = [
+    "AllocationSupport",
     "ExpectedClaim",
     "ExpectedArtifactRef",
     "ExpectedDependencyRef",
@@ -49,7 +59,10 @@ __all__ = [
     "ExpectedSourceMap",
     "InjectedAnomaly",
     "MasterReferenceRecord",
+    "PromotionClaimIds",
     "RawElectricityRow",
+    "ReportingPeriodSupport",
+    "SiteAliasSupport",
     "SyntheticInputBundle",
     "SyntheticInputLoadError",
     "SyntheticLoadedSource",
@@ -59,11 +72,14 @@ __all__ = [
     "SyntheticRawSources",
     "SyntheticRun",
     "SyntheticScenarioConfig",
+    "SyntheticRawClaimPromotionProfile",
     "SyntheticSourceDescriptor",
+    "UnitConversionSupport",
     "build_synthetic_loaded_source",
     "build_synthetic_loaded_sources",
     "generate_synthetic_pcf_run",
     "load_synthetic_input_bundle",
+    "promote_raw_claim_hypothesis",
     "synthetic_source_input_dependency_id",
     "write_synthetic_run",
 ]
