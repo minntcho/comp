@@ -8,9 +8,10 @@ from comp.persistence import (
     ArtifactConflict,
     ArtifactEnvelope,
     ArtifactIntegrityError,
+    ReceiptConflict,
     verify_artifact_envelope,
 )
-from tests.support.persistence_cases import claim_envelope
+from tests.support.persistence_cases import claim_envelope, receipt_projection_case
 
 
 pytestmark = pytest.mark.mysql
@@ -165,5 +166,45 @@ def test_mysql_artifact_store_rejects_invalid_digest():
 
         with pytest.raises(ArtifactIntegrityError, match="body digest"):
             store.record(tampered)
+    finally:
+        connection.close()
+
+
+def test_mysql_receipt_ledger_records_receipts_idempotently():
+    from comp.persistence.mysql import MySQLReceiptLedger, apply_trust_spine_schema
+
+    connection = _connect_mysql()
+    try:
+        apply_trust_spine_schema(connection)
+        _reset_spine(connection)
+        ledger = MySQLReceiptLedger(connection)
+        receipt = receipt_projection_case(amount=100).receipt
+
+        assert ledger.record(receipt) == receipt
+        assert ledger.record(receipt) == receipt
+        assert ledger.get(
+            public_row_id="public-row-1",
+            projection_id="public-row",
+            draft_id="draft-1",
+        ) == receipt
+        assert ledger.receipts() == (receipt,)
+    finally:
+        connection.close()
+
+
+def test_mysql_receipt_ledger_rejects_conflicting_receipt_root():
+    from comp.persistence.mysql import MySQLReceiptLedger, apply_trust_spine_schema
+
+    connection = _connect_mysql()
+    try:
+        apply_trust_spine_schema(connection)
+        _reset_spine(connection)
+        ledger = MySQLReceiptLedger(connection)
+        receipt = receipt_projection_case(amount=100).receipt
+        changed = replace(receipt, authorized_fields=("site",))
+
+        ledger.record(receipt)
+        with pytest.raises(ReceiptConflict, match="public-row-1"):
+            ledger.record(changed)
     finally:
         connection.close()
