@@ -90,6 +90,8 @@ def test_readme_compiler_tool_import_surface_is_exported():
         domain_pack_declaration_fingerprint,
         evidence_witness_fingerprint,
         profile_declaration_fingerprint,
+        profile_allowed_units,
+        profile_known_fields,
         reference_catalog_snapshot_fingerprint,
         reference_query_for_obligation_from_profile_policy,
         reference_query_for_obligation_from_policies,
@@ -124,6 +126,8 @@ def test_readme_compiler_tool_import_surface_is_exported():
     assert evidence_witness_fingerprint is not None
     assert active_retrieval_query_policies is not None
     assert profile_declaration_fingerprint is not None
+    assert profile_allowed_units is not None
+    assert profile_known_fields is not None
     assert reference_query_for_obligation_from_policies is not None
     assert reference_query_for_obligation_from_profile_policy is not None
     assert reference_query_for_obligation_from_policy is not None
@@ -152,6 +156,16 @@ def test_trust_kernel_hardening_documents_projection_numeric_policy():
     assert "## Projection Numeric Value Policy" in hardening
     assert "ProjectionValueCommitment" in hardening
     assert "Decimal" in hardening
+
+
+def test_trust_kernel_hardening_documents_profile_baseline_policy():
+    hardening = Path("docs/architecture/trust-kernel-hardening.md").read_text(
+        encoding="utf-8"
+    )
+
+    assert "profile-declared baseline" in hardening
+    assert "known fields and allowed units" in hardening
+    assert "run_profile_rules" in hardening
 
 
 def test_working_theory_status_section_tracks_current_rebuild_state():
