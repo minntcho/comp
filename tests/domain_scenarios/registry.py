@@ -46,6 +46,9 @@ from tests.domain_scenarios.synthetic_raw_claim_hypothesis_acceptance.scenario i
 from tests.domain_scenarios.synthetic_raw_claim_conflict.scenario import (
     RAW_CLAIM_CONFLICT_SCENARIO,
 )
+from tests.domain_scenarios.synthetic_raw_claim_conflict_resolution.scenario import (
+    RAW_CLAIM_CONFLICT_RESOLUTION_SCENARIO,
+)
 from tests.domain_scenarios.synthetic_pcf_smoke.scenario import (
     SCENARIO as SYNTHETIC_PCF_SMOKE_SCENARIO,
 )
@@ -68,6 +71,7 @@ def registered_scenarios() -> tuple[ScenarioDefinition, ...]:
         RAW_CLAIM_HYPOTHESIS_GATE_SCENARIO,
         RAW_CLAIM_HYPOTHESIS_ACCEPTANCE_SCENARIO,
         RAW_CLAIM_CONFLICT_SCENARIO,
+        RAW_CLAIM_CONFLICT_RESOLUTION_SCENARIO,
         SYNTHETIC_PCF_SMOKE_SCENARIO,
         SYNTHETIC_PCF_ANOMALY_SCENARIO,
         SYNTHETIC_PCF_RESOLUTION_SCENARIO,
