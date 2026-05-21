@@ -105,6 +105,21 @@ def test_reference_search_resolution_adds_candidates_and_resolves_followup():
     ]
 
 
+def test_reference_search_resolution_recomputes_status_after_resolving_only_blocker():
+    obligation = _planned_unknown_reference_report().obligations[1]
+    report = CompileReport(status="blocked", obligations=(obligation,))
+
+    resolved = resolve_reference_search_obligations(
+        report,
+        _catalog(),
+        query_for_obligation=lambda obligation: "korea electricity grid factor",
+        reference_type="emission_factor",
+    )
+
+    assert resolved.obligations == ()
+    assert resolved.status == "accepted"
+
+
 def test_reference_search_resolution_leaves_followup_open_without_query():
     planned = _planned_unknown_reference_report()
 

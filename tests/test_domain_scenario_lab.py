@@ -29,6 +29,9 @@ from tests.domain_scenarios.canonical_working_loop.scenario import (
 from tests.domain_scenarios.l_energy_pcf_governance.scenario import (
     run_l_energy_pcf_governance_scenario,
 )
+from tests.domain_scenarios.synthetic_pcf_anomaly.scenario import (
+    run_synthetic_pcf_anomaly_scenario,
+)
 from tests.domain_scenarios.synthetic_pcf_smoke.scenario import (
     run_synthetic_pcf_smoke_scenario,
 )
@@ -53,6 +56,7 @@ def test_domain_scenario_cli_lists_registered_scenarios(capsys):
     assert "l_energy.final_bottom_up_pcf_rollup.v1" in captured.out
     assert "l_energy_pcf_governance.v1" in captured.out
     assert "synthetic_pcf.smoke.v1" in captured.out
+    assert "synthetic_pcf.anomaly.v1" in captured.out
     assert "Canonical raw text PCF working loop" in captured.out
 
 
@@ -110,7 +114,7 @@ def test_domain_scenario_cli_runs_all_registered_scenarios(capsys):
     captured = capsys.readouterr()
     assert exit_code == 0
     assert "Domain Scenario Run" in captured.out
-    assert "Passed: 12/12" in captured.out
+    assert "Passed: 13/13" in captured.out
     assert "- canonical_working_loop.raw_text_pcf.v1: pass" in captured.out
     assert "- tiny_pcf.location_based_electricity.v1: pass" in captured.out
     assert "- l_energy.alpha_invalid_allocation_rfi.v1: pass" in captured.out
@@ -126,6 +130,7 @@ def test_domain_scenario_cli_runs_all_registered_scenarios(capsys):
     assert "- l_energy.final_bottom_up_pcf_rollup.v1: pass" in captured.out
     assert "- l_energy_pcf_governance.v1: pass" in captured.out
     assert "- synthetic_pcf.smoke.v1: pass" in captured.out
+    assert "- synthetic_pcf.anomaly.v1: pass" in captured.out
     assert captured.err == ""
 
 
@@ -137,8 +142,9 @@ def test_domain_scenario_cli_runs_all_as_json(capsys):
     captured = capsys.readouterr()
     payload = json.loads(captured.out)
     assert exit_code == 0
-    assert payload["summary"] == {"total": 12, "passed": 12, "failed": 0}
+    assert payload["summary"] == {"total": 13, "passed": 13, "failed": 0}
     assert tuple(item["status"] for item in payload["scenarios"]) == (
+        "pass",
         "pass",
         "pass",
         "pass",
@@ -165,6 +171,7 @@ def test_domain_scenario_cli_runs_all_as_json(capsys):
         "l_energy.final_bottom_up_pcf_rollup.v1",
         "l_energy_pcf_governance.v1",
         "synthetic_pcf.smoke.v1",
+        "synthetic_pcf.anomaly.v1",
     )
     assert "result" in payload["scenarios"][0]
     assert captured.err == ""
@@ -214,6 +221,7 @@ def test_registered_scenarios_are_explicit_scenario_definitions():
         "l_energy.final_bottom_up_pcf_rollup.v1",
         "l_energy_pcf_governance.v1",
         "synthetic_pcf.smoke.v1",
+        "synthetic_pcf.anomaly.v1",
     )
     assert all(isinstance(scenario, ScenarioDefinition) for scenario in scenarios)
     assert scenarios[1].contract.must_commit is True
@@ -286,6 +294,33 @@ def test_synthetic_pcf_smoke_scenario_runs_generated_raw_to_receipt_flow():
         fingerprint.dependency_kind
         for fingerprint in result.preparation.receipt.citations.dependency_fingerprints
     ) == ("synthetic_manifest",)
+
+
+def test_synthetic_pcf_anomaly_scenario_blocks_generated_bad_rows():
+    result = run_synthetic_pcf_anomaly_scenario()
+
+    assert result.scenario_id == "synthetic_pcf.anomaly.v1"
+    assert result.report.status == "blocked"
+    assert result.preparation.decision.status == "hold"
+    assert result.preparation.receipt is None
+    assert result.projection is None
+    assert tuple(result.preparation.package.open_obligation_ids) == (
+        "synthetic-obligation:missing_unit",
+        "synthetic-obligation:wrong_unit",
+        "synthetic-obligation:period_mismatch",
+        "synthetic-obligation:negative_amount",
+        "synthetic-obligation:site_alias",
+    )
+    assert tuple(result.preparation.package.hazard_ids) == (
+        "hazard:missing_unit:unit:review",
+        "hazard:period_mismatch:period:review",
+        "hazard:invalid_activity_amount:electricity_kwh:block",
+        "hazard:site_alias:site_id:review",
+    )
+    assert tuple((claim.field, claim.reason) for claim in result.report.failed_claims) == (
+        ("unit", "unsupported_unit"),
+        ("electricity_kwh", "negative_amount"),
+    )
 
 
 def test_tiny_pcf_scenario_rejects_tampered_projection_value():

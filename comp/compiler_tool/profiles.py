@@ -21,6 +21,8 @@ class RuleFamily:
     required_rubric_ids: tuple[str, ...] = field(default_factory=tuple)
     description: str = ""
     evaluate: RuleEvaluator | None = None
+    evaluator_id: str | None = None
+    implementation_version: str | None = None
 
 
 @dataclass(frozen=True)
@@ -130,6 +132,13 @@ def validate_compiler_profile(profile: CompilerProfile) -> None:
 
     active_rubrics = set(profile.active_rubric_ids)
     for rule in active_rule_families(profile, validate=False):
+        if rule.evaluate is not None and (
+            not rule.evaluator_id or not rule.implementation_version
+        ):
+            raise ProfileValidationError(
+                f"active rule {rule.rule_id} requires evaluator identity and "
+                "implementation version"
+            )
         for rubric_id in rule.required_rubric_ids:
             if rubric_id not in rubrics:
                 raise ProfileValidationError(
@@ -320,6 +329,8 @@ def _rule_family_fingerprint_payload(rule: RuleFamily) -> dict[str, Any]:
         "rule_id": rule.rule_id,
         "required_rubric_ids": rule.required_rubric_ids,
         "description": rule.description,
+        "evaluator_id": rule.evaluator_id,
+        "implementation_version": rule.implementation_version,
     }
 
 

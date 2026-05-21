@@ -51,6 +51,8 @@ def _tiny_domain():
                 rule_id=SCOPE2_RULE_ID,
                 required_rubric_ids=(SCOPE2_RUBRIC_ID,),
                 evaluate=_scope2_method_rule,
+                evaluator_id="fixture.ghg.scope2_method_support_rule.evaluator",
+                implementation_version="2026.1",
             ),
             RuleFamily(rule_id="fixture.inactive_rule.v1"),
         ),
@@ -103,6 +105,22 @@ def _hypothesis():
     )
 
 
+def _hypothesis_without_source_witness():
+    return InterpretationHypothesis(
+        hypothesis_id="hyp-scope2",
+        subject_id="claim-scope2",
+        claims=(
+            ClaimHypothesis(
+                field="scope2_method",
+                value="market_based",
+                witness_id=None,
+                origin="llm_inferred",
+            ),
+        ),
+        witnesses=(),
+    )
+
+
 def _judgment(obligation_id):
     return SemanticJudgment(
         judgment_id="judgment-scope2",
@@ -130,6 +148,19 @@ def test_tiny_domain_profile_opens_scope2_semantic_obligation():
         "llm/model@policy-v1",
     )
     assert report.can_project_public_row is False
+
+
+def test_profile_runner_blocks_claim_without_source_witness():
+    report = compile_with_profile(_hypothesis_without_source_witness(), _profile())
+
+    assert report.status == "blocked"
+    assert report.failed_claims[0].field == "scope2_method"
+    assert report.failed_claims[0].reason == "missing_source_witness"
+    assert any(
+        obligation.kind == "find_source_witness"
+        and obligation.field == "scope2_method"
+        for obligation in report.obligations
+    )
 
 
 def test_tiny_domain_semantic_judgment_discharges_obligation():

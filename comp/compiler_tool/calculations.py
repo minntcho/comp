@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from decimal import Decimal
+from decimal import Decimal, InvalidOperation, ROUND_HALF_UP
 from numbers import Number
 from typing import Any
 
@@ -17,6 +17,9 @@ class CalculationStep:
     input_ids: tuple[str, ...] = field(default_factory=tuple)
     output_value: Any = None
     output_unit: str | None = None
+    exact_output_value: Decimal | None = None
+    rounding_quantum: str | None = None
+    rounding_mode: str | None = None
 
 
 @dataclass(frozen=True)
@@ -66,6 +69,8 @@ class CalculationFormula:
     factor_value_attribute: str = "factor_value"
     input_unit_attribute: str = "input_unit"
     output_unit_attribute: str = "output_unit"
+    rounding_quantum: str | None = None
+    rounding_mode: str = "ROUND_HALF_UP"
 
 
 @dataclass(frozen=True)
@@ -153,7 +158,9 @@ def calculate_derived_claim(
             )
         )
 
-    if not isinstance(input_claim.value, Number) or not isinstance(factor_value, Number):
+    input_value = _decimal_number(input_claim.value)
+    factor_decimal = _decimal_number(factor_value)
+    if input_value is None or factor_decimal is None:
         return _blocked(
             _requirement(
                 reason="non_numeric_input",
@@ -164,7 +171,8 @@ def calculate_derived_claim(
             )
         )
 
-    output_value = _multiply(input_claim.value, factor_value)
+    exact_output_value = _apply_rounding(input_value * factor_decimal, formula)
+    output_value = _number(exact_output_value)
     trace = CalculationTrace(
         trace_id=f"trace:{output_claim_id}",
         formula_id=formula.formula_id,
@@ -177,6 +185,13 @@ def calculate_derived_claim(
                 input_ids=(input_claim.claim_id, reference_binding.binding_id),
                 output_value=output_value,
                 output_unit=formula.output_unit,
+                exact_output_value=exact_output_value,
+                rounding_quantum=formula.rounding_quantum,
+                rounding_mode=(
+                    formula.rounding_mode
+                    if formula.rounding_quantum is not None
+                    else None
+                ),
             ),
         ),
     )
@@ -205,6 +220,8 @@ def calculation_formula_declaration_fingerprint(
             "factor_value_attribute": formula.factor_value_attribute,
             "input_unit_attribute": formula.input_unit_attribute,
             "output_unit_attribute": formula.output_unit_attribute,
+            "rounding_quantum": formula.rounding_quantum,
+            "rounding_mode": formula.rounding_mode,
         },
     )
 
@@ -245,8 +262,33 @@ def _requirement(
     )
 
 
-def _multiply(left: Number, right: Number) -> int | float:
-    value = Decimal(str(left)) * Decimal(str(right))
+ROUNDING_MODES = {
+    "ROUND_HALF_UP": ROUND_HALF_UP,
+}
+
+
+def _decimal_number(value: Any) -> Decimal | None:
+    if isinstance(value, bool) or not isinstance(value, Number):
+        return None
+    try:
+        decimal = value if isinstance(value, Decimal) else Decimal(str(value))
+    except (InvalidOperation, ValueError):
+        return None
+    if not decimal.is_finite():
+        return None
+    return decimal
+
+
+def _apply_rounding(value: Decimal, formula: CalculationFormula) -> Decimal:
+    if formula.rounding_quantum is None:
+        return value
+    rounding_mode = ROUNDING_MODES.get(formula.rounding_mode)
+    if rounding_mode is None:
+        raise ValueError(f"Unsupported rounding mode: {formula.rounding_mode}")
+    return value.quantize(Decimal(formula.rounding_quantum), rounding=rounding_mode)
+
+
+def _number(value: Decimal) -> int | float:
     if value == value.to_integral_value():
         return int(value)
     return float(value)

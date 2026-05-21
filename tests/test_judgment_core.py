@@ -29,6 +29,24 @@ def test_judgment_state_append_only_and_versions():
     assert state.version_of(subject) == 1
 
 
+def test_fact_rejects_unhashable_value_at_construction():
+    subject = SubjectRef("claim", "c1")
+
+    import pytest
+
+    with pytest.raises(TypeError, match="Fact value must be hashable"):
+        Fact("evidence", subject, "payload", {"amount": 100})
+
+
+def test_fact_rejects_unhashable_meta_at_construction():
+    subject = SubjectRef("claim", "c1")
+
+    import pytest
+
+    with pytest.raises(TypeError, match="Fact meta value must be hashable"):
+        Fact("evidence", subject, "amount", 100, meta=(("source_ids", ["w1"]),))
+
+
 def test_active_hazards_respect_discharge_facts():
     subject = SubjectRef("draft", "d1")
     state = JudgmentState()

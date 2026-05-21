@@ -6,6 +6,7 @@ from dataclasses import replace
 from comp.compiler_tool.models import CompileReport, ProofObligation
 from comp.compiler_tool.reference_db import ReferenceCatalog
 from comp.compiler_tool.references import ReferenceCandidate
+from comp.compiler_tool.report_status import with_recomputed_status
 
 ReferenceSearchQuery = Callable[[ProofObligation], str | None]
 
@@ -54,12 +55,14 @@ def resolve_reference_search_obligations(
     if not changed:
         return report
 
-    return replace(
-        report,
-        obligations=tuple(obligations),
-        resolved_obligations=resolved_obligations,
-        reference_candidates=candidates,
-        can_project_public_row=False,
+    return with_recomputed_status(
+        replace(
+            report,
+            obligations=tuple(obligations),
+            resolved_obligations=resolved_obligations,
+            reference_candidates=candidates,
+            can_project_public_row=False,
+        )
     )
 
 
