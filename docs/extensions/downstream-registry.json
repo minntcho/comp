@@ -1,0 +1,25 @@
+{
+  "schema_version": 1,
+  "owner": "scenario-lab",
+  "description": "Downstream scenario-pack repositories that consume comp as a public authority kernel.",
+  "packs": [
+    {
+      "id": "comp-scenario-packs",
+      "repo": "minntcho/comp-scenario-packs",
+      "status": "planned",
+      "relationship": "downstream",
+      "scope": "large-domain-and-product-e2e",
+      "required_for_comp_pr_ci": false,
+      "recommended_for_release_candidate": true,
+      "authority_policy": "compatibility_signal_not_authority_source",
+      "dependency_direction": "downstream_consumes_comp",
+      "expected_comp_dependency_before_v1": "comp @ git+https://github.com/minntcho/comp@<ref>",
+      "expected_comp_dependency_after_v1": "comp>=1.0,<2.0",
+      "notes": [
+        "comp keeps only minimal kernel e2e scenarios internally.",
+        "Large domain, product, platform, importer, UI, and supplier workflow scenarios continue downstream.",
+        "Downstream packs must consume comp through public APIs after v1.0."
+      ]
+    }
+  ]
+}
