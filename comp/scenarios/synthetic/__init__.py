@@ -31,6 +31,11 @@ from comp.scenarios.synthetic.generator import (
     generate_synthetic_pcf_run,
     write_synthetic_run,
 )
+from comp.scenarios.synthetic.loaders import (
+    SyntheticInputLoadError,
+    SyntheticSourceDescriptor,
+    load_synthetic_input_bundle,
+)
 
 __all__ = [
     "ExpectedClaim",
@@ -48,6 +53,7 @@ __all__ = [
     "RawElectricityRow",
     "RESOLUTION_OUTPUT_CONTRACT",
     "SyntheticInputBundle",
+    "SyntheticInputLoadError",
     "SyntheticMaster",
     "SyntheticOracle",
     "SyntheticPcfAdapter",
@@ -56,6 +62,8 @@ __all__ = [
     "SyntheticResolutionArtifacts",
     "SyntheticRun",
     "SyntheticScenarioConfig",
+    "SyntheticSourceDescriptor",
     "generate_synthetic_pcf_run",
+    "load_synthetic_input_bundle",
     "write_synthetic_run",
 ]

@@ -1,14 +1,19 @@
 from __future__ import annotations
 
 import csv
+import json
+import shutil
 from pathlib import Path
 
 import pytest
 
+from comp.compiler_tool import resolve_reference_grounded_calculation
 from comp.scenarios.synthetic import (
+    SyntheticInputLoadError,
     SyntheticPcfAdapter,
     SyntheticScenarioConfig,
     generate_synthetic_pcf_run,
+    load_synthetic_input_bundle,
     write_synthetic_run,
 )
 from tests.support.synthetic.oracle_assertions import (
@@ -27,6 +32,36 @@ def test_synthetic_pcf_generator_writes_oracle_not_truth(tmp_path: Path) -> None
     assert run.manifest["reproducibility"]["seed"] == 7
     assert run.manifest["reproducibility"]["config_hash"].startswith("sha256:")
     assert run.output_contract == ("master", "raw_sources", "oracle")
+    assert run.manifest["sources"] == [
+        {
+            "source_ref": "reference_catalog.csv",
+            "role": "master_reference_catalog",
+            "path": "master/reference_catalog.csv",
+            "media_type": "text/csv",
+            "schema_id": "synthetic.master_reference_catalog.v1",
+        },
+        {
+            "source_ref": "sites.csv",
+            "role": "master_sites",
+            "path": "master/sites.csv",
+            "media_type": "text/csv",
+            "schema_id": "synthetic.master_sites.v1",
+        },
+        {
+            "source_ref": "products.csv",
+            "role": "master_products",
+            "path": "master/products.csv",
+            "media_type": "text/csv",
+            "schema_id": "synthetic.master_products.v1",
+        },
+        {
+            "source_ref": "erp_electricity.csv",
+            "role": "raw_source",
+            "path": "raw_sources/erp_electricity.csv",
+            "media_type": "text/csv",
+            "schema_id": "synthetic.erp_electricity.v1",
+        },
+    ]
 
     assert (run_dir / "manifest.json").is_file()
     assert (run_dir / "master" / "reference_catalog.csv").is_file()
@@ -211,6 +246,65 @@ def test_synthetic_pcf_adapter_rejects_oracle_bearing_run() -> None:
         SyntheticPcfAdapter(run)  # type: ignore[arg-type]
 
 
+def test_synthetic_input_loader_roundtrips_disk_sources_without_oracle(
+    tmp_path: Path,
+) -> None:
+    run = generate_synthetic_pcf_run(SyntheticScenarioConfig.pcf_smoke(seed=7))
+    run_dir = write_synthetic_run(run, tmp_path / "synthetic-pcf-smoke")
+    shutil.rmtree(run_dir / "oracle")
+
+    input_bundle = load_synthetic_input_bundle(run_dir)
+    adapter = SyntheticPcfAdapter(input_bundle)
+    report = resolve_reference_grounded_calculation(
+        adapter.blocked_report(),
+        adapter.reference_catalog(),
+        query_for_obligation=adapter.query_for_obligation,
+        criteria=adapter.reference_selection_criteria(),
+        input_claim=adapter.input_claim(),
+        formula=adapter.formula(),
+        output_claim_id=adapter.output_claim_id,
+    )
+
+    assert input_bundle.raw_sources == run.input_bundle.raw_sources
+    assert input_bundle.master == run.input_bundle.master
+    assert report.status == "accepted"
+    assert {witness.source for witness in report.evidence_witnesses} == {
+        "raw_sources/erp_electricity.csv",
+    }
+
+
+def test_synthetic_input_loader_uses_manifest_media_type_not_file_extension(
+    tmp_path: Path,
+) -> None:
+    run = generate_synthetic_pcf_run(SyntheticScenarioConfig.pcf_smoke(seed=7))
+    run_dir = write_synthetic_run(run, tmp_path / "synthetic-pcf-smoke")
+    alternate_path = run_dir / "raw_sources" / "erp_electricity.raw"
+    (run_dir / "raw_sources" / "erp_electricity.csv").replace(alternate_path)
+    manifest = _read_json(run_dir / "manifest.json")
+    manifest["sources"][-1]["path"] = "raw_sources/erp_electricity.raw"
+    _write_json(run_dir / "manifest.json", manifest)
+
+    input_bundle = load_synthetic_input_bundle(run_dir)
+
+    assert input_bundle.raw_sources == run.input_bundle.raw_sources
+
+
+def test_synthetic_input_loader_rejects_unsupported_manifest_source(
+    tmp_path: Path,
+) -> None:
+    run = generate_synthetic_pcf_run(SyntheticScenarioConfig.pcf_smoke(seed=7))
+    run_dir = write_synthetic_run(run, tmp_path / "synthetic-pcf-smoke")
+    manifest = _read_json(run_dir / "manifest.json")
+    manifest["sources"][-1]["media_type"] = "application/parquet"
+    _write_json(run_dir / "manifest.json", manifest)
+
+    with pytest.raises(
+        SyntheticInputLoadError,
+        match="unsupported synthetic source loader",
+    ):
+        load_synthetic_input_bundle(run_dir)
+
+
 def test_comp_core_does_not_import_synthetic_scenario_generator() -> None:
     root = Path(__file__).resolve().parents[1] / "comp"
     core_dirs = (
@@ -232,3 +326,14 @@ def test_comp_core_does_not_import_synthetic_scenario_generator() -> None:
 def _read_csv(path: Path) -> list[dict[str, str]]:
     with path.open(encoding="utf-8", newline="") as handle:
         return list(csv.DictReader(handle))
+
+
+def _read_json(path: Path) -> dict[str, object]:
+    return json.loads(path.read_text(encoding="utf-8"))
+
+
+def _write_json(path: Path, payload: dict[str, object]) -> None:
+    path.write_text(
+        json.dumps(payload, ensure_ascii=True, indent=2, sort_keys=True) + "\n",
+        encoding="utf-8",
+    )
