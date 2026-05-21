@@ -2,7 +2,7 @@
 
 Status: implementation-map
 Owner: scenario-lab
-Last checked against code: 2026-05-20
+Last checked against code: 2026-05-21
 Can block PRs: limited
 
 This document defines how to add larger domain scenarios without turning them
@@ -204,6 +204,36 @@ source inputs as `synthetic_source_input` dependency fingerprints. This keeps th
 contract tied to the source content the loader consumed rather than to CSV as a
 special case. Oracle files remain test expectations and must not be required to
 build the compiler input bundle.
+
+## Raw Claim Promotion Boundary
+
+Synthetic raw `ClaimHypothesis` examples may include LLM-like extractor
+candidates, source snippets, aliases, unit hints, and allocation hints. These
+raw candidates are not compiler authority.
+
+Promotion from raw candidates into canonical compiler artifacts belongs in the
+scenario/domain layer. The synthetic promotion helper may create:
+
+```text
+CheckedClaim
+ReferenceBinding
+DerivedClaim
+resolved ProofObligation
+CalculationTrace
+```
+
+It must not create:
+
+```text
+CommitReceipt
+public projection
+receipt ledger entries
+```
+
+The promotion boundary exists so scenario packs can show how domain/profile
+support turns candidates into checked artifacts without teaching the trust
+kernel domain-specific names such as plant aliases, unit conversion tables, or
+allocation support records.
 
 For the first L-Energy PCF scenario, copy only the minimal values required for
 the scenario contract into the pack and keep source refs to the original
