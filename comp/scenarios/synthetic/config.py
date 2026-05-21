@@ -105,6 +105,36 @@ class SyntheticScenarioConfig:
             ),
         )
 
+    @classmethod
+    def pcf_resolution(cls, *, seed: int = 17) -> "SyntheticScenarioConfig":
+        return cls(
+            scenario_id="synthetic_pcf.resolution.v1",
+            seed=seed,
+            profile_id="synthetic-pcf-resolution-profile-v1",
+            subject_id="product:synthetic-pcf-resolution-1",
+            public_row_id="public-row:synthetic-pcf-resolution-1",
+            projection_id="synthetic-pcf-resolution-public-row",
+            reporting_period="2024",
+            site_id="SITE-SYN-001",
+            site_name="Synthetic Cell Plant 001",
+            product_id="PRD-SYN-001",
+            electricity_kwh=1200,
+            electricity_unit="kWh",
+            geography="KR",
+            factor_reference_id="synthetic.factor.kr_grid_2024.location_based",
+            factor_value=0.42,
+            factor_input_unit="kWh",
+            factor_output_unit="kgCO2e",
+            source_row_id="ERP-SYN-PCF-RESOLUTION",
+            source_ref="erp_electricity.csv",
+            input_claim_id="synthetic-pcf-resolution:electricity:kwh",
+            output_claim_id="synthetic-pcf-resolution:electricity:co2e_kg",
+            formula_id="pcf.electricity_factor_multiplication.v1",
+            selector_rule_id="synthetic.factor_selector.v1",
+            binding_id="bind-synthetic-resolution-electricity-factor",
+            anomalies=(MISSING_UNIT,),
+        )
+
     def manifest_payload(self) -> dict[str, Any]:
         return {
             "scenario_id": self.scenario_id,

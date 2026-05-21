@@ -98,6 +98,16 @@ def materialize_synthetic_run(
 
 
 def _compile_report(adapter: SyntheticPcfAdapter) -> CompileReport:
+    if adapter.has_resolution_artifacts():
+        return resolve_reference_grounded_calculation(
+            adapter.resolution_seed_report(),
+            adapter.reference_catalog(),
+            query_for_obligation=adapter.query_for_obligation,
+            criteria=adapter.reference_selection_criteria(),
+            input_claim=adapter.resolved_input_claim(),
+            formula=adapter.formula(),
+            output_claim_id=adapter.output_claim_id,
+        )
     if adapter.config.anomalies:
         return adapter.anomaly_report()
     return resolve_reference_grounded_calculation(

@@ -24,6 +24,47 @@ def build_manifest(
     output_contract: tuple[str, ...],
 ) -> dict[str, Any]:
     payload = config.manifest_payload()
+    sources = [
+        {
+            "source_ref": "reference_catalog.csv",
+            "role": "master_reference_catalog",
+            "path": "master/reference_catalog.csv",
+            "media_type": "text/csv",
+            "schema_id": "synthetic.master_reference_catalog.v1",
+        },
+        {
+            "source_ref": "sites.csv",
+            "role": "master_sites",
+            "path": "master/sites.csv",
+            "media_type": "text/csv",
+            "schema_id": "synthetic.master_sites.v1",
+        },
+        {
+            "source_ref": "products.csv",
+            "role": "master_products",
+            "path": "master/products.csv",
+            "media_type": "text/csv",
+            "schema_id": "synthetic.master_products.v1",
+        },
+        {
+            "source_ref": config.source_ref,
+            "role": "raw_source",
+            "path": f"raw_sources/{config.source_ref}",
+            "media_type": "text/csv",
+            "schema_id": "synthetic.erp_electricity.v1",
+        },
+    ]
+    if "resolution_artifacts" in output_contract:
+        sources.append(
+            {
+                "source_ref": "unit_witnesses.csv",
+                "role": "resolution_unit_witness",
+                "path": "resolution_artifacts/unit_witnesses.csv",
+                "media_type": "text/csv",
+                "schema_id": "synthetic.resolution_unit_witnesses.v1",
+            }
+        )
+
     return {
         "generator": "comp.scenarios.synthetic",
         "scenario_id": config.scenario_id,
@@ -40,36 +81,7 @@ def build_manifest(
             "config_hash": build_config_hash(payload),
         },
         "config": payload,
-        "sources": [
-            {
-                "source_ref": "reference_catalog.csv",
-                "role": "master_reference_catalog",
-                "path": "master/reference_catalog.csv",
-                "media_type": "text/csv",
-                "schema_id": "synthetic.master_reference_catalog.v1",
-            },
-            {
-                "source_ref": "sites.csv",
-                "role": "master_sites",
-                "path": "master/sites.csv",
-                "media_type": "text/csv",
-                "schema_id": "synthetic.master_sites.v1",
-            },
-            {
-                "source_ref": "products.csv",
-                "role": "master_products",
-                "path": "master/products.csv",
-                "media_type": "text/csv",
-                "schema_id": "synthetic.master_products.v1",
-            },
-            {
-                "source_ref": config.source_ref,
-                "role": "raw_source",
-                "path": f"raw_sources/{config.source_ref}",
-                "media_type": "text/csv",
-                "schema_id": "synthetic.erp_electricity.v1",
-            },
-        ],
+        "sources": sources,
     }
 
 
