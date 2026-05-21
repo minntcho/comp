@@ -112,6 +112,31 @@ it bundles the canonical `ReferenceCatalog`, retrieval resolver/index, and their
 fixture version labels so larger domain packs can replace reference data without
 rewiring the scenario runner.
 
+## External Scenario Packs
+
+This directory keeps minimal scenarios that prove `comp` kernel contracts.
+
+Large domain/product e2e scenarios should continue in downstream scenario-pack
+repositories, starting with:
+
+```text
+https://github.com/minntcho/comp-scenario-packs
+```
+
+External scenario packs are compatibility signals, not authority sources.
+
+Use this directory for small scenarios where a failure indicates a likely
+`comp` authority-kernel regression. Use downstream scenario packs for full
+supplier workflows, platform importers, UI/viewer e2e, certificate verification,
+large multi-actor orchestration, and product-specific flows.
+
+See:
+
+```text
+docs/extensions/scenario-packs.md
+docs/extensions/downstream-registry.json
+```
+
 ## Local Runner
 
 The scenario registry can also be inspected without opening the pytest files:
