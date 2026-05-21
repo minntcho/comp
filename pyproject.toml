@@ -16,6 +16,7 @@ test = ["pytest>=8"]
 packages = [
   "comp",
   "comp.compiler_tool",
+  "comp.explanation",
   "comp.judgment",
   "comp.persistence",
   "comp.scenarios",
