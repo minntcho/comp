@@ -3,6 +3,14 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any
 
+from comp.scenarios.synthetic.anomalies import (
+    MISSING_UNIT,
+    NEGATIVE_AMOUNT,
+    PERIOD_MISMATCH,
+    SITE_ALIAS,
+    WRONG_UNIT,
+)
+
 
 @dataclass(frozen=True)
 class SyntheticScenarioConfig:
@@ -30,6 +38,7 @@ class SyntheticScenarioConfig:
     formula_id: str
     selector_rule_id: str
     binding_id: str
+    anomalies: tuple[str, ...] = ()
 
     @classmethod
     def pcf_smoke(cls, *, seed: int = 7) -> "SyntheticScenarioConfig":
@@ -60,6 +69,42 @@ class SyntheticScenarioConfig:
             binding_id="bind-synthetic-electricity-factor",
         )
 
+    @classmethod
+    def pcf_anomaly(cls, *, seed: int = 11) -> "SyntheticScenarioConfig":
+        return cls(
+            scenario_id="synthetic_pcf.anomaly.v1",
+            seed=seed,
+            profile_id="synthetic-pcf-anomaly-profile-v1",
+            subject_id="product:synthetic-pcf-anomaly-1",
+            public_row_id="public-row:synthetic-pcf-anomaly-1",
+            projection_id="synthetic-pcf-anomaly-public-row",
+            reporting_period="2024",
+            site_id="SITE-SYN-001",
+            site_name="Synthetic Cell Plant 001",
+            product_id="PRD-SYN-001",
+            electricity_kwh=1200,
+            electricity_unit="kWh",
+            geography="KR",
+            factor_reference_id="synthetic.factor.kr_grid_2024.location_based",
+            factor_value=0.42,
+            factor_input_unit="kWh",
+            factor_output_unit="kgCO2e",
+            source_row_id="ERP-SYN-PCF-ANOMALY",
+            source_ref="erp_electricity.csv",
+            input_claim_id="synthetic-pcf-anomaly:electricity:kwh",
+            output_claim_id="synthetic-pcf-anomaly:electricity:co2e_kg",
+            formula_id="pcf.electricity_factor_multiplication.v1",
+            selector_rule_id="synthetic.factor_selector.v1",
+            binding_id="bind-synthetic-anomaly-electricity-factor",
+            anomalies=(
+                MISSING_UNIT,
+                WRONG_UNIT,
+                PERIOD_MISMATCH,
+                NEGATIVE_AMOUNT,
+                SITE_ALIAS,
+            ),
+        )
+
     def manifest_payload(self) -> dict[str, Any]:
         return {
             "scenario_id": self.scenario_id,
@@ -86,6 +131,7 @@ class SyntheticScenarioConfig:
             "formula_id": self.formula_id,
             "selector_rule_id": self.selector_rule_id,
             "binding_id": self.binding_id,
+            "anomalies": self.anomalies,
         }
 
 
