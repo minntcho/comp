@@ -1,16 +1,20 @@
 from __future__ import annotations
 
 import csv
+import json
 from pathlib import Path
 from typing import Any
 
 from comp.compiler_tool import CompileReport
+from comp.judgment import CommitReceipt
+from comp.persistence import ProjectionReplayReport
 from comp.scenarios.synthetic import (
     ExpectedClaim,
     ExpectedDerivedClaim,
     ExpectedFailedClaim,
     ExpectedHazard,
     ExpectedObligation,
+    ExpectedReceipt,
     ExpectedSourceMap,
     InjectedAnomaly,
     SyntheticOracle,
@@ -88,6 +92,9 @@ def load_synthetic_oracle(oracle_dir: Path) -> SyntheticOracle:
             )
             for row in _read_csv(oracle_dir / "source_to_expected_claim_map.csv")
         ),
+        expected_receipt=_read_expected_receipt(
+            oracle_dir / "expected_receipt.json"
+        ),
     )
 
 
@@ -111,6 +118,58 @@ def assert_synthetic_oracle_matches_report(
         oracle
     ), "expected hazards did not match report.hazards"
     _assert_source_map_matches_witnesses(oracle, report)
+
+
+def assert_synthetic_receipt_oracle_matches(
+    oracle: SyntheticOracle,
+    receipt: CommitReceipt | None,
+    replay_report: ProjectionReplayReport | None,
+) -> None:
+    expected = oracle.expected_receipt
+    if expected is None:
+        assert receipt is None, "synthetic oracle expected no commit receipt"
+        assert replay_report is None, "synthetic oracle expected no replay report"
+        return
+
+    assert receipt is not None, "synthetic oracle expected a commit receipt"
+    assert replay_report is not None, "synthetic oracle expected replay output"
+    assert receipt.citations is not None, "synthetic receipt must carry citations"
+
+    citations = receipt.citations
+    assert receipt.public_row_id == expected.public_row_id
+    assert receipt.projection_id == expected.projection_id
+    assert tuple(receipt.authorized_fields) == expected.authorized_fields
+    assert replay_report.public_row == expected.public_row
+    assert replay_report.projection_id == expected.projection_id
+
+    assert citations.governance_status == expected.governance_status
+    assert citations.commit_package_id == expected.commit_package_id
+    assert citations.governance_decision_id == expected.governance_decision_id
+    assert citations.checked_claim_witness_ids == expected.checked_claim_witness_ids
+    assert citations.reference_binding_ids == expected.reference_binding_ids
+    assert citations.derived_claim_ids == expected.derived_claim_ids
+    assert citations.calculation_trace_ids == expected.calculation_trace_ids
+    assert citations.formula_ids == expected.formula_ids
+    assert (
+        tuple(
+            (fingerprint.dependency_kind, fingerprint.dependency_id)
+            for fingerprint in citations.dependency_fingerprints
+        )
+        == tuple(
+            (dependency.dependency_kind, dependency.dependency_id)
+            for dependency in expected.dependency_refs
+        )
+    )
+    assert (
+        tuple(
+            (artifact.artifact_id, artifact.artifact_kind)
+            for artifact in replay_report.artifact_refs
+        )
+        == tuple(
+            (artifact.artifact_id, artifact.artifact_kind)
+            for artifact in expected.artifact_refs
+        )
+    )
 
 
 def _expected_claim_rows(oracle: SyntheticOracle) -> tuple[tuple[Any, ...], ...]:
@@ -243,6 +302,14 @@ def _read_csv(path: Path) -> tuple[dict[str, str], ...]:
         return tuple(csv.DictReader(handle))
 
 
+def _read_expected_receipt(path: Path) -> ExpectedReceipt | None:
+    if not path.exists():
+        return None
+    return ExpectedReceipt.from_payload(
+        json.loads(path.read_text(encoding="utf-8"))
+    )
+
+
 def _parse_scalar(value: str) -> str | int | float:
     try:
         integer = int(value)
@@ -257,4 +324,8 @@ def _parse_scalar(value: str) -> str | int | float:
         return value
 
 
-__all__ = ["assert_synthetic_oracle_matches_report", "load_synthetic_oracle"]
+__all__ = [
+    "assert_synthetic_oracle_matches_report",
+    "assert_synthetic_receipt_oracle_matches",
+    "load_synthetic_oracle",
+]

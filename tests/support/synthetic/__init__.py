@@ -1,5 +1,6 @@
 from tests.support.synthetic.oracle_assertions import (
     assert_synthetic_oracle_matches_report,
+    assert_synthetic_receipt_oracle_matches,
     load_synthetic_oracle,
 )
 from tests.support.synthetic.run_harness import (
@@ -10,6 +11,7 @@ from tests.support.synthetic.run_harness import (
 __all__ = [
     "MaterializedSyntheticRun",
     "assert_synthetic_oracle_matches_report",
+    "assert_synthetic_receipt_oracle_matches",
     "load_synthetic_oracle",
     "materialize_synthetic_run",
 ]

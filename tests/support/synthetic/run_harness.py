@@ -11,6 +11,7 @@ from comp.compiler_tool import (
     prepare_commit,
     resolve_reference_grounded_calculation,
 )
+from comp.persistence import ProjectionReplayReport
 from comp.scenarios.synthetic import (
     SyntheticOracle,
     SyntheticPcfAdapter,
@@ -21,7 +22,12 @@ from comp.scenarios.synthetic import (
 )
 from tests.support.synthetic.oracle_assertions import (
     assert_synthetic_oracle_matches_report,
+    assert_synthetic_receipt_oracle_matches,
     load_synthetic_oracle,
+)
+from tests.support.synthetic.replay import (
+    replay_synthetic_projection,
+    synthetic_replay_bundle,
 )
 
 
@@ -34,7 +40,9 @@ class MaterializedSyntheticRun:
     report: CompileReport
     preparation: CommitPreparation
     projection: dict[str, Any] | None
+    replay_report: ProjectionReplayReport | None
     oracle_checked: bool
+    receipt_oracle_checked: bool
 
 
 def materialize_synthetic_run(
@@ -57,9 +65,22 @@ def materialize_synthetic_run(
         profile_id=adapter.profile_id,
         dependency_fingerprints=adapter.dependency_fingerprints(),
     )
-    projection = _project_if_authorized(adapter, report, preparation)
+    projection_spec = ProjectionSpec(adapter.projection_id, adapter.projection_fields)
+    projection = _project_if_authorized(adapter, report, preparation, projection_spec)
+    replay_report = _replay_if_authorized(
+        adapter,
+        report,
+        preparation,
+        projection,
+        projection_spec,
+    )
 
     assert_synthetic_oracle_matches_report(oracle, report)
+    assert_synthetic_receipt_oracle_matches(
+        oracle,
+        preparation.receipt,
+        replay_report,
+    )
 
     return MaterializedSyntheticRun(
         run=run,
@@ -69,7 +90,9 @@ def materialize_synthetic_run(
         report=report,
         preparation=preparation,
         projection=projection,
+        replay_report=replay_report,
         oracle_checked=True,
+        receipt_oracle_checked=oracle.expected_receipt is not None,
     )
 
 
@@ -91,13 +114,36 @@ def _project_if_authorized(
     adapter: SyntheticPcfAdapter,
     report: CompileReport,
     preparation: CommitPreparation,
+    projection_spec: ProjectionSpec,
 ) -> dict[str, Any] | None:
     if preparation.receipt is None:
         return None
     return project_public_row(
         adapter.projection_source(report),
-        ProjectionSpec(adapter.projection_id, adapter.projection_fields),
+        projection_spec,
         receipt=preparation.receipt,
+    )
+
+
+def _replay_if_authorized(
+    adapter: SyntheticPcfAdapter,
+    report: CompileReport,
+    preparation: CommitPreparation,
+    projection: dict[str, Any] | None,
+    projection_spec: ProjectionSpec,
+) -> ProjectionReplayReport | None:
+    if preparation.receipt is None or projection is None:
+        return None
+    bundle = synthetic_replay_bundle(
+        report,
+        preparation,
+        adapter.dependency_artifact_bodies(),
+    )
+    return replay_synthetic_projection(
+        projection,
+        projection_spec,
+        preparation,
+        bundle=bundle,
     )
 
 
