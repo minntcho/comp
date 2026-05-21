@@ -62,3 +62,30 @@ def test_persistence_codec_roundtrips_tuple_and_decimal_body():
         meta=envelope.meta,
     )
     verify_artifact_envelope(roundtripped)
+
+
+def test_apply_trust_spine_schema_creates_v1_tables():
+    pymysql = pytest.importorskip("pymysql")
+    from comp.persistence.mysql import apply_trust_spine_schema
+
+    connection = pymysql.connect(**_database_config())
+    try:
+        apply_trust_spine_schema(connection)
+        with connection.cursor() as cursor:
+            cursor.execute(
+                """
+                select table_name
+                from information_schema.tables
+                where table_schema = database()
+                order by table_name
+                """
+            )
+            tables = {row[0] for row in cursor.fetchall()}
+    finally:
+        connection.close()
+
+    assert "artifact_envelopes" in tables
+    assert "ledger_commit_receipts" in tables
+    assert "ledger_receipt_value_commitments" in tables
+    assert "ledger_receipt_dependency_fingerprints" in tables
+    assert "ledger_receipt_artifact_refs" in tables
