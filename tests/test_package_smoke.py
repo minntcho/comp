@@ -254,48 +254,113 @@ def test_document_governance_classifies_architecture_doc_authority():
 
 def test_architecture_docs_are_classified_by_governance_status():
     expected_status = {
-        "active-surface-cutover.md": ("historical-note", "docs", "no"),
-        "artifact-envelope-builder.md": ("active-contract", "persistence", "yes"),
-        "document-governance.md": ("active-contract", "trust-kernel", "yes"),
+        "active-surface-cutover.md": (
+            "historical-note",
+            "docs",
+            "no",
+            "2026-05-20",
+        ),
+        "artifact-envelope-builder.md": (
+            "active-contract",
+            "persistence",
+            "yes",
+            "2026-05-20",
+        ),
+        "document-governance.md": (
+            "active-contract",
+            "trust-kernel",
+            "yes",
+            "2026-05-20",
+        ),
         "domain-scenario-pack-generation.md": (
             "implementation-map",
             "scenario-lab",
             "limited",
+            "2026-05-20",
         ),
-        "extension-port-contracts.md": ("active-contract", "trust-kernel", "yes"),
-        "legacy-archive-cutover-plan.md": ("historical-note", "docs", "no"),
+        "extension-port-contracts.md": (
+            "active-contract",
+            "trust-kernel",
+            "yes",
+            "2026-05-20",
+        ),
+        "legacy-archive-cutover-plan.md": (
+            "historical-note",
+            "docs",
+            "no",
+            "2026-05-20",
+        ),
         "llm-orchestrated-compiler-tool-loop.md": (
             "historical-note",
             "agent-layer",
             "no",
+            "2026-05-20",
         ),
-        "llm-worker-orchestration.md": ("north-star", "agent-layer", "limited"),
+        "llm-worker-orchestration.md": (
+            "north-star",
+            "agent-layer",
+            "limited",
+            "2026-05-20",
+        ),
         "memory-assisted-compiler-loop.md": (
             "active-contract",
             "agent-layer",
             "yes",
+            "2026-05-20",
         ),
         "obligation-kernel-working-theory.md": (
             "implementation-map",
             "trust-kernel",
             "limited",
+            "2026-05-20",
         ),
-        "persistence-ledger-boundary.md": ("active-contract", "persistence", "yes"),
-        "receipt-proof-graph.md": ("active-contract", "explanation", "yes"),
-        "retrieval-fabric-north-star.md": ("north-star", "retrieval", "limited"),
-        "trust-kernel-extension-rings.md": ("active-contract", "trust-kernel", "yes"),
-        "trust-kernel-hardening.md": ("active-contract", "trust-kernel", "yes"),
+        "persistence-ledger-boundary.md": (
+            "active-contract",
+            "persistence",
+            "yes",
+            "2026-05-20",
+        ),
+        "production-trust-spine-database.md": (
+            "north-star",
+            "persistence",
+            "limited",
+            "2026-05-21",
+        ),
+        "receipt-proof-graph.md": (
+            "active-contract",
+            "explanation",
+            "yes",
+            "2026-05-20",
+        ),
+        "retrieval-fabric-north-star.md": (
+            "north-star",
+            "retrieval",
+            "limited",
+            "2026-05-20",
+        ),
+        "trust-kernel-extension-rings.md": (
+            "active-contract",
+            "trust-kernel",
+            "yes",
+            "2026-05-20",
+        ),
+        "trust-kernel-hardening.md": (
+            "active-contract",
+            "trust-kernel",
+            "yes",
+            "2026-05-20",
+        ),
     }
 
     architecture_docs = sorted(Path("docs/architecture").glob("*.md"))
     assert {path.name for path in architecture_docs} == set(expected_status)
 
     for path in architecture_docs:
-        status, owner, blocking = expected_status[path.name]
+        status, owner, blocking, checked_date = expected_status[path.name]
         text = path.read_text(encoding="utf-8")
         assert f"Status: {status}" in text
         assert f"Owner: {owner}" in text
-        assert "Last checked against code: 2026-05-20" in text
+        assert f"Last checked against code: {checked_date}" in text
         assert f"Can block PRs: {blocking}" in text
 
 
@@ -322,6 +387,22 @@ def test_docs_index_groups_architecture_docs_by_governance_authority():
     assert "architecture/active-surface-cutover.md" in docs_index
     assert "architecture/legacy-archive-cutover-plan.md" in docs_index
     assert "architecture/llm-orchestrated-compiler-tool-loop.md" in docs_index
+    assert "architecture/production-trust-spine-database.md" in docs_index
+
+
+def test_production_database_north_star_is_provisional_and_discoverable():
+    db_north_star = Path(
+        "docs/architecture/production-trust-spine-database.md"
+    ).read_text(encoding="utf-8")
+    persistence_boundary = Path(
+        "docs/architecture/persistence-ledger-boundary.md"
+    ).read_text(encoding="utf-8")
+
+    assert "Status: north-star" in db_north_star
+    assert "not a final database schema" in db_north_star
+    assert "intentionally provisional" in db_north_star
+    assert "Expected to evolve" in db_north_star
+    assert "production-trust-spine-database.md" in persistence_boundary
 
 
 def test_pyproject_packages_comp_core_scenarios_and_agent_layer():

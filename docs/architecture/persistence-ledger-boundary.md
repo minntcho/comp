@@ -25,6 +25,10 @@ Fingerprints pin the world that made the receipt meaningful.
 `artifact-envelope-builder.md` defines the active contract for constructing the
 envelope set required by receipt replay.
 
+`production-trust-spine-database.md` sketches the production database direction
+for carrying this boundary into Postgres. It is a north-star working model, not
+a final migration schema.
+
 The current implementation now has the first in-memory replay substrate:
 
 ```text
