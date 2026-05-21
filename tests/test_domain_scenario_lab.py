@@ -311,7 +311,35 @@ def test_synthetic_pcf_smoke_scenario_runs_generated_raw_to_receipt_flow():
     assert tuple(
         fingerprint.dependency_kind
         for fingerprint in result.preparation.receipt.citations.dependency_fingerprints
-    ) == ("synthetic_manifest",)
+    ) == (
+        "synthetic_manifest",
+        "synthetic_source_input",
+        "synthetic_source_input",
+        "synthetic_source_input",
+        "synthetic_source_input",
+    )
+    assert tuple(
+        fingerprint.dependency_id
+        for fingerprint in result.preparation.receipt.citations.dependency_fingerprints
+        if fingerprint.dependency_kind == "synthetic_source_input"
+    ) == (
+        (
+            "synthetic_source_input:synthetic_pcf.smoke.v1:"
+            "seed-7:master_reference_catalog:reference_catalog.csv"
+        ),
+        (
+            "synthetic_source_input:synthetic_pcf.smoke.v1:"
+            "seed-7:master_sites:sites.csv"
+        ),
+        (
+            "synthetic_source_input:synthetic_pcf.smoke.v1:"
+            "seed-7:master_products:products.csv"
+        ),
+        (
+            "synthetic_source_input:synthetic_pcf.smoke.v1:"
+            "seed-7:raw_source:erp_electricity.csv"
+        ),
+    )
 
 
 def test_synthetic_pcf_anomaly_scenario_blocks_generated_bad_rows():

@@ -198,7 +198,11 @@ schema_id
 ```
 
 Loader dispatch should use `media_type` plus `schema_id`; path suffixes are only
-storage hints. Oracle files remain test expectations and must not be required to
+storage hints. Loaded sources should then carry loader-level metadata such as
+`row_count` and `content_digest`, and commit receipts should cite the consumed
+source inputs as `synthetic_source_input` dependency fingerprints. This keeps the
+contract tied to the source content the loader consumed rather than to CSV as a
+special case. Oracle files remain test expectations and must not be required to
 build the compiler input bundle.
 
 For the first L-Energy PCF scenario, copy only the minimal values required for

@@ -11,11 +11,13 @@ from comp.scenarios.synthetic.config import SyntheticScenarioConfig
 from comp.scenarios.synthetic.generator import (
     MasterReferenceRecord,
     RawElectricityRow,
+    SyntheticLoadedSource,
     SyntheticInputBundle,
     SyntheticMaster,
     SyntheticRawSources,
     SyntheticResolutionArtifact,
     SyntheticResolutionArtifacts,
+    build_synthetic_loaded_source,
 )
 
 
@@ -47,14 +49,14 @@ class SyntheticSourceDescriptor:
             ) from exc
 
 
-Loader = Callable[[Path, SyntheticSourceDescriptor], object]
+Loader = Callable[[Path, SyntheticSourceDescriptor], tuple[object, ...]]
 
 
 def load_synthetic_input_bundle(run_dir: Path) -> SyntheticInputBundle:
     manifest = _read_manifest(run_dir)
     config = _config_from_manifest(manifest)
     descriptors = _source_descriptors(manifest)
-    loaded = _load_sources(run_dir, descriptors)
+    loaded, loaded_sources = _load_sources(run_dir, descriptors)
 
     return SyntheticInputBundle(
         config=config,
@@ -73,6 +75,7 @@ def load_synthetic_input_bundle(run_dir: Path) -> SyntheticInputBundle:
             unit_witnesses=tuple(loaded.get("resolution_unit_witness", ())),
         ),
         output_contract=tuple(manifest.get("output_contract", ())),
+        loaded_sources=loaded_sources,
     )
 
 
@@ -114,8 +117,9 @@ def _source_descriptors(
 def _load_sources(
     run_dir: Path,
     descriptors: tuple[SyntheticSourceDescriptor, ...],
-) -> dict[str, tuple[object, ...]]:
+) -> tuple[dict[str, tuple[object, ...]], tuple[SyntheticLoadedSource, ...]]:
     loaded: dict[str, tuple[object, ...]] = {}
+    loaded_sources: list[SyntheticLoadedSource] = []
     for descriptor in descriptors:
         loader = _LOADER_REGISTRY.get((descriptor.media_type, descriptor.schema_id))
         if loader is None:
@@ -125,7 +129,17 @@ def _load_sources(
             )
         loaded_items = tuple(loader(run_dir / descriptor.path, descriptor))
         loaded[descriptor.role] = loaded.get(descriptor.role, ()) + loaded_items
-    return loaded
+        loaded_sources.append(
+            build_synthetic_loaded_source(
+                source_ref=descriptor.source_ref,
+                role=descriptor.role,
+                path=descriptor.path,
+                media_type=descriptor.media_type,
+                schema_id=descriptor.schema_id,
+                rows=_rows_for_loaded_items(loaded_items),
+            )
+        )
+    return loaded, tuple(loaded_sources)
 
 
 def _load_reference_catalog_csv(
@@ -213,6 +227,31 @@ def _read_csv(
         )
     with path.open(encoding="utf-8", newline="") as handle:
         return tuple(csv.DictReader(handle))
+
+
+def _rows_for_loaded_items(
+    loaded_items: tuple[object, ...],
+) -> tuple[dict[str, Any], ...]:
+    rows: list[dict[str, Any]] = []
+    for item in loaded_items:
+        if isinstance(
+            item,
+            (
+                MasterReferenceRecord,
+                RawElectricityRow,
+                SyntheticResolutionArtifact,
+            ),
+        ):
+            rows.append(item.to_row())
+            continue
+        if isinstance(item, dict):
+            rows.append(dict(item))
+            continue
+        raise SyntheticInputLoadError(
+            "synthetic source loader returned unsupported item: "
+            f"{type(item).__name__}"
+        )
+    return tuple(rows)
 
 
 def _number(value: str) -> int | float:

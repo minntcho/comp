@@ -22,8 +22,11 @@ from comp.compiler_tool import (
 )
 from comp.compiler_tool.models import CompileReport, ProofObligation
 from comp.scenarios.synthetic.generator import (
+    SYNTHETIC_SOURCE_INPUT_KIND,
     SyntheticInputBundle,
+    SyntheticLoadedSource,
     SyntheticResolutionArtifact,
+    synthetic_source_input_dependency_id,
 )
 from comp.scenarios.synthetic.references import reference_catalog_from_input_bundle
 
@@ -287,19 +290,35 @@ class SyntheticPcfAdapter:
         return values
 
     def dependency_fingerprints(self) -> tuple[DependencyFingerprint, ...]:
-        return (self.synthetic_manifest_fingerprint(),)
+        return (
+            self.synthetic_manifest_fingerprint(),
+            *self.synthetic_source_fingerprints(),
+        )
 
     def dependency_artifact_bodies(self):
-        fingerprint = self.synthetic_manifest_fingerprint()
-        return {
-            (fingerprint.dependency_kind, fingerprint.dependency_id): {
+        manifest_fingerprint = self.synthetic_manifest_fingerprint()
+        bodies = {
+            (
+                manifest_fingerprint.dependency_kind,
+                manifest_fingerprint.dependency_id,
+            ): {
+                "dependency_kind": manifest_fingerprint.dependency_kind,
+                "dependency_id": manifest_fingerprint.dependency_id,
+                "fingerprint": manifest_fingerprint.fingerprint,
+                "digest_alg": manifest_fingerprint.digest_alg,
+                "manifest": self.input_bundle.manifest,
+            }
+        }
+        for source in self.input_bundle.loaded_sources:
+            fingerprint = self.synthetic_source_fingerprint(source)
+            bodies[(fingerprint.dependency_kind, fingerprint.dependency_id)] = {
                 "dependency_kind": fingerprint.dependency_kind,
                 "dependency_id": fingerprint.dependency_id,
                 "fingerprint": fingerprint.fingerprint,
                 "digest_alg": fingerprint.digest_alg,
-                "manifest": self.input_bundle.manifest,
+                "source": source.to_payload(),
             }
-        }
+        return bodies
 
     def synthetic_manifest_fingerprint(self) -> DependencyFingerprint:
         return DependencyFingerprint.from_payload(
@@ -308,6 +327,26 @@ class SyntheticPcfAdapter:
                 f"synthetic_manifest:{self.config.scenario_id}:seed-{self.config.seed}"
             ),
             payload=self.input_bundle.manifest,
+        )
+
+    def synthetic_source_fingerprints(self) -> tuple[DependencyFingerprint, ...]:
+        return tuple(
+            self.synthetic_source_fingerprint(source)
+            for source in self.input_bundle.loaded_sources
+        )
+
+    def synthetic_source_fingerprint(
+        self,
+        source: SyntheticLoadedSource,
+    ) -> DependencyFingerprint:
+        return DependencyFingerprint.from_payload(
+            dependency_kind=SYNTHETIC_SOURCE_INPUT_KIND,
+            dependency_id=synthetic_source_input_dependency_id(
+                self.config,
+                role=source.role,
+                source_ref=source.source_ref,
+            ),
+            payload=source.to_payload(),
         )
 
     def _hypothesis_from_raw(self) -> InterpretationHypothesis:

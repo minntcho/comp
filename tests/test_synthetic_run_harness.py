@@ -46,6 +46,16 @@ def test_synthetic_run_harness_materializes_smoke_receipt_flow(tmp_path) -> None
         )
         in harness.replay_report.artifact_refs
     )
+    assert (
+        ArtifactRef(
+            (
+                "synthetic_source_input:synthetic_pcf.smoke.v1:"
+                "seed-7:raw_source:erp_electricity.csv"
+            ),
+            "synthetic_source_input",
+        )
+        in harness.replay_report.artifact_refs
+    )
     expected_receipt = json.loads(
         (harness.run_dir / "oracle" / "expected_receipt.json").read_text(
             encoding="utf-8"
@@ -54,6 +64,15 @@ def test_synthetic_run_harness_materializes_smoke_receipt_flow(tmp_path) -> None
     assert expected_receipt["public_row_id"] == "public-row:synthetic-pcf-smoke-1"
     assert expected_receipt["projection_id"] == "synthetic-pcf-public-row"
     assert expected_receipt["authorized_fields"] == ["electricity_kwh", "co2e_kg"]
+    assert [
+        ref["dependency_kind"] for ref in expected_receipt["dependency_refs"]
+    ] == [
+        "synthetic_manifest",
+        "synthetic_source_input",
+        "synthetic_source_input",
+        "synthetic_source_input",
+        "synthetic_source_input",
+    ]
 
 
 def test_synthetic_run_harness_materializes_anomaly_hold_flow(tmp_path) -> None:
