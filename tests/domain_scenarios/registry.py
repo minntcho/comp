@@ -13,6 +13,9 @@ from tests.domain_scenarios.l_energy_pcf_governance.alpha_invalid_allocation_rfi
 from tests.domain_scenarios.l_energy_pcf_governance.alpha_physical_allocation_correction import (
     ALPHA_PHYSICAL_ALLOCATION_SCENARIO,
 )
+from tests.domain_scenarios.l_energy_pcf_governance.steel_frame_proxy_assignment import (
+    STEEL_FRAME_PROXY_SCENARIO,
+)
 from tests.domain_scenarios.tiny_pcf.scenario import SCENARIO as TINY_PCF_SCENARIO
 
 
@@ -22,6 +25,7 @@ def registered_scenarios() -> tuple[ScenarioDefinition, ...]:
         TINY_PCF_SCENARIO,
         ALPHA_INVALID_ALLOCATION_SCENARIO,
         ALPHA_PHYSICAL_ALLOCATION_SCENARIO,
+        STEEL_FRAME_PROXY_SCENARIO,
         L_ENERGY_PCF_GOVERNANCE_SCENARIO,
     )
 
