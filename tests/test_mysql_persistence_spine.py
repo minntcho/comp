@@ -9,9 +9,15 @@ from comp.persistence import (
     ArtifactEnvelope,
     ArtifactIntegrityError,
     ReceiptConflict,
+    receipt_artifact_refs,
+    replay_public_projection,
     verify_artifact_envelope,
 )
-from tests.support.persistence_cases import claim_envelope, receipt_projection_case
+from tests.support.persistence_cases import (
+    artifact_store_for_receipt,
+    claim_envelope,
+    receipt_projection_case,
+)
 
 
 pytestmark = pytest.mark.mysql
@@ -208,3 +214,60 @@ def test_mysql_receipt_ledger_rejects_conflicting_receipt_root():
             ledger.record(changed)
     finally:
         connection.close()
+
+
+def test_mysql_receipt_ledger_populates_receipt_indexes():
+    from comp.persistence.mysql import MySQLReceiptLedger, apply_trust_spine_schema
+
+    connection = _connect_mysql()
+    try:
+        apply_trust_spine_schema(connection)
+        _reset_spine(connection)
+        receipt = receipt_projection_case(amount=100).receipt
+        ledger = MySQLReceiptLedger(connection)
+        ledger.record(receipt)
+
+        with connection.cursor() as cursor:
+            cursor.execute("select count(*) from ledger_receipt_value_commitments")
+            value_commitments = cursor.fetchone()[0]
+            cursor.execute("select count(*) from ledger_receipt_dependency_fingerprints")
+            dependencies = cursor.fetchone()[0]
+            cursor.execute("select count(*) from ledger_receipt_artifact_refs")
+            refs = cursor.fetchone()[0]
+    finally:
+        connection.close()
+
+    assert receipt.citations is not None
+    assert value_commitments == len(receipt.citations.projection_value_commitments)
+    assert dependencies == len(receipt.citations.dependency_fingerprints)
+    assert refs == len(set(receipt_artifact_refs(receipt)))
+
+
+def test_mysql_artifact_store_supports_replay_public_projection():
+    from comp.persistence.mysql import MySQLArtifactStore, apply_trust_spine_schema
+
+    case = receipt_projection_case(amount=100)
+    memory_store = artifact_store_for_receipt(
+        case.receipt,
+        committed_values=case.source_values,
+    )
+
+    connection = _connect_mysql()
+    try:
+        apply_trust_spine_schema(connection)
+        _reset_spine(connection)
+        mysql_store = MySQLArtifactStore(connection)
+        for envelope in memory_store.envelopes():
+            mysql_store.record(envelope)
+
+        report = replay_public_projection(
+            case.source_values,
+            case.projection,
+            receipt=case.receipt,
+            artifacts=mysql_store,
+        )
+    finally:
+        connection.close()
+
+    assert report.public_row == case.public_row
+    assert report.artifact_refs == receipt_artifact_refs(case.receipt)
