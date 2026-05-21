@@ -18,6 +18,7 @@ from comp.scenarios.synthetic import (
     SyntheticRun,
     SyntheticScenarioConfig,
     generate_synthetic_pcf_run,
+    load_synthetic_input_bundle,
     write_synthetic_run,
 )
 from tests.support.synthetic.oracle_assertions import (
@@ -55,7 +56,7 @@ def materialize_synthetic_run(
         base_dir / f"{config.scenario_id}-seed-{config.seed}",
     )
     oracle = load_synthetic_oracle(run_dir / "oracle")
-    adapter = SyntheticPcfAdapter(run.input_bundle)
+    adapter = SyntheticPcfAdapter(load_synthetic_input_bundle(run_dir))
     report = _compile_report(adapter)
     preparation = prepare_commit(
         report,
