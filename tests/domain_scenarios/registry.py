@@ -7,6 +7,9 @@ from tests.domain_scenarios.canonical_working_loop.scenario import (
 from tests.domain_scenarios.l_energy_pcf_governance.scenario import (
     SCENARIO as L_ENERGY_PCF_GOVERNANCE_SCENARIO,
 )
+from tests.domain_scenarios.synthetic_pcf_smoke.scenario import (
+    SCENARIO as SYNTHETIC_PCF_SMOKE_SCENARIO,
+)
 from tests.domain_scenarios.tiny_pcf.scenario import SCENARIO as TINY_PCF_SCENARIO
 
 
@@ -15,6 +18,7 @@ def registered_scenarios() -> tuple[ScenarioDefinition, ...]:
         CANONICAL_WORKING_LOOP_SCENARIO,
         TINY_PCF_SCENARIO,
         L_ENERGY_PCF_GOVERNANCE_SCENARIO,
+        SYNTHETIC_PCF_SMOKE_SCENARIO,
     )
 
 
