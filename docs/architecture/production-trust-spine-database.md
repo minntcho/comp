@@ -388,3 +388,30 @@ Does the PR avoid treating JSONB convenience bodies as untyped truth?
 Does any schema change explain whether it updates this provisional model?
 ```
 
+## 12. Current Implementation Status
+
+The first durable spine slice is implemented for MySQL. This is still not a
+final product database schema; it is the V1 persistence adapter that proves the
+artifact/receipt authority path can survive outside memory.
+
+```text
+comp/persistence/mysql.py
+  provides apply_trust_spine_schema, MySQLArtifactStore, and MySQLReceiptLedger.
+
+artifact_envelopes
+  stores encoded ArtifactEnvelope bodies with digest-preserving persistence
+  JSON.
+
+ledger_commit_receipts
+  stores append-only CommitReceipt roots keyed by receipt id and ledger key.
+
+ledger_receipt_value_commitments
+ledger_receipt_dependency_fingerprints
+ledger_receipt_artifact_refs
+  provide receipt-derived query indexes. They are indexes, not independent
+  authority.
+```
+
+The implemented V1 slice intentionally does not include workflow, registry,
+projection cache, typed artifact index, or domain-specific view tables yet.
+Those remain provisional follow-on layers around the artifact/receipt spine.

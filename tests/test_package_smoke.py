@@ -330,7 +330,7 @@ def test_architecture_docs_are_classified_by_governance_status():
             "active-contract",
             "persistence",
             "yes",
-            "2026-05-20",
+            "2026-05-21",
         ),
         "production-trust-spine-database.md": (
             "north-star",
@@ -415,6 +415,21 @@ def test_production_database_north_star_is_provisional_and_discoverable():
     assert "intentionally provisional" in db_north_star
     assert "Expected to evolve" in db_north_star
     assert "production-trust-spine-database.md" in persistence_boundary
+
+
+def test_production_database_north_star_tracks_v1_mysql_spine():
+    db_doc = Path(
+        "docs/architecture/production-trust-spine-database.md"
+    ).read_text(encoding="utf-8")
+    persistence_doc = Path(
+        "docs/architecture/persistence-ledger-boundary.md"
+    ).read_text(encoding="utf-8")
+
+    assert "## 12. Current Implementation Status" in db_doc
+    assert "MySQLArtifactStore" in db_doc
+    assert "MySQLReceiptLedger" in db_doc
+    assert "ledger_receipt_artifact_refs" in db_doc
+    assert "MySQL trust spine" in persistence_doc
 
 
 def test_pyproject_packages_comp_core_scenarios_and_agent_layer():
