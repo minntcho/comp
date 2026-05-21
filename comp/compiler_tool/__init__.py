@@ -54,7 +54,7 @@ from comp.compiler_tool.profiles import (
     semantic_rubric_declaration_fingerprint,
     validate_compiler_profile,
 )
-from comp.compiler_tool.profile_runner import compile_with_profile
+from comp.compiler_tool.profile_runner import compile_with_profile, run_profile_rules
 from comp.compiler_tool.reference_db import (
     ReferenceCatalog,
     ReferenceCatalogSnapshot,
@@ -216,6 +216,7 @@ __all__ = [
     "rule_family_declaration_fingerprint",
     "semantic_rubric_declaration_fingerprint",
     "compile_with_profile",
+    "run_profile_rules",
     "CompilerTool",
     "apply_semantic_judgments",
     "compile_report_to_facts",

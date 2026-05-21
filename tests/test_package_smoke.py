@@ -144,6 +144,16 @@ def test_readme_tracks_persistence_active_surface():
     assert "replay_public_projection" in readme
 
 
+def test_trust_kernel_hardening_documents_projection_numeric_policy():
+    hardening = Path("docs/architecture/trust-kernel-hardening.md").read_text(
+        encoding="utf-8"
+    )
+
+    assert "## Projection Numeric Value Policy" in hardening
+    assert "ProjectionValueCommitment" in hardening
+    assert "Decimal" in hardening
+
+
 def test_working_theory_status_section_tracks_current_rebuild_state():
     working_theory = Path(
         "docs/architecture/obligation-kernel-working-theory.md"

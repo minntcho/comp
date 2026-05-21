@@ -12,10 +12,18 @@ from comp.compiler_tool.profiles import CompilerProfile, active_rule_families, v
 from comp.compiler_tool.report_status import with_recomputed_status
 
 
-def compile_with_profile(
+def run_profile_rules(
     hypothesis: InterpretationHypothesis,
     profile: CompilerProfile,
 ) -> CompileReport:
+    """Run profile-active rules without taking over the CompilerTool baseline.
+
+    This runner validates core source-witness grounding for submitted claims, then
+    asks active profile rule evaluators to open obligations. It does not apply
+    CompilerTool construction-time policy such as known-field coverage,
+    allowed-unit filtering, or missing-unit hazards.
+    """
+
     validate_compiler_profile(profile)
     failed_claims: list[FailedClaim] = []
     obligations: list[ProofObligation] = []
@@ -50,6 +58,15 @@ def compile_with_profile(
             can_project_public_row=False,
         )
     )
+
+
+def compile_with_profile(
+    hypothesis: InterpretationHypothesis,
+    profile: CompilerProfile,
+) -> CompileReport:
+    """Compatibility wrapper for the profile-only rule runner."""
+
+    return run_profile_rules(hypothesis, profile)
 
 
 def _validate_core_witness(
@@ -107,4 +124,4 @@ def _add_obligation(
         obligations.append(obligation)
 
 
-__all__ = ["compile_with_profile"]
+__all__ = ["compile_with_profile", "run_profile_rules"]

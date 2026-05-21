@@ -121,6 +121,29 @@ snapshots as explicit dependency fingerprints when they influence the receipt.
 Readable lock manifests are replay substrate; they help explain the behavior
 universe, but they do not become public authority.
 
+## Projection Numeric Value Policy
+
+The calculator should preserve exact numeric trace material while keeping public
+projection values compatible with JSON-like projection rows.
+
+Current policy:
+
+```text
+CalculationStep.exact_output_value preserves the Decimal value after the
+formula rounding policy is applied.
+
+DerivedClaim.value is the public-row-compatible rounded value (`int` or
+finite `float`) that becomes the source for ProjectionValueCommitment.
+
+ProjectionValueCommitment hashes the committed public value with typed canonical
+encoding. Replay checks the materialized public row against that commitment.
+```
+
+This means the trace explains the exact calculation and rounding decision, while
+the receipt commits to the actual public projection value. If a future policy
+chooses `Decimal` or canonical strings for public values, it must update this
+contract, projection commitment tests, and scenario expectations together.
+
 ## Retrieval And Reference Provenance
 
 Retrieval metadata is audit context, not authority. It should still be preserved

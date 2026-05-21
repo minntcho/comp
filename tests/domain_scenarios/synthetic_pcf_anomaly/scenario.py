@@ -50,7 +50,7 @@ SCENARIO = ScenarioDefinition(
 
 def run_synthetic_pcf_anomaly_scenario() -> DomainScenarioResult:
     run = generate_synthetic_pcf_run(SyntheticScenarioConfig.pcf_anomaly(seed=11))
-    adapter = SyntheticPcfAdapter(run)
+    adapter = SyntheticPcfAdapter(run.input_bundle)
     report = adapter.anomaly_report()
     preparation = prepare_commit(
         report,

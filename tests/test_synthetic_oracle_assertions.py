@@ -19,7 +19,7 @@ from tests.support.synthetic.oracle_assertions import (
 
 def test_oracle_assertions_match_smoke_report_outputs() -> None:
     run = generate_synthetic_pcf_run(SyntheticScenarioConfig.pcf_smoke(seed=7))
-    adapter = SyntheticPcfAdapter(run)
+    adapter = SyntheticPcfAdapter(run.input_bundle)
     report = resolve_reference_grounded_calculation(
         adapter.blocked_report(),
         adapter.reference_catalog(),
@@ -35,7 +35,7 @@ def test_oracle_assertions_match_smoke_report_outputs() -> None:
 
 def test_oracle_assertions_match_anomaly_report_outputs() -> None:
     run = generate_synthetic_pcf_run(SyntheticScenarioConfig.pcf_anomaly(seed=11))
-    adapter = SyntheticPcfAdapter(run)
+    adapter = SyntheticPcfAdapter(run.input_bundle)
 
     assert_synthetic_oracle_matches_report(run.oracle, adapter.anomaly_report())
 
@@ -43,7 +43,7 @@ def test_oracle_assertions_match_anomaly_report_outputs() -> None:
 def test_oracle_assertions_can_load_written_oracle_files(tmp_path) -> None:
     run = generate_synthetic_pcf_run(SyntheticScenarioConfig.pcf_anomaly(seed=11))
     run_dir = write_synthetic_run(run, tmp_path / "synthetic-pcf-anomaly")
-    adapter = SyntheticPcfAdapter(run)
+    adapter = SyntheticPcfAdapter(run.input_bundle)
 
     oracle = load_synthetic_oracle(run_dir / "oracle")
 
@@ -52,7 +52,7 @@ def test_oracle_assertions_can_load_written_oracle_files(tmp_path) -> None:
 
 def test_oracle_assertions_fail_when_expected_obligation_is_missing() -> None:
     run = generate_synthetic_pcf_run(SyntheticScenarioConfig.pcf_anomaly(seed=11))
-    adapter = SyntheticPcfAdapter(run)
+    adapter = SyntheticPcfAdapter(run.input_bundle)
     report = adapter.anomaly_report()
     report_without_site_alias = replace(report, obligations=report.obligations[:-1])
 

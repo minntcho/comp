@@ -66,7 +66,7 @@ SCENARIO = ScenarioDefinition(
 
 def run_synthetic_pcf_smoke_scenario() -> DomainScenarioResult:
     run = generate_synthetic_pcf_run(SyntheticScenarioConfig.pcf_smoke(seed=7))
-    adapter = SyntheticPcfAdapter(run)
+    adapter = SyntheticPcfAdapter(run.input_bundle)
     report = resolve_reference_grounded_calculation(
         adapter.blocked_report(),
         adapter.reference_catalog(),
