@@ -288,7 +288,7 @@ def test_architecture_docs_are_classified_by_governance_status():
             "implementation-map",
             "scenario-lab",
             "limited",
-            "2026-05-20",
+            "2026-05-21",
         ),
         "extension-port-contracts.md": (
             "active-contract",
@@ -360,7 +360,7 @@ def test_architecture_docs_are_classified_by_governance_status():
             "active-contract",
             "trust-kernel",
             "yes",
-            "2026-05-20",
+            "2026-05-21",
         ),
     }
 

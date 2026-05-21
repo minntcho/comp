@@ -2,7 +2,7 @@
 
 Status: active-contract
 Owner: trust-kernel
-Last checked against code: 2026-05-20
+Last checked against code: 2026-05-21
 Can block PRs: yes
 
 This document fixes the implementation standard for the next slice of the
@@ -58,6 +58,12 @@ clean `CommitReceipt`.
 ## Core / Domain Boundary
 
 Core code must own protocol, not ESG meaning.
+
+Raw claim promotion is a domain-layer operation. A promotion helper may turn
+supported extractor candidates into `CheckedClaim`, `ReferenceBinding`,
+`DerivedClaim`, and `CalculationTrace` artifacts, but the promoted
+`CompileReport` still cannot authorize projection. `CommitReceipt` remains the
+only public projection authority.
 
 Core may know about:
 
