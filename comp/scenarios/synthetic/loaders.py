@@ -15,6 +15,8 @@ from comp.scenarios.synthetic.generator import (
     SyntheticInputBundle,
     SyntheticMaster,
     SyntheticRawSources,
+    SyntheticResolutionArtifact,
+    SyntheticResolutionArtifacts,
     build_synthetic_loaded_source,
 )
 
@@ -68,6 +70,9 @@ def load_synthetic_input_bundle(run_dir: Path) -> SyntheticInputBundle:
         ),
         raw_sources=SyntheticRawSources(
             electricity_rows=tuple(loaded.get("raw_source", ())),
+        ),
+        resolution_artifacts=SyntheticResolutionArtifacts(
+            unit_witnesses=tuple(loaded.get("resolution_unit_witness", ())),
         ),
         output_contract=tuple(manifest.get("output_contract", ())),
         loaded_sources=loaded_sources,
@@ -193,6 +198,25 @@ def _load_electricity_csv(
     )
 
 
+def _load_resolution_unit_witnesses_csv(
+    path: Path,
+    descriptor: SyntheticSourceDescriptor,
+) -> tuple[SyntheticResolutionArtifact, ...]:
+    return tuple(
+        SyntheticResolutionArtifact(
+            artifact_id=row["artifact_id"],
+            obligation_id=row["obligation_id"],
+            source_row_id=row["source_row_id"],
+            field=row["field"],
+            resolved_value=row["resolved_value"],
+            witness_id=row["witness_id"],
+            source_ref=row["source_ref"],
+            rationale=row["rationale"],
+        )
+        for row in _read_csv(path, descriptor)
+    )
+
+
 def _read_csv(
     path: Path,
     descriptor: SyntheticSourceDescriptor,
@@ -210,7 +234,14 @@ def _rows_for_loaded_items(
 ) -> tuple[dict[str, Any], ...]:
     rows: list[dict[str, Any]] = []
     for item in loaded_items:
-        if isinstance(item, (MasterReferenceRecord, RawElectricityRow)):
+        if isinstance(
+            item,
+            (
+                MasterReferenceRecord,
+                RawElectricityRow,
+                SyntheticResolutionArtifact,
+            ),
+        ):
             rows.append(item.to_row())
             continue
         if isinstance(item, dict):
@@ -235,6 +266,10 @@ _LOADER_REGISTRY: dict[tuple[str, str], Loader] = {
     ("text/csv", "synthetic.master_sites.v1"): _load_sites_csv,
     ("text/csv", "synthetic.master_products.v1"): _load_products_csv,
     ("text/csv", "synthetic.erp_electricity.v1"): _load_electricity_csv,
+    (
+        "text/csv",
+        "synthetic.resolution_unit_witnesses.v1",
+    ): _load_resolution_unit_witnesses_csv,
 }
 
 

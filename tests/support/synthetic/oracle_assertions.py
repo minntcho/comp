@@ -15,6 +15,7 @@ from comp.scenarios.synthetic import (
     ExpectedHazard,
     ExpectedObligation,
     ExpectedReceipt,
+    ExpectedResolutionArtifact,
     ExpectedSourceMap,
     InjectedAnomaly,
     SyntheticOracle,
@@ -95,6 +96,12 @@ def load_synthetic_oracle(oracle_dir: Path) -> SyntheticOracle:
         expected_receipt=_read_expected_receipt(
             oracle_dir / "expected_receipt.json"
         ),
+        expected_resolved_obligations=_read_expected_obligations_if_exists(
+            oracle_dir / "expected_resolved_obligations.csv"
+        ),
+        expected_resolution_artifacts=_read_expected_resolution_artifacts_if_exists(
+            oracle_dir / "expected_resolution_artifacts.csv"
+        ),
     )
 
 
@@ -117,6 +124,12 @@ def assert_synthetic_oracle_matches_report(
     assert _hazard_rows(report) == _expected_hazard_rows(
         oracle
     ), "expected hazards did not match report.hazards"
+    if oracle.expected_resolved_obligations is not None:
+        assert _resolved_obligation_rows(
+            report
+        ) == _expected_resolved_obligation_rows(
+            oracle
+        ), "expected resolved obligations did not match report.resolved_obligations"
     _assert_source_map_matches_witnesses(oracle, report)
 
 
@@ -150,6 +163,7 @@ def assert_synthetic_receipt_oracle_matches(
     assert citations.derived_claim_ids == expected.derived_claim_ids
     assert citations.calculation_trace_ids == expected.calculation_trace_ids
     assert citations.formula_ids == expected.formula_ids
+    assert citations.resolved_obligation_ids == expected.resolved_obligation_ids
     assert (
         tuple(
             (fingerprint.dependency_kind, fingerprint.dependency_id)
@@ -232,6 +246,22 @@ def _expected_obligation_rows(
     )
 
 
+def _expected_resolved_obligation_rows(
+    oracle: SyntheticOracle,
+) -> tuple[tuple[Any, ...], ...]:
+    if oracle.expected_resolved_obligations is None:
+        return ()
+    return tuple(
+        (
+            obligation.obligation_id,
+            obligation.kind,
+            obligation.field,
+            obligation.reason,
+        )
+        for obligation in oracle.expected_resolved_obligations
+    )
+
+
 def _obligation_rows(report: CompileReport) -> tuple[tuple[Any, ...], ...]:
     return tuple(
         (
@@ -247,6 +277,24 @@ def _obligation_rows(report: CompileReport) -> tuple[tuple[Any, ...], ...]:
             obligation.reason,
         )
         for obligation in report.obligations
+    )
+
+
+def _resolved_obligation_rows(report: CompileReport) -> tuple[tuple[Any, ...], ...]:
+    return tuple(
+        (
+            obligation.obligation_id
+            or _stable_id(
+                "proof_obligation",
+                obligation.kind,
+                obligation.field,
+                obligation.reason,
+            ),
+            obligation.kind,
+            obligation.field,
+            obligation.reason,
+        )
+        for obligation in report.resolved_obligations
     )
 
 
@@ -307,6 +355,41 @@ def _read_expected_receipt(path: Path) -> ExpectedReceipt | None:
         return None
     return ExpectedReceipt.from_payload(
         json.loads(path.read_text(encoding="utf-8"))
+    )
+
+
+def _read_expected_obligations_if_exists(
+    path: Path,
+) -> tuple[ExpectedObligation, ...] | None:
+    if not path.exists():
+        return None
+    return tuple(
+        ExpectedObligation(
+            obligation_id=row["obligation_id"],
+            kind=row["kind"],
+            field=row["field"],
+            reason=row["reason"],
+        )
+        for row in _read_csv(path)
+    )
+
+
+def _read_expected_resolution_artifacts_if_exists(
+    path: Path,
+) -> tuple[ExpectedResolutionArtifact, ...] | None:
+    if not path.exists():
+        return None
+    return tuple(
+        ExpectedResolutionArtifact(
+            artifact_id=row["artifact_id"],
+            obligation_id=row["obligation_id"],
+            source_row_id=row["source_row_id"],
+            field=row["field"],
+            resolved_value=row["resolved_value"],
+            witness_id=row["witness_id"],
+            source_ref=row["source_ref"],
+        )
+        for row in _read_csv(path)
     )
 
 

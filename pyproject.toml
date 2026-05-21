@@ -11,11 +11,13 @@ requires-python = ">=3.11"
 
 [project.optional-dependencies]
 test = ["pytest>=8"]
+db = ["PyMySQL>=1.1"]
 
 [tool.setuptools]
 packages = [
   "comp",
   "comp.compiler_tool",
+  "comp.explanation",
   "comp.judgment",
   "comp.persistence",
   "comp.scenarios",

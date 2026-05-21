@@ -14,6 +14,11 @@ from comp.persistence.ledger import (
     verify_artifact_envelope,
     verify_materialized_public_projection,
 )
+from comp.persistence.mysql import (
+    MySQLArtifactStore,
+    MySQLReceiptLedger,
+    apply_trust_spine_schema,
+)
 from comp.persistence.replay import (
     ArtifactRef,
     ProjectionReplayReport,
@@ -28,11 +33,14 @@ __all__ = [
     "ArtifactIntegrityError",
     "InMemoryArtifactStore",
     "InMemoryReceiptLedger",
+    "MySQLArtifactStore",
+    "MySQLReceiptLedger",
     "PersistenceError",
     "ProjectionReplayBlocked",
     "ProjectionReplayReport",
     "ReceiptConflict",
     "ReceiptLedgerKey",
+    "apply_trust_spine_schema",
     "artifact_digest",
     "receipt_artifact_refs",
     "replay_public_projection",

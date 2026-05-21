@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from dataclasses import replace
+
 from comp.compiler_tool import (
     CalculationFormula,
     CalculationInput,
@@ -23,6 +25,7 @@ from comp.scenarios.synthetic.generator import (
     SYNTHETIC_SOURCE_INPUT_KIND,
     SyntheticInputBundle,
     SyntheticLoadedSource,
+    SyntheticResolutionArtifact,
     synthetic_source_input_dependency_id,
 )
 from comp.scenarios.synthetic.references import reference_catalog_from_input_bundle
@@ -69,6 +72,23 @@ class SyntheticPcfAdapter:
             field="electricity_kwh",
             value=row.amount,
             unit=row.unit,
+        )
+
+    def has_resolution_artifacts(self) -> bool:
+        return bool(self.input_bundle.resolution_artifacts.unit_witnesses)
+
+    def resolved_input_claim(self) -> CalculationInput:
+        row = self.input_bundle.raw_sources.electricity_rows[0]
+        unit_resolution = self._unit_resolution_artifact(row.source_row_id)
+        return CalculationInput(
+            claim_id=self.config.input_claim_id,
+            field="electricity_kwh",
+            value=row.amount,
+            unit=(
+                unit_resolution.resolved_value
+                if unit_resolution is not None
+                else row.unit
+            ),
         )
 
     def formula(self) -> CalculationFormula:
@@ -118,6 +138,22 @@ class SyntheticPcfAdapter:
             result,
             output_claim_id=self.config.output_claim_id,
             formula=self.formula(),
+        )
+
+    def resolution_seed_report(self) -> CompileReport:
+        report = self.blocked_report()
+        resolved_obligations = self._resolved_unit_obligations()
+        if not resolved_obligations:
+            return report
+        return with_recomputed_status(
+            replace(
+                report,
+                resolved_obligations=(
+                    *report.resolved_obligations,
+                    *resolved_obligations,
+                ),
+                can_project_public_row=False,
+            )
         )
 
     def anomaly_report(self) -> CompileReport:
@@ -337,6 +373,27 @@ class SyntheticPcfAdapter:
                 ),
             ),
         )
+
+    def _resolved_unit_obligations(self) -> tuple[ProofObligation, ...]:
+        return tuple(
+            ProofObligation(
+                kind="find_source_witness",
+                field=artifact.field,
+                reason="missing_unit",
+                obligation_id=artifact.obligation_id,
+            )
+            for artifact in self.input_bundle.resolution_artifacts.unit_witnesses
+            if artifact.field == "unit"
+        )
+
+    def _unit_resolution_artifact(
+        self,
+        source_row_id: str,
+    ) -> SyntheticResolutionArtifact | None:
+        for artifact in self.input_bundle.resolution_artifacts.unit_witnesses:
+            if artifact.source_row_id == source_row_id and artifact.field == "unit":
+                return artifact
+        return None
 
 
 __all__ = ["SyntheticPcfAdapter"]

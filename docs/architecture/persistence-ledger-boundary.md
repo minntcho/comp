@@ -2,7 +2,7 @@
 
 Status: active-contract
 Owner: persistence
-Last checked against code: 2026-05-20
+Last checked against code: 2026-05-21
 Can block PRs: yes
 
 CommitReceipt as the durable explanation root.
@@ -25,6 +25,10 @@ Fingerprints pin the world that made the receipt meaningful.
 `artifact-envelope-builder.md` defines the active contract for constructing the
 envelope set required by receipt replay.
 
+`production-trust-spine-database.md` sketches the production database direction
+for carrying this boundary into MySQL. It is a north-star working model, not a
+final migration schema.
+
 The current implementation now has the first in-memory replay substrate:
 
 ```text
@@ -46,10 +50,17 @@ comp.persistence
   InMemoryArtifactStore
   InMemoryReceiptLedger
   replay_public_projection(...)
+
+MySQL trust spine
+  apply_trust_spine_schema(...)
+  MySQLArtifactStore
+  MySQLReceiptLedger
+  receipt-derived indexes for value commitments, dependency fingerprints, and
+  artifact refs
 ```
 
-This document describes how that in-memory authority boundary should become a
-durable explanation boundary.
+This document describes how the memory and MySQL substrates preserve the same
+artifact/receipt authority boundary.
 
 ---
 

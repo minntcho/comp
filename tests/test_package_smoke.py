@@ -148,6 +148,18 @@ def test_readme_tracks_persistence_active_surface():
     assert "replay_public_projection" in readme
 
 
+def test_persistence_exports_mysql_backend_surface():
+    from comp.persistence import (
+        MySQLArtifactStore,
+        MySQLReceiptLedger,
+        apply_trust_spine_schema,
+    )
+
+    assert MySQLArtifactStore is not None
+    assert MySQLReceiptLedger is not None
+    assert apply_trust_spine_schema is not None
+
+
 def test_trust_kernel_hardening_documents_projection_numeric_policy():
     hardening = Path("docs/architecture/trust-kernel-hardening.md").read_text(
         encoding="utf-8"
@@ -318,7 +330,13 @@ def test_architecture_docs_are_classified_by_governance_status():
             "active-contract",
             "persistence",
             "yes",
-            "2026-05-20",
+            "2026-05-21",
+        ),
+        "production-trust-spine-database.md": (
+            "north-star",
+            "persistence",
+            "limited",
+            "2026-05-21",
         ),
         "receipt-proof-graph.md": (
             "active-contract",
@@ -381,6 +399,37 @@ def test_docs_index_groups_architecture_docs_by_governance_authority():
     assert "architecture/active-surface-cutover.md" in docs_index
     assert "architecture/legacy-archive-cutover-plan.md" in docs_index
     assert "architecture/llm-orchestrated-compiler-tool-loop.md" in docs_index
+    assert "architecture/production-trust-spine-database.md" in docs_index
+
+
+def test_production_database_north_star_is_provisional_and_discoverable():
+    db_north_star = Path(
+        "docs/architecture/production-trust-spine-database.md"
+    ).read_text(encoding="utf-8")
+    persistence_boundary = Path(
+        "docs/architecture/persistence-ledger-boundary.md"
+    ).read_text(encoding="utf-8")
+
+    assert "Status: north-star" in db_north_star
+    assert "not a final database schema" in db_north_star
+    assert "intentionally provisional" in db_north_star
+    assert "Expected to evolve" in db_north_star
+    assert "production-trust-spine-database.md" in persistence_boundary
+
+
+def test_production_database_north_star_tracks_v1_mysql_spine():
+    db_doc = Path(
+        "docs/architecture/production-trust-spine-database.md"
+    ).read_text(encoding="utf-8")
+    persistence_doc = Path(
+        "docs/architecture/persistence-ledger-boundary.md"
+    ).read_text(encoding="utf-8")
+
+    assert "## 12. Current Implementation Status" in db_doc
+    assert "MySQLArtifactStore" in db_doc
+    assert "MySQLReceiptLedger" in db_doc
+    assert "ledger_receipt_artifact_refs" in db_doc
+    assert "MySQL trust spine" in persistence_doc
 
 
 def test_pyproject_packages_comp_core_scenarios_and_agent_layer():
@@ -405,6 +454,7 @@ def test_pyproject_packages_comp_core_scenarios_and_agent_layer():
     assert setuptools_config["packages"] == [
         "comp",
         "comp.compiler_tool",
+        "comp.explanation",
         "comp.judgment",
         "comp.persistence",
         "comp.scenarios",
@@ -421,6 +471,11 @@ def test_pyproject_packages_comp_core_scenarios_and_agent_layer():
 
     dependencies = pyproject["project"].get("dependencies", [])
     assert not any(dependency.startswith("lark") for dependency in dependencies)
+
+    from comp.explanation import ReceiptProofGraph, export_receipt_proof_graph
+
+    assert ReceiptProofGraph is not None
+    assert export_receipt_proof_graph is not None
     assert ArtifactEnvelope is not None
     assert ArtifactRef is not None
     assert InMemoryArtifactStore is not None

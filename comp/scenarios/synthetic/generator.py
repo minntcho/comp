@@ -20,6 +20,12 @@ from comp.scenarios.synthetic.manifest import build_manifest
 
 
 OUTPUT_CONTRACT = ("master", "raw_sources", "oracle")
+RESOLUTION_OUTPUT_CONTRACT = (
+    "master",
+    "raw_sources",
+    "resolution_artifacts",
+    "oracle",
+)
 SYNTHETIC_SOURCE_INPUT_KIND = "synthetic_source_input"
 
 
@@ -76,6 +82,30 @@ class RawElectricityRow:
             "activity_type": self.activity_type,
             "amount": self.amount,
             "unit": self.unit,
+        }
+
+
+@dataclass(frozen=True)
+class SyntheticResolutionArtifact:
+    artifact_id: str
+    obligation_id: str
+    source_row_id: str
+    field: str
+    resolved_value: str
+    witness_id: str
+    source_ref: str
+    rationale: str
+
+    def to_row(self) -> dict[str, Any]:
+        return {
+            "artifact_id": self.artifact_id,
+            "obligation_id": self.obligation_id,
+            "source_row_id": self.source_row_id,
+            "field": self.field,
+            "resolved_value": self.resolved_value,
+            "witness_id": self.witness_id,
+            "source_ref": self.source_ref,
+            "rationale": self.rationale,
         }
 
 
@@ -204,6 +234,28 @@ class ExpectedHazard:
 
 
 @dataclass(frozen=True)
+class ExpectedResolutionArtifact:
+    artifact_id: str
+    obligation_id: str
+    source_row_id: str
+    field: str
+    resolved_value: str
+    witness_id: str
+    source_ref: str
+
+    def to_row(self) -> dict[str, Any]:
+        return {
+            "artifact_id": self.artifact_id,
+            "obligation_id": self.obligation_id,
+            "source_row_id": self.source_row_id,
+            "field": self.field,
+            "resolved_value": self.resolved_value,
+            "witness_id": self.witness_id,
+            "source_ref": self.source_ref,
+        }
+
+
+@dataclass(frozen=True)
 class ExpectedArtifactRef:
     artifact_id: str
     artifact_kind: str
@@ -257,6 +309,7 @@ class ExpectedReceipt:
     formula_ids: tuple[str, ...]
     dependency_refs: tuple[ExpectedDependencyRef, ...]
     artifact_refs: tuple[ExpectedArtifactRef, ...]
+    resolved_obligation_ids: tuple[str, ...] = ()
 
     def to_payload(self) -> dict[str, Any]:
         return {
@@ -272,6 +325,7 @@ class ExpectedReceipt:
             "derived_claim_ids": list(self.derived_claim_ids),
             "calculation_trace_ids": list(self.calculation_trace_ids),
             "formula_ids": list(self.formula_ids),
+            "resolved_obligation_ids": list(self.resolved_obligation_ids),
             "dependency_refs": [
                 ref.to_payload() for ref in self.dependency_refs
             ],
@@ -293,6 +347,9 @@ class ExpectedReceipt:
             derived_claim_ids=tuple(payload["derived_claim_ids"]),
             calculation_trace_ids=tuple(payload["calculation_trace_ids"]),
             formula_ids=tuple(payload["formula_ids"]),
+            resolved_obligation_ids=tuple(
+                payload.get("resolved_obligation_ids", ())
+            ),
             dependency_refs=tuple(
                 ExpectedDependencyRef.from_payload(ref)
                 for ref in payload["dependency_refs"]
@@ -314,6 +371,11 @@ class SyntheticMaster:
 @dataclass(frozen=True)
 class SyntheticRawSources:
     electricity_rows: tuple[RawElectricityRow, ...]
+
+
+@dataclass(frozen=True)
+class SyntheticResolutionArtifacts:
+    unit_witnesses: tuple[SyntheticResolutionArtifact, ...] = ()
 
 
 @dataclass(frozen=True)
@@ -344,6 +406,7 @@ class SyntheticInputBundle:
     manifest: dict[str, Any]
     master: SyntheticMaster
     raw_sources: SyntheticRawSources
+    resolution_artifacts: SyntheticResolutionArtifacts = SyntheticResolutionArtifacts()
     output_contract: tuple[str, ...] = OUTPUT_CONTRACT
     loaded_sources: tuple[SyntheticLoadedSource, ...] = ()
 
@@ -357,6 +420,8 @@ class SyntheticOracle:
     expected_failed_claims: tuple[ExpectedFailedClaim, ...]
     injected_anomalies: tuple[InjectedAnomaly, ...]
     source_to_expected_claim_map: tuple[ExpectedSourceMap, ...]
+    expected_resolved_obligations: tuple[ExpectedObligation, ...] | None = None
+    expected_resolution_artifacts: tuple[ExpectedResolutionArtifact, ...] | None = None
     expected_receipt: ExpectedReceipt | None = None
 
 
@@ -367,6 +432,7 @@ class SyntheticRun:
     master: SyntheticMaster
     raw_sources: SyntheticRawSources
     oracle: SyntheticOracle
+    resolution_artifacts: SyntheticResolutionArtifacts = SyntheticResolutionArtifacts()
     output_contract: tuple[str, ...] = OUTPUT_CONTRACT
 
     @property
@@ -376,16 +442,20 @@ class SyntheticRun:
             manifest=self.manifest,
             master=self.master,
             raw_sources=self.raw_sources,
+            resolution_artifacts=self.resolution_artifacts,
             output_contract=self.output_contract,
             loaded_sources=build_synthetic_loaded_sources(
                 self.manifest,
                 master=self.master,
                 raw_sources=self.raw_sources,
+                resolution_artifacts=self.resolution_artifacts,
             ),
         )
 
 
 def generate_synthetic_pcf_run(config: SyntheticScenarioConfig) -> SyntheticRun:
+    if config.scenario_id == "synthetic_pcf.resolution.v1":
+        return _generate_synthetic_pcf_resolution_run(config)
     if config.anomalies:
         return _generate_synthetic_pcf_anomaly_run(config)
 
@@ -473,6 +543,129 @@ def generate_synthetic_pcf_run(config: SyntheticScenarioConfig) -> SyntheticRun:
                 derived_value=derived_value,
             ),
         ),
+    )
+
+
+def _generate_synthetic_pcf_resolution_run(
+    config: SyntheticScenarioConfig,
+) -> SyntheticRun:
+    reference = MasterReferenceRecord(
+        reference_id=config.factor_reference_id,
+        reference_type="emission_factor",
+        label=f"{config.geography} grid electricity factor {config.reporting_period}",
+        geography=config.geography,
+        valid_period=config.reporting_period,
+        method="location_based",
+        factor_value=config.factor_value,
+        input_unit=config.factor_input_unit,
+        output_unit=config.factor_output_unit,
+        source="synthetic_reference_catalog",
+        witness_id=f"reference-witness:{config.factor_reference_id}",
+    )
+    missing_unit = _missing_unit_spec(config)
+    raw_row = missing_unit["row"]
+    source_witness_id = f"witness:{raw_row.source_row_id}:electricity_kwh"
+    derived_value = _multiply(raw_row.amount, config.factor_value)
+    resolution = _missing_unit_resolution_artifact(raw_row)
+    resolved_obligation = missing_unit["obligation"]
+
+    return SyntheticRun(
+        config=config,
+        manifest=build_manifest(
+            config,
+            output_contract=RESOLUTION_OUTPUT_CONTRACT,
+        ),
+        master=SyntheticMaster(
+            reference_catalog=(reference,),
+            sites=(
+                {
+                    "site_id": config.site_id,
+                    "site_name": config.site_name,
+                    "geography": config.geography,
+                },
+            ),
+            products=(
+                {
+                    "product_id": config.product_id,
+                    "site_id": config.site_id,
+                },
+            ),
+        ),
+        raw_sources=SyntheticRawSources(electricity_rows=(raw_row,)),
+        resolution_artifacts=SyntheticResolutionArtifacts(
+            unit_witnesses=(resolution,),
+        ),
+        oracle=SyntheticOracle(
+            expected_claims=(
+                ExpectedClaim(
+                    claim_id=config.input_claim_id,
+                    field="electricity_kwh",
+                    value=raw_row.amount,
+                    unit=resolution.resolved_value,
+                    witness_id=source_witness_id,
+                    source_row_id=raw_row.source_row_id,
+                ),
+            ),
+            expected_derived_claims=(
+                ExpectedDerivedClaim(
+                    claim_id=config.output_claim_id,
+                    field="co2e_kg",
+                    value=derived_value,
+                    unit=config.factor_output_unit,
+                    formula_id=config.formula_id,
+                ),
+            ),
+            expected_obligations=(),
+            expected_hazards=(),
+            expected_failed_claims=(),
+            injected_anomalies=(missing_unit["anomaly"],),
+            source_to_expected_claim_map=(
+                ExpectedSourceMap(
+                    source_ref=raw_row.source_ref,
+                    source_row_id=raw_row.source_row_id,
+                    expected_claim_id=config.input_claim_id,
+                    expected_field="electricity_kwh",
+                    witness_id=source_witness_id,
+                ),
+            ),
+            expected_resolved_obligations=(
+                resolved_obligation,
+                ExpectedObligation(
+                    obligation_id=_reference_search_obligation_id(config),
+                    kind="reference_search_required",
+                    field="co2e_kg",
+                    reason="unknown_reference",
+                ),
+                ExpectedObligation(
+                    obligation_id=_calculation_obligation_id(config),
+                    kind="calculation_blocked",
+                    field="co2e_kg",
+                    reason="unknown_reference",
+                ),
+            ),
+            expected_resolution_artifacts=(
+                ExpectedResolutionArtifact(
+                    artifact_id=resolution.artifact_id,
+                    obligation_id=resolution.obligation_id,
+                    source_row_id=resolution.source_row_id,
+                    field=resolution.field,
+                    resolved_value=resolution.resolved_value,
+                    witness_id=resolution.witness_id,
+                    source_ref=resolution.source_ref,
+                ),
+            ),
+            expected_receipt=_expected_smoke_receipt(
+                config,
+                source_witness_id=source_witness_id,
+                derived_value=derived_value,
+                resolved_obligation_ids=(
+                    resolved_obligation.obligation_id,
+                    _reference_search_obligation_id(config),
+                    _calculation_obligation_id(config),
+                ),
+            ),
+        ),
+        output_contract=RESOLUTION_OUTPUT_CONTRACT,
     )
 
 
@@ -592,6 +785,21 @@ def _missing_unit_spec(config: SyntheticScenarioConfig) -> dict[str, Any]:
         ),
         "failed_claim": None,
     }
+
+
+def _missing_unit_resolution_artifact(
+    row: RawElectricityRow,
+) -> SyntheticResolutionArtifact:
+    return SyntheticResolutionArtifact(
+        artifact_id="synthetic-resolution:missing_unit:kwh",
+        obligation_id="synthetic-obligation:missing_unit",
+        source_row_id=row.source_row_id,
+        field="unit",
+        resolved_value="kWh",
+        witness_id=f"resolution-witness:{row.source_row_id}:unit",
+        source_ref="unit_witnesses.csv",
+        rationale="operator supplied the omitted electricity unit",
+    )
 
 
 def _wrong_unit_spec(config: SyntheticScenarioConfig) -> dict[str, Any]:
@@ -741,6 +949,8 @@ def write_synthetic_run(run: SyntheticRun, run_dir: Path) -> Path:
     run_dir.mkdir(parents=True, exist_ok=True)
     (run_dir / "master").mkdir(exist_ok=True)
     (run_dir / "raw_sources").mkdir(exist_ok=True)
+    if run.resolution_artifacts.unit_witnesses:
+        (run_dir / "resolution_artifacts").mkdir(exist_ok=True)
     (run_dir / "oracle").mkdir(exist_ok=True)
 
     _write_json(run_dir / "manifest.json", run.manifest)
@@ -786,6 +996,24 @@ def write_synthetic_run(run: SyntheticRun, run_dir: Path) -> Path:
         ],
         (row.to_row() for row in run.raw_sources.electricity_rows),
     )
+    if run.resolution_artifacts.unit_witnesses:
+        _write_csv(
+            run_dir / "resolution_artifacts" / "unit_witnesses.csv",
+            [
+                "artifact_id",
+                "obligation_id",
+                "source_row_id",
+                "field",
+                "resolved_value",
+                "witness_id",
+                "source_ref",
+                "rationale",
+            ],
+            (
+                artifact.to_row()
+                for artifact in run.resolution_artifacts.unit_witnesses
+            ),
+        )
     _write_csv(
         run_dir / "oracle" / "expected_claims.csv",
         ["claim_id", "field", "value", "unit", "witness_id", "source_row_id"],
@@ -827,6 +1055,32 @@ def write_synthetic_run(run: SyntheticRun, run_dir: Path) -> Path:
         ],
         (item.to_row() for item in run.oracle.source_to_expected_claim_map),
     )
+    if run.oracle.expected_resolved_obligations is not None:
+        _write_csv(
+            run_dir / "oracle" / "expected_resolved_obligations.csv",
+            ["obligation_id", "kind", "field", "reason"],
+            (
+                obligation.to_row()
+                for obligation in run.oracle.expected_resolved_obligations
+            ),
+        )
+    if run.oracle.expected_resolution_artifacts is not None:
+        _write_csv(
+            run_dir / "oracle" / "expected_resolution_artifacts.csv",
+            [
+                "artifact_id",
+                "obligation_id",
+                "source_row_id",
+                "field",
+                "resolved_value",
+                "witness_id",
+                "source_ref",
+            ],
+            (
+                artifact.to_row()
+                for artifact in run.oracle.expected_resolution_artifacts
+            ),
+        )
     if run.oracle.expected_receipt is not None:
         _write_json(
             run_dir / "oracle" / "expected_receipt.json",
@@ -865,10 +1119,15 @@ def _expected_smoke_receipt(
     *,
     source_witness_id: str,
     derived_value: int | float,
+    resolved_obligation_ids: tuple[str, ...] | None = None,
 ) -> ExpectedReceipt:
     commit_package_id = f"commit-package:{config.subject_id}"
     governance_decision_id = f"governance-decision:{commit_package_id}"
     manifest_dependency_id = _synthetic_manifest_dependency_id(config)
+    resolved_ids = resolved_obligation_ids or (
+        _reference_search_obligation_id(config),
+        _calculation_obligation_id(config),
+    )
     source_dependency_refs = _synthetic_source_dependency_refs(config)
     return ExpectedReceipt(
         public_row_id=config.public_row_id,
@@ -886,6 +1145,7 @@ def _expected_smoke_receipt(
         derived_claim_ids=(config.output_claim_id,),
         calculation_trace_ids=(f"trace:{config.output_claim_id}",),
         formula_ids=(config.formula_id,),
+        resolved_obligation_ids=resolved_ids,
         dependency_refs=(
             ExpectedDependencyRef(
                 dependency_kind="synthetic_manifest",
@@ -922,6 +1182,20 @@ def _expected_smoke_receipt(
 
 def _synthetic_manifest_dependency_id(config: SyntheticScenarioConfig) -> str:
     return f"synthetic_manifest:{config.scenario_id}:seed-{config.seed}"
+
+
+def _reference_search_obligation_id(config: SyntheticScenarioConfig) -> str:
+    return (
+        f"resolve:{config.formula_id}:{config.output_claim_id}:"
+        "reference_search_required"
+    )
+
+
+def _calculation_obligation_id(config: SyntheticScenarioConfig) -> str:
+    return (
+        f"calculation:{config.formula_id}:{config.output_claim_id}:"
+        "unknown_reference"
+    )
 
 
 def synthetic_source_input_dependency_id(
@@ -962,6 +1236,7 @@ def build_synthetic_loaded_sources(
     *,
     master: SyntheticMaster,
     raw_sources: SyntheticRawSources,
+    resolution_artifacts: SyntheticResolutionArtifacts = SyntheticResolutionArtifacts(),
 ) -> tuple[SyntheticLoadedSource, ...]:
     return tuple(
         build_synthetic_loaded_source(
@@ -973,6 +1248,7 @@ def build_synthetic_loaded_sources(
             rows=_source_rows_for_manifest_source(
                 master,
                 raw_sources,
+                resolution_artifacts,
                 role=str(source["role"]),
                 source_ref=str(source["source_ref"]),
             ),
@@ -985,6 +1261,7 @@ def build_synthetic_loaded_sources(
 def _source_rows_for_manifest_source(
     master: SyntheticMaster,
     raw_sources: SyntheticRawSources,
+    resolution_artifacts: SyntheticResolutionArtifacts,
     *,
     role: str,
     source_ref: str,
@@ -1000,6 +1277,12 @@ def _source_rows_for_manifest_source(
             row.to_row()
             for row in raw_sources.electricity_rows
             if row.source_ref == source_ref
+        )
+    if role == "resolution_unit_witness":
+        return tuple(
+            artifact.to_row()
+            for artifact in resolution_artifacts.unit_witnesses
+            if artifact.source_ref == source_ref
         )
     return ()
 
@@ -1034,12 +1317,15 @@ def _synthetic_source_dependency_refs(
 def _synthetic_source_identities(
     config: SyntheticScenarioConfig,
 ) -> tuple[tuple[str, str], ...]:
-    return (
+    identities = (
         ("master_reference_catalog", "reference_catalog.csv"),
         ("master_sites", "sites.csv"),
         ("master_products", "products.csv"),
         ("raw_source", config.source_ref),
     )
+    if config.scenario_id == "synthetic_pcf.resolution.v1":
+        return (*identities, ("resolution_unit_witness", "unit_witnesses.csv"))
+    return identities
 
 
 __all__ = [
@@ -1051,17 +1337,21 @@ __all__ = [
     "ExpectedArtifactRef",
     "ExpectedDependencyRef",
     "ExpectedReceipt",
+    "ExpectedResolutionArtifact",
     "ExpectedSourceMap",
     "InjectedAnomaly",
     "MasterReferenceRecord",
     "OUTPUT_CONTRACT",
     "RawElectricityRow",
+    "RESOLUTION_OUTPUT_CONTRACT",
     "SYNTHETIC_SOURCE_INPUT_KIND",
     "SyntheticLoadedSource",
     "SyntheticInputBundle",
     "SyntheticMaster",
     "SyntheticOracle",
     "SyntheticRawSources",
+    "SyntheticResolutionArtifact",
+    "SyntheticResolutionArtifacts",
     "SyntheticRun",
     "build_synthetic_loaded_source",
     "build_synthetic_loaded_sources",
