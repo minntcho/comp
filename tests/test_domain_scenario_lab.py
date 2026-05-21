@@ -1,4 +1,6 @@
 import json
+import re
+from pathlib import Path
 
 import pytest
 
@@ -120,30 +122,14 @@ def test_domain_scenario_cli_runs_all_registered_scenarios(capsys):
     exit_code = main(["run-all"])
 
     captured = capsys.readouterr()
+    scenario_ids = _registered_scenario_ids()
+    expected_total = len(scenario_ids)
+
     assert exit_code == 0
     assert "Domain Scenario Run" in captured.out
-    assert "Passed: 18/18" in captured.out
-    assert "- canonical_working_loop.raw_text_pcf.v1: pass" in captured.out
-    assert "- tiny_pcf.location_based_electricity.v1: pass" in captured.out
-    assert "- l_energy.alpha_invalid_allocation_rfi.v1: pass" in captured.out
-    assert (
-        "- l_energy.alpha_physical_allocation_correction.v1: pass"
-        in captured.out
-    )
-    assert "- l_energy.steel_frame_proxy_assignment.v1: pass" in captured.out
-    assert "- l_energy.carbon_tech_certificate_submission.v1: pass" in captured.out
-    assert "- l_energy.l_materials_composition_rollup.v1: pass" in captured.out
-    assert "- l_energy.c_pack_yield_rollup.v1: pass" in captured.out
-    assert "- l_energy.tier0_physical_allocation.v1: pass" in captured.out
-    assert "- l_energy.final_bottom_up_pcf_rollup.v1: pass" in captured.out
-    assert "- l_energy_pcf_governance.v1: pass" in captured.out
-    assert "- synthetic.raw_claim_hypothesis_gate.v1: pass" in captured.out
-    assert "- synthetic.raw_claim_hypothesis_acceptance.v1: pass" in captured.out
-    assert "- synthetic.raw_claim_conflict.v1: pass" in captured.out
-    assert "- synthetic.raw_claim_conflict_resolution.v1: pass" in captured.out
-    assert "- synthetic_pcf.smoke.v1: pass" in captured.out
-    assert "- synthetic_pcf.anomaly.v1: pass" in captured.out
-    assert "- synthetic_pcf.resolution.v1: pass" in captured.out
+    assert f"Passed: {expected_total}/{expected_total}" in captured.out
+    for scenario_id in scenario_ids:
+        assert f"- {scenario_id}: pass" in captured.out
     assert captured.err == ""
 
 
@@ -154,50 +140,31 @@ def test_domain_scenario_cli_runs_all_as_json(capsys):
 
     captured = capsys.readouterr()
     payload = json.loads(captured.out)
+    scenario_ids = _registered_scenario_ids()
+    expected_total = len(scenario_ids)
+
     assert exit_code == 0
-    assert payload["summary"] == {"total": 18, "passed": 18, "failed": 0}
+    assert payload["summary"] == {
+        "total": expected_total,
+        "passed": expected_total,
+        "failed": 0,
+    }
     assert tuple(item["status"] for item in payload["scenarios"]) == (
-        "pass",
-        "pass",
-        "pass",
-        "pass",
-        "pass",
-        "pass",
-        "pass",
-        "pass",
-        "pass",
-        "pass",
-        "pass",
-        "pass",
-        "pass",
-        "pass",
-        "pass",
-        "pass",
-        "pass",
-        "pass",
+        ("pass",) * expected_total
     )
-    assert tuple(item["scenario_id"] for item in payload["scenarios"]) == (
-        "canonical_working_loop.raw_text_pcf.v1",
-        "tiny_pcf.location_based_electricity.v1",
-        "l_energy.alpha_invalid_allocation_rfi.v1",
-        "l_energy.alpha_physical_allocation_correction.v1",
-        "l_energy.steel_frame_proxy_assignment.v1",
-        "l_energy.carbon_tech_certificate_submission.v1",
-        "l_energy.l_materials_composition_rollup.v1",
-        "l_energy.c_pack_yield_rollup.v1",
-        "l_energy.tier0_physical_allocation.v1",
-        "l_energy.final_bottom_up_pcf_rollup.v1",
-        "l_energy_pcf_governance.v1",
-        "synthetic.raw_claim_hypothesis_gate.v1",
-        "synthetic.raw_claim_hypothesis_acceptance.v1",
-        "synthetic.raw_claim_conflict.v1",
-        "synthetic.raw_claim_conflict_resolution.v1",
-        "synthetic_pcf.smoke.v1",
-        "synthetic_pcf.anomaly.v1",
-        "synthetic_pcf.resolution.v1",
-    )
+    assert tuple(item["scenario_id"] for item in payload["scenarios"]) == scenario_ids
     assert "result" in payload["scenarios"][0]
     assert captured.err == ""
+
+
+def test_domain_scenario_cli_run_all_tests_do_not_pin_registered_count():
+    source = Path(__file__).read_text(encoding="utf-8")
+
+    assert not re.search(r'"Passed: (?!0/1")\d+/\d+"', source)
+    assert not re.search(
+        r'\{"total": \d+, "passed": \d+, "failed": 0\}',
+        source,
+    )
 
 
 def test_domain_scenario_cli_run_all_reports_contract_failure(capsys, monkeypatch):
@@ -226,6 +193,10 @@ def test_domain_scenario_cli_run_all_reports_contract_failure(capsys, monkeypatc
     assert "Passed: 0/1" in captured.out
     assert "- tiny_pcf.failure_fixture.v1: fail" in captured.out
     assert captured.err == ""
+
+
+def _registered_scenario_ids() -> tuple[str, ...]:
+    return tuple(scenario.scenario_id for scenario in registered_scenarios())
 
 
 def test_registered_scenarios_are_explicit_scenario_definitions():
