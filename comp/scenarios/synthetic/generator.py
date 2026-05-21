@@ -202,6 +202,107 @@ class ExpectedHazard:
 
 
 @dataclass(frozen=True)
+class ExpectedArtifactRef:
+    artifact_id: str
+    artifact_kind: str
+
+    def to_payload(self) -> dict[str, str]:
+        return {
+            "artifact_id": self.artifact_id,
+            "artifact_kind": self.artifact_kind,
+        }
+
+    @classmethod
+    def from_payload(cls, payload: dict[str, Any]) -> "ExpectedArtifactRef":
+        return cls(
+            artifact_id=str(payload["artifact_id"]),
+            artifact_kind=str(payload["artifact_kind"]),
+        )
+
+
+@dataclass(frozen=True)
+class ExpectedDependencyRef:
+    dependency_kind: str
+    dependency_id: str
+
+    def to_payload(self) -> dict[str, str]:
+        return {
+            "dependency_kind": self.dependency_kind,
+            "dependency_id": self.dependency_id,
+        }
+
+    @classmethod
+    def from_payload(cls, payload: dict[str, Any]) -> "ExpectedDependencyRef":
+        return cls(
+            dependency_kind=str(payload["dependency_kind"]),
+            dependency_id=str(payload["dependency_id"]),
+        )
+
+
+@dataclass(frozen=True)
+class ExpectedReceipt:
+    public_row_id: str
+    projection_id: str
+    authorized_fields: tuple[str, ...]
+    public_row: dict[str, Any]
+    governance_status: str
+    commit_package_id: str
+    governance_decision_id: str
+    checked_claim_witness_ids: tuple[str, ...]
+    reference_binding_ids: tuple[str, ...]
+    derived_claim_ids: tuple[str, ...]
+    calculation_trace_ids: tuple[str, ...]
+    formula_ids: tuple[str, ...]
+    dependency_refs: tuple[ExpectedDependencyRef, ...]
+    artifact_refs: tuple[ExpectedArtifactRef, ...]
+
+    def to_payload(self) -> dict[str, Any]:
+        return {
+            "public_row_id": self.public_row_id,
+            "projection_id": self.projection_id,
+            "authorized_fields": list(self.authorized_fields),
+            "public_row": self.public_row,
+            "governance_status": self.governance_status,
+            "commit_package_id": self.commit_package_id,
+            "governance_decision_id": self.governance_decision_id,
+            "checked_claim_witness_ids": list(self.checked_claim_witness_ids),
+            "reference_binding_ids": list(self.reference_binding_ids),
+            "derived_claim_ids": list(self.derived_claim_ids),
+            "calculation_trace_ids": list(self.calculation_trace_ids),
+            "formula_ids": list(self.formula_ids),
+            "dependency_refs": [
+                ref.to_payload() for ref in self.dependency_refs
+            ],
+            "artifact_refs": [ref.to_payload() for ref in self.artifact_refs],
+        }
+
+    @classmethod
+    def from_payload(cls, payload: dict[str, Any]) -> "ExpectedReceipt":
+        return cls(
+            public_row_id=str(payload["public_row_id"]),
+            projection_id=str(payload["projection_id"]),
+            authorized_fields=tuple(payload["authorized_fields"]),
+            public_row=dict(payload["public_row"]),
+            governance_status=str(payload["governance_status"]),
+            commit_package_id=str(payload["commit_package_id"]),
+            governance_decision_id=str(payload["governance_decision_id"]),
+            checked_claim_witness_ids=tuple(payload["checked_claim_witness_ids"]),
+            reference_binding_ids=tuple(payload["reference_binding_ids"]),
+            derived_claim_ids=tuple(payload["derived_claim_ids"]),
+            calculation_trace_ids=tuple(payload["calculation_trace_ids"]),
+            formula_ids=tuple(payload["formula_ids"]),
+            dependency_refs=tuple(
+                ExpectedDependencyRef.from_payload(ref)
+                for ref in payload["dependency_refs"]
+            ),
+            artifact_refs=tuple(
+                ExpectedArtifactRef.from_payload(ref)
+                for ref in payload["artifact_refs"]
+            ),
+        )
+
+
+@dataclass(frozen=True)
 class SyntheticMaster:
     reference_catalog: tuple[MasterReferenceRecord, ...]
     sites: tuple[dict[str, Any], ...]
@@ -231,6 +332,7 @@ class SyntheticOracle:
     expected_failed_claims: tuple[ExpectedFailedClaim, ...]
     injected_anomalies: tuple[InjectedAnomaly, ...]
     source_to_expected_claim_map: tuple[ExpectedSourceMap, ...]
+    expected_receipt: ExpectedReceipt | None = None
 
 
 @dataclass(frozen=True)
@@ -334,6 +436,11 @@ def generate_synthetic_pcf_run(config: SyntheticScenarioConfig) -> SyntheticRun:
                     expected_field="electricity_kwh",
                     witness_id=source_witness_id,
                 ),
+            ),
+            expected_receipt=_expected_smoke_receipt(
+                config,
+                source_witness_id=source_witness_id,
+                derived_value=derived_value,
             ),
         ),
     )
@@ -690,6 +797,11 @@ def write_synthetic_run(run: SyntheticRun, run_dir: Path) -> Path:
         ],
         (item.to_row() for item in run.oracle.source_to_expected_claim_map),
     )
+    if run.oracle.expected_receipt is not None:
+        _write_json(
+            run_dir / "oracle" / "expected_receipt.json",
+            run.oracle.expected_receipt.to_payload(),
+        )
     return run_dir
 
 
@@ -718,12 +830,70 @@ def _multiply(left: int | float, right: int | float) -> int | float:
     return float(value)
 
 
+def _expected_smoke_receipt(
+    config: SyntheticScenarioConfig,
+    *,
+    source_witness_id: str,
+    derived_value: int | float,
+) -> ExpectedReceipt:
+    commit_package_id = f"commit-package:{config.subject_id}"
+    governance_decision_id = f"governance-decision:{commit_package_id}"
+    manifest_dependency_id = _synthetic_manifest_dependency_id(config)
+    return ExpectedReceipt(
+        public_row_id=config.public_row_id,
+        projection_id=config.projection_id,
+        authorized_fields=("electricity_kwh", "co2e_kg"),
+        public_row={
+            "electricity_kwh": config.electricity_kwh,
+            "co2e_kg": derived_value,
+        },
+        governance_status="commit",
+        commit_package_id=commit_package_id,
+        governance_decision_id=governance_decision_id,
+        checked_claim_witness_ids=(source_witness_id,),
+        reference_binding_ids=(config.binding_id,),
+        derived_claim_ids=(config.output_claim_id,),
+        calculation_trace_ids=(f"trace:{config.output_claim_id}",),
+        formula_ids=(config.formula_id,),
+        dependency_refs=(
+            ExpectedDependencyRef(
+                dependency_kind="synthetic_manifest",
+                dependency_id=manifest_dependency_id,
+            ),
+        ),
+        artifact_refs=(
+            ExpectedArtifactRef(commit_package_id, "commit_package"),
+            ExpectedArtifactRef(governance_decision_id, "governance_decision"),
+            ExpectedArtifactRef(
+                f"checked_claim:electricity_kwh:{source_witness_id}",
+                "checked_claim",
+            ),
+            ExpectedArtifactRef(config.output_claim_id, "derived_claim"),
+            ExpectedArtifactRef(source_witness_id, "evidence_witness"),
+            ExpectedArtifactRef(config.binding_id, "reference_binding"),
+            ExpectedArtifactRef(
+                f"trace:{config.output_claim_id}",
+                "calculation_trace",
+            ),
+            ExpectedArtifactRef(config.formula_id, "formula"),
+            ExpectedArtifactRef(manifest_dependency_id, "synthetic_manifest"),
+        ),
+    )
+
+
+def _synthetic_manifest_dependency_id(config: SyntheticScenarioConfig) -> str:
+    return f"synthetic_manifest:{config.scenario_id}:seed-{config.seed}"
+
+
 __all__ = [
     "ExpectedClaim",
     "ExpectedDerivedClaim",
     "ExpectedFailedClaim",
     "ExpectedHazard",
     "ExpectedObligation",
+    "ExpectedArtifactRef",
+    "ExpectedDependencyRef",
+    "ExpectedReceipt",
     "ExpectedSourceMap",
     "InjectedAnomaly",
     "MasterReferenceRecord",
