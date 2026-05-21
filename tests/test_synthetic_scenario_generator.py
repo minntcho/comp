@@ -169,6 +169,13 @@ def test_synthetic_pcf_resolution_generator_writes_recovery_contract(
         "resolution_artifacts",
         "oracle",
     )
+    assert run.manifest["sources"][-1] == {
+        "source_ref": "unit_witnesses.csv",
+        "role": "resolution_unit_witness",
+        "path": "resolution_artifacts/unit_witnesses.csv",
+        "media_type": "text/csv",
+        "schema_id": "synthetic.resolution_unit_witnesses.v1",
+    }
     assert (run_dir / "resolution_artifacts" / "unit_witnesses.csv").is_file()
     assert (run_dir / "oracle" / "expected_resolution_artifacts.csv").is_file()
     assert (run_dir / "oracle" / "expected_resolved_obligations.csv").is_file()
@@ -271,6 +278,18 @@ def test_synthetic_input_loader_roundtrips_disk_sources_without_oracle(
     assert {witness.source for witness in report.evidence_witnesses} == {
         "raw_sources/erp_electricity.csv",
     }
+
+
+def test_synthetic_input_loader_roundtrips_resolution_artifacts_without_oracle(
+    tmp_path: Path,
+) -> None:
+    run = generate_synthetic_pcf_run(SyntheticScenarioConfig.pcf_resolution(seed=17))
+    run_dir = write_synthetic_run(run, tmp_path / "synthetic-pcf-resolution")
+    shutil.rmtree(run_dir / "oracle")
+
+    input_bundle = load_synthetic_input_bundle(run_dir)
+
+    assert input_bundle.resolution_artifacts == run.input_bundle.resolution_artifacts
 
 
 def test_synthetic_input_loader_uses_manifest_media_type_not_file_extension(
