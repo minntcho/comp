@@ -66,6 +66,7 @@ class RawElectricityRow:
     def to_row(self) -> dict[str, Any]:
         return {
             "source_row_id": self.source_row_id,
+            "source_ref": self.source_ref,
             "period": self.period,
             "site_id": self.site_id,
             "site_name": self.site_name,
@@ -213,6 +214,15 @@ class SyntheticRawSources:
 
 
 @dataclass(frozen=True)
+class SyntheticInputBundle:
+    config: SyntheticScenarioConfig
+    manifest: dict[str, Any]
+    master: SyntheticMaster
+    raw_sources: SyntheticRawSources
+    output_contract: tuple[str, ...] = OUTPUT_CONTRACT
+
+
+@dataclass(frozen=True)
 class SyntheticOracle:
     expected_claims: tuple[ExpectedClaim, ...]
     expected_derived_claims: tuple[ExpectedDerivedClaim, ...]
@@ -231,6 +241,16 @@ class SyntheticRun:
     raw_sources: SyntheticRawSources
     oracle: SyntheticOracle
     output_contract: tuple[str, ...] = OUTPUT_CONTRACT
+
+    @property
+    def input_bundle(self) -> SyntheticInputBundle:
+        return SyntheticInputBundle(
+            config=self.config,
+            manifest=self.manifest,
+            master=self.master,
+            raw_sources=self.raw_sources,
+            output_contract=self.output_contract,
+        )
 
 
 def generate_synthetic_pcf_run(config: SyntheticScenarioConfig) -> SyntheticRun:
@@ -618,6 +638,7 @@ def write_synthetic_run(run: SyntheticRun, run_dir: Path) -> Path:
         run_dir / "raw_sources" / "erp_electricity.csv",
         [
             "source_row_id",
+            "source_ref",
             "period",
             "site_id",
             "site_name",
@@ -708,6 +729,7 @@ __all__ = [
     "MasterReferenceRecord",
     "OUTPUT_CONTRACT",
     "RawElectricityRow",
+    "SyntheticInputBundle",
     "SyntheticMaster",
     "SyntheticOracle",
     "SyntheticRawSources",

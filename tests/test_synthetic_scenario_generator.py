@@ -3,6 +3,8 @@ from __future__ import annotations
 import csv
 from pathlib import Path
 
+import pytest
+
 from comp.scenarios.synthetic import (
     SyntheticPcfAdapter,
     SyntheticScenarioConfig,
@@ -90,6 +92,7 @@ def test_synthetic_pcf_anomaly_generator_writes_pressure_oracle(
         "ERP-SYN-PCF-NEGATIVE-AMOUNT",
         "ERP-SYN-PCF-SITE-ALIAS",
     ]
+    assert {row["source_ref"] for row in raw_rows} == {"erp_electricity.csv"}
     assert [row["anomaly_type"] for row in injected] == [
         "missing_unit",
         "wrong_unit",
@@ -118,7 +121,7 @@ def test_synthetic_pcf_anomaly_generator_writes_pressure_oracle(
 
 def test_synthetic_pcf_anomaly_adapter_reports_raw_source_pressure() -> None:
     run = generate_synthetic_pcf_run(SyntheticScenarioConfig.pcf_anomaly(seed=11))
-    adapter = SyntheticPcfAdapter(run)
+    adapter = SyntheticPcfAdapter(run.input_bundle)
 
     report = adapter.anomaly_report()
 
@@ -127,6 +130,13 @@ def test_synthetic_pcf_anomaly_adapter_reports_raw_source_pressure() -> None:
     assert {witness.source for witness in report.evidence_witnesses} == {
         "raw_sources/erp_electricity.csv",
     }
+
+
+def test_synthetic_pcf_adapter_rejects_oracle_bearing_run() -> None:
+    run = generate_synthetic_pcf_run(SyntheticScenarioConfig.pcf_smoke(seed=7))
+
+    with pytest.raises(TypeError, match="SyntheticInputBundle"):
+        SyntheticPcfAdapter(run)  # type: ignore[arg-type]
 
 
 def test_comp_core_does_not_import_synthetic_scenario_generator() -> None:

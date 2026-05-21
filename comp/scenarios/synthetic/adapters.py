@@ -19,8 +19,8 @@ from comp.compiler_tool import (
     calculate_derived_claim,
 )
 from comp.compiler_tool.models import CompileReport, ProofObligation
-from comp.scenarios.synthetic.generator import SyntheticRun
-from comp.scenarios.synthetic.references import reference_catalog_from_run
+from comp.scenarios.synthetic.generator import SyntheticInputBundle
+from comp.scenarios.synthetic.references import reference_catalog_from_input_bundle
 
 
 class SyntheticPcfAdapter:
@@ -28,9 +28,11 @@ class SyntheticPcfAdapter:
 
     projection_fields = ("electricity_kwh", "co2e_kg")
 
-    def __init__(self, run: SyntheticRun):
-        self.run = run
-        self.config = run.config
+    def __init__(self, input_bundle: SyntheticInputBundle):
+        if not isinstance(input_bundle, SyntheticInputBundle):
+            raise TypeError("SyntheticPcfAdapter requires a SyntheticInputBundle.")
+        self.input_bundle = input_bundle
+        self.config = input_bundle.config
 
     @property
     def subject_id(self) -> str:
@@ -53,10 +55,10 @@ class SyntheticPcfAdapter:
         return self.config.output_claim_id
 
     def reference_catalog(self) -> ReferenceCatalog:
-        return reference_catalog_from_run(self.run)
+        return reference_catalog_from_input_bundle(self.input_bundle)
 
     def input_claim(self) -> CalculationInput:
-        row = self.run.raw_sources.electricity_rows[0]
+        row = self.input_bundle.raw_sources.electricity_rows[0]
         return CalculationInput(
             claim_id=self.config.input_claim_id,
             field="electricity_kwh",
@@ -120,7 +122,7 @@ class SyntheticPcfAdapter:
         obligations: list[ProofObligation] = []
         hazards: list[Hazard] = []
 
-        for row in self.run.raw_sources.electricity_rows:
+        for row in self.input_bundle.raw_sources.electricity_rows:
             amount_witness_id = f"witness:{row.source_row_id}:electricity_kwh"
             witnesses.append(
                 EvidenceWitness(
@@ -257,7 +259,7 @@ class SyntheticPcfAdapter:
                 "dependency_id": fingerprint.dependency_id,
                 "fingerprint": fingerprint.fingerprint,
                 "digest_alg": fingerprint.digest_alg,
-                "manifest": self.run.manifest,
+                "manifest": self.input_bundle.manifest,
             }
         }
 
@@ -267,12 +269,12 @@ class SyntheticPcfAdapter:
             dependency_id=(
                 f"synthetic_manifest:{self.config.scenario_id}:seed-{self.config.seed}"
             ),
-            payload=self.run.manifest,
+            payload=self.input_bundle.manifest,
         )
 
     def _hypothesis_from_raw(self) -> InterpretationHypothesis:
-        row = self.run.raw_sources.electricity_rows[0]
-        expected = self.run.oracle.expected_claims[0]
+        row = self.input_bundle.raw_sources.electricity_rows[0]
+        witness_id = f"witness:{row.source_row_id}:electricity_kwh"
         return InterpretationHypothesis(
             hypothesis_id=self.config.subject_id,
             subject_id=self.config.subject_id,
@@ -280,13 +282,13 @@ class SyntheticPcfAdapter:
                 ClaimHypothesis(
                     field="electricity_kwh",
                     value=row.amount,
-                    witness_id=expected.witness_id,
+                    witness_id=witness_id,
                     origin="synthetic_raw_source",
                 ),
             ),
             witnesses=(
                 EvidenceWitness(
-                    witness_id=expected.witness_id,
+                    witness_id=witness_id,
                     field="electricity_kwh",
                     source=f"raw_sources/{row.source_ref}",
                     span=row.source_row_id,

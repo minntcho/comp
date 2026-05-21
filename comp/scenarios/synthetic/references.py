@@ -1,10 +1,12 @@
 from __future__ import annotations
 
 from comp.compiler_tool import ReferenceCatalog, ReferenceRecord
-from comp.scenarios.synthetic.generator import SyntheticRun
+from comp.scenarios.synthetic.generator import SyntheticInputBundle
 
 
-def reference_catalog_from_run(run: SyntheticRun) -> ReferenceCatalog:
+def reference_catalog_from_input_bundle(
+    input_bundle: SyntheticInputBundle,
+) -> ReferenceCatalog:
     return ReferenceCatalog(
         records=tuple(
             ReferenceRecord(
@@ -28,9 +30,9 @@ def reference_catalog_from_run(run: SyntheticRun) -> ReferenceCatalog:
                 source=record.source,
                 witness_ids=(record.witness_id,),
             )
-            for record in run.master.reference_catalog
+            for record in input_bundle.master.reference_catalog
         )
     )
 
 
-__all__ = ["reference_catalog_from_run"]
+__all__ = ["reference_catalog_from_input_bundle"]

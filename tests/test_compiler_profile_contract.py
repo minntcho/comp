@@ -59,6 +59,15 @@ def _noop_rule_evaluator(claim, hypothesis, profile):
     return ()
 
 
+def _locked_rule(rule_id, *, implementation_version):
+    return RuleFamily(
+        rule_id=rule_id,
+        evaluate=_noop_rule_evaluator,
+        evaluator_id="fixture.callable_rule.evaluator",
+        implementation_version=implementation_version,
+    )
+
+
 def _domain(
     *,
     rules,
@@ -313,6 +322,41 @@ def test_profile_declaration_fingerprint_pins_active_behavior_ids():
     assert fingerprint.fingerprint.startswith("sha256:")
     assert fingerprint == same_fingerprint
     assert fingerprint != changed_fingerprint
+
+
+def test_profile_declaration_fingerprint_pins_rule_implementation_version():
+    profile = CompilerProfile(
+        profile_id="fixture-profile",
+        domain_packs=(
+            _domain(
+                rules=(
+                    _locked_rule(
+                        "fixture.callable_rule.v1",
+                        implementation_version="2026.1",
+                    ),
+                ),
+            ),
+        ),
+        active_rule_ids=("fixture.callable_rule.v1",),
+    )
+    changed_profile = CompilerProfile(
+        profile_id="fixture-profile",
+        domain_packs=(
+            _domain(
+                rules=(
+                    _locked_rule(
+                        "fixture.callable_rule.v1",
+                        implementation_version="2026.2",
+                    ),
+                ),
+            ),
+        ),
+        active_rule_ids=("fixture.callable_rule.v1",),
+    )
+
+    assert profile_declaration_fingerprint(profile) != profile_declaration_fingerprint(
+        changed_profile
+    )
 
 
 def test_profile_lock_body_exposes_active_behavior_manifest():

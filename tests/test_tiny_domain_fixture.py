@@ -12,6 +12,7 @@ from comp.compiler_tool import (
     active_rule_families,
     apply_semantic_judgments,
     compile_with_profile,
+    run_profile_rules,
 )
 
 
@@ -148,6 +149,14 @@ def test_tiny_domain_profile_opens_scope2_semantic_obligation():
         "llm/model@policy-v1",
     )
     assert report.can_project_public_row is False
+
+
+def test_profile_rule_runner_surface_matches_compat_compile_with_profile():
+    report = run_profile_rules(_hypothesis(), _profile())
+    compat_report = compile_with_profile(_hypothesis(), _profile())
+
+    assert report == compat_report
+    assert report.status == "review_required"
 
 
 def test_profile_runner_blocks_claim_without_source_witness():
