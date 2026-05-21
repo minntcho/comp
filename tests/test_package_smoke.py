@@ -427,6 +427,7 @@ def test_pyproject_packages_comp_core_scenarios_and_agent_layer():
     assert setuptools_config["packages"] == [
         "comp",
         "comp.compiler_tool",
+        "comp.explanation",
         "comp.judgment",
         "comp.persistence",
         "comp.scenarios",
@@ -443,6 +444,11 @@ def test_pyproject_packages_comp_core_scenarios_and_agent_layer():
 
     dependencies = pyproject["project"].get("dependencies", [])
     assert not any(dependency.startswith("lark") for dependency in dependencies)
+
+    from comp.explanation import ReceiptProofGraph, export_receipt_proof_graph
+
+    assert ReceiptProofGraph is not None
+    assert export_receipt_proof_graph is not None
     assert ArtifactEnvelope is not None
     assert ArtifactRef is not None
     assert InMemoryArtifactStore is not None
