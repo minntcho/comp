@@ -7,3 +7,4 @@ anomalies:
   - wrong_unit
   - period_mismatch
   - negative_amount
+  - site_alias

@@ -3,14 +3,18 @@ from __future__ import annotations
 from comp.compiler_tool import (
     CalculationFormula,
     CalculationInput,
+    CheckedClaim,
     ClaimHypothesis,
     CompilerTool,
     DependencyFingerprint,
     EvidenceWitness,
+    FailedClaim,
+    Hazard,
     InterpretationHypothesis,
     ReferenceBinding,
     ReferenceCatalog,
     ReferenceSelectionCriteria,
+    with_recomputed_status,
     apply_calculation_result,
     calculate_derived_claim,
 )
@@ -107,6 +111,134 @@ class SyntheticPcfAdapter:
             result,
             output_claim_id=self.config.output_claim_id,
             formula=self.formula(),
+        )
+
+    def anomaly_report(self) -> CompileReport:
+        witnesses: list[EvidenceWitness] = []
+        checked: list[CheckedClaim] = []
+        failed: list[FailedClaim] = []
+        obligations: list[ProofObligation] = []
+        hazards: list[Hazard] = []
+
+        for row in self.run.raw_sources.electricity_rows:
+            amount_witness_id = f"witness:{row.source_row_id}:electricity_kwh"
+            witnesses.append(
+                EvidenceWitness(
+                    witness_id=amount_witness_id,
+                    field="electricity_kwh",
+                    source=f"raw_sources/{row.source_ref}",
+                    span=row.source_row_id,
+                    text=str(row.amount),
+                )
+            )
+            if float(row.amount) < 0:
+                failed.append(
+                    FailedClaim(
+                        field="electricity_kwh",
+                        value=row.amount,
+                        reason="negative_amount",
+                        origin="synthetic_raw_source",
+                        witness_id=amount_witness_id,
+                    )
+                )
+                obligations.append(
+                    ProofObligation(
+                        kind="investigate_activity_amount",
+                        field="electricity_kwh",
+                        reason="negative_amount",
+                        obligation_id="synthetic-obligation:negative_amount",
+                    )
+                )
+                hazards.append(
+                    Hazard(
+                        kind="invalid_activity_amount",
+                        field="electricity_kwh",
+                        severity="block",
+                    )
+                )
+            else:
+                checked.append(
+                    CheckedClaim(
+                        field="electricity_kwh",
+                        value=row.amount,
+                        witness_id=amount_witness_id,
+                        origin="synthetic_raw_source",
+                    )
+                )
+
+            if not row.unit:
+                obligations.append(
+                    ProofObligation(
+                        kind="find_source_witness",
+                        field="unit",
+                        reason="missing_unit",
+                        obligation_id="synthetic-obligation:missing_unit",
+                    )
+                )
+                hazards.append(Hazard(kind="missing_unit", field="unit", severity="review"))
+            elif row.unit.lower() != self.config.electricity_unit.lower():
+                unit_witness_id = f"witness:{row.source_row_id}:unit"
+                witnesses.append(
+                    EvidenceWitness(
+                        witness_id=unit_witness_id,
+                        field="unit",
+                        source=f"raw_sources/{row.source_ref}",
+                        span=row.source_row_id,
+                        text=row.unit,
+                    )
+                )
+                failed.append(
+                    FailedClaim(
+                        field="unit",
+                        value=row.unit,
+                        reason="unsupported_unit",
+                        origin="synthetic_raw_source",
+                        witness_id=unit_witness_id,
+                    )
+                )
+                obligations.append(
+                    ProofObligation(
+                        kind="find_source_witness",
+                        field="unit",
+                        reason="unsupported_unit",
+                        obligation_id="synthetic-obligation:wrong_unit",
+                    )
+                )
+
+            if row.period != self.config.reporting_period:
+                obligations.append(
+                    ProofObligation(
+                        kind="find_context",
+                        field="period",
+                        reason="period_mismatch",
+                        obligation_id="synthetic-obligation:period_mismatch",
+                    )
+                )
+                hazards.append(
+                    Hazard(kind="period_mismatch", field="period", severity="review")
+                )
+
+            if row.site_id != self.config.site_id:
+                obligations.append(
+                    ProofObligation(
+                        kind="resolve_site_identity",
+                        field="site_id",
+                        reason="site_alias",
+                        obligation_id="synthetic-obligation:site_alias",
+                    )
+                )
+                hazards.append(Hazard(kind="site_alias", field="site_id", severity="review"))
+
+        return with_recomputed_status(
+            CompileReport(
+                status="accepted",
+                evidence_witnesses=tuple(witnesses),
+                checked_claims=tuple(checked),
+                failed_claims=tuple(failed),
+                obligations=tuple(obligations),
+                hazards=tuple(hazards),
+                can_project_public_row=False,
+            )
         )
 
     def projection_source(self, report: CompileReport) -> dict[str, object]:

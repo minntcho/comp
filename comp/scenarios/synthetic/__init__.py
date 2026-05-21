@@ -9,7 +9,11 @@ from comp.scenarios.synthetic.config import SyntheticScenarioConfig
 from comp.scenarios.synthetic.generator import (
     ExpectedClaim,
     ExpectedDerivedClaim,
+    ExpectedFailedClaim,
+    ExpectedHazard,
+    ExpectedObligation,
     ExpectedSourceMap,
+    InjectedAnomaly,
     MasterReferenceRecord,
     RawElectricityRow,
     SyntheticMaster,
@@ -23,7 +27,11 @@ from comp.scenarios.synthetic.generator import (
 __all__ = [
     "ExpectedClaim",
     "ExpectedDerivedClaim",
+    "ExpectedFailedClaim",
+    "ExpectedHazard",
+    "ExpectedObligation",
     "ExpectedSourceMap",
+    "InjectedAnomaly",
     "MasterReferenceRecord",
     "RawElectricityRow",
     "SyntheticMaster",

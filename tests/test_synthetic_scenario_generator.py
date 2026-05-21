@@ -4,6 +4,7 @@ import csv
 from pathlib import Path
 
 from comp.scenarios.synthetic import (
+    SyntheticPcfAdapter,
     SyntheticScenarioConfig,
     generate_synthetic_pcf_run,
     write_synthetic_run,
@@ -47,6 +48,100 @@ def test_synthetic_pcf_generator_writes_oracle_not_truth(tmp_path: Path) -> None
     ]
 
 
+def test_synthetic_pcf_anomaly_generator_writes_pressure_oracle(
+    tmp_path: Path,
+) -> None:
+    config = SyntheticScenarioConfig.pcf_anomaly(seed=11)
+
+    run = generate_synthetic_pcf_run(config)
+    run_dir = write_synthetic_run(run, tmp_path / "synthetic-pcf-anomaly")
+
+    assert run.manifest["scenario_id"] == "synthetic_pcf.anomaly.v1"
+    assert run.manifest["reproducibility"]["seed"] == 11
+    assert run.output_contract == ("master", "raw_sources", "oracle")
+    assert tuple(item.anomaly_type for item in run.oracle.injected_anomalies) == (
+        "missing_unit",
+        "wrong_unit",
+        "period_mismatch",
+        "negative_amount",
+        "site_alias",
+    )
+
+    assert (run_dir / "raw_sources" / "erp_electricity.csv").is_file()
+    assert (run_dir / "oracle" / "injected_anomalies.csv").is_file()
+    assert (run_dir / "oracle" / "expected_failed_claims.csv").is_file()
+    assert (run_dir / "oracle" / "expected_obligations.csv").is_file()
+    assert (run_dir / "oracle" / "expected_hazards.csv").is_file()
+    assert not (run_dir / "truth").exists()
+
+    raw_rows = _read_csv(run_dir / "raw_sources" / "erp_electricity.csv")
+    injected = _read_csv(run_dir / "oracle" / "injected_anomalies.csv")
+    failed = _read_csv(run_dir / "oracle" / "expected_failed_claims.csv")
+    obligations = _read_csv(run_dir / "oracle" / "expected_obligations.csv")
+    hazards = _read_csv(run_dir / "oracle" / "expected_hazards.csv")
+
+    assert [row["source_row_id"] for row in raw_rows] == [
+        "ERP-SYN-PCF-MISSING-UNIT",
+        "ERP-SYN-PCF-WRONG-UNIT",
+        "ERP-SYN-PCF-PERIOD-MISMATCH",
+        "ERP-SYN-PCF-NEGATIVE-AMOUNT",
+        "ERP-SYN-PCF-SITE-ALIAS",
+    ]
+    assert [row["anomaly_type"] for row in injected] == [
+        "missing_unit",
+        "wrong_unit",
+        "period_mismatch",
+        "negative_amount",
+        "site_alias",
+    ]
+    assert [(row["field"], row["reason"]) for row in failed] == [
+        ("unit", "unsupported_unit"),
+        ("electricity_kwh", "negative_amount"),
+    ]
+    assert [row["obligation_id"] for row in obligations] == [
+        "synthetic-obligation:missing_unit",
+        "synthetic-obligation:wrong_unit",
+        "synthetic-obligation:period_mismatch",
+        "synthetic-obligation:negative_amount",
+        "synthetic-obligation:site_alias",
+    ]
+    assert [(row["kind"], row["field"], row["severity"]) for row in hazards] == [
+        ("missing_unit", "unit", "review"),
+        ("period_mismatch", "period", "review"),
+        ("invalid_activity_amount", "electricity_kwh", "block"),
+        ("site_alias", "site_id", "review"),
+    ]
+
+
+def test_synthetic_pcf_anomaly_adapter_reports_raw_source_pressure() -> None:
+    run = generate_synthetic_pcf_run(SyntheticScenarioConfig.pcf_anomaly(seed=11))
+    adapter = SyntheticPcfAdapter(run)
+
+    report = adapter.anomaly_report()
+
+    assert report.status == "blocked"
+    assert tuple((claim.field, claim.reason) for claim in report.failed_claims) == (
+        ("unit", "unsupported_unit"),
+        ("electricity_kwh", "negative_amount"),
+    )
+    assert tuple(obligation.obligation_id for obligation in report.obligations) == (
+        "synthetic-obligation:missing_unit",
+        "synthetic-obligation:wrong_unit",
+        "synthetic-obligation:period_mismatch",
+        "synthetic-obligation:negative_amount",
+        "synthetic-obligation:site_alias",
+    )
+    assert tuple((hazard.kind, hazard.field, hazard.severity) for hazard in report.hazards) == (
+        ("missing_unit", "unit", "review"),
+        ("period_mismatch", "period", "review"),
+        ("invalid_activity_amount", "electricity_kwh", "block"),
+        ("site_alias", "site_id", "review"),
+    )
+    assert {witness.source for witness in report.evidence_witnesses} == {
+        "raw_sources/erp_electricity.csv",
+    }
+
+
 def test_comp_core_does_not_import_synthetic_scenario_generator() -> None:
     root = Path(__file__).resolve().parents[1] / "comp"
     core_dirs = (
@@ -63,3 +158,8 @@ def test_comp_core_does_not_import_synthetic_scenario_generator() -> None:
     ]
 
     assert importing_files == []
+
+
+def _read_csv(path: Path) -> list[dict[str, str]]:
+    with path.open(encoding="utf-8", newline="") as handle:
+        return list(csv.DictReader(handle))
