@@ -16,6 +16,9 @@ from tests.domain_scenarios.l_energy_pcf_governance.alpha_physical_allocation_co
 from tests.domain_scenarios.l_energy_pcf_governance.carbon_tech_certificate_submission import (
     CARBON_TECH_CERTIFICATE_SCENARIO,
 )
+from tests.domain_scenarios.l_energy_pcf_governance.l_materials_composition_rollup import (
+    L_MATERIALS_COMPOSITION_SCENARIO,
+)
 from tests.domain_scenarios.l_energy_pcf_governance.steel_frame_proxy_assignment import (
     STEEL_FRAME_PROXY_SCENARIO,
 )
@@ -30,6 +33,7 @@ def registered_scenarios() -> tuple[ScenarioDefinition, ...]:
         ALPHA_PHYSICAL_ALLOCATION_SCENARIO,
         STEEL_FRAME_PROXY_SCENARIO,
         CARBON_TECH_CERTIFICATE_SCENARIO,
+        L_MATERIALS_COMPOSITION_SCENARIO,
         L_ENERGY_PCF_GOVERNANCE_SCENARIO,
     )
 
