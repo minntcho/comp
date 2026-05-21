@@ -119,6 +119,78 @@ def test_synthetic_pcf_anomaly_generator_writes_pressure_oracle(
     ]
 
 
+def test_synthetic_pcf_resolution_generator_writes_recovery_contract(
+    tmp_path: Path,
+) -> None:
+    config = SyntheticScenarioConfig.pcf_resolution(seed=17)
+
+    run = generate_synthetic_pcf_run(config)
+    run_dir = write_synthetic_run(run, tmp_path / "synthetic-pcf-resolution")
+
+    assert run.manifest["scenario_id"] == "synthetic_pcf.resolution.v1"
+    assert run.output_contract == (
+        "master",
+        "raw_sources",
+        "resolution_artifacts",
+        "oracle",
+    )
+    assert (run_dir / "resolution_artifacts" / "unit_witnesses.csv").is_file()
+    assert (run_dir / "oracle" / "expected_resolution_artifacts.csv").is_file()
+    assert (run_dir / "oracle" / "expected_resolved_obligations.csv").is_file()
+    assert (run_dir / "oracle" / "expected_receipt.json").is_file()
+    assert not (run_dir / "truth").exists()
+
+    raw_rows = _read_csv(run_dir / "raw_sources" / "erp_electricity.csv")
+    resolution_artifacts = _read_csv(
+        run_dir / "resolution_artifacts" / "unit_witnesses.csv"
+    )
+    expected_resolved = _read_csv(
+        run_dir / "oracle" / "expected_resolved_obligations.csv"
+    )
+
+    assert raw_rows[0]["source_row_id"] == "ERP-SYN-PCF-MISSING-UNIT"
+    assert raw_rows[0]["unit"] == ""
+    assert resolution_artifacts == [
+        {
+            "artifact_id": "synthetic-resolution:missing_unit:kwh",
+            "obligation_id": "synthetic-obligation:missing_unit",
+            "source_row_id": "ERP-SYN-PCF-MISSING-UNIT",
+            "field": "unit",
+            "resolved_value": "kWh",
+            "witness_id": "resolution-witness:ERP-SYN-PCF-MISSING-UNIT:unit",
+            "source_ref": "unit_witnesses.csv",
+            "rationale": "operator supplied the omitted electricity unit",
+        }
+    ]
+    assert expected_resolved == [
+        {
+            "obligation_id": "synthetic-obligation:missing_unit",
+            "kind": "find_source_witness",
+            "field": "unit",
+            "reason": "missing_unit",
+        },
+        {
+            "obligation_id": (
+                "resolve:pcf.electricity_factor_multiplication.v1:"
+                "synthetic-pcf-resolution:electricity:co2e_kg:"
+                "reference_search_required"
+            ),
+            "kind": "reference_search_required",
+            "field": "co2e_kg",
+            "reason": "unknown_reference",
+        },
+        {
+            "obligation_id": (
+                "calculation:pcf.electricity_factor_multiplication.v1:"
+                "synthetic-pcf-resolution:electricity:co2e_kg:unknown_reference"
+            ),
+            "kind": "calculation_blocked",
+            "field": "co2e_kg",
+            "reason": "unknown_reference",
+        },
+    ]
+
+
 def test_synthetic_pcf_anomaly_adapter_reports_raw_source_pressure() -> None:
     run = generate_synthetic_pcf_run(SyntheticScenarioConfig.pcf_anomaly(seed=11))
     adapter = SyntheticPcfAdapter(run.input_bundle)

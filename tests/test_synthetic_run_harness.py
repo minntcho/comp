@@ -73,3 +73,40 @@ def test_synthetic_run_harness_materializes_anomaly_hold_flow(tmp_path) -> None:
     assert harness.preparation.receipt is None
     assert harness.projection is None
     assert harness.replay_report is None
+
+
+def test_synthetic_run_harness_materializes_resolution_commit_flow(tmp_path) -> None:
+    harness = materialize_synthetic_run(
+        SyntheticScenarioConfig.pcf_resolution(seed=17),
+        tmp_path,
+    )
+
+    assert harness.run_dir.name == "synthetic_pcf.resolution.v1-seed-17"
+    assert (
+        harness.run_dir / "resolution_artifacts" / "unit_witnesses.csv"
+    ).is_file()
+    assert (
+        harness.run_dir / "oracle" / "expected_resolved_obligations.csv"
+    ).is_file()
+    assert harness.oracle_checked is True
+    assert harness.receipt_oracle_checked is True
+    assert harness.report.status == "accepted"
+    assert harness.report.obligations == ()
+    assert harness.report.hazards == ()
+    assert tuple(
+        obligation.obligation_id for obligation in harness.report.resolved_obligations
+    ) == (
+        "synthetic-obligation:missing_unit",
+        "resolve:pcf.electricity_factor_multiplication.v1:"
+        "synthetic-pcf-resolution:electricity:co2e_kg:reference_search_required",
+        "calculation:pcf.electricity_factor_multiplication.v1:"
+        "synthetic-pcf-resolution:electricity:co2e_kg:unknown_reference",
+    )
+    assert harness.preparation.decision.status == "commit"
+    assert harness.preparation.receipt is not None
+    assert harness.projection == {
+        "electricity_kwh": 1200,
+        "co2e_kg": 504.0,
+    }
+    assert harness.replay_report is not None
+    assert harness.replay_report.public_row == harness.projection

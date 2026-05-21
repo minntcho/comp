@@ -28,6 +28,9 @@ from tests.domain_scenarios.l_energy_pcf_governance.steel_frame_proxy_assignment
 from tests.domain_scenarios.synthetic_pcf_anomaly.scenario import (
     SCENARIO as SYNTHETIC_PCF_ANOMALY_SCENARIO,
 )
+from tests.domain_scenarios.synthetic_pcf_resolution.scenario import (
+    SCENARIO as SYNTHETIC_PCF_RESOLUTION_SCENARIO,
+)
 from tests.domain_scenarios.l_energy_pcf_governance.tier0_physical_allocation import (
     TIER0_PHYSICAL_ALLOCATION_SCENARIO,
 )
@@ -59,6 +62,7 @@ def registered_scenarios() -> tuple[ScenarioDefinition, ...]:
         RAW_CLAIM_HYPOTHESIS_GATE_SCENARIO,
         SYNTHETIC_PCF_SMOKE_SCENARIO,
         SYNTHETIC_PCF_ANOMALY_SCENARIO,
+        SYNTHETIC_PCF_RESOLUTION_SCENARIO,
     )
 
 
