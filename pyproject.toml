@@ -15,8 +15,13 @@ packages = [
   "comp.compiler_tool",
   "comp.judgment",
   "comp.persistence",
+  "comp.scenarios",
+  "comp.scenarios.synthetic",
   "minchoagnt",
 ]
+
+[tool.setuptools.package-data]
+"comp.scenarios.synthetic" = ["profiles/*.yaml"]
 
 [project.scripts]
 minchoagnt = "minchoagnt.cli:main"

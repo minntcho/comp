@@ -1,0 +1,9 @@
+scenario_id: synthetic_pcf.anomaly.v1
+seed: 11
+profile_id: synthetic-pcf-anomaly-profile-v1
+reporting_period: 2024
+anomalies:
+  - missing_unit
+  - wrong_unit
+  - period_mismatch
+  - negative_amount

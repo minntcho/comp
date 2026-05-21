@@ -25,6 +25,9 @@ from tests.domain_scenarios.l_energy_pcf_governance.l_materials_composition_roll
 from tests.domain_scenarios.l_energy_pcf_governance.steel_frame_proxy_assignment import (
     STEEL_FRAME_PROXY_SCENARIO,
 )
+from tests.domain_scenarios.synthetic_pcf_smoke.scenario import (
+    SCENARIO as SYNTHETIC_PCF_SMOKE_SCENARIO,
+)
 from tests.domain_scenarios.tiny_pcf.scenario import SCENARIO as TINY_PCF_SCENARIO
 
 
@@ -39,6 +42,7 @@ def registered_scenarios() -> tuple[ScenarioDefinition, ...]:
         L_MATERIALS_COMPOSITION_SCENARIO,
         C_PACK_YIELD_ROLLUP_SCENARIO,
         L_ENERGY_PCF_GOVERNANCE_SCENARIO,
+        SYNTHETIC_PCF_SMOKE_SCENARIO,
     )
 
 
