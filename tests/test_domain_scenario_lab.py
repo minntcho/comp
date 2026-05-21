@@ -120,7 +120,7 @@ def test_domain_scenario_cli_runs_all_registered_scenarios(capsys):
     captured = capsys.readouterr()
     assert exit_code == 0
     assert "Domain Scenario Run" in captured.out
-    assert "Passed: 15/15" in captured.out
+    assert "Passed: 16/16" in captured.out
     assert "- canonical_working_loop.raw_text_pcf.v1: pass" in captured.out
     assert "- tiny_pcf.location_based_electricity.v1: pass" in captured.out
     assert "- l_energy.alpha_invalid_allocation_rfi.v1: pass" in captured.out
@@ -151,8 +151,9 @@ def test_domain_scenario_cli_runs_all_as_json(capsys):
     captured = capsys.readouterr()
     payload = json.loads(captured.out)
     assert exit_code == 0
-    assert payload["summary"] == {"total": 15, "passed": 15, "failed": 0}
+    assert payload["summary"] == {"total": 16, "passed": 16, "failed": 0}
     assert tuple(item["status"] for item in payload["scenarios"]) == (
+        "pass",
         "pass",
         "pass",
         "pass",
