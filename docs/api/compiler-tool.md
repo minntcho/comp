@@ -68,6 +68,43 @@ ReviewDecision != public authority
 PublicOutputReceipt == projection gate
 ```
 
+## Behavior declaration surfaces
+
+These names let domain packs, profiles, fixtures, and reference resources
+declare behavior. They are not authority overrides.
+
+```text
+DomainPack
+CompilerProfile
+RuleFamily
+SemanticRubric
+JudgePolicy
+ReferenceCatalog
+ReferenceCatalogSnapshot
+ReferenceRecord
+CalculationFormula
+RetrievalQueryPolicy
+RetrievalQueryRule
+```
+
+DomainPack is a declaration library.
+CompilerProfile is the active behavior lock.
+Neither is authority.
+
+Behavior declaration surfaces may describe allowed fields, allowed units, active
+rules, rubrics, references, formulas, and retrieval policies. The compiler still
+owns protocol validation, authority promotion, and receipt-gated projection.
+
+They must not:
+
+```text
+mint PublicOutputReceipt
+bypass ReferenceOption -> CanonicalReference selection
+treat rule output as public authority
+authorize projection without receipt
+disable core invariants
+```
+
 ## Experimental / internal-ish API
 
 These names are currently exported for implementation convenience, tests, or

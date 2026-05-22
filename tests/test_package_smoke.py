@@ -100,6 +100,19 @@ COMPILER_TOOL_ADVANCED_PUBLIC = {
     "ReferenceCatalog",
     "ReferenceResolver",
 }
+COMPILER_TOOL_BEHAVIOR_DECLARATION_PUBLIC = {
+    "DomainPack",
+    "CompilerProfile",
+    "RuleFamily",
+    "SemanticRubric",
+    "JudgePolicy",
+    "ReferenceCatalog",
+    "ReferenceCatalogSnapshot",
+    "ReferenceRecord",
+    "CalculationFormula",
+    "RetrievalQueryPolicy",
+    "RetrievalQueryRule",
+}
 COMPILER_TOOL_EXPERIMENTAL_NOT_QUICKSTART = {
     "active_retrieval_query_policies",
     "profile_declaration_fingerprint",
@@ -220,6 +233,21 @@ def test_compiler_tool_advanced_surface_is_documented():
     assert "__all__ is not the stability contract" in api_doc
 
 
+def test_compiler_tool_behavior_declaration_surface_is_documented():
+    import comp.compiler_tool as compiler_tool
+
+    api_doc = Path("docs/api/compiler-tool.md").read_text(encoding="utf-8")
+
+    assert "## Behavior declaration surfaces" in api_doc
+    assert "They are not authority overrides." in api_doc
+    assert "DomainPack is a declaration library." in api_doc
+    assert "CompilerProfile is the active behavior lock." in api_doc
+    assert "Neither is authority." in api_doc
+    for name in COMPILER_TOOL_BEHAVIOR_DECLARATION_PUBLIC:
+        assert hasattr(compiler_tool, name), name
+        assert name in api_doc, name
+
+
 def test_compiler_tool_experimental_surface_is_not_in_readme_quickstart():
     quickstart = _readme_compiler_tool_quickstart()
     api_doc = Path("docs/api/compiler-tool.md").read_text(encoding="utf-8")
@@ -323,6 +351,10 @@ def test_document_governance_classifies_architecture_doc_authority():
     assert "document-governance.md" in docs_index
 
     required_headers = {
+        "docs/architecture/contracts/compiler-domain-boundary.md": (
+            "Status: active-contract",
+            "Can block PRs: yes",
+        ),
         "docs/architecture/contracts/trust-kernel-extension-rings.md": (
             "Status: active-contract",
             "Can block PRs: yes",
@@ -436,6 +468,12 @@ def test_architecture_docs_are_classified_by_governance_status():
             "2026-05-20",
         ),
         "document-governance.md": (
+            "active-contract",
+            "trust-kernel",
+            "yes",
+            "2026-05-22",
+        ),
+        "compiler-domain-boundary.md": (
             "active-contract",
             "trust-kernel",
             "yes",
@@ -607,6 +645,7 @@ def test_docs_index_groups_architecture_docs_by_governance_authority():
         "### Historical Notes"
     )
     assert "archive/architecture/active-surface-cutover.md" in docs_index
+    assert "architecture/contracts/compiler-domain-boundary.md" in docs_index
     assert "architecture/contracts/friendly-authority-vocabulary.md" in docs_index
     assert "archive/architecture/legacy-archive-cutover-plan.md" in docs_index
     assert "archive/architecture/llm-orchestrated-compiler-tool-loop.md" in docs_index
