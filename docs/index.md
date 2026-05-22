@@ -55,6 +55,7 @@ override active contracts.
 2. `architecture/llm-worker-orchestration.md`
 3. `architecture/production-trust-spine-database.md`
 4. `architecture/friendly-authority-vocabulary.md`
+5. `architecture/scenario-trust-runtime-bridge.md`
 
 ### Historical Notes
 
