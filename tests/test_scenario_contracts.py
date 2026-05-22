@@ -1,9 +1,10 @@
 import json
+from pathlib import Path
 
 import pytest
 
-from comp.persistence.codec import encode_persistence_json
-from comp.persistence.mysql import commit_receipt_to_body
+from comp.scenario_contracts import RuntimeCase, RuntimeProjection
+from comp.scenario_contracts import write_artifact_envelopes, write_runtime_case
 from tests.support.persistence_cases import artifact_store_for_receipt
 from tests.support.persistence_cases import receipt_projection_case
 
@@ -59,6 +60,99 @@ def test_run_scenario_writes_json_report(tmp_path):
     }
 
 
+def test_writer_helpers_round_trip_prepared_bundle(tmp_path):
+    from comp.scenario_contracts import run_scenario
+
+    case = receipt_projection_case(amount=125, site="plant-b")
+    store = artifact_store_for_receipt(
+        case.receipt,
+        committed_values=case.source_values,
+    )
+    prepared = tmp_path / "prepared"
+    prepared.mkdir()
+    runtime_case_path = prepared / "runtime_case.json"
+    artifact_path = prepared / "artifact_envelopes.jsonl"
+
+    write_runtime_case(
+        RuntimeCase(
+            case_id="writer-round-trip",
+            receipts=(case.receipt,),
+            projections=(
+                RuntimeProjection(
+                    public_row_id="public-row-1",
+                    projection_id="public-row",
+                    draft_id="draft-1",
+                    output_fields=("site", "amount"),
+                    row=case.public_row,
+                ),
+            ),
+        ),
+        runtime_case_path,
+    )
+    write_artifact_envelopes(store.envelopes(), artifact_path)
+
+    manifest_path = _write_manifest(
+        tmp_path,
+        report_path=tmp_path / "reports" / "latest.json",
+    )
+    result = run_scenario(manifest_path)
+
+    runtime_payload = json.loads(runtime_case_path.read_text(encoding="utf-8"))
+    first_artifact = json.loads(
+        artifact_path.read_text(encoding="utf-8").splitlines()[0]
+    )
+
+    assert result.status == "passed"
+    assert runtime_payload["case_id"] == "writer-round-trip"
+    assert len(runtime_payload["receipts"]) == 1
+    assert runtime_payload["projections"][0]["output_fields"] == ["site", "amount"]
+    assert {
+        "artifact_id",
+        "artifact_kind",
+        "schema_version",
+        "body_digest",
+        "body",
+        "source_refs",
+        "meta",
+    } == set(first_artifact)
+
+
+def test_public_contract_exports_bundle_loaders_and_writers():
+    from comp.scenario_contracts import (
+        artifact_envelope_from_mapping,
+        artifact_envelope_to_mapping,
+        load_artifact_envelopes,
+        load_runtime_case,
+        runtime_case_from_mapping,
+        runtime_case_to_mapping,
+        runtime_projection_to_mapping,
+        write_artifact_envelopes,
+        write_runtime_case,
+    )
+
+    assert artifact_envelope_from_mapping is not None
+    assert artifact_envelope_to_mapping is not None
+    assert load_artifact_envelopes is not None
+    assert load_runtime_case is not None
+    assert runtime_case_from_mapping is not None
+    assert runtime_case_to_mapping is not None
+    assert runtime_projection_to_mapping is not None
+    assert write_artifact_envelopes is not None
+    assert write_runtime_case is not None
+
+
+def test_scenario_contract_examples_document_public_bundle_writer():
+    examples = Path("docs/examples/scenario_contracts/README.md").read_text(
+        encoding="utf-8"
+    )
+
+    assert "input_mode: canonical_bundle" in examples
+    assert "write_runtime_case" in examples
+    assert "write_artifact_envelopes" in examples
+    assert "comp scenario run" in examples
+    assert "pre-trust" in examples
+
+
 def test_run_scenario_rejects_pack_adapter_mode(tmp_path):
     from comp.scenario_contracts import ScenarioManifestError, run_scenario
 
@@ -100,7 +194,10 @@ def test_comp_scenario_cli_validates_and_runs_prepared_bundle(tmp_path, capsys):
     assert main(["scenario", "validate", str(manifest_path)]) == 0
     assert "fixture_public_projection" in capsys.readouterr().out
 
-    assert main(["scenario", "run", str(manifest_path), "--report", str(report_path)]) == 0
+    assert (
+        main(["scenario", "run", str(manifest_path), "--report", str(report_path)])
+        == 0
+    )
     output = capsys.readouterr().out
 
     assert "passed" in output
@@ -120,30 +217,23 @@ def _write_prepared_scenario(tmp_path, *, report_path=None, report_format="json"
     artifact_path = prepared / "artifact_envelopes.jsonl"
     manifest_path = tmp_path / "scenario.json"
 
-    runtime_case_path.write_text(
-        json.dumps(
-            {
-                "case_id": "fixture-case",
-                "receipts": [commit_receipt_to_body(case.receipt)],
-                "projections": [
-                    {
-                        "public_row_id": "public-row-1",
-                        "projection_id": "public-row",
-                        "draft_id": "draft-1",
-                        "output_fields": ["site", "amount"],
-                        "row": case.public_row,
-                    }
-                ],
-            },
-            sort_keys=True,
+    write_runtime_case(
+        RuntimeCase(
+            case_id="fixture-case",
+            receipts=(case.receipt,),
+            projections=(
+                RuntimeProjection(
+                    public_row_id="public-row-1",
+                    projection_id="public-row",
+                    draft_id="draft-1",
+                    output_fields=("site", "amount"),
+                    row=case.public_row,
+                ),
+            ),
         ),
-        encoding="utf-8",
+        runtime_case_path,
     )
-
-    artifact_path.write_text(
-        "\n".join(_artifact_payload(envelope) for envelope in store.envelopes()),
-        encoding="utf-8",
-    )
+    write_artifact_envelopes(store.envelopes(), artifact_path)
 
     manifest = {
         "id": "fixture_public_projection",
@@ -169,16 +259,27 @@ def _write_prepared_scenario(tmp_path, *, report_path=None, report_format="json"
     return manifest_path
 
 
-def _artifact_payload(envelope):
-    return json.dumps(
-        {
-            "artifact_id": envelope.artifact_id,
-            "artifact_kind": envelope.artifact_kind,
-            "schema_version": envelope.schema_version,
-            "body_digest": envelope.body_digest,
-            "body": encode_persistence_json(envelope.body),
-            "source_refs": encode_persistence_json(envelope.source_refs),
-            "meta": encode_persistence_json(envelope.meta),
+def _write_manifest(tmp_path, *, report_path=None):
+    manifest_path = tmp_path / "scenario.json"
+    manifest = {
+        "id": "fixture_public_projection",
+        "input_mode": "canonical_bundle",
+        "runtime_case": {"path": "prepared/runtime_case.json"},
+        "artifact_envelopes": {"path": "prepared/artifact_envelopes.jsonl"},
+        "expected": {
+            "invariants": [
+                "receipt_exists",
+                "replay_succeeds",
+                "all_public_rows_have_receipts",
+                "projection_values_are_committed",
+                "blocking_hazards_absent",
+            ]
         },
-        sort_keys=True,
-    )
+    }
+    if report_path is not None:
+        manifest["report"] = {
+            "format": "json",
+            "path": str(report_path),
+        }
+    manifest_path.write_text(json.dumps(manifest, sort_keys=True), encoding="utf-8")
+    return manifest_path

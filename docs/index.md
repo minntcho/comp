@@ -66,6 +66,13 @@ block PRs by themselves.
 2. `architecture/legacy-archive-cutover-plan.md`
 3. `architecture/llm-orchestrated-compiler-tool-loop.md`
 
+## Examples
+
+Examples are runnable or copyable guides for public surfaces. They are not
+authority contracts unless an active contract explicitly references them.
+
+1. `examples/scenario_contracts/README.md`
+
 ## Compiler Tool Layers
 
 Use this layer map when adding code or reviewing PRs:

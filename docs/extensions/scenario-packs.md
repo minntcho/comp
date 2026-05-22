@@ -119,6 +119,27 @@ nightly downstream runs
 release-candidate downstream runs
 ```
 
+## Prepared Bundle Contract
+
+Downstream packs should prepare trust inputs before invoking `comp`:
+
+```text
+raw domain/product data
+  -> downstream pre-trust adapter
+  -> RuntimeCase JSON + ArtifactEnvelope JSONL
+  -> comp scenario run
+```
+
+Use the public scenario contract helpers:
+
+```python
+from comp.scenario_contracts import write_artifact_envelopes, write_runtime_case
+```
+
+Do not import `tests.*` or backend-specific JSON codecs from a downstream pack.
+See `docs/examples/scenario_contracts/README.md` for the minimal prepared bundle
+shape.
+
 ## Review Rule
 
 Before adding a large scenario to `comp`, ask:

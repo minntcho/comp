@@ -1,11 +1,11 @@
 from __future__ import annotations
 
 import json
-from collections.abc import Mapping
+from collections.abc import Iterable, Mapping
 from pathlib import Path
 from typing import Any
 
-from comp.persistence.codec import decode_persistence_json
+from comp.persistence.codec import decode_persistence_json, encode_persistence_json
 from comp.persistence.envelope import ArtifactEnvelope
 from comp.scenario_contracts.manifest import ScenarioManifestError
 
@@ -23,6 +23,32 @@ def load_artifact_envelopes(path: str | Path) -> tuple[ArtifactEnvelope, ...]:
             )
         envelopes.append(artifact_envelope_from_mapping(payload))
     return tuple(envelopes)
+
+
+def write_artifact_envelopes(
+    envelopes: Iterable[ArtifactEnvelope],
+    path: str | Path,
+) -> Path:
+    artifact_path = Path(path)
+    artifact_path.parent.mkdir(parents=True, exist_ok=True)
+    lines = [
+        json.dumps(artifact_envelope_to_mapping(envelope), sort_keys=True)
+        for envelope in envelopes
+    ]
+    artifact_path.write_text("\n".join(lines), encoding="utf-8")
+    return artifact_path
+
+
+def artifact_envelope_to_mapping(envelope: ArtifactEnvelope) -> dict[str, object]:
+    return {
+        "artifact_id": envelope.artifact_id,
+        "artifact_kind": envelope.artifact_kind,
+        "schema_version": envelope.schema_version,
+        "body_digest": envelope.body_digest,
+        "body": encode_persistence_json(envelope.body),
+        "source_refs": encode_persistence_json(envelope.source_refs),
+        "meta": encode_persistence_json(envelope.meta),
+    }
 
 
 def artifact_envelope_from_mapping(payload: Mapping[str, Any]) -> ArtifactEnvelope:
@@ -67,4 +93,9 @@ def _required_str(payload: Mapping[str, Any], key: str) -> str:
     return value
 
 
-__all__ = ["artifact_envelope_from_mapping", "load_artifact_envelopes"]
+__all__ = [
+    "artifact_envelope_from_mapping",
+    "artifact_envelope_to_mapping",
+    "load_artifact_envelopes",
+    "write_artifact_envelopes",
+]

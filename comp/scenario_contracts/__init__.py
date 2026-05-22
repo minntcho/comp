@@ -4,6 +4,16 @@ from comp.scenario_contracts.case import (
     RuntimeCase,
     RuntimeProjection,
     load_runtime_case,
+    runtime_case_from_mapping,
+    runtime_case_to_mapping,
+    runtime_projection_to_mapping,
+    write_runtime_case,
+)
+from comp.scenario_contracts.artifacts import (
+    artifact_envelope_from_mapping,
+    artifact_envelope_to_mapping,
+    load_artifact_envelopes,
+    write_artifact_envelopes,
 )
 from comp.scenario_contracts.manifest import (
     ScenarioManifest,
@@ -21,8 +31,16 @@ __all__ = [
     "ScenarioManifest",
     "ScenarioManifestError",
     "ScenarioResult",
+    "artifact_envelope_from_mapping",
+    "artifact_envelope_to_mapping",
+    "load_artifact_envelopes",
     "load_manifest",
     "load_runtime_case",
     "run_scenario",
+    "runtime_case_from_mapping",
+    "runtime_case_to_mapping",
+    "runtime_projection_to_mapping",
+    "write_artifact_envelopes",
     "write_report",
+    "write_runtime_case",
 ]

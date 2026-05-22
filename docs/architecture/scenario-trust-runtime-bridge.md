@@ -384,6 +384,8 @@ The first public bridge slice is implemented:
 comp.scenario_contracts
   loads canonical_bundle JSON manifests, prepared RuntimeCase JSON, and
   ArtifactEnvelope JSONL bundles.
+  exposes write_runtime_case and write_artifact_envelopes helpers so external
+  packs do not need private tests.* helpers or backend-specific JSON encoders.
 
 comp.runtime.TrustRuntime
   records prepared artifacts and receipts into in-memory stores, replays declared
@@ -401,4 +403,10 @@ YAML manifests require PyYAML if used; JSON manifests work without extra deps.
 Only input_mode=canonical_bundle is accepted.
 No raw pack adapter execution exists inside comp.
 No benchmark runner, MySQL query profiling, or migration rehearsal is included.
+```
+
+The public bundle example lives at:
+
+```text
+docs/examples/scenario_contracts/README.md
 ```
