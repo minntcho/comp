@@ -493,7 +493,7 @@ def test_architecture_docs_are_classified_by_governance_status():
             "active-contract",
             "persistence",
             "yes",
-            "2026-05-21",
+            "2026-05-22",
         ),
         "production-trust-spine-database.md": (
             "north-star",
@@ -722,6 +722,27 @@ def test_production_database_north_star_tracks_v1_mysql_spine():
     assert "MySQLReceiptLedger" in db_doc
     assert "ledger_receipt_artifact_refs" in db_doc
     assert "MySQL trust spine" in persistence_doc
+
+
+def test_persistence_ledger_boundary_documents_mysql_operating_contract():
+    persistence_doc = Path(
+        "docs/architecture/contracts/persistence-ledger-boundary.md"
+    ).read_text(encoding="utf-8")
+
+    assert "## 14. MySQL Operating Contract" in persistence_doc
+    for line in (
+        "MySQL stores replay inputs and receipt records.",
+        "MySQL does not authorize public projection.",
+        "Any materialized or indexed table is receipt-derived and must be replay-verifiable.",
+        "ArtifactEnvelope writes are idempotent for the same artifact_id, artifact_kind, schema_version, and body_digest.",
+        "The same artifact_id with a different kind, schema_version, or body_digest raises ArtifactConflict.",
+        "ReceiptLedgerKey conflicts raise ReceiptConflict.",
+        "MySQLArtifactStore.record(...) commits artifact-envelope writes independently.",
+        "MySQLReceiptLedger.record(...) inserts the receipt body and receipt-derived indexes in one transaction before commit.",
+        "apply_trust_spine_schema(...) is idempotent DDL setup, not an online migration runner.",
+        "A recorded receipt without replayable artifacts is storage state only; projection stays blocked until replay_public_projection(...) succeeds.",
+    ):
+        assert line in persistence_doc
 
 
 def test_receipt_proof_graph_contract_names_prework_boundaries():
