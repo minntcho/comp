@@ -40,7 +40,7 @@ def build_synthetic_pcf_resolution_run(
     config: SyntheticScenarioConfig,
 ) -> SyntheticRun:
     missing_unit = missing_unit_spec(config)
-    raw_row = missing_unit["row"]
+    raw_row = missing_unit.row
     resolution = missing_unit_resolution_artifact(raw_row)
 
     return SyntheticRun(
@@ -63,7 +63,7 @@ def build_synthetic_pcf_anomaly_run(
     config: SyntheticScenarioConfig,
 ) -> SyntheticRun:
     specs = anomaly_specs(config)
-    rows = tuple(spec["row"] for spec in specs)
+    rows = tuple(spec.row for spec in specs)
 
     return SyntheticRun(
         config=config,
