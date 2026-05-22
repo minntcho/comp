@@ -41,9 +41,7 @@ def test_materialize_compiler_run_artifacts_builds_replayable_materials():
     materials = materialize_compiler_run_artifacts(
         report,
         preparation,
-        external_material_source=ExternalArtifactMaterialSource.from_bodies(
-            external_bodies
-        ),
+        external_material_source=_external_material_source(external_bodies),
     )
     assert all(isinstance(material, ArtifactMaterial) for material in materials)
     assert {
@@ -106,10 +104,12 @@ def test_materialize_compiler_run_artifacts_requires_external_dependency_body():
         materialize_compiler_run_artifacts(
             report,
             preparation,
-            external_material_source=ExternalArtifactMaterialSource.from_bodies(
-                missing_reference_record
-            ),
+            external_material_source=_external_material_source(missing_reference_record),
         )
+
+
+def test_external_artifact_material_source_accepts_typed_materials_only():
+    assert not hasattr(ExternalArtifactMaterialSource, "from_bodies")
 
 
 def test_external_artifact_material_source_rejects_conflicting_materials():
@@ -240,6 +240,19 @@ def _accepted_compiler_run():
         ): _catalog_snapshot_body(snapshot, snapshot_fingerprint),
     }
     return report, preparation, external_bodies
+
+
+def _external_material_source(
+    bodies: dict[tuple[str, str], dict],
+) -> ExternalArtifactMaterialSource:
+    return ExternalArtifactMaterialSource(
+        ExternalArtifactMaterial(
+            artifact_kind=artifact_kind,
+            artifact_id=artifact_id,
+            body=body,
+        )
+        for (artifact_kind, artifact_id), body in bodies.items()
+    )
 
 
 def _fingerprint_from_body(body):
