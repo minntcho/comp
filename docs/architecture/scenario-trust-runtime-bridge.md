@@ -9,8 +9,9 @@ This document sketches the public bridge that external scenario packs should use
 when they need to pressure-test `comp` without importing `tests.*` or turning the
 trust kernel into a product workflow engine.
 
-It is not an implemented API contract yet. It is a direction document for the
-next scenario-runtime slice.
+It is a direction document for the scenario-runtime bridge. The first
+implementation slice is intentionally small and should not be treated as a final
+scenario pack API.
 
 The stable boundary is:
 
@@ -373,4 +374,31 @@ Are expected results invariant-based instead of exact JSON blobs?
 Does at least one internal smoke scenario exercise the public bridge?
 Can reports show performance without making performance data authoritative?
 Does any new scenario code avoid importing tests.* from external packages?
+```
+
+## 13. Current Implementation Status
+
+The first public bridge slice is implemented:
+
+```text
+comp.scenario_contracts
+  loads canonical_bundle JSON manifests, prepared RuntimeCase JSON, and
+  ArtifactEnvelope JSONL bundles.
+
+comp.runtime.TrustRuntime
+  records prepared artifacts and receipts into in-memory stores, replays declared
+  projections, evaluates invariant results, and emits ScenarioResult.
+
+comp scenario validate
+comp scenario run
+  expose the prepared-bundle trust path through a public CLI.
+```
+
+Current limits:
+
+```text
+YAML manifests require PyYAML if used; JSON manifests work without extra deps.
+Only input_mode=canonical_bundle is accepted.
+No raw pack adapter execution exists inside comp.
+No benchmark runner, MySQL query profiling, or migration rehearsal is included.
 ```

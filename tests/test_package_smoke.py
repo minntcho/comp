@@ -573,10 +573,13 @@ def test_pyproject_packages_comp_core_scenarios_and_agent_layer():
     setuptools_config = pyproject["tool"]["setuptools"]
     assert setuptools_config["packages"] == [
         "comp",
+        "comp.cli",
         "comp.compiler_tool",
         "comp.explanation",
         "comp.judgment",
         "comp.persistence",
+        "comp.runtime",
+        "comp.scenario_contracts",
         "comp.scenarios",
         "comp.scenarios.synthetic",
         "comp.views",
@@ -588,6 +591,7 @@ def test_pyproject_packages_comp_core_scenarios_and_agent_layer():
     assert "py-modules" not in setuptools_config
 
     scripts = pyproject["project"].get("scripts", {})
+    assert scripts["comp"] == "comp.cli.scenario:main"
     assert scripts["minchoagnt"] == "minchoagnt.cli:main"
     assert scripts["comp-receipt-graph"] == "comp.explanation.receipt_graph_cli:main"
 
