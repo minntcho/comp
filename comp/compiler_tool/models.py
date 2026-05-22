@@ -3,8 +3,8 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Any, Literal
 
-from comp.compiler_tool.calculations import CalculationRequirement, DerivedClaim
-from comp.compiler_tool.references import ReferenceBinding, ReferenceCandidate
+from comp.compiler_tool.calculations import CalculationRequirement, CalculatedClaim
+from comp.compiler_tool.references import CanonicalReference, ReferenceOption
 from comp.judgment.receipts import DependencyFingerprint
 
 CompileStatus = Literal[
@@ -143,7 +143,7 @@ class Hazard:
 
 
 @dataclass(frozen=True)
-class CompileReport:
+class ValidationReport:
     status: CompileStatus
     evidence_witnesses: tuple[EvidenceRef, ...] = field(default_factory=tuple)
     checked_claims: tuple[CheckedClaim, ...] = field(default_factory=tuple)
@@ -153,7 +153,10 @@ class CompileReport:
     obligations: tuple[ValidationRequirement, ...] = field(default_factory=tuple)
     resolved_obligations: tuple[ValidationRequirement, ...] = field(default_factory=tuple)
     hazards: tuple[Hazard, ...] = field(default_factory=tuple)
-    reference_candidates: tuple[ReferenceCandidate, ...] = field(default_factory=tuple)
-    reference_bindings: tuple[ReferenceBinding, ...] = field(default_factory=tuple)
-    derived_claims: tuple[DerivedClaim, ...] = field(default_factory=tuple)
+    reference_candidates: tuple[ReferenceOption, ...] = field(default_factory=tuple)
+    reference_bindings: tuple[CanonicalReference, ...] = field(default_factory=tuple)
+    derived_claims: tuple[CalculatedClaim, ...] = field(default_factory=tuple)
     can_project_public_row: bool = False
+
+
+CompileReport = ValidationReport

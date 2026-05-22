@@ -84,6 +84,58 @@ def test_friendly_intake_validation_names_are_canonical_with_legacy_aliases():
     assert evidence_ref_fingerprint(witness).dependency_kind == "evidence_witness"
 
 
+def test_friendly_reference_calculation_report_names_are_canonical_with_legacy_aliases():
+    from comp.compiler_tool import (
+        CalculatedClaim,
+        CanonicalReference,
+        CalculationTrace,
+        CompileReport,
+        DerivedClaim,
+        ReferenceBinding,
+        ReferenceCandidate,
+        ReferenceOption,
+        ValidationReport,
+    )
+
+    option = ReferenceCandidate(
+        candidate_id="candidate-1",
+        reference_id="factor.kr.2024",
+        reference_type="emission_factor",
+        retrieval_method="profile_rule",
+    )
+    reference = ReferenceBinding(
+        binding_id="binding-1",
+        claim_id="claim:electricity",
+        reference_id="factor.kr.2024",
+        reference_type="emission_factor",
+    )
+    calculated = DerivedClaim(
+        claim_id="claim:co2e",
+        field="co2e_kg",
+        value=1200,
+        unit="kg",
+        trace=CalculationTrace(trace_id="trace-1", formula_id="formula:co2e"),
+    )
+    report = CompileReport(
+        status="accepted",
+        reference_candidates=(option,),
+        reference_bindings=(reference,),
+        derived_claims=(calculated,),
+    )
+
+    assert ReferenceCandidate is ReferenceOption
+    assert ReferenceBinding is CanonicalReference
+    assert DerivedClaim is CalculatedClaim
+    assert CompileReport is ValidationReport
+    assert type(option).__name__ == "ReferenceOption"
+    assert type(reference).__name__ == "CanonicalReference"
+    assert type(calculated).__name__ == "CalculatedClaim"
+    assert type(report).__name__ == "ValidationReport"
+    assert option.can_authorize_calculation is False
+    assert reference.can_authorize_calculation is True
+    assert calculated.can_authorize_public_projection is False
+
+
 def test_compiler_tool_has_no_domain_known_fields_by_default():
     report = CompilerTool().compile_interpretation(
         _hypothesis(

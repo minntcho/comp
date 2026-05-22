@@ -1,6 +1,7 @@
 """Deterministic compiler-tool contract surface."""
 
 from comp.compiler_tool.calculations import (
+    CalculatedClaim,
     CalculationFormula,
     CalculationInput,
     CalculationRequirement,
@@ -38,6 +39,7 @@ from comp.compiler_tool.models import (
     UncheckedArea,
     UnknownClaim,
     ValidationRequirement,
+    ValidationReport,
     evidence_ref_fingerprint,
     evidence_witness_fingerprint,
 )
@@ -80,8 +82,10 @@ from comp.compiler_tool.reference_selector import (
     select_reference_binding,
 )
 from comp.compiler_tool.references import (
+    CanonicalReference,
     ReferenceBinding,
     ReferenceCandidate,
+    ReferenceOption,
     RejectedReferenceCandidate,
 )
 from comp.compiler_tool.receipt_builder import (
@@ -140,6 +144,7 @@ __all__ = [
     "EvidenceWitness",
     "evidence_ref_fingerprint",
     "evidence_witness_fingerprint",
+    "ValidationReport",
     "CompileReport",
     "CheckedClaim",
     "FailedClaim",
@@ -156,6 +161,7 @@ __all__ = [
     "CalculationResult",
     "CalculationStep",
     "CalculationTrace",
+    "CalculatedClaim",
     "DerivedClaim",
     "calculation_formula_declaration_fingerprint",
     "calculate_derived_claim",
@@ -170,8 +176,10 @@ __all__ = [
     "GovernanceDecision",
     "GovernanceStatus",
     "decide_governance",
+    "ReferenceOption",
     "ReferenceCandidate",
     "RejectedReferenceCandidate",
+    "CanonicalReference",
     "ReferenceBinding",
     "ReceiptBuildBlocked",
     "CommitReceiptCitations",

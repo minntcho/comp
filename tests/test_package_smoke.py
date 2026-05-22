@@ -76,6 +76,8 @@ def test_top_level_package_no_longer_exports_legacy_runner_surface():
 
 def test_readme_compiler_tool_import_surface_is_exported():
     from comp.compiler_tool import (
+        CalculatedClaim,
+        CanonicalReference,
         ClaimCandidate,
         CompileReport,
         CompilerTool,
@@ -102,16 +104,20 @@ def test_readme_compiler_tool_import_surface_is_exported():
         reference_query_for_obligation_from_resolver_tasks,
         reference_query_from_resolver_task,
         reference_record_fingerprint,
+        ReferenceOption,
         resolve_reference_retrieval_obligations,
         rule_family_declaration_fingerprint,
         semantic_rubric_declaration_fingerprint,
         ValidationRequirement,
+        ValidationReport,
         build_commit_receipt,
         compile_report_to_facts,
         prepare_commit,
         resolver_tasks_from_report,
     )
 
+    assert CalculatedClaim is not None
+    assert CanonicalReference is not None
     assert ClaimCandidate is not None
     assert CompilerTool is not None
     assert CompileReport is not None
@@ -140,11 +146,13 @@ def test_readme_compiler_tool_import_surface_is_exported():
     assert reference_query_for_obligation_from_policy is not None
     assert reference_query_from_resolver_task is not None
     assert reference_query_for_obligation_from_resolver_tasks is not None
+    assert ReferenceOption is not None
     assert reference_catalog_snapshot_fingerprint is not None
     assert reference_record_fingerprint is not None
     assert rule_family_declaration_fingerprint is not None
     assert semantic_rubric_declaration_fingerprint is not None
     assert ValidationRequirement is not None
+    assert ValidationReport is not None
     assert resolve_reference_retrieval_obligations is not None
 
 
@@ -432,6 +440,8 @@ def test_friendly_authority_vocabulary_names_rename_path_without_moving_authorit
     assert "감사 산출물 기록" in vocabulary
     assert "Canonical rename with deprecated aliases" in vocabulary
     assert "ClaimCandidate is canonical." in vocabulary
+    assert "CanonicalReference is canonical." in vocabulary
+    assert "ValidationReport is canonical." in vocabulary
     assert "ProofObligation remains a compatibility alias." in vocabulary
     assert "Only a clean public-output receipt can authorize public output." in vocabulary
 
