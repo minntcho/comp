@@ -470,6 +470,8 @@ def test_friendly_authority_vocabulary_names_rename_path_without_moving_authorit
     assert "PublicOutputSpec is canonical." in vocabulary
     assert "PublicOutputBlocked is canonical." in vocabulary
     assert "PublicOutput is available as the public-row return type." in vocabulary
+    assert "comp.schema_labels provides frozen display metadata" in vocabulary
+    assert "schema_label_ko(\"ClaimCandidate\")" in vocabulary
     assert "ProofObligation remains a compatibility alias." in vocabulary
     assert "CommitReceipt remains a compatibility alias." in vocabulary
     assert "Only a clean public-output receipt can authorize public output." in vocabulary
