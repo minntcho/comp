@@ -1,3 +1,4 @@
+import json
 from dataclasses import replace
 from typing import get_type_hints
 
@@ -54,6 +55,34 @@ def test_receipt_proof_graph_exports_successful_replay_payload():
     assert graph.to_payload()["can_authorize_public_projection"] is False
     for artifact_ref in replay.artifact_refs:
         assert graph.artifact_node(artifact_ref) is not None
+
+
+def test_receipt_proof_graph_serializes_stable_json_payload():
+    case = receipt_projection_case(amount=100)
+    artifacts = artifact_store_for_receipt(
+        case.receipt,
+        committed_values=case.source_values,
+    )
+    replay = replay_public_projection(
+        case.source_values,
+        case.projection,
+        receipt=case.receipt,
+        artifacts=artifacts,
+    )
+    graph = export_receipt_proof_graph(
+        receipt=case.receipt,
+        replay=replay,
+        artifacts=artifacts,
+    )
+
+    payload = json.loads(graph.to_json())
+
+    assert payload["authority"] == "explanation_only"
+    assert payload["can_authorize_public_projection"] is False
+    assert payload["receipt_node_id"] == receipt_node_id(case.receipt)
+    assert isinstance(payload["nodes"], list)
+    assert isinstance(payload["edges"], list)
+    assert payload["field_paths"][0]["field"] == "amount"
 
 
 def test_public_projection_fields_connect_to_receipt_and_value_sources():
