@@ -650,6 +650,16 @@ def test_friendly_authority_vocabulary_names_rename_path_without_moving_authorit
     assert "schema_label_ko(\"ClaimCandidate\")" in vocabulary
     assert "The first helper lives in `comp.user_messages`" in vocabulary
     assert "user_message_for_reason(\"unsupported_unit\")" in vocabulary
+    assert "## 6. Residual Field Vocabulary Audit" in vocabulary
+    assert "Safe active field rename candidates" in vocabulary
+    assert "`ValidationReport.evidence_witnesses` -> `ValidationReport.evidence_refs`" in vocabulary
+    assert "`ValidationReport.reference_candidates` -> `ValidationReport.reference_options`" in vocabulary
+    assert "`ValidationReport.reference_bindings` -> `ValidationReport.canonical_references`" in vocabulary
+    assert "`ValidationReport.derived_claims` -> `ValidationReport.calculated_claims`" in vocabulary
+    assert "Codec-bound receipt and replay vocabulary" in vocabulary
+    assert "`PublicOutputReceipt.projection_id`" in vocabulary
+    assert "`DependencyFingerprint.dependency_kind=\"evidence_witness\"`" in vocabulary
+    assert "Do not add a blanket ban on `projection` or `witness`" in vocabulary
     assert "Only a clean public-output receipt can authorize public output." in vocabulary
 
 
