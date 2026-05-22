@@ -460,6 +460,44 @@ verify reference catalog snapshot coverage
 If replay requires data that the builder does not preserve, the builder contract
 is incomplete and should be updated before adding another backend.
 
+## Current Implementation Status
+
+The first production receipt coverage builder lives in:
+
+```text
+comp.persistence.envelope_builder
+```
+
+`comp.persistence.envelope_builder` is a persistence module, not a compiler-run
+adapter.
+
+It exposes:
+
+```text
+ArtifactMaterial
+ReceiptEnvelopeSetBuildError
+build_receipt_envelope_set(...)
+```
+
+`build_receipt_envelope_set(...)` consumes a `PublicOutputReceipt` and
+compiler-agnostic `ArtifactMaterial` items. It derives required refs from
+`receipt_artifact_refs(...)`, verifies cited material coverage, builds
+`ArtifactEnvelope` objects, and can optionally record the envelopes into a store
+through a `record(...)` boundary.
+
+The implementation does not import `comp.compiler_tool`, does not inspect
+compiler reports, and does not produce compiler-run material. The
+compiler-aware materializer remains a later adapter slice.
+
+Coverage lives in:
+
+```text
+tests/test_artifact_envelope_builder.py
+```
+
+`tests/test_artifact_envelope_builder.py` pins the compiler-agnostic coverage
+builder behavior.
+
 ## Testing Expectations
 
 Tests for the first production builder should cover:

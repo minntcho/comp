@@ -2,6 +2,12 @@
 
 from comp.persistence.digest import artifact_digest
 from comp.persistence.envelope import ArtifactEnvelope
+from comp.persistence.envelope_builder import (
+    ArtifactMaterial,
+    ArtifactRecorder,
+    ReceiptEnvelopeSetBuildError,
+    build_receipt_envelope_set,
+)
 from comp.persistence.ledger import (
     ArtifactConflict,
     ArtifactIntegrityError,
@@ -30,6 +36,8 @@ from comp.persistence.replay import (
 __all__ = [
     "ArtifactConflict",
     "ArtifactEnvelope",
+    "ArtifactMaterial",
+    "ArtifactRecorder",
     "ArtifactRef",
     "ArtifactIntegrityError",
     "ArtifactStore",
@@ -41,9 +49,11 @@ __all__ = [
     "ProjectionReplayBlocked",
     "ProjectionReplayReport",
     "ReceiptConflict",
+    "ReceiptEnvelopeSetBuildError",
     "ReceiptLedgerKey",
     "apply_trust_spine_schema",
     "artifact_digest",
+    "build_receipt_envelope_set",
     "receipt_artifact_refs",
     "replay_public_projection",
     "verify_artifact_envelope",
