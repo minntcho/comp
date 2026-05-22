@@ -15,6 +15,17 @@ from minchoagnt.review import (
     ReviewPlan,
     ReviewPlanValidationError,
 )
+from minchoagnt.revision_loop import (
+    LoopTrace,
+    ObligationReflection,
+    RevisedHypothesis,
+    RevisionIteration,
+    WitnessFixtureRule,
+    WitnessRequest,
+    deterministic_revision_loop,
+    obligation_reflection,
+    revised_hypothesis_fixture,
+)
 from minchoagnt.skills import SkillStore
 from minchoagnt.workbench import ReviewWorkbench, WorkbenchRun
 from minchoagnt.work_orders import (
@@ -43,14 +54,23 @@ __all__ = [
     "ReviewPlan",
     "ReviewPlanValidationError",
     "ReviewSummary",
+    "LoopTrace",
+    "ObligationReflection",
+    "RevisedHypothesis",
+    "RevisionIteration",
     "ReviewWorkbench",
     "SkillStore",
+    "WitnessFixtureRule",
+    "WitnessRequest",
     "WorkbenchRun",
     "LLMWorkOrder",
     "LLMWorkerSubmission",
     "LLMWorkerResult",
     "AbstentionArtifact",
     "DeterministicLLMWorker",
+    "deterministic_revision_loop",
+    "obligation_reflection",
+    "revised_hypothesis_fixture",
     "semantic_work_orders_from_result",
     "semantic_work_orders_from_tasks",
     "apply_llm_worker_results",
