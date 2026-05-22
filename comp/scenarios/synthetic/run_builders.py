@@ -16,6 +16,7 @@ from comp.scenarios.synthetic.models import (
     SyntheticRun,
 )
 from comp.scenarios.synthetic.oracle import (
+    expected_anomaly_oracle,
     expected_calculation_obligation,
     expected_reference_search_obligation,
     expected_resolution_artifact,
@@ -132,43 +133,13 @@ def build_synthetic_pcf_anomaly_run(
 ) -> SyntheticRun:
     specs = anomaly_specs(config)
     rows = tuple(spec["row"] for spec in specs)
-    expected_claims = tuple(
-        electricity_expected_claim(
-            f"synthetic-pcf-anomaly:{row.source_row_id}:electricity_kwh",
-            row,
-        )
-        for row in rows
-        if float(row.amount) >= 0
-    )
-    expected_maps = tuple(
-        electricity_source_map(
-            f"synthetic-pcf-anomaly:{row.source_row_id}:electricity_kwh",
-            row,
-        )
-        for row in rows
-        if float(row.amount) >= 0
-    )
 
     return SyntheticRun(
         config=config,
         manifest=build_manifest(config, output_contract=OUTPUT_CONTRACT),
         master=pcf_master(config),
         raw_sources=SyntheticRawSources(electricity_rows=rows),
-        oracle=SyntheticOracle(
-            expected_claims=expected_claims,
-            expected_calculated_claims=(),
-            expected_validation_requirements=tuple(spec["obligation"] for spec in specs),
-            expected_hazards=tuple(
-                spec["hazard"] for spec in specs if spec["hazard"] is not None
-            ),
-            expected_failed_claims=tuple(
-                spec["failed_claim"]
-                for spec in specs
-                if spec["failed_claim"] is not None
-            ),
-            injected_anomalies=tuple(spec["anomaly"] for spec in specs),
-            source_to_expected_claim_map=expected_maps,
-        ),
+        oracle=expected_anomaly_oracle(specs),
     )
 
 __all__ = [
