@@ -8,8 +8,6 @@ from comp.scenarios.synthetic.anomaly_specs import (
 from comp.scenarios.synthetic.config import SyntheticScenarioConfig
 from comp.scenarios.synthetic.manifest import build_manifest
 from comp.scenarios.synthetic.models import (
-    ExpectedObligation,
-    ExpectedResolutionArtifact,
     OUTPUT_CONTRACT,
     RESOLUTION_OUTPUT_CONTRACT,
     SyntheticOracle,
@@ -18,9 +16,10 @@ from comp.scenarios.synthetic.models import (
     SyntheticRun,
 )
 from comp.scenarios.synthetic.oracle import (
-    calculation_obligation_id,
+    expected_calculation_obligation,
+    expected_reference_search_obligation,
+    expected_resolution_artifact,
     expected_smoke_receipt,
-    reference_search_obligation_id,
 )
 from comp.scenarios.synthetic.pcf_fixtures import (
     calculate_co2e_value,
@@ -73,6 +72,8 @@ def build_synthetic_pcf_resolution_run(
     derived_value = calculate_co2e_value(raw_row.amount, config.factor_value)
     resolution = missing_unit_resolution_artifact(raw_row)
     resolved_obligation = missing_unit["obligation"]
+    reference_search_obligation = expected_reference_search_obligation(config)
+    calculation_obligation = expected_calculation_obligation(config)
 
     return SyntheticRun(
         config=config,
@@ -105,29 +106,11 @@ def build_synthetic_pcf_resolution_run(
             ),
             expected_resolved_obligations=(
                 resolved_obligation,
-                ExpectedObligation(
-                    obligation_id=reference_search_obligation_id(config),
-                    kind="reference_search_required",
-                    field="co2e_kg",
-                    reason="unknown_reference",
-                ),
-                ExpectedObligation(
-                    obligation_id=calculation_obligation_id(config),
-                    kind="calculation_blocked",
-                    field="co2e_kg",
-                    reason="unknown_reference",
-                ),
+                reference_search_obligation,
+                calculation_obligation,
             ),
             expected_resolution_artifacts=(
-                ExpectedResolutionArtifact(
-                    artifact_id=resolution.artifact_id,
-                    obligation_id=resolution.obligation_id,
-                    source_row_id=resolution.source_row_id,
-                    field=resolution.field,
-                    resolved_value=resolution.resolved_value,
-                    witness_id=resolution.witness_id,
-                    source_ref=resolution.source_ref,
-                ),
+                expected_resolution_artifact(resolution),
             ),
             expected_receipt=expected_smoke_receipt(
                 config,
@@ -135,8 +118,8 @@ def build_synthetic_pcf_resolution_run(
                 derived_value=derived_value,
                 resolved_obligation_ids=(
                     resolved_obligation.obligation_id,
-                    reference_search_obligation_id(config),
-                    calculation_obligation_id(config),
+                    reference_search_obligation.obligation_id,
+                    calculation_obligation.obligation_id,
                 ),
             ),
         ),
