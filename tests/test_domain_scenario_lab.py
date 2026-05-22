@@ -6,6 +6,8 @@ import pytest
 
 from comp import DependencyFingerprint, ProjectionSpec
 from tests.domain_scenarios.assertions import (
+    assert_no_proof_graph,
+    assert_proof_graph_contract,
     assert_projection_tamper_blocked,
     assert_receipt_trace,
 )
@@ -324,6 +326,16 @@ def test_synthetic_pcf_smoke_scenario_runs_generated_raw_to_receipt_flow():
             "seed-7:raw_source:erp_electricity.csv"
         ),
     )
+    assert_proof_graph_contract(
+        result,
+        required_fields=("electricity_kwh", "co2e_kg"),
+        required_node_kinds=(
+            "synthetic_manifest",
+            "synthetic_source_input",
+            "dependency_fingerprint",
+        ),
+        required_edge_kinds=("authorized_by", "pinned_dependency", "projected_as"),
+    )
 
 
 def test_synthetic_pcf_anomaly_scenario_blocks_generated_bad_rows():
@@ -351,6 +363,7 @@ def test_synthetic_pcf_anomaly_scenario_blocks_generated_bad_rows():
         ("unit", "unsupported_unit"),
         ("electricity_kwh", "negative_amount"),
     )
+    assert_no_proof_graph(result)
 
 
 def test_synthetic_pcf_resolution_scenario_commits_after_generated_fix():
@@ -363,6 +376,21 @@ def test_synthetic_pcf_resolution_scenario_commits_after_generated_fix():
     assert result.projection == EXPECTED_PROJECTION
     assert "synthetic-obligation:missing_unit" in (
         result.preparation.package.resolved_obligation_ids
+    )
+    assert_proof_graph_contract(
+        result,
+        required_fields=("electricity_kwh", "co2e_kg"),
+        required_node_kinds=(
+            "synthetic_manifest",
+            "synthetic_source_input",
+            "dependency_fingerprint",
+        ),
+        required_node_ids=(
+            "synthetic_source_input:"
+            "synthetic_source_input:synthetic_pcf.resolution.v1:"
+            "seed-17:resolution_unit_witness:unit_witnesses.csv",
+        ),
+        required_edge_kinds=("authorized_by", "pinned_dependency", "projected_as"),
     )
 
 
