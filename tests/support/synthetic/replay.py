@@ -31,7 +31,7 @@ class SyntheticReplayBundle:
 def synthetic_replay_bundle(
     report: ValidationReport,
     preparation: CommitPreparation,
-    dependency_artifact_bodies: Mapping[tuple[str, str], Mapping[str, Any]],
+    external_material_source: ExternalArtifactMaterialSource,
 ) -> SyntheticReplayBundle:
     receipt = preparation.receipt
     if receipt is None:
@@ -41,9 +41,7 @@ def synthetic_replay_bundle(
     materials = materialize_compiler_run_artifacts(
         report,
         preparation,
-        external_material_source=ExternalArtifactMaterialSource.from_bodies(
-            dependency_artifact_bodies
-        ),
+        external_material_source=external_material_source,
         schema_version="synthetic-scenario-v1",
     )
     build_receipt_envelope_set(receipt, materials, record_to=artifacts)

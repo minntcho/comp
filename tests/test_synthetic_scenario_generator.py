@@ -8,6 +8,8 @@ from pathlib import Path
 import pytest
 
 from comp.compiler_tool import resolve_reference_grounded_calculation
+from comp.persistence import ArtifactRef
+from comp.runtime import ExternalArtifactMaterialSource
 from comp.scenarios.synthetic import (
     SyntheticInputLoadError,
     SyntheticPcfAdapter,
@@ -635,8 +637,9 @@ def test_synthetic_adapter_cites_loaded_sources_as_dependencies(
     adapter = SyntheticPcfAdapter(load_synthetic_input_bundle(run_dir))
 
     fingerprints = adapter.dependency_fingerprints()
-    bodies = adapter.dependency_artifact_bodies()
+    external_material_source = adapter.external_material_source()
 
+    assert isinstance(external_material_source, ExternalArtifactMaterialSource)
     assert [
         (fingerprint.dependency_kind, fingerprint.dependency_id)
         for fingerprint in fingerprints
@@ -675,7 +678,12 @@ def test_synthetic_adapter_cites_loaded_sources_as_dependencies(
         ),
     ]
     for fingerprint in fingerprints:
-        body = bodies[(fingerprint.dependency_kind, fingerprint.dependency_id)]
+        body = external_material_source.body_for(
+            ArtifactRef(
+                artifact_id=fingerprint.dependency_id,
+                artifact_kind=fingerprint.dependency_kind,
+            )
+        )
         assert body["fingerprint"] == fingerprint.fingerprint
         assert body["digest_alg"] == fingerprint.digest_alg
 

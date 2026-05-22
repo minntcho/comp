@@ -19,6 +19,7 @@ from comp.compiler_tool import (
     resolver_tasks_from_report,
     retry_blocked_calculation,
 )
+from comp.runtime import ExternalArtifactMaterial, ExternalArtifactMaterialSource
 from tests.domain_scenarios.canonical_working_loop.expected import (
     EXPECTED_PROJECTION,
     EXPECTED_REFERENCE_CANDIDATE_IDS,
@@ -158,11 +159,15 @@ def run_canonical_working_loop_scenario() -> DomainScenarioResult:
         projection=projection,
         subject=SubjectRef("claim", SUBJECT_ID),
         resolver_steps=RESOLVER_STEPS,
-        dependency_artifact_bodies={
-            ("compiler_profile", scenario_profile.profile_id): (
-                profile_lock_envelope_body(scenario_profile)
+        external_material_source=ExternalArtifactMaterialSource(
+            (
+                ExternalArtifactMaterial(
+                    artifact_kind="compiler_profile",
+                    artifact_id=scenario_profile.profile_id,
+                    body=profile_lock_envelope_body(scenario_profile),
+                ),
             ),
-        },
+        ),
     )
 
 

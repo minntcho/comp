@@ -12,6 +12,7 @@ from comp.compiler_tool import (
     compile_report_to_facts,
 )
 from comp.judgment import DependencyFingerprint, Fact, SubjectRef
+from comp.runtime import ExternalArtifactMaterialSource
 
 
 @dataclass(frozen=True)
@@ -63,8 +64,8 @@ class DomainScenarioResult:
     report_facts: frozenset[Fact]
     commit_facts: frozenset[Fact]
     resolver_steps: tuple[str, ...]
-    dependency_artifact_bodies: Mapping[tuple[str, str], Mapping[str, Any]] = field(
-        default_factory=dict
+    external_material_source: ExternalArtifactMaterialSource = field(
+        default_factory=ExternalArtifactMaterialSource
     )
 
     def to_dict(self) -> dict[str, Any]:
@@ -84,8 +85,7 @@ def build_domain_scenario_result(
     projection: dict[str, Any] | None,
     subject: SubjectRef,
     resolver_steps: tuple[str, ...],
-    dependency_artifact_bodies: Mapping[tuple[str, str], Mapping[str, Any]]
-    | None = None,
+    external_material_source: ExternalArtifactMaterialSource | None = None,
 ) -> DomainScenarioResult:
     return DomainScenarioResult(
         scenario_id=scenario_id,
@@ -95,7 +95,11 @@ def build_domain_scenario_result(
         report_facts=frozenset(compile_report_to_facts(report, subject)),
         commit_facts=frozenset(commit_preparation_to_facts(preparation, subject)),
         resolver_steps=resolver_steps,
-        dependency_artifact_bodies=dependency_artifact_bodies or {},
+        external_material_source=(
+            external_material_source
+            if external_material_source is not None
+            else ExternalArtifactMaterialSource()
+        ),
     )
 
 

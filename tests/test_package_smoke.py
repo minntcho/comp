@@ -925,7 +925,7 @@ def test_artifact_envelope_builder_contract_separates_coverage_from_materializat
         "not an authority source",
         "It must not mint receipts, call `build_public_output(...)`, record",
         "Domain Scenario Lab replay must exercise the same path:",
-        "must pass them through `ExternalArtifactMaterialSource`",
+        "must expose it as `ExternalArtifactMaterialSource`",
         "must not recreate `ArtifactEnvelope` construction or receipt-ref coverage",
         "`tests/test_artifact_envelope_builder.py`",
         "`tests/test_compiler_run_artifact_materializer.py`",

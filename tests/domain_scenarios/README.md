@@ -121,8 +121,8 @@ DomainScenarioResult
 -> replay_public_projection(...)
 ```
 
-Scenario helpers may prepare external artifact bodies for fixture-only records,
-but they should pass them through `ExternalArtifactMaterialSource`, not construct
+Scenario helpers may prepare fixture-owned external material for fixture-only records,
+but they should expose it as `ExternalArtifactMaterialSource`, not construct
 `ArtifactEnvelope` objects directly or duplicate receipt-ref coverage policy.
 
 ## External Scenario Packs

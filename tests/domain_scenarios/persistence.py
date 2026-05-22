@@ -14,6 +14,7 @@ from comp.persistence import (
     replay_public_projection,
 )
 from comp.runtime import (
+    ExternalArtifactMaterial,
     ExternalArtifactMaterialSource,
     materialize_compiler_run_artifacts,
 )
@@ -40,9 +41,7 @@ def scenario_replay_bundle(
     materials = materialize_compiler_run_artifacts(
         result.report,
         result.preparation,
-        external_material_source=ExternalArtifactMaterialSource.from_bodies(
-            _scenario_external_artifact_bodies(result)
-        ),
+        external_material_source=_scenario_external_material_source(result),
         schema_version="domain-scenario-v1",
     )
     for envelope in build_receipt_envelope_set(receipt, materials):
@@ -88,40 +87,70 @@ def replay_scenario_projection(
     )
 
 
-def _scenario_external_artifact_bodies(
+def _scenario_external_material_source(
     result: DomainScenarioResult,
-) -> dict[tuple[str, str], dict[str, Any]]:
-    bodies = {
-        key: dict(body) for key, body in result.dependency_artifact_bodies.items()
+) -> ExternalArtifactMaterialSource:
+    materials = {
+        material.key: material for material in result.external_material_source.materials
     }
     receipt = result.preparation.receipt
     if receipt is None or receipt.citations is None:
-        return bodies
+        return ExternalArtifactMaterialSource(materials.values())
 
     for judgment_id in receipt.citations.semantic_judgment_ids:
-        bodies.setdefault(
-            ("semantic_judgment", judgment_id),
+        _setdefault_material(
+            materials,
+            "semantic_judgment",
+            judgment_id,
             {"judgment_id": judgment_id},
         )
 
     for witness_id in receipt.citations.checked_claim_witness_ids:
-        bodies.setdefault(
-            ("evidence_witness", witness_id),
+        _setdefault_material(
+            materials,
+            "evidence_witness",
+            witness_id,
             {"witness_id": witness_id, "source": "domain_scenario"},
         )
 
     for fingerprint in receipt.citations.dependency_fingerprints:
         key = (fingerprint.dependency_kind, fingerprint.dependency_id)
-        if key in bodies:
+        if key in materials:
             continue
         if fingerprint.dependency_kind == "reference_catalog_snapshot":
-            bodies[key] = _reference_catalog_snapshot_body(
-                fingerprint,
-                receipt.citations.dependency_fingerprints,
+            _setdefault_material(
+                materials,
+                fingerprint.dependency_kind,
+                fingerprint.dependency_id,
+                _reference_catalog_snapshot_body(
+                    fingerprint,
+                    receipt.citations.dependency_fingerprints,
+                ),
             )
             continue
-        bodies[key] = _dependency_fingerprint_body(fingerprint)
-    return bodies
+        _setdefault_material(
+            materials,
+            fingerprint.dependency_kind,
+            fingerprint.dependency_id,
+            _dependency_fingerprint_body(fingerprint),
+        )
+    return ExternalArtifactMaterialSource(materials.values())
+
+
+def _setdefault_material(
+    materials: dict[tuple[str, str], ExternalArtifactMaterial],
+    artifact_kind: str,
+    artifact_id: str,
+    body: dict[str, Any],
+) -> None:
+    materials.setdefault(
+        (artifact_kind, artifact_id),
+        ExternalArtifactMaterial(
+            artifact_kind=artifact_kind,
+            artifact_id=artifact_id,
+            body=body,
+        ),
+    )
 
 
 def _reference_catalog_snapshot_body(

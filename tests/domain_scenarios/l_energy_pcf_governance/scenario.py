@@ -19,6 +19,7 @@ from comp.compiler_tool import (
     resolver_tasks_from_report,
     retry_blocked_calculation,
 )
+from comp.runtime import ExternalArtifactMaterial, ExternalArtifactMaterialSource
 from tests.domain_scenarios.core import (
     DomainScenarioResult,
     ScenarioContract,
@@ -185,11 +186,15 @@ def run_l_energy_pcf_governance_scenario(
         projection=projection,
         subject=SubjectRef("claim", SUBJECT_ID),
         resolver_steps=RESOLVER_STEPS,
-        dependency_artifact_bodies={
-            ("compiler_profile", scenario_profile.profile_id): (
-                profile_lock_envelope_body(scenario_profile)
+        external_material_source=ExternalArtifactMaterialSource(
+            (
+                ExternalArtifactMaterial(
+                    artifact_kind="compiler_profile",
+                    artifact_id=scenario_profile.profile_id,
+                    body=profile_lock_envelope_body(scenario_profile),
+                ),
             ),
-        },
+        ),
     )
 
 

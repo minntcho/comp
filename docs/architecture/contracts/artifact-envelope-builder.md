@@ -554,8 +554,8 @@ DomainScenarioResult
 -> replay_public_projection(...)
 ```
 
-Scenario helpers may prepare external artifact bodies for fixtures, but they
-must pass them through `ExternalArtifactMaterialSource`. They must not recreate `ArtifactEnvelope` construction or receipt-ref coverage
+Scenario helpers may prepare fixture-owned external material, but they
+must expose it as `ExternalArtifactMaterialSource`. They must not recreate `ArtifactEnvelope` construction or receipt-ref coverage
 policy.
 
 ## Review Checklist

@@ -190,6 +190,7 @@ def test_domain_scenario_docs_explain_residency_tiers():
     assert "Scenario replay uses the production materializer boundary" in readme
     assert "materialize_compiler_run_artifacts(...)" in readme
     assert "ExternalArtifactMaterialSource" in readme
+    assert "fixture-owned external material" in readme
     assert "not construct\n`ArtifactEnvelope` objects directly" in readme
 
 
@@ -200,7 +201,7 @@ def test_domain_scenario_replay_uses_production_materializer_boundary():
 
     assert "materialize_compiler_run_artifacts" in source
     assert "build_receipt_envelope_set" in source
-    assert "ExternalArtifactMaterialSource.from_bodies" in source
+    assert "_scenario_external_material_source" in source
     assert "external_material_source=" in source
 
     for stale_policy in (
@@ -209,6 +210,8 @@ def test_domain_scenario_replay_uses_production_materializer_boundary():
         "evidence_ref_fingerprint",
         "_artifact_envelope_for_ref",
         "_artifact_body_for_ref",
+        "_scenario_external_artifact_bodies",
+        "dependency_artifact_bodies",
         "external_artifact_bodies=",
     ):
         assert stale_policy not in source
