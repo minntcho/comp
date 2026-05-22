@@ -1,5 +1,6 @@
 import json
 
+from comp.explanation import export_receipt_proof_graph
 from comp.persistence.mysql import commit_receipt_to_body
 from comp.persistence.codec import encode_persistence_json
 from comp.persistence.replay import ProjectionReplayReport
@@ -109,6 +110,175 @@ def test_receipt_graph_cli_can_write_graph_json_to_file(tmp_path, capsys):
     assert exit_code == 0
     assert captured.out == ""
     assert payload["authority"] == "explanation_only"
+
+
+def test_receipt_graph_cli_exports_mermaid_from_replay_inputs(tmp_path, capsys):
+    receipt_path, replay_path, artifacts_path = _write_graph_inputs(
+        tmp_path,
+        site="plant-a",
+    )
+
+    exit_code = main(
+        [
+            "export-mermaid",
+            "--receipt",
+            str(receipt_path),
+            "--replay",
+            str(replay_path),
+            "--artifacts",
+            str(artifacts_path),
+        ]
+    )
+
+    captured = capsys.readouterr()
+    assert exit_code == 0
+    assert captured.err == ""
+    assert captured.out.startswith("flowchart TD\n")
+    assert "-- \"authorized_by\" -->" in captured.out
+    assert "plant-a" not in captured.out
+    assert "value" not in captured.out
+
+
+def test_receipt_graph_cli_exports_graphviz_dot_to_file(tmp_path, capsys):
+    receipt_path, replay_path, artifacts_path = _write_graph_inputs(
+        tmp_path,
+        site="plant-a",
+    )
+    output_path = tmp_path / "graph.dot"
+
+    exit_code = main(
+        [
+            "export-dot",
+            "--receipt",
+            str(receipt_path),
+            "--replay",
+            str(replay_path),
+            "--artifacts",
+            str(artifacts_path),
+            "--output",
+            str(output_path),
+        ]
+    )
+
+    captured = capsys.readouterr()
+    output = output_path.read_text(encoding="utf-8")
+    assert exit_code == 0
+    assert captured.out == ""
+    assert output.startswith("digraph ReceiptProofGraph {\n")
+    assert "[label=\"authorized_by\"]" in output
+    assert "plant-a" not in output
+    assert "value" not in output
+
+
+def test_receipt_graph_cli_renders_mermaid_from_scenario_proof_graph_payload(
+    tmp_path,
+    capsys,
+):
+    graph_payload = _sample_graph_payload(site="plant-a")
+    scenario_path = tmp_path / "scenario.json"
+    scenario_path.write_text(
+        json.dumps({"scenario_id": "synthetic.demo", "proof_graph": graph_payload}),
+        encoding="utf-8",
+    )
+
+    exit_code = main(["render-mermaid", "--graph", str(scenario_path)])
+
+    captured = capsys.readouterr()
+    assert exit_code == 0
+    assert captured.out.startswith("flowchart TD\n")
+    assert "-- \"authorized_by\" -->" in captured.out
+    assert "plant-a" not in captured.out
+
+
+def test_receipt_graph_cli_renders_graphviz_dot_from_graph_payload_file(
+    tmp_path,
+    capsys,
+):
+    graph_path = tmp_path / "proof-graph.json"
+    graph_path.write_text(
+        json.dumps(_sample_graph_payload(site="plant-a")),
+        encoding="utf-8",
+    )
+
+    exit_code = main(["render-dot", "--graph", str(graph_path)])
+
+    captured = capsys.readouterr()
+    assert exit_code == 0
+    assert captured.out.startswith("digraph ReceiptProofGraph {\n")
+    assert "[label=\"authorized_by\"]" in captured.out
+    assert "plant-a" not in captured.out
+
+
+def test_receipt_graph_cli_reads_utf16_json_from_windows_redirect(
+    tmp_path,
+    capsys,
+):
+    scenario_path = tmp_path / "scenario.json"
+    scenario_path.write_text(
+        json.dumps(
+            {
+                "scenario_id": "synthetic.demo",
+                "proof_graph": _sample_graph_payload(site="plant-a"),
+            }
+        ),
+        encoding="utf-16",
+    )
+
+    exit_code = main(["render-mermaid", "--graph", str(scenario_path)])
+
+    captured = capsys.readouterr()
+    assert exit_code == 0
+    assert captured.out.startswith("flowchart TD\n")
+    assert "plant-a" not in captured.out
+
+
+def _sample_graph_payload(*, site: str = "plant-a") -> dict[str, object]:
+    case = receipt_projection_case(amount=100, site=site)
+    artifacts = artifact_store_for_receipt(
+        case.receipt,
+        committed_values=case.source_values,
+    )
+    replay = replay_public_projection(
+        case.source_values,
+        case.projection,
+        receipt=case.receipt,
+        artifacts=artifacts,
+    )
+    graph = export_receipt_proof_graph(
+        receipt=case.receipt,
+        replay=replay,
+        artifacts=artifacts,
+    )
+    return graph.to_payload()
+
+
+def _write_graph_inputs(tmp_path, *, site: str = "plant-a"):
+    case = receipt_projection_case(amount=100, site=site)
+    artifacts = artifact_store_for_receipt(
+        case.receipt,
+        committed_values=case.source_values,
+    )
+    replay = replay_public_projection(
+        case.source_values,
+        case.projection,
+        receipt=case.receipt,
+        artifacts=artifacts,
+    )
+    receipt_path = tmp_path / "receipt.json"
+    replay_path = tmp_path / "replay.json"
+    artifacts_path = tmp_path / "artifacts.json"
+    receipt_path.write_text(
+        json.dumps(commit_receipt_to_body(case.receipt)),
+        encoding="utf-8",
+    )
+    replay_path.write_text(json.dumps(_replay_payload(replay)), encoding="utf-8")
+    artifacts_path.write_text(
+        json.dumps(
+            {"artifacts": [_artifact_payload(item) for item in artifacts.envelopes()]}
+        ),
+        encoding="utf-8",
+    )
+    return receipt_path, replay_path, artifacts_path
 
 
 def _replay_payload(replay: ProjectionReplayReport) -> dict[str, object]:

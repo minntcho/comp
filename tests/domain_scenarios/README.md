@@ -170,6 +170,14 @@ includes `proof_graph`. The graph is explanation-only: it is derived after
 replay succeeds, hides raw committed values by default, and cannot authorize a
 projection.
 
+To inspect that graph visually, render the exported scenario payload:
+
+```bash
+python -m tests.domain_scenarios run synthetic_pcf.smoke.v1 --json > scenario.json
+comp-receipt-graph render-mermaid --graph scenario.json --output proof-graph.mmd
+comp-receipt-graph render-dot --graph scenario.json --output proof-graph.dot
+```
+
 The runner is intentionally generic. It only knows about `ScenarioDefinition`,
 `registered_scenarios()`, `run_scenario()`, and `DomainScenarioResult`; scenario
 packs own their domain fixtures and expected contracts.

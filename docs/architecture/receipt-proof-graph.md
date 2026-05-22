@@ -356,8 +356,9 @@ than reconstructing graph semantics independently. Renderer code belongs in
 compiler, resolver, calculator, governance gate, projection gate, or replay
 function.
 
-The initial CLI is file-based and exports a graph from an already materialized
-receipt, replay report, and artifact envelope set:
+The CLI is file-based and exports a graph from an already materialized receipt,
+replay report, and artifact envelope set. JSON remains the stable payload; the
+Mermaid and Graphviz outputs are render-only views derived from that same graph:
 
 ```text
 comp-receipt-graph export-json \
@@ -365,12 +366,41 @@ comp-receipt-graph export-json \
   --replay replay.json \
   --artifacts artifacts.json \
   --output proof-graph.json
+
+comp-receipt-graph export-mermaid \
+  --receipt receipt.json \
+  --replay replay.json \
+  --artifacts artifacts.json \
+  --output proof-graph.mmd
+
+comp-receipt-graph export-dot \
+  --receipt receipt.json \
+  --replay replay.json \
+  --artifacts artifacts.json \
+  --output proof-graph.dot
+```
+
+Existing graph payloads can also be rendered directly. This is the path for a
+scenario JSON export that already contains `proof_graph`:
+
+```text
+python -m tests.domain_scenarios run synthetic_pcf.smoke.v1 \
+  --json > scenario.json
+
+comp-receipt-graph render-mermaid \
+  --graph scenario.json \
+  --output proof-graph.mmd
+
+comp-receipt-graph render-dot \
+  --graph proof-graph.json \
+  --output proof-graph.dot
 ```
 
 The CLI consumes replay outputs; it does not replay projections itself.
 Artifact envelope bodies should use the persistence JSON codec so tuple, list,
 decimal, and scalar values keep the same digest material they had at replay
-time.
+time. Diagram renderers omit raw values and metadata by default; they are for
+inspection, not for policy or projection decisions.
 
 MySQLArtifactStore is an ArtifactStore implementation. It stores and
 retrieves replay artifacts; it does not become a graph backend or a policy

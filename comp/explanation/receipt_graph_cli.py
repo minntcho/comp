@@ -18,23 +18,31 @@ from comp.persistence import (
 )
 from comp.persistence.codec import decode_persistence_json
 from comp.persistence.mysql import commit_receipt_from_body
+from comp.views.receipt_graph import render_graphviz_dot, render_mermaid
 
 
 def main(argv: Sequence[str] | None = None) -> int:
     parser = _build_parser()
     args = parser.parse_args(argv)
 
-    if args.command == "export-json":
-        graph = export_receipt_proof_graph(
-            receipt=commit_receipt_from_body(_load_mapping(args.receipt)),
-            replay=_replay_from_payload(_load_mapping(args.replay)),
-            artifacts=_artifact_store_from_payload(_load_mapping(args.artifacts)),
-        )
-        output = graph.to_json() + "\n"
-        if args.output is None:
-            sys.stdout.write(output)
+    if args.command in {"export-json", "export-mermaid", "export-dot"}:
+        graph = _export_graph(args)
+        if args.command == "export-json":
+            output = graph.to_json() + "\n"
+        elif args.command == "export-mermaid":
+            output = render_mermaid(graph.to_payload())
         else:
-            Path(args.output).write_text(output, encoding="utf-8")
+            output = render_graphviz_dot(graph.to_payload())
+        _write_output(output, args.output)
+        return 0
+
+    if args.command in {"render-mermaid", "render-dot"}:
+        graph_payload = _graph_payload_from_file(args.graph)
+        if args.command == "render-mermaid":
+            output = render_mermaid(graph_payload)
+        else:
+            output = render_graphviz_dot(graph_payload)
+        _write_output(output, args.output)
         return 0
 
     parser.print_help(sys.stderr)
@@ -44,13 +52,43 @@ def main(argv: Sequence[str] | None = None) -> int:
 def _build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="comp-receipt-graph",
-        description="Export receipt proof graphs as explanation-only JSON.",
+        description="Export receipt proof graphs as explanation-only JSON or diagrams.",
     )
     subparsers = parser.add_subparsers(dest="command")
-    export = subparsers.add_parser(
+    _add_export_parser(
+        subparsers,
         "export-json",
-        help="Export a ReceiptProofGraph from receipt, replay, and artifact JSON.",
+        "Export a ReceiptProofGraph from receipt, replay, and artifact JSON.",
     )
+    _add_export_parser(
+        subparsers,
+        "export-mermaid",
+        "Export a Mermaid flowchart from receipt, replay, and artifact JSON.",
+    )
+    _add_export_parser(
+        subparsers,
+        "export-dot",
+        "Export a Graphviz DOT graph from receipt, replay, and artifact JSON.",
+    )
+    _add_render_parser(
+        subparsers,
+        "render-mermaid",
+        "Render Mermaid from a proof graph JSON payload.",
+    )
+    _add_render_parser(
+        subparsers,
+        "render-dot",
+        "Render Graphviz DOT from a proof graph JSON payload.",
+    )
+    return parser
+
+
+def _add_export_parser(
+    subparsers: argparse._SubParsersAction,
+    name: str,
+    help_text: str,
+) -> argparse.ArgumentParser:
+    export = subparsers.add_parser(name, help=help_text)
     export.add_argument("--receipt", required=True, help="CommitReceipt body JSON path.")
     export.add_argument("--replay", required=True, help="ProjectionReplayReport JSON path.")
     export.add_argument(
@@ -60,18 +98,73 @@ def _build_parser() -> argparse.ArgumentParser:
     )
     export.add_argument(
         "--output",
-        help="Optional output JSON path. Defaults to stdout.",
+        help="Optional output path. Defaults to stdout.",
     )
-    return parser
+    return export
+
+
+def _add_render_parser(
+    subparsers: argparse._SubParsersAction,
+    name: str,
+    help_text: str,
+) -> argparse.ArgumentParser:
+    render = subparsers.add_parser(name, help=help_text)
+    render.add_argument(
+        "--graph",
+        required=True,
+        help="ReceiptProofGraph JSON path, or scenario JSON containing proof_graph.",
+    )
+    render.add_argument(
+        "--output",
+        help="Optional output path. Defaults to stdout.",
+    )
+    return render
+
+
+def _export_graph(args: argparse.Namespace):
+    return export_receipt_proof_graph(
+        receipt=commit_receipt_from_body(_load_mapping(args.receipt)),
+        replay=_replay_from_payload(_load_mapping(args.replay)),
+        artifacts=_artifact_store_from_payload(_load_mapping(args.artifacts)),
+    )
+
+
+def _graph_payload_from_file(path: str) -> Mapping[str, Any]:
+    payload = _load_mapping(path)
+    if "proof_graph" in payload:
+        graph_payload = payload["proof_graph"]
+        if not isinstance(graph_payload, Mapping):
+            raise TypeError(f"Expected proof_graph object in {path}.")
+        return graph_payload
+    if "nodes" in payload and "edges" in payload:
+        return payload
+    raise TypeError(f"Expected ReceiptProofGraph payload: {path}.")
+
+
+def _write_output(output: str, output_path: str | None) -> None:
+    if output_path is None:
+        sys.stdout.write(output)
+    else:
+        Path(output_path).write_text(output, encoding="utf-8")
 
 
 def _load_mapping(path: str) -> Mapping[str, Any]:
-    payload = json.loads(Path(path).read_text(encoding="utf-8"))
+    payload = json.loads(_read_json_text(path))
     if isinstance(payload, Mapping) and "__comp_type__" in payload:
         payload = decode_persistence_json(payload)
     if not isinstance(payload, Mapping):
         raise TypeError(f"Expected JSON object: {path}.")
     return payload
+
+
+def _read_json_text(path: str) -> str:
+    data = Path(path).read_bytes()
+    for encoding in ("utf-8-sig", "utf-16", "utf-16-le", "utf-16-be"):
+        try:
+            return data.decode(encoding)
+        except UnicodeDecodeError:
+            continue
+    return data.decode("utf-8")
 
 
 def _replay_from_payload(payload: Mapping[str, Any]) -> ProjectionReplayReport:
