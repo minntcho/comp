@@ -2,11 +2,21 @@
 
 Status: active-contract
 Owner: persistence
-Last checked against code: 2026-05-20
+Last checked against code: 2026-05-22
 Can block PRs: yes
 
-This document defines the contract for turning a completed compiler run into
-the `ArtifactEnvelope` set needed for receipt replay.
+This document defines the contract for producing the `ArtifactEnvelope` set
+needed for receipt replay without letting persistence learn compiler internals.
+
+It names two separate roles:
+
+```text
+ReceiptEnvelopeSetBuilder
+  compiler-object agnostic coverage builder
+
+CompilerRunArtifactMaterializer
+  compiler-run adapter that can produce artifact material
+```
 
 It sits below `trust-kernel-extension-rings.md`,
 `extension-port-contracts.md`, and `persistence-ledger-boundary.md`.
@@ -34,23 +44,54 @@ If an artifact is cited by the receipt, the builder must either produce the
 matching envelope or fail loudly. It must not silently omit, synthesize, or
 rewrite cited material.
 
+## Role Split
+
+The receipt coverage builder is compiler-object agnostic.
+
+`ReceiptEnvelopeSetBuilder` consumes a `PublicOutputReceipt` and prepared
+artifact material keyed by `(artifact_kind, artifact_id)`. It derives required
+coverage from `receipt_artifact_refs(...)`, builds or records matching
+`ArtifactEnvelope` objects, and fails when cited material is missing or
+inconsistent.
+
+It must not accept `ValidationReport`, `CommitPreparation`, or `EvidenceRef` as direct inputs.
+It must not import `comp.compiler_tool`, inspect report status, discharge
+requirements, select references, calculate claims, or decide public projection
+authority.
+
+`CompilerRunArtifactMaterializer` is a separate adapter. A compiler-run materializer may read compiler objects and produce artifact material.
+It may serialize checked claims, semantic judgments, canonical references,
+calculation traces, commit packages, governance decisions, dependency
+fingerprints, and source evidence into replay-ready bodies.
+
+The materializer is outside `comp.persistence` and must not mint receipts, discharge requirements, or decide projection authority.
+
 ## Inputs
 
-The production builder should accept the smallest set that can explain a
-committed projection:
+The receipt coverage builder should accept the smallest compiler-agnostic set
+that can explain a committed projection:
+
+```text
+PublicOutputReceipt
+ArtifactMaterial items keyed by artifact_kind and artifact_id
+optional ArtifactStore target
+```
+
+The current Domain Scenario Lab already has a fixture-shaped version of this
+materializer boundary in `tests/domain_scenarios/persistence.py`.
+Production code should generalize the materializer contract without making scenario fixtures authoritative.
+
+A compiler-run materializer may accept the smallest compiler-aware set needed
+to produce those materials:
 
 ```text
 ValidationReport
 CommitPreparation
 EvidenceRef artifacts used by checked claims
-SemanticJudgment artifacts used to resolve semantic obligations
+SemanticJudgment artifacts used to resolve semantic requirements
 Dependency manifests for profile, domain, formula, source evidence, reference
 records, and reference catalog snapshots
 ```
-
-The current Domain Scenario Lab already has a fixture-shaped version of this
-boundary in `tests/domain_scenarios/persistence.py`. Production code should
-generalize that contract without making scenario fixtures authoritative.
 
 ## Outputs
 
