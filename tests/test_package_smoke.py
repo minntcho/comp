@@ -916,6 +916,10 @@ def test_artifact_envelope_builder_contract_separates_coverage_from_materializat
         "A compiler-run materializer may read compiler objects and produce artifact material.",
         "The materializer is outside `comp.persistence` and must not mint receipts, discharge requirements, or decide projection authority.",
         "Production code should generalize the materializer contract without making scenario fixtures authoritative.",
+        "## Current Implementation Status",
+        "`comp.persistence.envelope_builder`",
+        "`build_receipt_envelope_set(...)`",
+        "`tests/test_artifact_envelope_builder.py`",
     ):
         assert line in builder_doc
 
@@ -973,11 +977,14 @@ def test_pyproject_packages_comp_core_scenarios_and_agent_layer():
     from comp.persistence import (
         ArtifactStore,
         ArtifactEnvelope,
+        ArtifactMaterial,
         ArtifactRef,
         InMemoryArtifactStore,
         InMemoryReceiptLedger,
         ProjectionReplayReport,
+        ReceiptEnvelopeSetBuildError,
         artifact_digest,
+        build_receipt_envelope_set,
         replay_public_projection,
         verify_materialized_public_projection,
     )
@@ -1028,11 +1035,14 @@ def test_pyproject_packages_comp_core_scenarios_and_agent_layer():
     assert export_receipt_proof_graph is not None
     assert ArtifactStore is not None
     assert ArtifactEnvelope is not None
+    assert ArtifactMaterial is not None
     assert ArtifactRef is not None
     assert InMemoryArtifactStore is not None
     assert InMemoryReceiptLedger is not None
     assert ProjectionReplayReport is not None
+    assert ReceiptEnvelopeSetBuildError is not None
     assert artifact_digest is not None
+    assert build_receipt_envelope_set is not None
     assert replay_public_projection is not None
     assert verify_materialized_public_projection is not None
 
