@@ -210,7 +210,7 @@ No LLM API integration.
 Scope:
 
 ```text
-Add legacy/archive/pipeline_legacy_20260518/README.md.
+Document the legacy archive boundary.
 Declare archived modules and tests.
 Explain why the legacy pipeline is reference material, not active authority.
 ```
@@ -229,19 +229,26 @@ No CompilerTool implementation.
 Scope:
 
 ```text
-Copy legacy pipeline modules into legacy/archive/pipeline_legacy_20260518/.
+Copy legacy pipeline modules into a temporary archive snapshot.
 Copy legacy-oriented tests as reference material.
 Keep original active files temporarily.
 Document the archive copy boundary.
 ```
 
-Archive test policy:
+Current state:
 
 ```text
-Archived tests must not be collected by active pytest runs.
-Use reference_tests/ with non-test filenames, .py.txt snapshots, or explicit
-pytest collection configuration.
-Do not let archived tests define active pass/fail status.
+The temporary in-repository archive snapshot has been removed.
+Use repository history when old pass-pipeline source text is needed.
+```
+
+Historical archive test policy:
+
+```text
+During the temporary archive phase, archived tests were not collected by active
+pytest runs.
+Do not let old row-pipeline tests define the active pass/fail status of the
+rebuild branch.
 ```
 
 Non-goals:

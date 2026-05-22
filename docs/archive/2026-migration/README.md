@@ -1,14 +1,11 @@
 # 2026 Migration Archive
 
-This directory is reserved for documents copied from the later migration branch.
+This directory is reserved for notes about documents copied from the later
+migration branch.
 
-Those documents are historical reference only. They are not active implementation policy for this rebuild branch.
-
-Current migration state is preserved at:
-
-```text
-legacy/current-migration-state-20260429
-```
+Those documents and legacy pass-pipeline snapshots are historical reference
+only. They are not active implementation policy for this rebuild branch. Use
+repository history when old source snapshots are needed.
 
 Active rebuild policy starts from:
 

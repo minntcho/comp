@@ -73,7 +73,8 @@ from comp.persistence import replay_public_projection
 ```
 
 legacy pipeline runner, pass-pipeline module, compatibility facade는 active
-package source가 아니다. 필요하면 archive reference material로만 취급한다.
+package source가 아니다. 과거 pass-pipeline snapshot은 repository history에서만
+확인하고, 현재 tree에는 reference copy를 유지하지 않는다.
 
 ## Compiler Tool 레이어
 
