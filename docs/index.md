@@ -78,6 +78,7 @@ authority contracts unless an active contract explicitly references them.
 
 1. `api/compiler-tool.md`
 2. `api/public-output-gate.md`
+3. `api/scenario-contracts.md`
 
 ## Examples
 

@@ -114,6 +114,28 @@ PUBLIC_OUTPUT_GATE_PUBLIC = {
     "DependencyFingerprint",
     "build_public_output",
 }
+SCENARIO_CONTRACTS_STABLE_PUBLIC = {
+    "InvariantResult",
+    "ScenarioManifest",
+    "ScenarioManifestError",
+    "RuntimeCase",
+    "RuntimeProjection",
+    "ScenarioBundleExistsError",
+    "ScenarioResult",
+    "load_manifest",
+    "load_runtime_case",
+    "runtime_case_from_mapping",
+    "runtime_case_to_mapping",
+    "runtime_projection_to_mapping",
+    "write_runtime_case",
+    "load_artifact_envelopes",
+    "write_artifact_envelopes",
+    "artifact_envelope_from_mapping",
+    "artifact_envelope_to_mapping",
+    "run_scenario",
+    "write_public_projection_smoke_bundle",
+    "write_report",
+}
 COMPILER_TOOL_ADVANCED_PUBLIC = {
     "SemanticJudgment",
     "ReferenceOption",
@@ -281,6 +303,27 @@ def test_public_output_gate_api_reference_is_documented():
     for name in PUBLIC_OUTPUT_GATE_PUBLIC:
         assert hasattr(comp, name), name
         assert name in api_doc, name
+
+
+def test_scenario_contracts_api_reference_is_documented():
+    import comp.scenario_contracts as scenario_contracts
+    from comp.persistence import ArtifactEnvelope
+
+    api_doc = Path("docs/api/scenario-contracts.md").read_text(encoding="utf-8")
+    docs_index = Path("docs/index.md").read_text(encoding="utf-8")
+
+    assert "api/scenario-contracts.md" in docs_index
+    assert "Public scenario bridge contracts" in api_doc
+    assert "input_mode='canonical_bundle'" in api_doc
+    assert "prepared RuntimeCase + ArtifactEnvelope bundle" in api_doc
+    assert "Product ingestion stays outside comp." in api_doc
+    assert "ArtifactEnvelope is a public companion surface" in api_doc
+    assert "comp.scenario_contracts.__all__ is the stability contract" in api_doc
+    for name in SCENARIO_CONTRACTS_STABLE_PUBLIC:
+        assert hasattr(scenario_contracts, name), name
+        assert name in api_doc, name
+    assert ArtifactEnvelope is not None
+    assert "write_public_projection_smoke_bundle" in api_doc
 
 
 def test_compiler_tool_advanced_surface_is_documented():
