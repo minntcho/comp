@@ -406,6 +406,18 @@ MySQLArtifactStore is an ArtifactStore implementation. It stores and
 retrieves replay artifacts; it does not become a graph backend or a policy
 authority.
 
+The durable-path check is:
+
+```text
+MySQLReceiptLedger.get(...)
+-> replay_public_projection(..., artifacts=MySQLArtifactStore)
+-> export_receipt_proof_graph(..., artifacts=MySQLArtifactStore)
+-> JSON / Mermaid / Graphviz renderer
+```
+
+This confirms MySQL can supply replay and graph-export inputs without moving
+replay, explanation, or rendering authority into the database layer.
+
 ## 12. Deferred Graphs
 
 Candidate and review graphs are important, but they are not V0.
