@@ -531,7 +531,7 @@ def test_architecture_docs_are_classified_by_governance_status():
             "active-contract",
             "persistence",
             "yes",
-            "2026-05-20",
+            "2026-05-22",
         ),
         "document-governance.md": (
             "active-contract",
@@ -858,6 +858,29 @@ def test_persistence_ledger_boundary_documents_mysql_operating_contract():
         "A recorded receipt without replayable artifacts is storage state only; projection stays blocked until replay_public_projection(...) succeeds.",
     ):
         assert line in persistence_doc
+
+
+def test_artifact_envelope_builder_contract_separates_coverage_from_materialization():
+    builder_doc = Path(
+        "docs/architecture/contracts/artifact-envelope-builder.md"
+    ).read_text(encoding="utf-8")
+
+    for line in (
+        "ReceiptEnvelopeSetBuilder",
+        "CompilerRunArtifactMaterializer",
+        "The receipt coverage builder is compiler-object agnostic.",
+        "It must not accept `ValidationReport`, `CommitPreparation`, or `EvidenceRef` as direct inputs.",
+        "A compiler-run materializer may read compiler objects and produce artifact material.",
+        "The materializer is outside `comp.persistence` and must not mint receipts, discharge requirements, or decide projection authority.",
+        "Production code should generalize the materializer contract without making scenario fixtures authoritative.",
+    ):
+        assert line in builder_doc
+
+    for stale_line in (
+        "This document defines the contract for turning a completed compiler run into",
+        "The production builder should accept the smallest set that can explain a",
+    ):
+        assert stale_line not in builder_doc
 
 
 def test_receipt_proof_graph_contract_names_prework_boundaries():
