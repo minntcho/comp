@@ -2,7 +2,7 @@
 
 Status: active-contract
 Owner: persistence
-Last checked against code: 2026-05-21
+Last checked against code: 2026-05-22
 Can block PRs: yes
 
 PublicOutputReceipt as the durable explanation root.
@@ -540,21 +540,26 @@ fingerprints for the raw text spans that grounded checked claims.
 ```
 
 That completes the original in-memory substrate slice and attaches it to the
-canonical raw-input and L-Energy scenario harnesses. It does not yet mean
-production persistence exists, nor does it mean a database, retention policy, or
-production catalog snapshot store exists.
+canonical raw-input and L-Energy scenario harnesses. The current MySQL adapter
+proves the artifact/receipt spine outside memory, but it does not mean a final
+product database schema, retention policy, or production catalog snapshot store
+exists.
 
 ---
 
-## 12. Next Implementation Slice
+## 12. Implemented Graph Slice
 
-Recommended next code slice:
+The receipt proof graph slice is now implemented as an explanation layer:
 
 ```text
-feat: export receipt proof graph
+comp/explanation/receipt_graph.py
+comp/views/receipt_graph.py
+comp/explanation/receipt_graph_cli.py
+tests/test_receipt_proof_graph.py
+tests/test_receipt_proof_graph_cli.py
 ```
 
-The graph boundary is now defined in `receipt-proof-graph.md`. The short rule is:
+The graph boundary is defined in `receipt-proof-graph.md`. The short rule is:
 
 ```text
 Receipt authorizes.
@@ -563,41 +568,36 @@ Graph explains.
 UI renders.
 ```
 
-Candidate files:
+The graph reads successful replay payloads and stored artifact envelopes. It
+does not run replay, mint receipts, call projection authority, or turn MySQL
+rows into public projection validity.
+
+Implemented behavior:
 
 ```text
-comp/explanation/*.py
-tests/domain_scenarios/*.py
-tests/domain_scenarios/views.py
-tests/test_persistence_projection_replay.py
+Replay reports expose graph-friendly artifact refs, dependency fingerprints,
+and receipt scope.
+ReceiptProofGraph exports JSON / Mermaid / Graphviz explanation payloads.
+Viewer payloads can explain why a public projection exists without re-running
+the compiler.
+MySQLArtifactStore can provide the replay substrate for graph export after
+replay succeeds.
 ```
 
-Minimum behavior:
+Non-goals remain:
 
 ```text
-Replay reports or scenario views expose a graph-friendly edge list:
-source evidence -> evidence witness -> checked claim -> derived claim -> receipt.
-Dependency fingerprints appear as typed nodes with digest metadata.
-Viewer payloads can answer why a public field exists without re-running the
-compiler.
-```
-
-Non-goals for that slice:
-
-```text
-no database
-no ORM
-no production storage backend
 no catalog ingestion pipeline
 no legal retention policy
 no full event sourcing
 no real embedding index persistence
 no production catalog snapshot store
-no real DB ingestion
+no graph authority
 ```
 
-The goal is to move from "receipt pins all major dependency worlds" toward
-"receipt replay can be rendered as a readable proof graph."
+The graph slice moves from "receipt pins all major dependency worlds" toward
+"receipt replay can be rendered as a readable proof graph" while preserving the
+same authority rule: receipt authorizes, replay verifies, graph explains.
 
 ---
 
@@ -614,3 +614,58 @@ replay verification for source container digests
 
 That slice should keep the document's rule: replay explains the old receipt,
 while recompute may produce a new answer under today's catalog and profile.
+
+---
+
+## 14. MySQL Operating Contract
+
+The active MySQL adapter has a deliberately small operating contract:
+
+```text
+MySQL stores replay inputs and receipt records.
+MySQL does not authorize public projection.
+Any materialized or indexed table is receipt-derived and must be replay-verifiable.
+```
+
+Artifact write semantics:
+
+```text
+ArtifactEnvelope writes are idempotent for the same artifact_id, artifact_kind, schema_version, and body_digest.
+The same artifact_id with a different kind, schema_version, or body_digest raises ArtifactConflict.
+Invalid envelope body digests raise ArtifactIntegrityError before storage.
+MySQLArtifactStore.record(...) commits artifact-envelope writes independently.
+```
+
+Receipt ledger semantics:
+
+```text
+ReceiptLedgerKey conflicts raise ReceiptConflict.
+MySQLReceiptLedger.record(...) inserts the receipt body and receipt-derived indexes in one transaction before commit.
+ledger_receipt_value_commitments, ledger_receipt_dependency_fingerprints, and ledger_receipt_artifact_refs are receipt-derived query indexes.
+Those indexes are not an alternate receipt body, graph truth, or projection authority.
+```
+
+Schema setup semantics:
+
+```text
+apply_trust_spine_schema(...) is idempotent DDL setup, not an online migration runner.
+It creates the V1 trust-spine tables when they are absent.
+It does not manage destructive migrations, data backfills, schema-version rollout, or online lock strategy.
+```
+
+Replay readiness semantics:
+
+```text
+A recorded receipt without replayable artifacts is storage state only; projection stays blocked until replay_public_projection(...) succeeds.
+MySQLReceiptLedger.get(...) is a storage lookup, not an authority decision.
+Stored public rows, future projection tables, typed indexes, and domain views remain invalid unless replay-verifiable from the receipt and cited artifacts.
+```
+
+The operational boundary stays:
+
+```text
+DB = typed storage / replay input provider
+Receipt = public projection authority
+Replay = verification
+Graph = explanation
+```
