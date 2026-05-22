@@ -4,7 +4,10 @@ from comp.scenarios.synthetic.config import SyntheticScenarioConfig
 from comp.scenarios.synthetic.models import (
     ExpectedArtifactRef,
     ExpectedDependencyRef,
+    ExpectedObligation,
     ExpectedReceipt,
+    ExpectedResolutionArtifact,
+    SyntheticResolutionArtifact,
 )
 from comp.scenarios.synthetic.sources import synthetic_source_dependency_refs
 
@@ -79,6 +82,42 @@ def synthetic_manifest_dependency_id(config: SyntheticScenarioConfig) -> str:
     return f"synthetic_manifest:{config.scenario_id}:seed-{config.seed}"
 
 
+def expected_reference_search_obligation(
+    config: SyntheticScenarioConfig,
+) -> ExpectedObligation:
+    return ExpectedObligation(
+        obligation_id=reference_search_obligation_id(config),
+        kind="reference_search_required",
+        field="co2e_kg",
+        reason="unknown_reference",
+    )
+
+
+def expected_calculation_obligation(
+    config: SyntheticScenarioConfig,
+) -> ExpectedObligation:
+    return ExpectedObligation(
+        obligation_id=calculation_obligation_id(config),
+        kind="calculation_blocked",
+        field="co2e_kg",
+        reason="unknown_reference",
+    )
+
+
+def expected_resolution_artifact(
+    resolution: SyntheticResolutionArtifact,
+) -> ExpectedResolutionArtifact:
+    return ExpectedResolutionArtifact(
+        artifact_id=resolution.artifact_id,
+        obligation_id=resolution.obligation_id,
+        source_row_id=resolution.source_row_id,
+        field=resolution.field,
+        resolved_value=resolution.resolved_value,
+        witness_id=resolution.witness_id,
+        source_ref=resolution.source_ref,
+    )
+
+
 def reference_search_obligation_id(config: SyntheticScenarioConfig) -> str:
     return (
         f"resolve:{config.formula_id}:{config.output_claim_id}:"
@@ -95,6 +134,9 @@ def calculation_obligation_id(config: SyntheticScenarioConfig) -> str:
 
 __all__ = [
     "calculation_obligation_id",
+    "expected_calculation_obligation",
+    "expected_reference_search_obligation",
+    "expected_resolution_artifact",
     "expected_smoke_receipt",
     "reference_search_obligation_id",
     "synthetic_manifest_dependency_id",

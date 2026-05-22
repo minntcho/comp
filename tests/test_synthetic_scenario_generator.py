@@ -71,6 +71,34 @@ def test_synthetic_expected_receipt_oracle_lives_outside_generator_module() -> N
     )
 
 
+def test_synthetic_resolution_oracle_expectations_live_outside_run_builders_module() -> None:
+    from comp.scenarios.synthetic.oracle import (
+        expected_calculation_obligation,
+        expected_reference_search_obligation,
+        expected_resolution_artifact,
+    )
+    from comp.scenarios.synthetic.run_builders import build_synthetic_pcf_resolution_run
+
+    config = SyntheticScenarioConfig.pcf_resolution(seed=17)
+    run = build_synthetic_pcf_resolution_run(config)
+    resolution = run.resolution_artifacts.unit_witnesses[0]
+
+    assert (
+        expected_reference_search_obligation.__module__
+        == "comp.scenarios.synthetic.oracle"
+    )
+    assert build_synthetic_pcf_resolution_run.__globals__[
+        "expected_reference_search_obligation"
+    ] is expected_reference_search_obligation
+    assert run.oracle.expected_resolved_obligations[1:] == (
+        expected_reference_search_obligation(config),
+        expected_calculation_obligation(config),
+    )
+    assert run.oracle.expected_resolution_artifacts == (
+        expected_resolution_artifact(resolution),
+    )
+
+
 def test_synthetic_anomaly_specs_live_outside_generator_module() -> None:
     from comp.scenarios.synthetic.anomaly_specs import (
         anomaly_specs,
