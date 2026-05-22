@@ -25,6 +25,9 @@ l_energy_pcf_governance
 
 l_energy_alpha_invalid_allocation_rfi
   seeded blocked/no-projection pack in parallel validation for l_energy.alpha_invalid_allocation_rfi.v1
+
+l_energy_alpha_physical_allocation_correction
+  seeded accepted/projection pack in parallel validation for l_energy.alpha_physical_allocation_correction.v1
 ```
 
 ## Boundary
