@@ -127,6 +127,7 @@ def test_public_contract_exports_bundle_loaders_and_writers():
         runtime_case_to_mapping,
         runtime_projection_to_mapping,
         write_artifact_envelopes,
+        write_public_projection_smoke_bundle,
         write_runtime_case,
     )
 
@@ -138,6 +139,7 @@ def test_public_contract_exports_bundle_loaders_and_writers():
     assert runtime_case_to_mapping is not None
     assert runtime_projection_to_mapping is not None
     assert write_artifact_envelopes is not None
+    assert write_public_projection_smoke_bundle is not None
     assert write_runtime_case is not None
 
 
@@ -149,6 +151,7 @@ def test_scenario_contract_examples_document_public_bundle_writer():
     assert "input_mode: canonical_bundle" in examples
     assert "write_runtime_case" in examples
     assert "write_artifact_envelopes" in examples
+    assert "comp scenario init" in examples
     assert "comp scenario run" in examples
     assert "pre-trust" in examples
 
@@ -183,6 +186,40 @@ def test_run_scenario_rejects_unsupported_report_format(tmp_path):
 
     with pytest.raises(ScenarioManifestError, match="report.format"):
         run_scenario(manifest_path)
+
+
+def test_comp_scenario_cli_initializes_runnable_smoke_bundle(tmp_path, capsys):
+    from comp.cli.scenario import main
+
+    target = tmp_path / "public_projection_smoke"
+    report_path = target / "reports" / "latest.json"
+
+    assert main(["scenario", "init", str(target)]) == 0
+    init_output = capsys.readouterr().out
+
+    assert "scenario.json" in init_output
+    assert (target / "scenario.json").exists()
+    assert (target / "prepared" / "runtime_case.json").exists()
+    assert (target / "prepared" / "artifact_envelopes.jsonl").exists()
+
+    assert (
+        main(
+            [
+                "scenario",
+                "run",
+                str(target / "scenario.json"),
+                "--report",
+                str(report_path),
+            ]
+        )
+        == 0
+    )
+    run_output = capsys.readouterr().out
+    report = json.loads(report_path.read_text(encoding="utf-8"))
+
+    assert "passed" in run_output
+    assert report["scenario_id"] == "public_projection_smoke"
+    assert report["status"] == "passed"
 
 
 def test_comp_scenario_cli_validates_and_runs_prepared_bundle(tmp_path, capsys):

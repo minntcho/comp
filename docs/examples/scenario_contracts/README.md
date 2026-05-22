@@ -78,6 +78,24 @@ write_artifact_envelopes(artifact_envelopes, "prepared/artifact_envelopes.jsonl"
 
 ## Running The Bundle
 
+To create a neutral runnable smoke bundle:
+
+```bash
+comp scenario init public_projection_smoke
+comp scenario run public_projection_smoke/scenario.json
+```
+
+That command writes:
+
+```text
+public_projection_smoke/
+  scenario.json
+  prepared/runtime_case.json
+  prepared/artifact_envelopes.jsonl
+```
+
+To run a bundle prepared by an external pack:
+
 ```bash
 comp scenario validate scenario.json
 comp scenario run scenario.json --report reports/latest.json

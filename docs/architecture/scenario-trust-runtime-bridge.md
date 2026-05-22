@@ -394,6 +394,10 @@ comp.runtime.TrustRuntime
 comp scenario validate
 comp scenario run
   expose the prepared-bundle trust path through a public CLI.
+
+comp scenario init
+  writes a neutral public_projection_smoke bundle that external pack authors can
+  run before replacing the prepared files with pack-produced trust inputs.
 ```
 
 Current limits:
