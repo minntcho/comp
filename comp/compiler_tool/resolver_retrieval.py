@@ -6,7 +6,7 @@ from string import Formatter
 from typing import Any
 
 from comp.compiler_tool.models import ValidationRequirement
-from comp.compiler_tool.resolver_tasks import ResolverTask, resolver_task_from_obligation
+from comp.compiler_tool.resolver_tasks import ResolverTask, resolver_task_from_requirement
 from comp.compiler_tool.retrieval import ReferenceQuery, RetrievalLens
 
 
@@ -41,48 +41,48 @@ def reference_query_from_resolver_task(
         )
 
     return ReferenceQuery(
-        query_id=f"reference-query:{task.obligation_id}",
+        query_id=f"reference-query:{task.requirement_id}",
         text=text,
         lens=lens,
         reference_type=reference_type,
-        source_artifact_ids=(task.task_id, task.obligation_id),
+        source_artifact_ids=(task.task_id, task.requirement_id),
     )
 
 
-def reference_query_for_obligation_from_policy(
+def reference_query_for_requirement_from_policy(
     tasks: tuple[ResolverTask, ...],
     *,
     policy: RetrievalQueryPolicy,
     context: Mapping[str, Any] | None = None,
 ) -> Callable[[ValidationRequirement], ReferenceQuery | None]:
-    return reference_query_for_obligation_from_policies(
+    return reference_query_for_requirement_from_policies(
         tasks,
         policies=(policy,),
         context=context,
     )
 
 
-def reference_query_for_obligation_from_policies(
+def reference_query_for_requirement_from_policies(
     tasks: tuple[ResolverTask, ...],
     *,
     policies: tuple[RetrievalQueryPolicy, ...],
     context: Mapping[str, Any] | None = None,
 ) -> Callable[[ValidationRequirement], ReferenceQuery | None]:
     context = context or {}
-    queries_by_obligation_id: dict[str, ReferenceQuery] = {}
+    queries_by_requirement_id: dict[str, ReferenceQuery] = {}
     for task in tasks:
         query = _query_for_task_from_policies(task, policies, context)
         if query is not None:
-            queries_by_obligation_id[task.obligation_id] = query
+            queries_by_requirement_id[task.requirement_id] = query
 
-    def query_for_obligation(obligation: ValidationRequirement) -> ReferenceQuery | None:
-        obligation_id = resolver_task_from_obligation(obligation).obligation_id
-        return queries_by_obligation_id.get(obligation_id)
+    def query_for_requirement(requirement: ValidationRequirement) -> ReferenceQuery | None:
+        requirement_id = resolver_task_from_requirement(requirement).requirement_id
+        return queries_by_requirement_id.get(requirement_id)
 
-    return query_for_obligation
+    return query_for_requirement
 
 
-def reference_query_for_obligation_from_profile_policy(
+def reference_query_for_requirement_from_profile_policy(
     tasks: tuple[ResolverTask, ...],
     *,
     profile,
@@ -104,36 +104,36 @@ def reference_query_for_obligation_from_profile_policy(
                 f"inactive retrieval policy id: {policy_id}"
             )
 
-    return reference_query_for_obligation_from_policies(
+    return reference_query_for_requirement_from_policies(
         tasks,
         policies=active_policies,
         context=context,
     )
 
 
-def reference_query_for_obligation_from_resolver_tasks(
+def reference_query_for_requirement_from_resolver_tasks(
     tasks: tuple[ResolverTask, ...],
     *,
     query_texts: Mapping[str, str],
     lens: RetrievalLens,
     reference_type: str | None = None,
 ) -> Callable[[ValidationRequirement], ReferenceQuery | None]:
-    queries_by_obligation_id = {
-        task.obligation_id: reference_query_from_resolver_task(
+    queries_by_requirement_id = {
+        task.requirement_id: reference_query_from_resolver_task(
             task,
-            text=query_texts[task.obligation_id],
+            text=query_texts[task.requirement_id],
             lens=lens,
             reference_type=reference_type,
         )
         for task in tasks
-        if task.task_type == "reference_search" and task.obligation_id in query_texts
+        if task.task_type == "reference_search" and task.requirement_id in query_texts
     }
 
-    def query_for_obligation(obligation: ValidationRequirement) -> ReferenceQuery | None:
-        obligation_id = resolver_task_from_obligation(obligation).obligation_id
-        return queries_by_obligation_id.get(obligation_id)
+    def query_for_requirement(requirement: ValidationRequirement) -> ReferenceQuery | None:
+        requirement_id = resolver_task_from_requirement(requirement).requirement_id
+        return queries_by_requirement_id.get(requirement_id)
 
-    return query_for_obligation
+    return query_for_requirement
 
 
 def _query_for_task_from_policies(
@@ -211,9 +211,9 @@ def _task_values(task: ResolverTask) -> dict[str, Any]:
     return {
         **dict(task.payload),
         "task_id": task.task_id,
-        "obligation_id": task.obligation_id,
+        "requirement_id": task.requirement_id,
         "task_type": task.task_type,
-        "obligation_kind": task.obligation_kind,
+        "requirement_kind": task.requirement_kind,
         "field": task.field,
         "reason": task.reason,
         "claim_id": task.claim_id,
@@ -227,9 +227,9 @@ def _task_value(task: ResolverTask, key: str) -> Any:
 __all__ = [
     "RetrievalQueryPolicy",
     "RetrievalQueryRule",
-    "reference_query_for_obligation_from_policies",
-    "reference_query_for_obligation_from_profile_policy",
-    "reference_query_for_obligation_from_policy",
-    "reference_query_for_obligation_from_resolver_tasks",
+    "reference_query_for_requirement_from_policies",
+    "reference_query_for_requirement_from_profile_policy",
+    "reference_query_for_requirement_from_policy",
+    "reference_query_for_requirement_from_resolver_tasks",
     "reference_query_from_resolver_task",
 ]

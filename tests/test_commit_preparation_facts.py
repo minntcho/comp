@@ -63,7 +63,7 @@ def test_commit_preparation_to_facts_keeps_hold_visible_without_receipt_fact():
                     kind="reference_selection_required",
                     field="co2e_emission",
                     reason="ambiguous",
-                    obligation_id="reference-selection:hyp-1:co2e_emission",
+                    requirement_id="reference-selection:hyp-1:co2e_emission",
                 ),
             ),
         ),

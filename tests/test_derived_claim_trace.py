@@ -70,7 +70,7 @@ def test_semantic_judgment_application_preserves_calculated_claims():
         kind="semantic_judgment_required",
         field="scope2_method",
         reason="semantic_support_required",
-        obligation_id="obl-scope2",
+        requirement_id="obl-scope2",
         semantic_requirement=SemanticJudgmentRequirement(
             question="Does the span support market-based Scope 2?",
             claim_id="hyp-1:scope2_method",
@@ -90,7 +90,7 @@ def test_semantic_judgment_application_preserves_calculated_claims():
         [
             SemanticJudgment(
                 judgment_id="judgment-1",
-                obligation_id="obl-scope2",
+                requirement_id="obl-scope2",
                 verdict="supports",
                 rubric_id="ghg.scope2_method.v1",
                 judge="llm/test",

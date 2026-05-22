@@ -103,12 +103,12 @@ def test_compile_report_to_facts_maps_each_report_category():
     assert Fact(
         tag="hazard_open",
         subject=subject,
-        key="proof_obligation:unit",
-        value="proof_obligation:find_source_witness:unit:unsupported_unit",
+        key="validation_requirement:unit",
+        value="validation_requirement:find_source_witness:unit:unsupported_unit",
         meta=(
             ("kind", "find_source_witness"),
             ("reason", "unsupported_unit"),
-            ("report_section", "proof_obligation"),
+            ("report_section", "validation_requirement"),
             ("report_status", "blocked"),
         ),
     ) in facts
@@ -145,8 +145,8 @@ def test_resolved_validation_requirements_discharge_matching_hazard_ids():
         Fact(
             tag="hazard_discharge",
             subject=subject,
-            key="proof_obligation:unit",
-            value="proof_obligation:find_source_witness:unit:unsupported_unit",
+            key="validation_requirement:unit",
+            value="validation_requirement:find_source_witness:unit:unsupported_unit",
             meta=(
                 ("kind", "find_source_witness"),
                 ("reason", "unsupported_unit"),
@@ -161,15 +161,15 @@ def test_resolved_validation_requirements_discharge_matching_hazard_ids():
             Fact(
                 tag="hazard_open",
                 subject=subject,
-                key="proof_obligation:unit",
-                value="proof_obligation:find_source_witness:unit:unsupported_unit",
+                key="validation_requirement:unit",
+                value="validation_requirement:find_source_witness:unit:unsupported_unit",
             )
         ]
     )
 
     add_compile_report_facts(state, report, subject)
 
-    assert "proof_obligation:find_source_witness:unit:unsupported_unit" not in (
+    assert "validation_requirement:find_source_witness:unit:unsupported_unit" not in (
         state.active_hazard_ids(subject)
     )
 
@@ -183,7 +183,7 @@ def test_obligation_facts_preserve_explicit_obligation_ids():
                 kind="semantic_judgment_required",
                 field="scope2_method",
                 reason="support_required",
-                obligation_id="obl-custom-open",
+                requirement_id="obl-custom-open",
             ),
         ),
         resolved_validation_requirements=(
@@ -191,7 +191,7 @@ def test_obligation_facts_preserve_explicit_obligation_ids():
                 kind="find_source_witness",
                 field="unit",
                 reason="unsupported_unit",
-                obligation_id="obl-custom-resolved",
+                requirement_id="obl-custom-resolved",
             ),
         ),
     )
@@ -201,19 +201,19 @@ def test_obligation_facts_preserve_explicit_obligation_ids():
     assert Fact(
         tag="hazard_open",
         subject=subject,
-        key="proof_obligation:scope2_method",
+        key="validation_requirement:scope2_method",
         value="obl-custom-open",
         meta=(
             ("kind", "semantic_judgment_required"),
             ("reason", "support_required"),
-            ("report_section", "proof_obligation"),
+            ("report_section", "validation_requirement"),
             ("report_status", "review_required"),
         ),
     ) in facts
     assert Fact(
         tag="hazard_discharge",
         subject=subject,
-        key="proof_obligation:unit",
+        key="validation_requirement:unit",
         value="obl-custom-resolved",
         meta=(
             ("kind", "find_source_witness"),

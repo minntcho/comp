@@ -11,11 +11,11 @@ from comp.compiler_tool.retrieval import ReferenceQuery, ReferenceResolver
 ReferenceRetrievalQuery = Callable[[ValidationRequirement], ReferenceQuery | None]
 
 
-def resolve_reference_retrieval_obligations(
+def resolve_reference_retrieval_requirements(
     report: ValidationReport,
     resolver: ReferenceResolver,
     *,
-    query_for_obligation: ReferenceRetrievalQuery,
+    query_for_requirement: ReferenceRetrievalQuery,
     limit: int = 10,
 ) -> ValidationReport:
     obligations: list[ValidationRequirement] = []
@@ -28,7 +28,7 @@ def resolve_reference_retrieval_obligations(
             obligations.append(obligation)
             continue
 
-        query = query_for_obligation(obligation)
+        query = query_for_requirement(obligation)
         if query is None:
             obligations.append(obligation)
             continue
@@ -90,5 +90,5 @@ def _append_unique_obligations(
 
 __all__ = [
     "ReferenceRetrievalQuery",
-    "resolve_reference_retrieval_obligations",
+    "resolve_reference_retrieval_requirements",
 ]

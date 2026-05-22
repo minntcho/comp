@@ -183,25 +183,25 @@ def _open_obligations() -> tuple[ValidationRequirement, ...]:
             kind="resolve_site_identity",
             field="site_id",
             reason="site_alias_unresolved",
-            obligation_id=EXPECTED_OPEN_OBLIGATION_IDS[0],
+            requirement_id=EXPECTED_OPEN_OBLIGATION_IDS[0],
         ),
         ValidationRequirement(
             kind="unit_conversion_policy_required",
             field="electricity_mwh",
             reason="gwh_to_mwh_conversion_policy_missing",
-            obligation_id=EXPECTED_OPEN_OBLIGATION_IDS[1],
+            requirement_id=EXPECTED_OPEN_OBLIGATION_IDS[1],
         ),
         ValidationRequirement(
             kind="find_context",
             field="period",
             reason="period_mismatch",
-            obligation_id=EXPECTED_OPEN_OBLIGATION_IDS[2],
+            requirement_id=EXPECTED_OPEN_OBLIGATION_IDS[2],
         ),
         ValidationRequirement(
             kind="physical_allocation_support_required",
             field="allocation_share",
             reason="line_mass_or_residence_time_support_missing",
-            obligation_id=EXPECTED_OPEN_OBLIGATION_IDS[3],
+            requirement_id=EXPECTED_OPEN_OBLIGATION_IDS[3],
         ),
     )
 

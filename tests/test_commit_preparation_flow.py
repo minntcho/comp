@@ -87,7 +87,7 @@ def test_prepare_commit_returns_hold_without_receipt_for_open_obligations():
                 kind="reference_selection_required",
                 field="co2e_emission",
                 reason="ambiguous",
-                obligation_id="reference-selection:hyp-1:co2e_emission",
+                requirement_id="reference-selection:hyp-1:co2e_emission",
             ),
         ),
     )

@@ -43,7 +43,7 @@ def _follow_up_obligations(
             kind=kind,
             field=obligation.field,
             reason=requirement.reason,
-            obligation_id=_follow_up_id(requirement, kind),
+            requirement_id=_follow_up_id(requirement, kind),
             claim_id=requirement.output_claim_id,
             blocking=True,
             calculation_requirement=requirement,

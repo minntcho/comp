@@ -13,9 +13,9 @@ from comp.compiler_tool import (
     profile_declaration_fingerprint,
     profile_lock_envelope_body,
     reference_catalog_snapshot_fingerprint,
-    reference_query_for_obligation_from_profile_policy,
+    reference_query_for_requirement_from_profile_policy,
     reference_record_fingerprint,
-    resolve_reference_retrieval_obligations,
+    resolve_reference_retrieval_requirements,
     resolver_tasks_from_report,
     retry_blocked_calculation,
 )
@@ -135,7 +135,7 @@ SCENARIO = ScenarioDefinition(
     contract=ScenarioContract(
         must_commit=True,
         required_projection=EXPECTED_PROJECTION,
-        required_resolved_obligation_kinds=EXPECTED_RESOLVED_OBLIGATION_KINDS,
+        required_resolved_requirement_kinds=EXPECTED_RESOLVED_OBLIGATION_KINDS,
         required_reference_candidate_ids=EXPECTED_REFERENCE_CANDIDATE_IDS,
         required_reference_binding_ids=EXPECTED_REFERENCE_BINDING_IDS,
         required_derived_claim_ids=EXPECTED_DERIVED_CLAIM_IDS,
@@ -208,10 +208,10 @@ def _compile_retrieval_backed_report(
     opened_report = blocked_report()
     planned_report = plan_calculation_resolution(opened_report)
     resolver_tasks = resolver_tasks_from_report(planned_report)
-    retrieval_report = resolve_reference_retrieval_obligations(
+    retrieval_report = resolve_reference_retrieval_requirements(
         planned_report,
         pack.resolver,
-        query_for_obligation=reference_query_for_obligation_from_profile_policy(
+        query_for_requirement=reference_query_for_requirement_from_profile_policy(
             resolver_tasks,
             profile=scenario_profile,
             context=retrieval_query_context(),

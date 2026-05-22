@@ -24,18 +24,18 @@ def apply_reference_selection(
         catalog=catalog,
         criteria=criteria,
     )
-    obligation_id = _selection_obligation_id(criteria)
+    requirement_id = _selection_requirement_id(criteria)
 
     if result.status == "bound" and result.binding is not None:
         open_obligations = tuple(
             obligation
             for obligation in report.validation_requirements
-            if not _matches_selection_obligation(obligation, obligation_id)
+            if not _matches_selection_requirement(obligation, requirement_id)
         )
         resolved = tuple(
             obligation
             for obligation in report.validation_requirements
-            if _matches_selection_obligation(obligation, obligation_id)
+            if _matches_selection_requirement(obligation, requirement_id)
         )
         return with_recomputed_status(
             replace(
@@ -57,7 +57,7 @@ def apply_reference_selection(
         kind="reference_selection_required",
         field=field,
         reason=result.status,
-        obligation_id=obligation_id,
+        requirement_id=requirement_id,
         claim_id=criteria.claim_id,
         blocking=True,
     )
@@ -70,17 +70,17 @@ def apply_reference_selection(
     )
 
 
-def _selection_obligation_id(criteria: ReferenceSelectionCriteria) -> str:
+def _selection_requirement_id(criteria: ReferenceSelectionCriteria) -> str:
     return f"reference_selection:{criteria.selector_rule_id}:{criteria.claim_id}"
 
 
-def _matches_selection_obligation(
-    obligation: ValidationRequirement,
-    obligation_id: str,
+def _matches_selection_requirement(
+    requirement: ValidationRequirement,
+    requirement_id: str,
 ) -> bool:
     return (
-        obligation.kind == "reference_selection_required"
-        and obligation.obligation_id == obligation_id
+        requirement.kind == "reference_selection_required"
+        and requirement.requirement_id == requirement_id
     )
 
 
@@ -110,9 +110,9 @@ def _append_unique_obligation_by_id(
     existing: tuple[ValidationRequirement, ...],
     addition: ValidationRequirement,
 ) -> tuple[ValidationRequirement, ...]:
-    if addition.obligation_id is not None and any(
-        obligation.obligation_id == addition.obligation_id
-        for obligation in existing
+    if addition.requirement_id is not None and any(
+        requirement.requirement_id == addition.requirement_id
+        for requirement in existing
     ):
         return existing
     if addition in existing:

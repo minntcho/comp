@@ -229,19 +229,19 @@ def _resolved_validation_requirements() -> tuple[ValidationRequirement, ...]:
             kind="site_alias_resolved",
             field="site_id",
             reason="OCH-01_alias_bound_to_ocheong_plant_1",
-            obligation_id="raw-conflict:site_alias:resolved",
+            requirement_id="raw-conflict:site_alias:resolved",
         ),
         ValidationRequirement(
             kind="period_validated",
             field="period",
             reason="period_inside_active_reporting_window",
-            obligation_id="raw-conflict:period:validated",
+            requirement_id="raw-conflict:period:validated",
         ),
         ValidationRequirement(
             kind="unit_conversion_policy_applied",
             field="electricity_mwh",
             reason="GWh_to_MWh_conversion_factor_1000",
-            obligation_id="raw-conflict:unit_conversion:applied",
+            requirement_id="raw-conflict:unit_conversion:applied",
         ),
     )
 
@@ -252,7 +252,7 @@ def _open_obligations() -> tuple[ValidationRequirement, ...]:
             kind="resolve_source_conflict",
             field="electricity_mwh",
             reason="email_and_ems_values_disagree_after_canonicalization",
-            obligation_id=CONFLICT_OBLIGATION_ID,
+            requirement_id=CONFLICT_OBLIGATION_ID,
         ),
     )
 
@@ -364,7 +364,7 @@ RAW_CLAIM_CONFLICT_SCENARIO = ScenarioDefinition(
     ),
     contract=ScenarioContract(
         must_commit=False,
-        required_resolved_obligation_kinds=(
+        required_resolved_requirement_kinds=(
             "site_alias_resolved",
             "period_validated",
             "unit_conversion_policy_applied",

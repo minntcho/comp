@@ -13,7 +13,7 @@ def _semantic_obligation():
         kind="semantic_judgment_required",
         field="scope2_method",
         reason="semantic_support_required",
-        obligation_id="obl-scope2-method",
+        requirement_id="obl-scope2-method",
         claim_id="claim-scope2-method",
         semantic_requirement=SemanticJudgmentRequirement(
             question="Does the cited span support the claimed Scope 2 method?",
@@ -30,7 +30,7 @@ def _semantic_obligation():
 def _judgment(**overrides):
     data = {
         "judgment_id": "judgment-1",
-        "obligation_id": "obl-scope2-method",
+        "requirement_id": "obl-scope2-method",
         "verdict": "supports",
         "rubric_id": "ghg-protocol-scope2-method-v1",
         "judge": "llm/model@policy-v1",

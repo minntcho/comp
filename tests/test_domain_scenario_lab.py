@@ -128,7 +128,7 @@ def test_domain_scenario_cli_summarizes_blocked_requirements_as_actions():
                     kind="find_source_witness",
                     field="co2e_kg",
                     reason="missing_source_witness",
-                    obligation_id="obl-1",
+                    requirement_id="obl-1",
                 ),
             ),
         ),

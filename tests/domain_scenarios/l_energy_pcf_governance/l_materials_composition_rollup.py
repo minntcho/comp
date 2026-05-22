@@ -242,7 +242,7 @@ def _resolved_validation_requirements() -> tuple[ValidationRequirement, ...]:
             kind="composition_total_validated",
             field="ncm_composition",
             reason="shares_sum_to_one",
-            obligation_id=COMPOSITION_TOTAL_OBLIGATION_ID,
+            requirement_id=COMPOSITION_TOTAL_OBLIGATION_ID,
         ),
     )
 
@@ -326,7 +326,7 @@ L_MATERIALS_COMPOSITION_SCENARIO = ScenarioDefinition(
     contract=ScenarioContract(
         must_commit=True,
         required_projection=EXPECTED_PROJECTION,
-        required_resolved_obligation_kinds=("composition_total_validated",),
+        required_resolved_requirement_kinds=("composition_total_validated",),
         required_reference_binding_ids=(COMPOSITION_FACTOR_BINDING_ID,),
         required_derived_claim_ids=(
             COMPOSITION_TOTAL_CLAIM_ID,

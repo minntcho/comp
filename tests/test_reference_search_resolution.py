@@ -8,7 +8,7 @@ from comp.compiler_tool import (
     apply_calculation_result,
     calculate_derived_claim,
     plan_calculation_resolution,
-    resolve_reference_search_obligations,
+    resolve_reference_search_requirements,
 )
 
 
@@ -82,10 +82,10 @@ def _planned_unknown_reference_report():
 def test_reference_search_resolution_adds_candidates_and_resolves_followup():
     planned = _planned_unknown_reference_report()
 
-    resolved = resolve_reference_search_obligations(
+    resolved = resolve_reference_search_requirements(
         planned,
         _catalog(),
-        query_for_obligation=lambda obligation: "korea electricity grid factor",
+        query_for_requirement=lambda obligation: "korea electricity grid factor",
         reference_type="emission_factor",
     )
 
@@ -109,10 +109,10 @@ def test_reference_search_resolution_recomputes_status_after_resolving_only_bloc
     obligation = _planned_unknown_reference_report().validation_requirements[1]
     report = ValidationReport(status="blocked", validation_requirements=(obligation,))
 
-    resolved = resolve_reference_search_obligations(
+    resolved = resolve_reference_search_requirements(
         report,
         _catalog(),
-        query_for_obligation=lambda obligation: "korea electricity grid factor",
+        query_for_requirement=lambda obligation: "korea electricity grid factor",
         reference_type="emission_factor",
     )
 
@@ -123,10 +123,10 @@ def test_reference_search_resolution_recomputes_status_after_resolving_only_bloc
 def test_reference_search_resolution_leaves_followup_open_without_query():
     planned = _planned_unknown_reference_report()
 
-    resolved = resolve_reference_search_obligations(
+    resolved = resolve_reference_search_requirements(
         planned,
         _catalog(),
-        query_for_obligation=lambda obligation: None,
+        query_for_requirement=lambda obligation: None,
         reference_type="emission_factor",
     )
 
@@ -136,10 +136,10 @@ def test_reference_search_resolution_leaves_followup_open_without_query():
 def test_reference_search_resolution_leaves_followup_open_without_candidates():
     planned = _planned_unknown_reference_report()
 
-    resolved = resolve_reference_search_obligations(
+    resolved = resolve_reference_search_requirements(
         planned,
         _catalog(),
-        query_for_obligation=lambda obligation: "diesel combustion",
+        query_for_requirement=lambda obligation: "diesel combustion",
         reference_type="emission_factor",
     )
 
@@ -149,16 +149,16 @@ def test_reference_search_resolution_leaves_followup_open_without_candidates():
 def test_reference_search_resolution_is_idempotent():
     planned = _planned_unknown_reference_report()
 
-    once = resolve_reference_search_obligations(
+    once = resolve_reference_search_requirements(
         planned,
         _catalog(),
-        query_for_obligation=lambda obligation: "korea electricity grid factor",
+        query_for_requirement=lambda obligation: "korea electricity grid factor",
         reference_type="emission_factor",
     )
-    twice = resolve_reference_search_obligations(
+    twice = resolve_reference_search_requirements(
         once,
         _catalog(),
-        query_for_obligation=lambda obligation: "korea electricity grid factor",
+        query_for_requirement=lambda obligation: "korea electricity grid factor",
         reference_type="emission_factor",
     )
 

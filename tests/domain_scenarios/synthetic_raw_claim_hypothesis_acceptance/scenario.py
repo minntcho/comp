@@ -189,7 +189,7 @@ RAW_CLAIM_HYPOTHESIS_ACCEPTANCE_SCENARIO = ScenarioDefinition(
     contract=ScenarioContract(
         must_commit=True,
         required_projection=EXPECTED_PROJECTION,
-        required_resolved_obligation_kinds=(
+        required_resolved_requirement_kinds=(
             "site_alias_resolved",
             "unit_conversion_policy_applied",
             "period_validated",

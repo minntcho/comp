@@ -117,7 +117,7 @@ def alpha_invalid_allocation_report() -> ValidationReport:
                     kind="find_context",
                     field="rolling_residence_time",
                     reason="physical_allocation_parameter_required",
-                    obligation_id=ROLLING_RESIDENCE_OBLIGATION_ID,
+                    requirement_id=ROLLING_RESIDENCE_OBLIGATION_ID,
                 ),
             ),
             hazards=(

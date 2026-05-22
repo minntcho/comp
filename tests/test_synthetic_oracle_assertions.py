@@ -23,7 +23,7 @@ def test_oracle_assertions_match_smoke_report_outputs() -> None:
     report = resolve_reference_grounded_calculation(
         adapter.blocked_report(),
         adapter.reference_catalog(),
-        query_for_obligation=adapter.query_for_obligation,
+        query_for_requirement=adapter.query_for_requirement,
         criteria=adapter.reference_selection_criteria(),
         input_claim=adapter.input_claim(),
         formula=adapter.formula(),

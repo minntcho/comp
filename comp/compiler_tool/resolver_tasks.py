@@ -14,10 +14,10 @@ from comp.compiler_tool.models import (
 @dataclass(frozen=True)
 class ResolverTask:
     task_id: str
-    obligation_id: str
+    requirement_id: str
     task_type: str
     required_artifact: str
-    obligation_kind: str
+    requirement_kind: str
     field: str
     reason: str
     claim_id: str | None = None
@@ -27,28 +27,28 @@ class ResolverTask:
 
 def resolver_tasks_from_report(report: ValidationReport) -> tuple[ResolverTask, ...]:
     return tuple(
-        resolver_task_from_obligation(obligation)
+        resolver_task_from_requirement(obligation)
         for obligation in report.validation_requirements
     )
 
 
-def resolver_task_from_obligation(obligation: ValidationRequirement) -> ResolverTask:
-    obligation_id = _obligation_id(obligation)
+def resolver_task_from_requirement(requirement: ValidationRequirement) -> ResolverTask:
+    requirement_id = _requirement_id(requirement)
     return ResolverTask(
-        task_id=f"resolver-task:{obligation_id}",
-        obligation_id=obligation_id,
-        task_type=_task_type(obligation.kind),
-        required_artifact=_required_artifact(obligation.kind),
-        obligation_kind=obligation.kind,
-        field=obligation.field,
-        reason=obligation.reason,
-        claim_id=obligation.claim_id,
-        blocking=obligation.blocking,
-        payload=_payload(obligation),
+        task_id=f"resolver-task:{requirement_id}",
+        requirement_id=requirement_id,
+        task_type=_task_type(requirement.kind),
+        required_artifact=_required_artifact(requirement.kind),
+        requirement_kind=requirement.kind,
+        field=requirement.field,
+        reason=requirement.reason,
+        claim_id=requirement.claim_id,
+        blocking=requirement.blocking,
+        payload=_payload(requirement),
     )
 
 
-def _task_type(obligation_kind: str) -> str:
+def _task_type(requirement_kind: str) -> str:
     return {
         "semantic_judgment_required": "semantic_judgment",
         "reference_search_required": "reference_search",
@@ -57,10 +57,10 @@ def _task_type(obligation_kind: str) -> str:
         "find_context": "context",
         "find_source_witness": "evidence_search",
         "calculation_blocked": "calculation_resolution",
-    }.get(obligation_kind, "obligation_resolution")
+    }.get(requirement_kind, "requirement_resolution")
 
 
-def _required_artifact(obligation_kind: str) -> str:
+def _required_artifact(requirement_kind: str) -> str:
     return {
         "semantic_judgment_required": "semantic_judgment",
         "reference_search_required": "reference_options",
@@ -69,7 +69,7 @@ def _required_artifact(obligation_kind: str) -> str:
         "find_context": "context_attachment",
         "find_source_witness": "evidence_witness",
         "calculation_blocked": "calculation_result",
-    }.get(obligation_kind, "resolver_artifact")
+    }.get(requirement_kind, "resolver_artifact")
 
 
 def _payload(obligation: ValidationRequirement) -> tuple[tuple[str, Any], ...]:
@@ -124,14 +124,14 @@ def _present_items(
     return tuple((key, value) for key, value in items if value is not None)
 
 
-def _obligation_id(obligation: ValidationRequirement) -> str:
-    if obligation.obligation_id is not None:
-        return obligation.obligation_id
+def _requirement_id(requirement: ValidationRequirement) -> str:
+    if requirement.requirement_id is not None:
+        return requirement.requirement_id
     return _stable_id(
-        "proof_obligation",
-        obligation.kind,
-        obligation.field,
-        obligation.reason,
+        "validation_requirement",
+        requirement.kind,
+        requirement.field,
+        requirement.reason,
     )
 
 
@@ -141,6 +141,6 @@ def _stable_id(*parts: str) -> str:
 
 __all__ = [
     "ResolverTask",
-    "resolver_task_from_obligation",
+    "resolver_task_from_requirement",
     "resolver_tasks_from_report",
 ]

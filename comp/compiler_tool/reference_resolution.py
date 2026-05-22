@@ -11,11 +11,11 @@ from comp.compiler_tool.report_status import with_recomputed_status
 ReferenceSearchQuery = Callable[[ValidationRequirement], str | None]
 
 
-def resolve_reference_search_obligations(
+def resolve_reference_search_requirements(
     report: ValidationReport,
     catalog: ReferenceCatalog,
     *,
-    query_for_obligation: ReferenceSearchQuery,
+    query_for_requirement: ReferenceSearchQuery,
     reference_type: str | None = None,
     limit: int = 10,
     retrieval_method: str = "keyword",
@@ -30,7 +30,7 @@ def resolve_reference_search_obligations(
             obligations.append(obligation)
             continue
 
-        query = query_for_obligation(obligation)
+        query = query_for_requirement(obligation)
         if not query:
             obligations.append(obligation)
             continue
@@ -95,4 +95,4 @@ def _append_unique_obligations(
     return result
 
 
-__all__ = ["ReferenceSearchQuery", "resolve_reference_search_obligations"]
+__all__ = ["ReferenceSearchQuery", "resolve_reference_search_requirements"]

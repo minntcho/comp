@@ -102,7 +102,7 @@ def _compile_report(adapter: SyntheticPcfAdapter) -> ValidationReport:
         return resolve_reference_grounded_calculation(
             adapter.resolution_seed_report(),
             adapter.reference_catalog(),
-            query_for_obligation=adapter.query_for_obligation,
+            query_for_requirement=adapter.query_for_requirement,
             criteria=adapter.reference_selection_criteria(),
             input_claim=adapter.resolved_input_claim(),
             formula=adapter.formula(),
@@ -113,7 +113,7 @@ def _compile_report(adapter: SyntheticPcfAdapter) -> ValidationReport:
     return resolve_reference_grounded_calculation(
         adapter.blocked_report(),
         adapter.reference_catalog(),
-        query_for_obligation=adapter.query_for_obligation,
+        query_for_requirement=adapter.query_for_requirement,
         criteria=adapter.reference_selection_criteria(),
         input_claim=adapter.input_claim(),
         formula=adapter.formula(),

@@ -119,7 +119,7 @@ def test_comp_adapter_exposes_resolver_tasks_for_agent_loop():
     assert len(tasks) == 1
     assert tasks[0].task_type == "evidence_search"
     assert tasks[0].required_artifact == "evidence_witness"
-    assert tasks[0].obligation_kind == "find_source_witness"
+    assert tasks[0].requirement_kind == "find_source_witness"
     assert tasks[0].field == "unit"
 
 
@@ -128,7 +128,7 @@ def test_deterministic_comp_resolver_applies_semantic_judgment_without_receipt()
         kind="semantic_judgment_required",
         field="scope2_method",
         reason="support_required",
-        obligation_id="obl-scope2",
+        requirement_id="obl-scope2",
         semantic_requirement=SemanticJudgmentRequirement(
             question="Does this span support market-based Scope 2?",
             claim_id="claim-scope2",
@@ -147,7 +147,7 @@ def test_deterministic_comp_resolver_applies_semantic_judgment_without_receipt()
         semantic_judgments=(
             SemanticJudgment(
                 judgment_id="judgment-scope2",
-                obligation_id="obl-scope2",
+                requirement_id="obl-scope2",
                 verdict="supports",
                 rubric_id="ghg-protocol-scope2-method-v1",
                 judge="llm/scope2-fixture",
@@ -160,7 +160,7 @@ def test_deterministic_comp_resolver_applies_semantic_judgment_without_receipt()
 
     resolution = resolver.resolve(compile_result)
 
-    assert [task.obligation_id for task in resolution.tasks] == ["obl-scope2"]
+    assert [task.requirement_id for task in resolution.tasks] == ["obl-scope2"]
     assert resolution.semantic_judgment_ids == ("judgment-scope2",)
     assert resolution.result.report.status == "accepted"
     assert resolution.result.report.validation_requirements == ()
@@ -185,7 +185,7 @@ def test_deterministic_comp_resolver_runs_reference_search_from_task_query():
         kind="reference_search_required",
         field="co2e_emission",
         reason="unknown_reference",
-        obligation_id=obligation_id,
+        requirement_id=obligation_id,
         claim_id="hyp-1:co2e_emission",
         calculation_requirement=requirement,
     )
@@ -211,7 +211,7 @@ def test_deterministic_comp_resolver_runs_reference_search_from_task_query():
 
     resolution = resolver.resolve(compile_result)
 
-    assert resolution.reference_query_obligation_ids == (obligation_id,)
+    assert resolution.reference_query_requirement_ids == (obligation_id,)
     reference_ids = [
         candidate.reference_id
         for candidate in resolution.result.report.reference_options
@@ -239,7 +239,7 @@ def test_deterministic_comp_resolver_runs_reference_retrieval_from_task_query():
         kind="reference_search_required",
         field="co2e_emission",
         reason="unknown_reference",
-        obligation_id=obligation_id,
+        requirement_id=obligation_id,
         claim_id="hyp-1:co2e_emission",
         calculation_requirement=requirement,
     )
@@ -269,7 +269,7 @@ def test_deterministic_comp_resolver_runs_reference_retrieval_from_task_query():
 
     resolution = resolver.resolve(compile_result)
 
-    assert resolution.reference_query_obligation_ids == (obligation_id,)
+    assert resolution.reference_query_requirement_ids == (obligation_id,)
     assert [
         candidate.retrieval_method
         for candidate in resolution.result.report.reference_options
@@ -302,7 +302,7 @@ def test_deterministic_comp_resolver_runs_reference_retrieval_from_query_policy(
         kind="reference_search_required",
         field="co2e_emission",
         reason="unknown_reference",
-        obligation_id=obligation_id,
+        requirement_id=obligation_id,
         claim_id="hyp-1:co2e_emission",
         calculation_requirement=requirement,
     )
@@ -344,7 +344,7 @@ def test_deterministic_comp_resolver_runs_reference_retrieval_from_query_policy(
 
     resolution = resolver.resolve(compile_result)
 
-    assert resolution.reference_query_obligation_ids == (obligation_id,)
+    assert resolution.reference_query_requirement_ids == (obligation_id,)
     assert [
         candidate.reference_id
         for candidate in resolution.result.report.reference_options
@@ -364,7 +364,7 @@ def test_deterministic_comp_resolver_leaves_reference_policy_task_open_without_c
         kind="reference_search_required",
         field="co2e_emission",
         reason="unknown_reference",
-        obligation_id=obligation_id,
+        requirement_id=obligation_id,
         claim_id="hyp-1:co2e_emission",
         calculation_requirement=CalculationRequirement(
             reason="unknown_reference",
@@ -398,6 +398,6 @@ def test_deterministic_comp_resolver_leaves_reference_policy_task_open_without_c
 
     resolution = resolver.resolve(compile_result)
 
-    assert resolution.reference_query_obligation_ids == ()
+    assert resolution.reference_query_requirement_ids == ()
     assert resolution.result.report == compile_result.report
     assert resolution.result.receipt is None

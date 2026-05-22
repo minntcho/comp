@@ -262,7 +262,7 @@ def _obligation_fact(
     subject: SubjectRef,
     obligation: ValidationRequirement,
     *,
-    section: str = "proof_obligation",
+    section: str = "validation_requirement",
 ) -> Fact:
     meta = [
         ("kind", obligation.kind),
@@ -281,8 +281,8 @@ def _obligation_fact(
     return Fact(
         tag=tag,
         subject=subject,
-        key=f"proof_obligation:{obligation.field}",
-        value=_obligation_id(obligation),
+        key=f"validation_requirement:{obligation.field}",
+        value=_requirement_id(obligation),
         meta=tuple(meta),
     )
 
@@ -299,14 +299,14 @@ def _unchecked_area_id(field: str, reason: str) -> str:
     return _stable_id("unchecked_area", field, reason)
 
 
-def _obligation_id(obligation: ValidationRequirement) -> str:
-    if obligation.obligation_id is not None:
-        return obligation.obligation_id
+def _requirement_id(requirement: ValidationRequirement) -> str:
+    if requirement.requirement_id is not None:
+        return requirement.requirement_id
     return _stable_id(
-        "proof_obligation",
-        obligation.kind,
-        obligation.field,
-        obligation.reason,
+        "validation_requirement",
+        requirement.kind,
+        requirement.field,
+        requirement.reason,
     )
 
 

@@ -31,7 +31,7 @@ def _scope2_method_rule(claim, hypothesis, profile):
             kind="semantic_judgment_required",
             field=claim.field,
             reason="semantic_support_required",
-            obligation_id=f"semantic:{claim.field}:{claim.witness_id}",
+            requirement_id=f"semantic:{claim.field}:{claim.witness_id}",
             claim_id=f"{hypothesis.hypothesis_id}:{claim.field}",
             semantic_requirement=rubric.requirement(
                 question="Does the cited span support the claimed Scope 2 method?",
@@ -169,7 +169,7 @@ def _hypothesis_without_source_witness():
 def _judgment(obligation_id):
     return SemanticJudgment(
         judgment_id="judgment-scope2",
-        obligation_id=obligation_id,
+        requirement_id=obligation_id,
         verdict="supports",
         rubric_id=SCOPE2_RUBRIC_ID,
         judge="llm/model@policy-v1",
@@ -243,7 +243,7 @@ def test_tiny_domain_semantic_judgment_discharges_obligation():
 
     resolved = apply_semantic_judgments(
         report,
-        (_judgment(obligation.obligation_id),),
+        (_judgment(obligation.requirement_id),),
         available_span_ids=("span-17",),
     )
 

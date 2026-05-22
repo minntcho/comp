@@ -77,7 +77,7 @@ from comp.compiler_tool.reference_db import (
 )
 from comp.compiler_tool.reference_resolution import (
     ReferenceSearchQuery,
-    resolve_reference_search_obligations,
+    resolve_reference_search_requirements,
 )
 from comp.compiler_tool.reference_selection_report import apply_reference_selection
 from comp.compiler_tool.reference_selector import (
@@ -97,15 +97,15 @@ from comp.compiler_tool.report_status import (
 from comp.compiler_tool.resolver_retrieval import (
     RetrievalQueryPolicy,
     RetrievalQueryRule,
-    reference_query_for_obligation_from_policies,
-    reference_query_for_obligation_from_policy,
-    reference_query_for_obligation_from_profile_policy,
-    reference_query_for_obligation_from_resolver_tasks,
+    reference_query_for_requirement_from_policies,
+    reference_query_for_requirement_from_policy,
+    reference_query_for_requirement_from_profile_policy,
+    reference_query_for_requirement_from_resolver_tasks,
     reference_query_from_resolver_task,
 )
 from comp.compiler_tool.resolver_tasks import (
     ResolverTask,
-    resolver_task_from_obligation,
+    resolver_task_from_requirement,
     resolver_tasks_from_report,
 )
 from comp.compiler_tool.retrieval import (
@@ -118,7 +118,7 @@ from comp.compiler_tool.retrieval import (
 )
 from comp.compiler_tool.retrieval_resolution import (
     ReferenceRetrievalQuery,
-    resolve_reference_retrieval_obligations,
+    resolve_reference_retrieval_requirements,
 )
 from comp.compiler_tool.semantic import apply_semantic_judgments
 from comp.compiler_tool.tool import CompilerTool
@@ -179,7 +179,7 @@ __all__ = [
     "reference_record_fingerprint",
     "reference_catalog_snapshot_fingerprint",
     "ReferenceSearchQuery",
-    "resolve_reference_search_obligations",
+    "resolve_reference_search_requirements",
     "apply_reference_selection",
     "ReferenceSelectionCriteria",
     "ReferenceSelectionResult",
@@ -187,14 +187,14 @@ __all__ = [
     "recompute_report_status",
     "with_recomputed_status",
     "ResolverTask",
-    "resolver_task_from_obligation",
+    "resolver_task_from_requirement",
     "resolver_tasks_from_report",
     "RetrievalQueryPolicy",
     "RetrievalQueryRule",
-    "reference_query_for_obligation_from_policies",
-    "reference_query_for_obligation_from_profile_policy",
-    "reference_query_for_obligation_from_policy",
-    "reference_query_for_obligation_from_resolver_tasks",
+    "reference_query_for_requirement_from_policies",
+    "reference_query_for_requirement_from_profile_policy",
+    "reference_query_for_requirement_from_policy",
+    "reference_query_for_requirement_from_resolver_tasks",
     "reference_query_from_resolver_task",
     "RETRIEVAL_LENSES",
     "RetrievalLens",
@@ -203,7 +203,7 @@ __all__ = [
     "ReferenceResolver",
     "EmbeddingResolverStub",
     "ReferenceRetrievalQuery",
-    "resolve_reference_retrieval_obligations",
+    "resolve_reference_retrieval_requirements",
     "RuleFamily",
     "SemanticRubric",
     "JudgePolicy",

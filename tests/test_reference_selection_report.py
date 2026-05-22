@@ -71,7 +71,7 @@ def _selection_obligation(reason="ambiguous"):
         kind="reference_selection_required",
         field="co2e_emission",
         reason=reason,
-        obligation_id="reference_selection:ghg.factor_selector.v1:hyp-1:amount",
+        requirement_id="reference_selection:ghg.factor_selector.v1:hyp-1:amount",
         claim_id="hyp-1:amount",
         blocking=True,
     )
