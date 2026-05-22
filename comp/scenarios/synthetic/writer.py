@@ -6,7 +6,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any, Iterable
 
 if TYPE_CHECKING:
-    from comp.scenarios.synthetic.generator import SyntheticRun
+    from comp.scenarios.synthetic.models import SyntheticRun
 
 
 def write_synthetic_run(run: SyntheticRun, run_dir: Path) -> Path:

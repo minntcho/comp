@@ -6,7 +6,8 @@ claims, issue receipts, or authorize public output.
 
 from comp.scenarios.synthetic.adapters import SyntheticPcfAdapter
 from comp.scenarios.synthetic.config import SyntheticScenarioConfig
-from comp.scenarios.synthetic.generator import (
+from comp.scenarios.synthetic.generator import generate_synthetic_pcf_run
+from comp.scenarios.synthetic.models import (
     ExpectedArtifactRef,
     ExpectedClaim,
     ExpectedDependencyRef,
@@ -29,9 +30,10 @@ from comp.scenarios.synthetic.generator import (
     SyntheticResolutionArtifact,
     SyntheticResolutionArtifacts,
     SyntheticRun,
+)
+from comp.scenarios.synthetic.sources import (
     build_synthetic_loaded_source,
     build_synthetic_loaded_sources,
-    generate_synthetic_pcf_run,
     synthetic_source_input_dependency_id,
 )
 from comp.scenarios.synthetic.loaders import (

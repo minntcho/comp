@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from comp.compiler_tool import ReferenceCatalog, ReferenceRecord
-from comp.scenarios.synthetic.generator import SyntheticInputBundle
+from comp.scenarios.synthetic.models import SyntheticInputBundle
 
 
 def reference_catalog_from_input_bundle(
