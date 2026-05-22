@@ -302,6 +302,31 @@ def test_document_governance_classifies_architecture_doc_authority():
             assert line in text
 
 
+def test_document_governance_defines_authority_lifecycle_locations():
+    governance = Path(
+        "docs/architecture/document-governance.md"
+    ).read_text(encoding="utf-8")
+    docs_index = Path("docs/index.md").read_text(encoding="utf-8")
+
+    assert "Document headers are the metadata source of truth." in governance
+    assert "`docs/index.md` is the navigation source of truth." in governance
+    assert "docs/architecture/ root is an entry surface" in governance
+    assert "demotion changes both status and location" in governance
+
+    for lifecycle_rule in (
+        "active-contract -> docs/architecture/contracts/",
+        "implementation-map -> docs/architecture/maps/",
+        "north-star -> docs/architecture/north-stars/",
+        "historical-note -> docs/archive/architecture/",
+        "implementation plan -> docs/archive/plans/",
+        "migration history -> docs/archive/migration/",
+    ):
+        assert lifecycle_rule in governance
+
+    assert "The document header is the metadata source of truth" in docs_index
+    assert "this index is the navigation source of truth" in docs_index
+
+
 def test_architecture_docs_are_classified_by_governance_status():
     expected_status = {
         "active-surface-cutover.md": (
@@ -320,7 +345,7 @@ def test_architecture_docs_are_classified_by_governance_status():
             "active-contract",
             "trust-kernel",
             "yes",
-            "2026-05-20",
+            "2026-05-22",
         ),
         "domain-scenario-pack-generation.md": (
             "implementation-map",
