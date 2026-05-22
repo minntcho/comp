@@ -60,6 +60,47 @@ LEGACY_ACTIVE_PATHS = (
     "comp/pipeline/__init__.py",
 )
 
+DOC_HEADER_FIELDS = (
+    "Status",
+    "Owner",
+    "Last checked against code",
+    "Can block PRs",
+)
+DOC_STATUS_BLOCKING = {
+    "active-contract": "yes",
+    "implementation-map": "limited",
+    "north-star": "limited",
+    "historical-note": "no",
+}
+DOC_OWNERS = {
+    "agent-layer",
+    "docs",
+    "explanation",
+    "persistence",
+    "retrieval",
+    "scenario-lab",
+    "trust-kernel",
+}
+
+
+def _governed_architecture_docs():
+    return sorted(Path("docs/architecture").glob("*.md")) + sorted(
+        Path("docs/archive/architecture").glob("*.md")
+    )
+
+
+def _doc_header(path):
+    header = {}
+    for line in path.read_text(encoding="utf-8").splitlines()[:8]:
+        if ": " in line:
+            key, value = line.split(": ", 1)
+            header[key] = value
+    return header
+
+
+def _docs_relative_path(path):
+    return path.relative_to("docs").as_posix()
+
 
 def test_top_level_package_exposes_active_judgment_surface():
     assert Fact is not None
@@ -325,6 +366,51 @@ def test_document_governance_defines_authority_lifecycle_locations():
 
     assert "The document header is the metadata source of truth" in docs_index
     assert "this index is the navigation source of truth" in docs_index
+
+
+def test_document_governance_documents_smoke_enforcement():
+    governance = Path(
+        "docs/architecture/document-governance.md"
+    ).read_text(encoding="utf-8")
+
+    assert "## Smoke Enforcement" in governance
+    assert "required header keys" in governance
+    assert "status-to-blocking match" in governance
+    assert "lifecycle location" in governance
+    assert "index listing" in governance
+
+
+def test_governed_architecture_docs_have_valid_machine_readable_headers():
+    for path in _governed_architecture_docs():
+        header = _doc_header(path)
+
+        assert set(DOC_HEADER_FIELDS).issubset(header), path
+        assert header["Status"] in DOC_STATUS_BLOCKING, path
+        assert header["Owner"] in DOC_OWNERS, path
+        assert header["Can block PRs"] == DOC_STATUS_BLOCKING[header["Status"]], path
+        assert len(header["Last checked against code"].split("-")) == 3, path
+
+
+def test_governed_architecture_docs_match_index_and_lifecycle_location():
+    docs_index = Path("docs/index.md").read_text(encoding="utf-8")
+    governed_docs = _governed_architecture_docs()
+
+    for path in governed_docs:
+        header = _doc_header(path)
+        rel_path = _docs_relative_path(path)
+
+        assert rel_path in docs_index, path
+        if header["Status"] == "historical-note":
+            assert path.match("docs/archive/architecture/*.md"), path
+        else:
+            assert path.match("docs/architecture/*.md"), path
+
+    assert not [
+        path
+        for path in Path("docs/architecture").rglob("*.md")
+        if "REQUIRED SUB-SKILL:" in path.read_text(encoding="utf-8")
+    ]
+    assert not Path("docs/superpowers/plans").exists()
 
 
 def test_architecture_docs_are_classified_by_governance_status():
