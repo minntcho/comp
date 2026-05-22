@@ -54,6 +54,7 @@ override active contracts.
 1. `architecture/retrieval-fabric-north-star.md`
 2. `architecture/llm-worker-orchestration.md`
 3. `architecture/production-trust-spine-database.md`
+4. `architecture/friendly-authority-vocabulary.md`
 
 ### Historical Notes
 
