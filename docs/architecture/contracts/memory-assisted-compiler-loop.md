@@ -2,7 +2,7 @@
 
 Status: active-contract
 Owner: agent-layer
-Last checked against code: 2026-05-20
+Last checked against code: 2026-05-22
 Can block PRs: yes
 
 This document fixes the integration boundary between `comp` and a
@@ -83,8 +83,9 @@ Memory / Skills / Session Trace
 -> Receipt-gated Projection
 ```
 
-`minchoagnt` may improve the next `InterpretationHypothesis`. It must not mint
-`Fact`, `PublicOutputReceipt`, or public projection authority.
+`minchoagnt` may improve the next `InterpretationHypothesis`. It may record
+compiler-report-derived facts through the public adapter path, but it must not
+mint freestanding `Fact`, `PublicOutputReceipt`, or public projection authority.
 
 Allowed:
 
@@ -127,8 +128,8 @@ The orchestration layer may import `comp`:
 
 ```python
 from comp.compiler_tool import CompilerTool, InterpretationHypothesis
-from comp.compiler_tool import compile_report_to_facts
-from comp.judgment import JudgmentState, PublicOutputReceipt, build_public_output
+from comp.compiler_tool import compile_report_to_facts, resolver_tasks_from_report
+from comp.judgment import Fact, JudgmentState, SubjectRef
 ```
 
 This keeps the dependency direction honest:
@@ -137,6 +138,25 @@ This keeps the dependency direction honest:
 agent layer depends on compiler authority
 compiler authority does not depend on agent memory
 ```
+
+### 3.1 Agent Core Boundary Contract
+
+The import boundary is part of the contract, not just a packaging preference.
+
+`comp` must not import `minchoagnt`.
+
+`minchoagnt` may import `comp.compiler_tool` report, resolver-task, and fact-adapter contracts.
+
+`minchoagnt` may import judgment value types needed to hold report-derived facts,
+such as `Fact`, `JudgmentState`, and `SubjectRef`.
+
+`minchoagnt` must not import `PublicOutputReceipt`, receipt builders, replay engines, or projection gates.
+
+`CompCompilerAdapter` records report-derived facts and leaves receipt issuance to `comp` governance and receipt paths.
+
+Agent output is proposal and resolution material, not projection authority.
+
+This is machine-checked by `tests/test_authority_import_boundaries.py`.
 
 ---
 

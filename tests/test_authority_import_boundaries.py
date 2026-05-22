@@ -89,6 +89,32 @@ AUTHORITY_BOUNDARY_RULES = (
             "minchoagnt",
         ),
     ),
+    ImportBoundaryRule(
+        label="agent orchestration layer",
+        paths=(Path("minchoagnt"),),
+        forbidden_prefixes=(
+            "comp.explanation",
+            "comp.persistence",
+            "comp.views",
+            "comp.scenario_contracts",
+            "comp.scenarios",
+            "comp.runtime",
+        ),
+        forbidden_imports=(
+            "comp:PublicOutput",
+            "comp:PublicOutputReceipt",
+            "comp:PublicOutputSpec",
+            "comp:build_public_output",
+            "comp.compiler_tool:build_public_output_receipt",
+            "comp.compiler_tool:prepare_commit",
+            "comp.judgment:PublicOutput",
+            "comp.judgment:PublicOutputReceipt",
+            "comp.judgment:PublicOutputSpec",
+            "comp.judgment:build_public_output",
+            "comp.persistence:replay_public_projection",
+            "comp.persistence.replay:replay_public_projection",
+        ),
+    ),
 )
 
 
@@ -115,6 +141,29 @@ def test_trust_kernel_contract_documents_machine_checked_import_boundaries():
     )
     for line in expected_lines:
         assert line in contract
+
+
+def test_agent_layer_does_not_call_projection_receipt_or_replay_authority():
+    forbidden_calls = {
+        "build_public_output",
+        "build_public_output_receipt",
+        "prepare_commit",
+        "replay_public_projection",
+        "export_receipt_proof_graph",
+        "explain_public_field",
+        "InMemoryReceiptLedger",
+        "MySQLReceiptLedger",
+        "PublicOutputReceipt",
+    }
+    violations = []
+    for source_path in _python_files((Path("minchoagnt"),)):
+        for called in _called_names(source_path):
+            if called.rsplit(".", 1)[-1] in forbidden_calls:
+                violations.append(
+                    f"agent orchestration layer: {source_path} calls {called}"
+                )
+
+    assert violations == []
 
 
 def _rule_violations(rule: ImportBoundaryRule) -> list[str]:
@@ -149,6 +198,26 @@ def _imports(path: Path) -> tuple[str, ...]:
             imports.append(node.module)
             imports.extend(f"{node.module}:{alias.name}" for alias in node.names)
     return tuple(imports)
+
+
+def _called_names(path: Path) -> tuple[str, ...]:
+    tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
+    calls = []
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Call):
+            calls.append(_call_name(node.func))
+    return tuple(call for call in calls if call)
+
+
+def _call_name(node: ast.AST) -> str:
+    if isinstance(node, ast.Name):
+        return node.id
+    if isinstance(node, ast.Attribute):
+        base = _call_name(node.value)
+        if base:
+            return f"{base}.{node.attr}"
+        return node.attr
+    return ""
 
 
 def _is_forbidden(imported: str, rule: ImportBoundaryRule) -> bool:
