@@ -144,6 +144,22 @@ Prefer:
 원본자료가 변경되어 감사 재검증에 실패했습니다.
 ```
 
+The first helper lives in `comp.user_messages`:
+
+```python
+from comp.user_messages import user_message_for_reason, user_message_ko
+
+user_message_for_reason("unsupported_unit").ko
+# "지원하지 않는 단위입니다. 단위를 확인해 주세요."
+
+user_message_ko("public_output_receipt_required")
+# "공개 결과를 만들려면 공개 승인 증표가 필요합니다."
+```
+
+Like `comp.schema_labels`, this helper is display-only. It can be used by docs,
+CLI output, UI adapters, and downstream product surfaces. It must not decide
+validation, calculation, receipt issuance, replay, or public-output authority.
+
 Internal exception types may remain English. Their messages should be suitable
 for CLI and product display unless the exception is explicitly developer-only.
 
