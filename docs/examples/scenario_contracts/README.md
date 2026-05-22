@@ -85,6 +85,13 @@ comp scenario init public_projection_smoke
 comp scenario run public_projection_smoke/scenario.json
 ```
 
+`comp scenario init` refuses to overwrite an existing target. To regenerate the
+neutral smoke bundle explicitly:
+
+```bash
+comp scenario init --force public_projection_smoke
+```
+
 That command writes:
 
 ```text

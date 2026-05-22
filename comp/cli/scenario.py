@@ -5,6 +5,7 @@ import sys
 from collections.abc import Sequence
 
 from comp.scenario_contracts import load_manifest, run_scenario
+from comp.scenario_contracts import ScenarioBundleExistsError
 from comp.scenario_contracts import write_public_projection_smoke_bundle
 
 
@@ -23,7 +24,15 @@ def main(argv: Sequence[str] | None = None) -> int:
         print(f"{result.scenario_id}: {result.status}")
         return 0 if result.status == "passed" else 1
     if args.scenario_command == "init":
-        manifest_path = write_public_projection_smoke_bundle(args.target)
+        try:
+            manifest_path = write_public_projection_smoke_bundle(
+                args.target,
+                force=args.force,
+            )
+        except ScenarioBundleExistsError as exc:
+            print(str(exc), file=sys.stderr)
+            print("Use --force to regenerate the smoke bundle.", file=sys.stderr)
+            return 2
         print(f"created {manifest_path}")
         return 0
     parser.print_help(sys.stderr)
@@ -53,6 +62,7 @@ def _build_parser() -> argparse.ArgumentParser:
         "init",
         help="Create a runnable public-projection smoke scenario bundle.",
     )
+    init.add_argument("--force", action="store_true")
     init.add_argument("target")
     return parser
 
