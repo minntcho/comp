@@ -70,6 +70,29 @@ def test_synthetic_expected_receipt_oracle_lives_outside_generator_module() -> N
     )
 
 
+def test_synthetic_anomaly_specs_live_outside_generator_module() -> None:
+    from comp.scenarios.synthetic.anomaly_specs import (
+        anomaly_specs,
+        missing_unit_resolution_artifact,
+    )
+
+    config = SyntheticScenarioConfig.pcf_anomaly(seed=11)
+    run = generate_synthetic_pcf_run(config)
+    specs = anomaly_specs(config)
+
+    assert anomaly_specs.__module__ == "comp.scenarios.synthetic.anomaly_specs"
+    assert generate_synthetic_pcf_run.__globals__["anomaly_specs"] is anomaly_specs
+    assert tuple(spec["row"] for spec in specs) == run.raw_sources.electricity_rows
+    assert tuple(spec["anomaly"] for spec in specs) == run.oracle.injected_anomalies
+
+    resolution_run = generate_synthetic_pcf_run(
+        SyntheticScenarioConfig.pcf_resolution(seed=17)
+    )
+    assert resolution_run.resolution_artifacts.unit_witnesses == (
+        missing_unit_resolution_artifact(resolution_run.raw_sources.electricity_rows[0]),
+    )
+
+
 def test_synthetic_pcf_generator_writes_oracle_not_truth(tmp_path: Path) -> None:
     config = SyntheticScenarioConfig.pcf_smoke(seed=7)
 
