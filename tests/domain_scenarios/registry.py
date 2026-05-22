@@ -115,6 +115,19 @@ _DOWNSTREAM_CANDIDATE_IDS = (
 
 
 def _scenario_residency_for(scenario_id: str) -> ScenarioResidency:
+    if scenario_id == ALPHA_INVALID_ALLOCATION_SCENARIO.scenario_id:
+        return ScenarioResidency(
+            tier="downstream-candidate",
+            target_pack="comp-scenario-packs",
+            external_pack_id="l_energy_alpha_invalid_allocation_rfi",
+            external_contract_id="canonical_blocked_projection_smoke",
+            cutover_state="parallel-validation",
+            reason=(
+                "blocked large domain workflow fixture has a seeded downstream "
+                "canonical bundle but remains internal until parallel validation "
+                "covers the same trust meaning"
+            ),
+        )
     if scenario_id == L_ENERGY_PCF_GOVERNANCE_SCENARIO.scenario_id:
         return ScenarioResidency(
             tier="downstream-candidate",

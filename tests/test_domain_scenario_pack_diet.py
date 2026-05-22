@@ -64,6 +64,9 @@ def test_domain_scenario_residency_metadata_explains_diet_boundary():
 
 def test_downstream_candidate_cutover_metadata_tracks_external_coverage():
     l_energy = scenario_residency("l_energy_pcf_governance.v1")
+    blocked_allocation = scenario_residency(
+        "l_energy.alpha_invalid_allocation_rfi.v1"
+    )
     l_energy_rollup = scenario_residency("l_energy.final_bottom_up_pcf_rollup.v1")
     synthetic = scenario_residency("synthetic_pcf.smoke.v1")
     raw_claim = scenario_residency(
@@ -75,6 +78,16 @@ def test_downstream_candidate_cutover_metadata_tracks_external_coverage():
     assert l_energy.external_pack_id == "l_energy_pcf_governance"
     assert l_energy.external_contract_id == "canonical_projection_smoke"
     assert l_energy.cutover_state == "parallel-validation"
+
+    assert blocked_allocation.tier == "downstream-candidate"
+    assert blocked_allocation.target_pack == "comp-scenario-packs"
+    assert blocked_allocation.external_pack_id == (
+        "l_energy_alpha_invalid_allocation_rfi"
+    )
+    assert blocked_allocation.external_contract_id == (
+        "canonical_blocked_projection_smoke"
+    )
+    assert blocked_allocation.cutover_state == "parallel-validation"
 
     assert l_energy_rollup.tier == "downstream-candidate"
     assert l_energy_rollup.external_pack_id is None
@@ -105,6 +118,7 @@ def test_domain_scenario_docs_explain_residency_tiers():
     assert "parallel-validation" in readme
     assert "copy/reconstruct -> external run -> parallel validation" in extension_doc
     assert "public_projection_smoke" in extension_doc
+    assert "l_energy_alpha_invalid_allocation_rfi" in extension_doc
     assert "registry exposes residency metadata" in extension_doc
 
 
@@ -131,6 +145,15 @@ def test_downstream_registry_records_active_pack_cutover_state():
             "scope": "canonical-runtime-smoke",
             "cutover_state": "baseline-public-surface",
             "covers_comp_scenario_ids": [],
+        },
+        {
+            "id": "l_energy_alpha_invalid_allocation_rfi",
+            "status": "seed",
+            "scope": "large-domain-and-product-e2e",
+            "cutover_state": "parallel-validation",
+            "covers_comp_scenario_ids": [
+                "l_energy.alpha_invalid_allocation_rfi.v1"
+            ],
         },
         {
             "id": "l_energy_pcf_governance",
