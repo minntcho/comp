@@ -20,15 +20,66 @@ These names are the preferred import surface for package users and README
 quickstarts.
 
 ```python
+from comp.compiler_tool import InterpretationHypothesis, ClaimCandidate, EvidenceRef
 from comp.compiler_tool import CompilerTool, ValidationReport
 from comp.compiler_tool import resolver_tasks_from_report
 from comp.compiler_tool import prepare_commit, build_public_output_receipt
 from comp.compiler_tool import compile_report_to_facts
 ```
 
-Stable names:
+### Quickstart input models
+
+These models are stable as quickstart input models. They are stable for
+constructing candidate and provenance input to `CompilerTool`. They do not carry
+public-output authority.
 
 ```text
+InterpretationHypothesis
+ClaimCandidate
+EvidenceRef
+```
+
+### Compiler entrypoint
+
+```text
+CompilerTool
+ValidationReport
+```
+
+### Review / resolver handoff
+
+```text
+resolver_tasks_from_report
+```
+
+### Commit preparation
+
+```text
+prepare_commit
+build_public_output_receipt
+compile_report_to_facts
+```
+
+### Quickstart companion gate from top-level `comp`
+
+README quickstarts may pair `comp.compiler_tool` with the top-level public-output
+gate:
+
+```python
+from comp import PublicOutputBlocked, PublicOutputReceipt, PublicOutputSpec
+from comp import build_public_output
+```
+
+Those names are owned by the judgment/public-output gate, not by
+`comp.compiler_tool`. They appear in the quickstart because the first user path
+is only complete when it reaches receipt-gated projection.
+
+Stable compiler-tool names:
+
+```text
+InterpretationHypothesis
+ClaimCandidate
+EvidenceRef
 CompilerTool
 ValidationReport
 resolver_tasks_from_report

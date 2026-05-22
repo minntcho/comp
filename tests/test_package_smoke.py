@@ -82,12 +82,27 @@ DOC_OWNERS = {
     "trust-kernel",
 }
 COMPILER_TOOL_STABLE_PUBLIC = {
+    "InterpretationHypothesis",
+    "ClaimCandidate",
+    "EvidenceRef",
     "CompilerTool",
     "ValidationReport",
     "resolver_tasks_from_report",
     "prepare_commit",
     "build_public_output_receipt",
     "compile_report_to_facts",
+}
+COMPILER_TOOL_QUICKSTART_PATH = {
+    "InterpretationHypothesis",
+    "ClaimCandidate",
+    "EvidenceRef",
+    "CompilerTool",
+    "prepare_commit",
+}
+TOP_LEVEL_QUICKSTART_GATE = {
+    "PublicOutputBlocked",
+    "PublicOutputSpec",
+    "build_public_output",
 }
 COMPILER_TOOL_ADVANCED_PUBLIC = {
     "SemanticJudgment",
@@ -162,11 +177,16 @@ def _docs_relative_path(path):
 
 def _readme_compiler_tool_quickstart():
     readme = Path("README.md").read_text(encoding="utf-8")
-    for block in readme.split("```python")[1:]:
+    start = "<!-- compiler-tool-quickstart:start -->"
+    end = "<!-- compiler-tool-quickstart:end -->"
+    if start not in readme or end not in readme:
+        raise AssertionError("README does not mark the compiler_tool quickstart.")
+    quickstart_section = readme.split(start, 1)[1].split(end, 1)[0]
+    for block in quickstart_section.split("```python")[1:]:
         code = block.split("```", 1)[0]
         if "from comp.compiler_tool import" in code:
             return code
-    raise AssertionError("README does not include a compiler_tool quickstart block.")
+    raise AssertionError("README quickstart marker does not include a python block.")
 
 
 def test_top_level_package_exposes_active_judgment_surface():
@@ -194,14 +214,32 @@ def test_top_level_package_no_longer_exports_legacy_runner_surface():
     assert not hasattr(comp, "PipelineRunResult")
 
 
-def test_compiler_tool_stable_public_surface_is_exported_and_in_readme():
+def test_compiler_tool_stable_public_surface_is_exported_and_documented():
     import comp.compiler_tool as compiler_tool
 
-    quickstart = _readme_compiler_tool_quickstart()
+    api_doc = Path("docs/api/compiler-tool.md").read_text(encoding="utf-8")
 
     for name in COMPILER_TOOL_STABLE_PUBLIC:
         assert hasattr(compiler_tool, name), name
+        assert name in api_doc, name
+
+
+def test_readme_compiler_tool_quickstart_uses_required_public_path():
+    quickstart = _readme_compiler_tool_quickstart()
+
+    for name in COMPILER_TOOL_QUICKSTART_PATH:
         assert name in quickstart, name
+    for name in TOP_LEVEL_QUICKSTART_GATE:
+        assert name in quickstart, name
+
+
+def test_readme_compiler_tool_quickstart_executes_receipt_gate_path():
+    namespace = {}
+    exec(_readme_compiler_tool_quickstart(), namespace)
+
+    assert namespace["blocked_without_receipt"] is True
+    assert namespace["row"] == {"amount": 1200, "unit": "kWh"}
+    assert "internal_note" not in namespace["row"]
 
 
 def test_compiler_tool_advanced_surface_is_documented():
