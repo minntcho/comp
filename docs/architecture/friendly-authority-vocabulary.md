@@ -145,7 +145,77 @@ PublicOutputReceipt is required for public output.
 PublicOutput is a receipt-verifiable view, not authority.
 ```
 
-## 6. Non-Goals
+## 6. Residual Field Vocabulary Audit
+
+The canonical class and export names are complete. Some active fields, fixture
+keys, and serialized receipt/replay payload keys still contain older vocabulary.
+They must be handled by category, not by a global text replacement.
+
+### Safe active field rename candidates
+
+These are active Python-facing names that still expose older terms. They should
+be renamed in a breaking follow-up PR when the call sites can move together:
+
+| Current active field | Preferred field | Why it can move |
+| --- | --- | --- |
+| `ValidationReport.evidence_witnesses` | `ValidationReport.evidence_refs` | The value type is already `EvidenceRef`; this is an active object field, not receipt authority. |
+| `ValidationReport.reference_candidates` | `ValidationReport.reference_options` | The value type is already `ReferenceOption`; this is compiler report state. |
+| `ValidationReport.reference_bindings` | `ValidationReport.canonical_references` | The value type is already `CanonicalReference`; this is calculation input authority, not a free-form selection. |
+| `ValidationReport.derived_claims` | `ValidationReport.calculated_claims` | The value type is already `CalculatedClaim`; this is report state and public-output precondition input. |
+| `ValidationReport.obligations` | `ValidationReport.validation_requirements` | The value type is already `ValidationRequirement`; this field is user-visible enough to deserve the friendly name. |
+| `ValidationReport.resolved_obligations` | `ValidationReport.resolved_validation_requirements` | Keeps the open/resolved pair aligned after `obligations` moves. |
+
+Required shorthand for the next active-field PR:
+
+```text
+`ValidationReport.evidence_witnesses` -> `ValidationReport.evidence_refs`
+`ValidationReport.reference_candidates` -> `ValidationReport.reference_options`
+`ValidationReport.reference_bindings` -> `ValidationReport.canonical_references`
+`ValidationReport.derived_claims` -> `ValidationReport.calculated_claims`
+`ValidationReport.obligations` -> `ValidationReport.validation_requirements`
+`ValidationReport.resolved_obligations` -> `ValidationReport.resolved_validation_requirements`
+```
+
+Do not add aliases for these fields unless a migration PR explicitly proves the
+temporary duplicate surface cannot leak into docs, examples, or downstream
+imports. The default migration shape is still a breaking rename.
+
+### Codec-bound receipt and replay vocabulary
+
+These names are serialized into receipts, barrier snapshots, proof graphs,
+persistence rows, scenario fixtures, or replay material. They may be renamed,
+but only through a codec/boundary PR that pins old-body replay behavior and
+new-body output behavior together:
+
+| Serialized or replay-facing name | Boundary |
+| --- | --- |
+| `PublicOutputReceipt.projection_id` | Receipt identity and replay lookup. |
+| `PublicOutputReceiptCitations.projection_id` | Barrier snapshot equality check. |
+| `PublicOutputReceiptCitations.projection_value_commitments` | Value digest proof surface. |
+| `PublicOutputReceiptCitations.commit_package_id` | Receipt citation to the review package artifact. |
+| `PublicOutputReceiptCitations.governance_decision_id` | Receipt citation to the review decision artifact. |
+| `PublicOutputReceiptCitations.checked_claim_witness_ids` | Receipt citation to checked evidence spans. |
+| `DependencyFingerprint.dependency_kind="evidence_witness"` | Existing dependency digest semantics. |
+
+Changing these in the same PR as active report fields would mix API cleanup with
+replay compatibility. That is exactly the kind of dual-SSOT risk this repo
+tries to avoid.
+
+### Terms intentionally not globally banned
+
+Do not add a blanket ban on `projection` or `witness`.
+
+`Projection` is no longer the class name for public output, but lowercase
+`projection_id`, `public_projection` fixture names, and replay function names
+still identify persisted or scenario-contract concepts. They need codec-aware
+migration, not search-and-replace cleanup.
+
+`Witness` is no longer part of `EvidenceRef`, but `witness_id`,
+`source_witness_ids`, and `checked_claim_witness_ids` may still be protocol
+identifiers for source spans and receipt citations. Rename them only when the
+receipt, replay, and scenario-contract payloads move together.
+
+## 7. Non-Goals
 
 Do not use Korean Python class names.
 
