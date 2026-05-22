@@ -122,17 +122,17 @@ def carbon_tech_certificate_submission_report() -> ValidationReport:
     return with_recomputed_status(
         ValidationReport(
             status="accepted",
-            evidence_witnesses=_evidence_witnesses(),
+            evidence_refs=_evidence_refs(),
             checked_claims=_checked_claims(),
-            resolved_obligations=_resolved_obligations(),
-            reference_bindings=_reference_bindings(),
-            derived_claims=_derived_claims(),
+            resolved_validation_requirements=_resolved_validation_requirements(),
+            canonical_references=_canonical_references(),
+            calculated_claims=_calculated_claims(),
             can_build_public_output=True,
         )
     )
 
 
-def _evidence_witnesses() -> tuple[EvidenceRef, ...]:
+def _evidence_refs() -> tuple[EvidenceRef, ...]:
     return (
         EvidenceRef(
             witness_id="source:carbon-tech-certificate-metadata",
@@ -199,7 +199,7 @@ def _checked_claims() -> tuple[CheckedClaim, ...]:
     )
 
 
-def _resolved_obligations() -> tuple[ValidationRequirement, ...]:
+def _resolved_validation_requirements() -> tuple[ValidationRequirement, ...]:
     return (
         ValidationRequirement(
             kind="certificate_boundary_supported",
@@ -210,7 +210,7 @@ def _resolved_obligations() -> tuple[ValidationRequirement, ...]:
     )
 
 
-def _reference_bindings() -> tuple[CanonicalReference, ...]:
+def _canonical_references() -> tuple[CanonicalReference, ...]:
     return (
         CanonicalReference(
             binding_id=CERTIFICATE_FACTOR_BINDING_ID,
@@ -223,7 +223,7 @@ def _reference_bindings() -> tuple[CanonicalReference, ...]:
     )
 
 
-def _derived_claims() -> tuple[CalculatedClaim, ...]:
+def _calculated_claims() -> tuple[CalculatedClaim, ...]:
     raw_emission = Decimal(PRODUCTION_TON) * CERTIFICATE_FACTOR_TCO2E_PER_TON
     final_emission = _round_half_up(raw_emission)
     return (
@@ -261,7 +261,7 @@ def _derived_claims() -> tuple[CalculatedClaim, ...]:
 
 def _projection_source(report: ValidationReport) -> dict[str, object]:
     values = {claim.field: claim.value for claim in report.checked_claims}
-    values.update({claim.field: claim.value for claim in report.derived_claims})
+    values.update({claim.field: claim.value for claim in report.calculated_claims})
     return values
 
 

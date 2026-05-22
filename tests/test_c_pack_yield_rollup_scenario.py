@@ -31,7 +31,7 @@ def test_c_pack_yield_rollup_calculates_required_input_and_final_emission():
     }
     assert tuple(
         (claim.field, claim.value, claim.unit)
-        for claim in result.report.derived_claims
+        for claim in result.report.calculated_claims
     ) == (
         ("required_lower_tier_input_ton", 6300, "ton"),
         ("c_pack_own_emission_tco2e", 478, "tCO2e"),
@@ -70,7 +70,7 @@ def test_c_pack_rollup_binds_assembly_electricity_factor():
 
     assert tuple(
         (binding.binding_id, binding.reference_id, binding.reference_type)
-        for binding in result.report.reference_bindings
+        for binding in result.report.canonical_references
     ) == (
         (ELECTRICITY_BINDING_ID, "platform.factor.electricity_mwh", "emission_factor"),
     )
@@ -84,7 +84,7 @@ def test_c_pack_rollup_creates_receipt_and_projection():
     result = run_c_pack_yield_rollup_scenario()
 
     assert result.report.status == "accepted"
-    assert result.report.obligations == ()
+    assert result.report.validation_requirements == ()
     assert result.report.hazards == ()
     assert result.preparation.package.complete is True
     assert result.preparation.decision.status == "commit"
@@ -115,7 +115,7 @@ def test_c_pack_yield_rollup_scenario_is_registered_with_contract():
 
 
 def _trace_for(result, claim_id):
-    for claim in result.report.derived_claims:
+    for claim in result.report.calculated_claims:
         if claim.claim_id == claim_id:
             return claim.trace
     raise AssertionError(f"missing derived claim: {claim_id}")

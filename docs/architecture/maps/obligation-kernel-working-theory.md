@@ -995,7 +995,7 @@ Acceptance criteria:
 ValidationRequirement(reference_search_required)
 -> ReferenceQuery
 -> ReferenceResolver.search(...)
--> ValidationReport.reference_candidates
+-> ValidationReport.reference_options
 
 No CanonicalReference is created by retrieval.
 No CalculatedClaim is created by retrieval.

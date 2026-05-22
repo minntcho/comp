@@ -144,15 +144,15 @@ class SyntheticPcfAdapter:
 
     def resolution_seed_report(self) -> ValidationReport:
         report = self.blocked_report()
-        resolved_obligations = self._resolved_unit_obligations()
-        if not resolved_obligations:
+        resolved_validation_requirements = self._resolved_unit_obligations()
+        if not resolved_validation_requirements:
             return report
         return with_recomputed_status(
             replace(
                 report,
-                resolved_obligations=(
-                    *report.resolved_obligations,
-                    *resolved_obligations,
+                resolved_validation_requirements=(
+                    *report.resolved_validation_requirements,
+                    *resolved_validation_requirements,
                 ),
                 can_build_public_output=False,
             )
@@ -277,10 +277,10 @@ class SyntheticPcfAdapter:
         return with_recomputed_status(
             ValidationReport(
                 status="accepted",
-                evidence_witnesses=tuple(witnesses),
+                evidence_refs=tuple(witnesses),
                 checked_claims=tuple(checked),
                 failed_claims=tuple(failed),
-                obligations=tuple(obligations),
+                validation_requirements=tuple(obligations),
                 hazards=tuple(hazards),
                 can_build_public_output=False,
             )
@@ -288,7 +288,7 @@ class SyntheticPcfAdapter:
 
     def projection_source(self, report: ValidationReport) -> dict[str, object]:
         values = {claim.field: claim.value for claim in report.checked_claims}
-        values.update({claim.field: claim.value for claim in report.derived_claims})
+        values.update({claim.field: claim.value for claim in report.calculated_claims})
         return values
 
     def dependency_fingerprints(self) -> tuple[DependencyFingerprint, ...]:

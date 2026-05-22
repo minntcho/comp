@@ -13,7 +13,7 @@ def test_synthetic_pcf_resolution_scenario_commits_after_artifact_resolution():
 
     assert result.scenario_id == "synthetic_pcf.resolution.v1"
     assert result.report.status == "accepted"
-    assert result.report.obligations == ()
+    assert result.report.validation_requirements == ()
     assert result.report.hazards == ()
     assert result.preparation.decision.status == "commit"
     assert result.preparation.receipt is not None

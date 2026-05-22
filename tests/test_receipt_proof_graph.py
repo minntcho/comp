@@ -224,8 +224,8 @@ def test_canonical_scenario_replay_exports_claim_reference_calculation_edges():
         artifacts=bundle.artifacts,
     )
 
-    derived = result.report.derived_claims[0]
-    binding = result.report.reference_bindings[0]
+    derived = result.report.calculated_claims[0]
+    binding = result.report.canonical_references[0]
     trace_id = derived.trace.trace_id
     derived_node_id = artifact_node_id("derived_claim", derived.claim_id)
     trace_node_id = artifact_node_id("calculation_trace", trace_id)

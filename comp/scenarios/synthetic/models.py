@@ -401,13 +401,13 @@ class SyntheticInputBundle:
 @dataclass(frozen=True)
 class SyntheticOracle:
     expected_claims: tuple[ExpectedClaim, ...]
-    expected_derived_claims: tuple[ExpectedCalculatedClaim, ...]
-    expected_obligations: tuple[ExpectedObligation, ...]
+    expected_calculated_claims: tuple[ExpectedCalculatedClaim, ...]
+    expected_validation_requirements: tuple[ExpectedObligation, ...]
     expected_hazards: tuple[ExpectedHazard, ...]
     expected_failed_claims: tuple[ExpectedFailedClaim, ...]
     injected_anomalies: tuple[InjectedAnomaly, ...]
     source_to_expected_claim_map: tuple[ExpectedSourceMap, ...]
-    expected_resolved_obligations: tuple[ExpectedObligation, ...] | None = None
+    expected_resolved_validation_requirements: tuple[ExpectedObligation, ...] | None = None
     expected_resolution_artifacts: tuple[ExpectedResolutionArtifact, ...] | None = None
     expected_receipt: ExpectedReceipt | None = None
 

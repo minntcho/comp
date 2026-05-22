@@ -70,7 +70,7 @@ def test_successful_calculation_adds_derived_claim_to_report():
         catalog=_catalog(),
         formula=_formula(),
     )
-    report = ValidationReport(status="accepted", reference_bindings=(binding,))
+    report = ValidationReport(status="accepted", canonical_references=(binding,))
 
     updated = apply_calculation_result(
         report,
@@ -80,9 +80,9 @@ def test_successful_calculation_adds_derived_claim_to_report():
     )
 
     assert updated.status == "accepted"
-    assert updated.reference_bindings == (binding,)
-    assert updated.derived_claims == (calculation.derived_claim,)
-    assert updated.obligations == ()
+    assert updated.canonical_references == (binding,)
+    assert updated.calculated_claims == (calculation.derived_claim,)
+    assert updated.validation_requirements == ()
     assert updated.can_build_public_output is False
 
 
@@ -95,7 +95,7 @@ def test_blocked_calculation_opens_blocking_obligation_on_report():
         catalog=_catalog(),
         formula=_formula(),
     )
-    report = ValidationReport(status="accepted", reference_bindings=(binding,))
+    report = ValidationReport(status="accepted", canonical_references=(binding,))
 
     updated = apply_calculation_result(
         report,
@@ -105,9 +105,9 @@ def test_blocked_calculation_opens_blocking_obligation_on_report():
     )
 
     assert updated.status == "blocked"
-    assert updated.reference_bindings == (binding,)
-    assert updated.derived_claims == ()
-    assert updated.obligations == (
+    assert updated.canonical_references == (binding,)
+    assert updated.calculated_claims == ()
+    assert updated.validation_requirements == (
         ValidationRequirement(
             kind="calculation_blocked",
             field="co2e_emission",
@@ -193,4 +193,4 @@ def test_semantic_application_preserves_open_calculation_obligation_status():
     updated = apply_semantic_judgments(report, ())
 
     assert updated.status == "blocked"
-    assert updated.obligations == report.obligations
+    assert updated.validation_requirements == report.validation_requirements

@@ -50,7 +50,7 @@ def test_semantic_judgment_model_set_is_exported():
 
 def test_matching_semantic_judgment_discharges_obligation():
     obligation = _semantic_obligation()
-    report = ValidationReport(status="review_required", obligations=(obligation,))
+    report = ValidationReport(status="review_required", validation_requirements=(obligation,))
 
     resolved = apply_semantic_judgments(
         report,
@@ -59,14 +59,14 @@ def test_matching_semantic_judgment_discharges_obligation():
     )
 
     assert resolved.status == "accepted"
-    assert resolved.obligations == ()
-    assert resolved.resolved_obligations == (obligation,)
+    assert resolved.validation_requirements == ()
+    assert resolved.resolved_validation_requirements == (obligation,)
     assert resolved.hazards == ()
 
 
 def test_wrong_rubric_does_not_discharge_obligation():
     obligation = _semantic_obligation()
-    report = ValidationReport(status="review_required", obligations=(obligation,))
+    report = ValidationReport(status="review_required", validation_requirements=(obligation,))
 
     resolved = apply_semantic_judgments(
         report,
@@ -75,13 +75,13 @@ def test_wrong_rubric_does_not_discharge_obligation():
     )
 
     assert resolved.status == "review_required"
-    assert resolved.obligations == (obligation,)
-    assert resolved.resolved_obligations == ()
+    assert resolved.validation_requirements == (obligation,)
+    assert resolved.resolved_validation_requirements == ()
 
 
 def test_unaccepted_or_non_required_verdict_does_not_discharge_obligation():
     obligation = _semantic_obligation()
-    report = ValidationReport(status="review_required", obligations=(obligation,))
+    report = ValidationReport(status="review_required", validation_requirements=(obligation,))
 
     refuted = apply_semantic_judgments(
         report,
@@ -95,16 +95,16 @@ def test_unaccepted_or_non_required_verdict_does_not_discharge_obligation():
     )
 
     assert refuted.status == "review_required"
-    assert refuted.obligations == (obligation,)
-    assert refuted.resolved_obligations == ()
+    assert refuted.validation_requirements == (obligation,)
+    assert refuted.resolved_validation_requirements == ()
     assert unsupported.status == "review_required"
-    assert unsupported.obligations == (obligation,)
-    assert unsupported.resolved_obligations == ()
+    assert unsupported.validation_requirements == (obligation,)
+    assert unsupported.resolved_validation_requirements == ()
 
 
 def test_unallowed_judge_or_missing_cited_span_does_not_discharge_obligation():
     obligation = _semantic_obligation()
-    report = ValidationReport(status="review_required", obligations=(obligation,))
+    report = ValidationReport(status="review_required", validation_requirements=(obligation,))
 
     unallowed_judge = apply_semantic_judgments(
         report,
@@ -117,15 +117,15 @@ def test_unallowed_judge_or_missing_cited_span_does_not_discharge_obligation():
         available_span_ids=("span-17",),
     )
 
-    assert unallowed_judge.obligations == (obligation,)
-    assert unallowed_judge.resolved_obligations == ()
-    assert missing_span.obligations == (obligation,)
-    assert missing_span.resolved_obligations == ()
+    assert unallowed_judge.validation_requirements == (obligation,)
+    assert unallowed_judge.resolved_validation_requirements == ()
+    assert missing_span.validation_requirements == (obligation,)
+    assert missing_span.resolved_validation_requirements == ()
 
 
 def test_conflicting_semantic_judgments_keep_obligation_open_and_add_hazard():
     obligation = _semantic_obligation()
-    report = ValidationReport(status="review_required", obligations=(obligation,))
+    report = ValidationReport(status="review_required", validation_requirements=(obligation,))
 
     resolved = apply_semantic_judgments(
         report,
@@ -137,8 +137,8 @@ def test_conflicting_semantic_judgments_keep_obligation_open_and_add_hazard():
     )
 
     assert resolved.status == "review_required"
-    assert resolved.obligations == (obligation,)
-    assert resolved.resolved_obligations == ()
+    assert resolved.validation_requirements == (obligation,)
+    assert resolved.resolved_validation_requirements == ()
     assert len(resolved.hazards) == 1
     assert resolved.hazards[0].kind == "conflicting_semantic_judgment"
     assert resolved.hazards[0].field == "scope2_method"
@@ -158,11 +158,11 @@ def test_nonsemantic_obligations_do_not_reclassify_unchecked_report():
                 reason="missing_rule_coverage",
             ),
         ),
-        obligations=(obligation,),
+        validation_requirements=(obligation,),
     )
 
     resolved = apply_semantic_judgments(report, ())
 
     assert resolved.status == "unchecked"
-    assert resolved.obligations == (obligation,)
-    assert resolved.resolved_obligations == ()
+    assert resolved.validation_requirements == (obligation,)
+    assert resolved.resolved_validation_requirements == ()

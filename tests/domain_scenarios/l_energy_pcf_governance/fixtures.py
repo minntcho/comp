@@ -62,7 +62,7 @@ def checked_claims() -> tuple[CheckedClaim, ...]:
     )
 
 
-def reference_bindings() -> tuple[CanonicalReference, ...]:
+def canonical_references() -> tuple[CanonicalReference, ...]:
     return (
         CanonicalReference(
             binding_id=ELECTRICITY_BINDING_ID,
@@ -107,15 +107,15 @@ def reference_bindings() -> tuple[CanonicalReference, ...]:
     )
 
 
-def downstream_reference_bindings() -> tuple[CanonicalReference, ...]:
+def downstream_canonical_references() -> tuple[CanonicalReference, ...]:
     return tuple(
         binding
-        for binding in reference_bindings()
+        for binding in canonical_references()
         if binding.binding_id != ELECTRICITY_BINDING_ID
     )
 
 
-def derived_claims() -> tuple[CalculatedClaim, ...]:
+def calculated_claims() -> tuple[CalculatedClaim, ...]:
     return (
         _derived_claim(
             claim_id=OUTPUT_CLAIM_ID,
@@ -189,9 +189,9 @@ def derived_claims() -> tuple[CalculatedClaim, ...]:
     )
 
 
-def downstream_derived_claims() -> tuple[CalculatedClaim, ...]:
+def downstream_calculated_claims() -> tuple[CalculatedClaim, ...]:
     return tuple(
-        claim for claim in derived_claims() if claim.claim_id != OUTPUT_CLAIM_ID
+        claim for claim in calculated_claims() if claim.claim_id != OUTPUT_CLAIM_ID
     )
 
 
@@ -497,13 +497,13 @@ def attach_downstream_fixture_artifacts(report: ValidationReport) -> ValidationR
     return with_recomputed_status(
         replace(
             report,
-            reference_bindings=_append_missing_reference_bindings(
-                report.reference_bindings,
-                downstream_reference_bindings(),
+            canonical_references=_append_missing_canonical_references(
+                report.canonical_references,
+                downstream_canonical_references(),
             ),
-            derived_claims=_append_missing_derived_claims(
-                report.derived_claims,
-                downstream_derived_claims(),
+            calculated_claims=_append_missing_calculated_claims(
+                report.calculated_claims,
+                downstream_calculated_claims(),
             ),
             can_build_public_output=False,
         )
@@ -514,8 +514,8 @@ def compile_report() -> ValidationReport:
     return ValidationReport(
         status="accepted",
         checked_claims=checked_claims(),
-        reference_bindings=reference_bindings(),
-        derived_claims=derived_claims(),
+        canonical_references=canonical_references(),
+        calculated_claims=calculated_claims(),
     )
 
 
@@ -542,7 +542,7 @@ def _derived_claim(
     )
 
 
-def _append_missing_reference_bindings(
+def _append_missing_canonical_references(
     existing: tuple[CanonicalReference, ...],
     additions: tuple[CanonicalReference, ...],
 ) -> tuple[CanonicalReference, ...]:
@@ -553,7 +553,7 @@ def _append_missing_reference_bindings(
     )
 
 
-def _append_missing_derived_claims(
+def _append_missing_calculated_claims(
     existing: tuple[CalculatedClaim, ...],
     additions: tuple[CalculatedClaim, ...],
 ) -> tuple[CalculatedClaim, ...]:
@@ -578,15 +578,15 @@ __all__ = [
     "checked_claims",
     "compile_report",
     "criteria",
-    "derived_claims",
-    "downstream_derived_claims",
-    "downstream_reference_bindings",
+    "calculated_claims",
+    "downstream_calculated_claims",
+    "downstream_canonical_references",
     "formula",
     "input_claim",
     "profile",
     "reference_pack",
     "reference_resolver",
-    "reference_bindings",
+    "canonical_references",
     "retrieval_query_context",
     "retrieval_query_policy",
 ]

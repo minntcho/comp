@@ -91,7 +91,7 @@ def run_raw_claim_conflict_resolution_scenario() -> DomainScenarioResult:
         profile_id=PROFILE_ID,
         dependency_fingerprints=tuple(
             evidence_ref_fingerprint(witness)
-            for witness in report.evidence_witnesses
+            for witness in report.evidence_refs
         ),
     )
     projection = None
@@ -115,17 +115,17 @@ def raw_claim_conflict_resolution_report() -> ValidationReport:
     return with_recomputed_status(
         ValidationReport(
             status="accepted",
-            evidence_witnesses=_evidence_witnesses(),
+            evidence_refs=_evidence_refs(),
             checked_claims=_checked_claims(),
-            resolved_obligations=_resolved_obligations(),
-            reference_bindings=_reference_bindings(),
-            derived_claims=_derived_claims(),
+            resolved_validation_requirements=_resolved_validation_requirements(),
+            canonical_references=_canonical_references(),
+            calculated_claims=_calculated_claims(),
             can_build_public_output=True,
         )
     )
 
 
-def _evidence_witnesses() -> tuple[EvidenceRef, ...]:
+def _evidence_refs() -> tuple[EvidenceRef, ...]:
     return (
         EvidenceRef(
             witness_id="w-email-electricity-march",
@@ -210,7 +210,7 @@ def _checked_claims() -> tuple[CheckedClaim, ...]:
     )
 
 
-def _resolved_obligations() -> tuple[ValidationRequirement, ...]:
+def _resolved_validation_requirements() -> tuple[ValidationRequirement, ...]:
     return (
         ValidationRequirement(
             kind="site_alias_resolved",
@@ -239,7 +239,7 @@ def _resolved_obligations() -> tuple[ValidationRequirement, ...]:
     )
 
 
-def _reference_bindings() -> tuple[CanonicalReference, ...]:
+def _canonical_references() -> tuple[CanonicalReference, ...]:
     return (
         CanonicalReference(
             binding_id=ALIAS_BINDING_ID,
@@ -279,7 +279,7 @@ def _reference_bindings() -> tuple[CanonicalReference, ...]:
     )
 
 
-def _derived_claims() -> tuple[CalculatedClaim, ...]:
+def _calculated_claims() -> tuple[CalculatedClaim, ...]:
     email_mwh = EMAIL_GWH * GWH_TO_MWH_FACTOR
     ems_mwh = EMS_GWH * GWH_TO_MWH_FACTOR
     return (
@@ -359,7 +359,7 @@ def _source_electricity_claim(
 
 def _projection_source(report: ValidationReport) -> dict[str, object]:
     values = {claim.field: claim.value for claim in report.checked_claims}
-    values.update({claim.field: claim.value for claim in report.derived_claims})
+    values.update({claim.field: claim.value for claim in report.calculated_claims})
     return values
 
 

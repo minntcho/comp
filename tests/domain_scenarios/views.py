@@ -30,13 +30,13 @@ def report_view(report) -> dict[str, Any]:
         "friendly_summary": validation_summary_view(report),
         "open_obligations": [
             _obligation_view(obligation)
-            for obligation in report.obligations
+            for obligation in report.validation_requirements
         ],
-        "resolved_obligations": [
+        "resolved_validation_requirements": [
             _obligation_view(obligation)
-            for obligation in report.resolved_obligations
+            for obligation in report.resolved_validation_requirements
         ],
-        "reference_candidates": [
+        "reference_options": [
             {
                 "candidate_id": candidate.candidate_id,
                 "reference_id": candidate.reference_id,
@@ -45,9 +45,9 @@ def report_view(report) -> dict[str, Any]:
                 "retrieval_score": candidate.retrieval_score,
                 "authority": candidate.authority,
             }
-            for candidate in report.reference_candidates
+            for candidate in report.reference_options
         ],
-        "reference_bindings": [
+        "canonical_references": [
             {
                 "binding_id": binding.binding_id,
                 "reference_id": binding.reference_id,
@@ -60,9 +60,9 @@ def report_view(report) -> dict[str, Any]:
                     for rejected in binding.rejected_candidates
                 ],
             }
-            for binding in report.reference_bindings
+            for binding in report.canonical_references
         ],
-        "derived_claims": [
+        "calculated_claims": [
             {
                 "claim_id": claim.claim_id,
                 "field": claim.field,
@@ -72,7 +72,7 @@ def report_view(report) -> dict[str, Any]:
                 "formula_id": claim.formula_id,
                 "reference_binding_ids": claim.trace.reference_binding_ids,
             }
-            for claim in report.derived_claims
+            for claim in report.calculated_claims
         ],
     }
 

@@ -15,7 +15,7 @@ def test_synthetic_run_harness_materializes_smoke_receipt_flow(tmp_path) -> None
 
     assert harness.run_dir.name == "synthetic_pcf.smoke.v1-seed-7"
     assert (harness.run_dir / "raw_sources" / "erp_electricity.csv").is_file()
-    assert (harness.run_dir / "oracle" / "expected_derived_claims.csv").is_file()
+    assert (harness.run_dir / "oracle" / "expected_calculated_claims.csv").is_file()
     assert (harness.run_dir / "oracle" / "expected_receipt.json").is_file()
     assert harness.oracle_checked is True
     assert harness.receipt_oracle_checked is True
@@ -105,15 +105,15 @@ def test_synthetic_run_harness_materializes_resolution_commit_flow(tmp_path) -> 
         harness.run_dir / "resolution_artifacts" / "unit_witnesses.csv"
     ).is_file()
     assert (
-        harness.run_dir / "oracle" / "expected_resolved_obligations.csv"
+        harness.run_dir / "oracle" / "expected_resolved_validation_requirements.csv"
     ).is_file()
     assert harness.oracle_checked is True
     assert harness.receipt_oracle_checked is True
     assert harness.report.status == "accepted"
-    assert harness.report.obligations == ()
+    assert harness.report.validation_requirements == ()
     assert harness.report.hazards == ()
     assert tuple(
-        obligation.obligation_id for obligation in harness.report.resolved_obligations
+        obligation.obligation_id for obligation in harness.report.resolved_validation_requirements
     ) == (
         "synthetic-obligation:missing_unit",
         "resolve:pcf.electricity_factor_multiplication.v1:"

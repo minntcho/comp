@@ -47,7 +47,7 @@ def resolve_reference_grounded_calculation(
         criteria=criteria,
         field=formula.output_field,
     )
-    binding = _binding_for(selected.reference_bindings, criteria.binding_id)
+    binding = _binding_for(selected.canonical_references, criteria.binding_id)
     if binding is None:
         return selected
 
@@ -64,7 +64,7 @@ def resolve_reference_grounded_calculation(
 def _has_reference_search_obligation(report: ValidationReport) -> bool:
     return any(
         obligation.kind == "reference_search_required"
-        for obligation in report.obligations
+        for obligation in report.validation_requirements
     )
 
 

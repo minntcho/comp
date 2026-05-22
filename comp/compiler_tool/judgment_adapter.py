@@ -25,7 +25,7 @@ def compile_report_to_facts(report: ValidationReport, subject: SubjectRef) -> se
             )
         )
 
-    for claim in report.derived_claims:
+    for claim in report.calculated_claims:
         facts.add(
             Fact(
                 tag="evidence",
@@ -48,7 +48,7 @@ def compile_report_to_facts(report: ValidationReport, subject: SubjectRef) -> se
             )
         )
 
-    for binding in report.reference_bindings:
+    for binding in report.canonical_references:
         facts.add(
             Fact(
                 tag="prov_edge",
@@ -124,10 +124,10 @@ def compile_report_to_facts(report: ValidationReport, subject: SubjectRef) -> se
             )
         )
 
-    for obligation in report.obligations:
+    for obligation in report.validation_requirements:
         facts.add(_obligation_fact("hazard_open", report.status, subject, obligation))
 
-    for obligation in report.resolved_obligations:
+    for obligation in report.resolved_validation_requirements:
         facts.add(
             _obligation_fact(
                 "hazard_discharge",

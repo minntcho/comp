@@ -78,11 +78,11 @@ def test_l_energy_pcf_governance_scenario_resolves_energy_factor_through_retriev
     assert "profile_active_retrieval_policy" in result.resolver_steps
     assert "reference_retrieval:embedding_stub:factor" in result.resolver_steps
     assert tuple(
-        obligation.kind for obligation in result.report.resolved_obligations
+        obligation.kind for obligation in result.report.resolved_validation_requirements
     ) == ("reference_search_required", "calculation_blocked")
 
     candidate_ids = tuple(
-        candidate.candidate_id for candidate in result.report.reference_candidates
+        candidate.candidate_id for candidate in result.report.reference_options
     )
     assert candidate_ids == (
         "embedding_stub:factor:idx-l-energy-supplier-electricity-mwh-2025",
@@ -93,16 +93,16 @@ def test_l_energy_pcf_governance_scenario_resolves_energy_factor_through_retriev
         "embedding_stub:factor:idx-l-energy-us-electricity-mwh-2025",
     )
     assert tuple(
-        candidate.reference_id for candidate in result.report.reference_candidates
+        candidate.reference_id for candidate in result.report.reference_options
     ) == EXPECTED_REFERENCE_CANDIDATE_IDS
     assert all(
         candidate.authority == "candidate_only"
-        for candidate in result.report.reference_candidates
+        for candidate in result.report.reference_options
     )
 
     electricity_binding = next(
         binding
-        for binding in result.report.reference_bindings
+        for binding in result.report.canonical_references
         if binding.binding_id == "bind:pcf:electricity_factor"
     )
     assert (
@@ -116,7 +116,7 @@ def test_l_energy_pcf_governance_scenario_resolves_energy_factor_through_retriev
 
     own_emission_claim = next(
         claim
-        for claim in result.report.derived_claims
+        for claim in result.report.calculated_claims
         if claim.claim_id == "l-energy:own_emission_tco2e"
     )
     assert own_emission_claim.origin == "calculated"
@@ -174,7 +174,7 @@ def test_l_energy_scenario_accepts_swappable_reference_pack():
 
     assert result.projection == EXPECTED_PROJECTION
     assert tuple(
-        candidate.reference_id for candidate in result.report.reference_candidates
+        candidate.reference_id for candidate in result.report.reference_options
     ) == ("platform.factor.electricity_mwh",)
 
 
@@ -184,7 +184,7 @@ def test_l_energy_pcf_governance_scenario_preserves_actor_receipt_trace():
     assert_scenario_contract(result, L_ENERGY_SCENARIO.contract)
     assert result.preparation.package.open_obligation_ids == ()
     assert result.preparation.package.hazard_ids == ()
-    assert tuple(claim.claim_id for claim in result.report.derived_claims) == (
+    assert tuple(claim.claim_id for claim in result.report.calculated_claims) == (
         EXPECTED_DERIVED_CLAIM_IDS
     )
     assert_receipt_trace(
@@ -201,7 +201,7 @@ def test_l_energy_pcf_governance_scenario_exports_targeted_viewer_payload():
     assert exported["scenario_id"] == "l_energy_pcf_governance.v1"
     assert exported["commit"]["governance_status"] == "commit"
     assert exported["projection"] == EXPECTED_PROJECTION
-    assert len(exported["report"]["derived_claims"]) == len(
+    assert len(exported["report"]["calculated_claims"]) == len(
         EXPECTED_DERIVED_CLAIM_IDS
     )
 

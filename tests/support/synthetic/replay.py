@@ -158,7 +158,7 @@ def _artifact_body_for_ref(
             "digest_alg": fingerprint.digest_alg,
         }
     if ref.artifact_kind == "reference_binding":
-        binding = _by_id(report.reference_bindings, ref.artifact_id, "binding_id")
+        binding = _by_id(report.canonical_references, ref.artifact_id, "binding_id")
         return {
             "binding_id": binding.binding_id,
             "claim_id": binding.claim_id,
@@ -179,7 +179,7 @@ def _artifact_body_for_ref(
             "authority": binding.authority,
         }
     if ref.artifact_kind == "derived_claim":
-        claim = _by_id(report.derived_claims, ref.artifact_id, "claim_id")
+        claim = _by_id(report.calculated_claims, ref.artifact_id, "claim_id")
         return {
             "claim_id": claim.claim_id,
             "field": claim.field,
@@ -221,14 +221,14 @@ def _checked_claim_by_source_id(report: ValidationReport, source_id: str):
 
 
 def _evidence_witness_by_id(report: ValidationReport, witness_id: str):
-    for witness in report.evidence_witnesses:
+    for witness in report.evidence_refs:
         if witness.witness_id == witness_id:
             return witness
     raise AssertionError(f"Synthetic evidence witness not found: {witness_id}.")
 
 
 def _trace_by_id(report: ValidationReport, trace_id: str):
-    for claim in report.derived_claims:
+    for claim in report.calculated_claims:
         if claim.trace.trace_id == trace_id:
             return claim.trace
     raise AssertionError(f"Synthetic calculation trace not found: {trace_id}.")

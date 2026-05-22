@@ -94,7 +94,7 @@ def test_blocked_calculation_report_obligation_carries_requirement_payload():
         formula=_formula(),
     )
 
-    assert report.obligations[0].calculation_requirement == result.requirement
+    assert report.validation_requirements[0].calculation_requirement == result.requirement
 
 
 def test_calculation_requirement_metadata_is_visible_to_judgment_facts():

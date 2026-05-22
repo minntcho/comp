@@ -108,12 +108,12 @@ class CompilerTool:
         return with_recomputed_status(
             ValidationReport(
                 status="accepted",
-                evidence_witnesses=tuple(hypothesis.witnesses),
+                evidence_refs=tuple(hypothesis.witnesses),
                 checked_claims=tuple(checked),
                 failed_claims=tuple(failed),
                 unknowns=tuple(unknowns),
                 unchecked_areas=tuple(unchecked),
-                obligations=tuple(obligations),
+                validation_requirements=tuple(obligations),
                 hazards=tuple(hazards),
                 can_build_public_output=False,
             )

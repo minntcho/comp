@@ -50,13 +50,13 @@ def test_oracle_assertions_can_load_written_oracle_files(tmp_path) -> None:
     assert_synthetic_oracle_matches_report(oracle, adapter.anomaly_report())
 
 
-def test_oracle_assertions_fail_when_expected_obligation_is_missing() -> None:
+def test_oracle_assertions_fail_when_expected_validation_requirement_is_missing() -> None:
     run = generate_synthetic_pcf_run(SyntheticScenarioConfig.pcf_anomaly(seed=11))
     adapter = SyntheticPcfAdapter(run.input_bundle)
     report = adapter.anomaly_report()
-    report_without_site_alias = replace(report, obligations=report.obligations[:-1])
+    report_without_site_alias = replace(report, validation_requirements=report.validation_requirements[:-1])
 
-    with pytest.raises(AssertionError, match="expected obligations"):
+    with pytest.raises(AssertionError, match="expected validation requirements"):
         assert_synthetic_oracle_matches_report(
             run.oracle,
             report_without_site_alias,

@@ -25,7 +25,7 @@ def test_compile_report_to_facts_maps_reference_binding_as_provenance_edge():
         source_witness_ids=("span-amount", "ref-factor-row-17"),
         rejected_candidates=(rejected,),
     )
-    report = ValidationReport(status="accepted", reference_bindings=(binding,))
+    report = ValidationReport(status="accepted", canonical_references=(binding,))
 
     facts = compile_report_to_facts(report, subject)
 

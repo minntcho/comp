@@ -91,23 +91,23 @@ def test_reference_search_resolution_adds_candidates_and_resolves_followup():
 
     assert resolved.status == "blocked"
     assert resolved.can_build_public_output is False
-    assert [candidate.reference_id for candidate in resolved.reference_candidates] == [
+    assert [candidate.reference_id for candidate in resolved.reference_options] == [
         "factor.kr_grid.2024.location_based"
     ]
-    assert resolved.reference_candidates[0].authority == "candidate_only"
-    assert resolved.reference_candidates[0].source == "tiny-fixture"
-    assert resolved.reference_candidates[0].witness_ids == ("ref-factor-row-17",)
-    assert [obligation.kind for obligation in resolved.obligations] == [
+    assert resolved.reference_options[0].authority == "candidate_only"
+    assert resolved.reference_options[0].source == "tiny-fixture"
+    assert resolved.reference_options[0].witness_ids == ("ref-factor-row-17",)
+    assert [obligation.kind for obligation in resolved.validation_requirements] == [
         "calculation_blocked"
     ]
-    assert [obligation.kind for obligation in resolved.resolved_obligations] == [
+    assert [obligation.kind for obligation in resolved.resolved_validation_requirements] == [
         "reference_search_required"
     ]
 
 
 def test_reference_search_resolution_recomputes_status_after_resolving_only_blocker():
-    obligation = _planned_unknown_reference_report().obligations[1]
-    report = ValidationReport(status="blocked", obligations=(obligation,))
+    obligation = _planned_unknown_reference_report().validation_requirements[1]
+    report = ValidationReport(status="blocked", validation_requirements=(obligation,))
 
     resolved = resolve_reference_search_obligations(
         report,
@@ -116,7 +116,7 @@ def test_reference_search_resolution_recomputes_status_after_resolving_only_bloc
         reference_type="emission_factor",
     )
 
-    assert resolved.obligations == ()
+    assert resolved.validation_requirements == ()
     assert resolved.status == "accepted"
 
 
@@ -162,6 +162,6 @@ def test_reference_search_resolution_is_idempotent():
         reference_type="emission_factor",
     )
 
-    assert twice.reference_candidates == once.reference_candidates
-    assert twice.resolved_obligations == once.resolved_obligations
-    assert twice.obligations == once.obligations
+    assert twice.reference_options == once.reference_options
+    assert twice.resolved_validation_requirements == once.resolved_validation_requirements
+    assert twice.validation_requirements == once.validation_requirements

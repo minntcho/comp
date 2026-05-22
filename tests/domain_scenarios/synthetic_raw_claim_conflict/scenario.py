@@ -95,7 +95,7 @@ def raw_conflict_hypothesis() -> InterpretationHypothesis:
                 origin="parser_candidate",
             ),
         ),
-        witnesses=_evidence_witnesses()[:2],
+        witnesses=_evidence_refs()[:2],
     )
 
 
@@ -109,7 +109,7 @@ def run_raw_claim_conflict_scenario() -> DomainScenarioResult:
         profile_id=PROFILE_ID,
         dependency_fingerprints=tuple(
             evidence_ref_fingerprint(witness)
-            for witness in report.evidence_witnesses
+            for witness in report.evidence_refs
         ),
     )
     return build_domain_scenario_result(
@@ -126,20 +126,20 @@ def raw_claim_conflict_report() -> ValidationReport:
     return with_recomputed_status(
         ValidationReport(
             status="accepted",
-            evidence_witnesses=_evidence_witnesses(),
+            evidence_refs=_evidence_refs(),
             checked_claims=_checked_claims(),
             failed_claims=_failed_claims(),
-            resolved_obligations=_resolved_obligations(),
-            obligations=_open_obligations(),
+            resolved_validation_requirements=_resolved_validation_requirements(),
+            validation_requirements=_open_obligations(),
             hazards=_hazards(),
-            reference_bindings=_reference_bindings(),
-            derived_claims=_derived_claims(),
+            canonical_references=_canonical_references(),
+            calculated_claims=_calculated_claims(),
             can_build_public_output=False,
         )
     )
 
 
-def _evidence_witnesses() -> tuple[EvidenceRef, ...]:
+def _evidence_refs() -> tuple[EvidenceRef, ...]:
     return (
         EvidenceRef(
             witness_id="w-email-electricity-march",
@@ -223,7 +223,7 @@ def _failed_claims() -> tuple[FailedClaim, ...]:
     )
 
 
-def _resolved_obligations() -> tuple[ValidationRequirement, ...]:
+def _resolved_validation_requirements() -> tuple[ValidationRequirement, ...]:
     return (
         ValidationRequirement(
             kind="site_alias_resolved",
@@ -267,7 +267,7 @@ def _hazards() -> tuple[Hazard, ...]:
     )
 
 
-def _reference_bindings() -> tuple[CanonicalReference, ...]:
+def _canonical_references() -> tuple[CanonicalReference, ...]:
     return (
         CanonicalReference(
             binding_id=ALIAS_BINDING_ID,
@@ -296,7 +296,7 @@ def _reference_bindings() -> tuple[CanonicalReference, ...]:
     )
 
 
-def _derived_claims() -> tuple[CalculatedClaim, ...]:
+def _calculated_claims() -> tuple[CalculatedClaim, ...]:
     email_mwh = EMAIL_GWH * GWH_TO_MWH_FACTOR
     ems_mwh = EMS_GWH * GWH_TO_MWH_FACTOR
     return (

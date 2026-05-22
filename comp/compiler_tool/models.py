@@ -137,15 +137,15 @@ class Hazard:
 @dataclass(frozen=True)
 class ValidationReport:
     status: CompileStatus
-    evidence_witnesses: tuple[EvidenceRef, ...] = field(default_factory=tuple)
+    evidence_refs: tuple[EvidenceRef, ...] = field(default_factory=tuple)
     checked_claims: tuple[CheckedClaim, ...] = field(default_factory=tuple)
     failed_claims: tuple[FailedClaim, ...] = field(default_factory=tuple)
     unknowns: tuple[UnknownClaim, ...] = field(default_factory=tuple)
     unchecked_areas: tuple[UncheckedArea, ...] = field(default_factory=tuple)
-    obligations: tuple[ValidationRequirement, ...] = field(default_factory=tuple)
-    resolved_obligations: tuple[ValidationRequirement, ...] = field(default_factory=tuple)
+    validation_requirements: tuple[ValidationRequirement, ...] = field(default_factory=tuple)
+    resolved_validation_requirements: tuple[ValidationRequirement, ...] = field(default_factory=tuple)
     hazards: tuple[Hazard, ...] = field(default_factory=tuple)
-    reference_candidates: tuple[ReferenceOption, ...] = field(default_factory=tuple)
-    reference_bindings: tuple[CanonicalReference, ...] = field(default_factory=tuple)
-    derived_claims: tuple[CalculatedClaim, ...] = field(default_factory=tuple)
+    reference_options: tuple[ReferenceOption, ...] = field(default_factory=tuple)
+    canonical_references: tuple[CanonicalReference, ...] = field(default_factory=tuple)
+    calculated_claims: tuple[CalculatedClaim, ...] = field(default_factory=tuple)
     can_build_public_output: bool = False

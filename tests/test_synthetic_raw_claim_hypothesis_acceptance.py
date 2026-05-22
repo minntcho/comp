@@ -43,7 +43,7 @@ def test_raw_claim_acceptance_promotes_only_canonical_checked_claims():
         ("total_line_mass_ton", 100000, "physical_allocation_support"),
     }
     assert result.report.failed_claims == ()
-    assert result.report.obligations == ()
+    assert result.report.validation_requirements == ()
     assert result.report.hazards == ()
 
 
@@ -52,7 +52,7 @@ def test_raw_claim_acceptance_binds_alias_unit_and_allocation_support():
 
     assert tuple(
         (binding.binding_id, binding.reference_id, binding.reference_type)
-        for binding in result.report.reference_bindings
+        for binding in result.report.canonical_references
     ) == (
         (
             ALIAS_BINDING_ID,
@@ -70,7 +70,7 @@ def test_raw_claim_acceptance_binds_alias_unit_and_allocation_support():
             "physical_allocation_support",
         ),
     )
-    assert tuple(item.kind for item in result.report.resolved_obligations) == (
+    assert tuple(item.kind for item in result.report.resolved_validation_requirements) == (
         "site_alias_resolved",
         "unit_conversion_policy_applied",
         "period_validated",
@@ -89,7 +89,7 @@ def test_raw_claim_acceptance_calculates_canonical_values():
 
     assert tuple(
         (claim.claim_id, claim.field, claim.value, claim.unit)
-        for claim in result.report.derived_claims
+        for claim in result.report.calculated_claims
     ) == (
         (ELECTRICITY_MWH_CLAIM_ID, "electricity_mwh", 6400, "MWh"),
         (ALLOCATION_SHARE_CLAIM_ID, "allocation_share", 0.5, None),
@@ -126,7 +126,7 @@ def test_raw_claim_acceptance_creates_receipt_and_projection():
     assert result.projection == EXPECTED_PROJECTION
     assert result.preparation.receipt.citations.dependency_fingerprints == tuple(
         evidence_ref_fingerprint(witness)
-        for witness in result.report.evidence_witnesses
+        for witness in result.report.evidence_refs
     )
 
     with pytest.raises(PublicOutputBlocked, match="value commitment mismatch"):
@@ -153,7 +153,7 @@ def test_raw_claim_acceptance_scenario_is_registered_with_contract():
 
 
 def _trace_step_value(result, claim_id, step_id):
-    for claim in result.report.derived_claims:
+    for claim in result.report.calculated_claims:
         if claim.claim_id == claim_id:
             for step in claim.trace.steps:
                 if step.step_id == step_id:

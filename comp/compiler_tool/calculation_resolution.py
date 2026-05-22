@@ -9,20 +9,20 @@ from comp.compiler_tool.models import ValidationReport, ValidationRequirement
 def plan_calculation_resolution(report: ValidationReport) -> ValidationReport:
     follow_ups = tuple(
         follow_up
-        for obligation in report.obligations
+        for obligation in report.validation_requirements
         for follow_up in _follow_up_obligations(obligation)
     )
     if not follow_ups:
         return report
 
-    obligations = report.obligations
+    obligations = report.validation_requirements
     for follow_up in follow_ups:
         if follow_up not in obligations:
             obligations = (*obligations, follow_up)
 
     return replace(
         report,
-        obligations=obligations,
+        validation_requirements=obligations,
         can_build_public_output=False,
     )
 

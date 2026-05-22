@@ -22,7 +22,7 @@ def apply_calculation_result(
         return with_recomputed_status(
             replace(
                 report,
-                derived_claims=(*report.derived_claims, result.derived_claim),
+                calculated_claims=(*report.calculated_claims, result.derived_claim),
                 can_build_public_output=False,
             )
         )
@@ -47,7 +47,7 @@ def apply_calculation_result(
     return with_recomputed_status(
         replace(
             report,
-            obligations=_append_unique(report.obligations, obligation),
+            validation_requirements=_append_unique(report.validation_requirements, obligation),
             can_build_public_output=False,
         )
     )

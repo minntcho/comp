@@ -48,7 +48,7 @@ _REASON_MESSAGE_KEYS = {
     "missing_source_witness": "missing_evidence",
     "missing_evidence": "missing_evidence",
     "ambiguous_reference": "ambiguous_reference",
-    "multiple_reference_candidates": "ambiguous_reference",
+    "multiple_reference_options": "ambiguous_reference",
     "unsupported_unit": "unsupported_unit",
     "public_output_receipt_required": "public_output_receipt_required",
     "public_output_requires_receipt": "public_output_receipt_required",

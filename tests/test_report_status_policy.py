@@ -32,7 +32,7 @@ from comp.compiler_tool import (
         (
             ValidationReport(
                 status="accepted",
-                obligations=(
+                validation_requirements=(
                     ValidationRequirement(
                         kind="calculation_blocked",
                         field="co2e_emission",
@@ -52,7 +52,7 @@ from comp.compiler_tool import (
         (
             ValidationReport(
                 status="accepted",
-                obligations=(
+                validation_requirements=(
                     ValidationRequirement(
                         kind="semantic_judgment_required",
                         field="scope2_method",
@@ -81,7 +81,7 @@ from comp.compiler_tool import (
         (
             ValidationReport(
                 status="accepted",
-                obligations=(
+                validation_requirements=(
                     ValidationRequirement(
                         kind="reference_selection_required",
                         field="co2e_emission",
@@ -94,7 +94,7 @@ from comp.compiler_tool import (
         (
             ValidationReport(
                 status="review_required",
-                obligations=(
+                validation_requirements=(
                     ValidationRequirement(
                         kind="nonblocking_hint",
                         field="co2e_emission",

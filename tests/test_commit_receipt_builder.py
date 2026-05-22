@@ -183,7 +183,7 @@ def test_commit_receipt_builder_commits_checked_and_derived_projection_values():
                 origin="source_text",
             ),
         ),
-        derived_claims=(
+        calculated_claims=(
             CalculatedClaim(
                 claim_id="hyp-1:co2e_emission",
                 field="co2e_emission",

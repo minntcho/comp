@@ -36,7 +36,7 @@ def test_final_bottom_up_rollup_calculates_total_and_intensities():
     )
     assert tuple(
         (claim.field, claim.value, claim.unit)
-        for claim in result.report.derived_claims
+        for claim in result.report.calculated_claims
     ) == (
         ("l_energy_total_emission_tco2e", 199994, "tCO2e"),
         ("kg_co2e_per_pack", 1999.94, "kgCO2e/pack"),
@@ -49,7 +49,7 @@ def test_final_bottom_up_rollup_binds_all_child_receipts():
 
     assert tuple(
         (binding.binding_id, binding.reference_id, binding.reference_type)
-        for binding in result.report.reference_bindings
+        for binding in result.report.canonical_references
     ) == (
         (
             TIER0_CHILD_BINDING_ID,
@@ -84,12 +84,12 @@ def test_final_bottom_up_rollup_binds_all_child_receipts():
 def test_final_bottom_up_rollup_requires_authorized_child_paths():
     result = run_final_bottom_up_rollup_scenario()
 
-    assert tuple(item.kind for item in result.report.resolved_obligations) == (
+    assert tuple(item.kind for item in result.report.resolved_validation_requirements) == (
         "child_claims_accepted_or_proxy_authorized",
         "rollup_snapshot_created",
     )
     assert result.report.status == "accepted"
-    assert result.report.obligations == ()
+    assert result.report.validation_requirements == ()
     assert result.report.hazards == ()
     assert {
         (claim.field, claim.value)
@@ -138,7 +138,7 @@ def test_final_bottom_up_rollup_scenario_is_registered_with_contract():
 
 
 def _trace_step_value(result, claim_id, step_id):
-    for claim in result.report.derived_claims:
+    for claim in result.report.calculated_claims:
         if claim.claim_id == claim_id:
             for step in claim.trace.steps:
                 if step.step_id == step_id:

@@ -57,7 +57,7 @@ def _resolver() -> EmbeddingResolverStub:
 
 def test_reference_query_from_resolver_task_preserves_task_identity():
     task = resolver_tasks_from_report(
-        ValidationReport(status="blocked", obligations=(_reference_search_obligation(),))
+        ValidationReport(status="blocked", validation_requirements=(_reference_search_obligation(),))
     )[0]
 
     query = reference_query_from_resolver_task(
@@ -87,7 +87,7 @@ def test_reference_query_from_resolver_task_rejects_non_reference_search_task():
     task = resolver_tasks_from_report(
         ValidationReport(
             status="review_required",
-            obligations=(
+            validation_requirements=(
                 ValidationRequirement(
                     kind="find_source_witness",
                     field="unit",
@@ -108,7 +108,7 @@ def test_reference_query_from_resolver_task_rejects_non_reference_search_task():
 def test_reference_query_builder_from_tasks_feeds_retrieval_bridge():
     report = ValidationReport(
         status="blocked",
-        obligations=(_reference_search_obligation(),),
+        validation_requirements=(_reference_search_obligation(),),
     )
     tasks = resolver_tasks_from_report(report)
 
@@ -127,20 +127,20 @@ def test_reference_query_builder_from_tasks_feeds_retrieval_bridge():
         ),
     )
 
-    assert [candidate.reference_id for candidate in resolved.reference_candidates] == [
+    assert [candidate.reference_id for candidate in resolved.reference_options] == [
         "factor.kr_grid.2024.location_based"
     ]
-    assert resolved.reference_candidates[0].authority == "candidate_only"
-    assert resolved.obligations == ()
-    assert resolved.resolved_obligations == (_reference_search_obligation(),)
-    assert resolved.reference_bindings == ()
-    assert resolved.derived_claims == ()
+    assert resolved.reference_options[0].authority == "candidate_only"
+    assert resolved.validation_requirements == ()
+    assert resolved.resolved_validation_requirements == (_reference_search_obligation(),)
+    assert resolved.canonical_references == ()
+    assert resolved.calculated_claims == ()
 
 
 def test_reference_retrieval_resolution_recomputes_status_after_resolving_only_blocker():
     report = ValidationReport(
         status="blocked",
-        obligations=(_reference_search_obligation(),),
+        validation_requirements=(_reference_search_obligation(),),
     )
 
     resolved = resolve_reference_retrieval_obligations(
@@ -158,14 +158,14 @@ def test_reference_retrieval_resolution_recomputes_status_after_resolving_only_b
         ),
     )
 
-    assert resolved.obligations == ()
+    assert resolved.validation_requirements == ()
     assert resolved.status == "accepted"
 
 
 def test_reference_query_builder_from_tasks_leaves_missing_query_open():
     report = ValidationReport(
         status="blocked",
-        obligations=(_reference_search_obligation(),),
+        validation_requirements=(_reference_search_obligation(),),
     )
 
     resolved = resolve_reference_retrieval_obligations(
@@ -184,7 +184,7 @@ def test_reference_query_builder_from_tasks_leaves_missing_query_open():
 
 def test_retrieval_query_policy_renders_reference_query_from_task_payload_and_context():
     task = resolver_tasks_from_report(
-        ValidationReport(status="blocked", obligations=(_reference_search_obligation(),))
+        ValidationReport(status="blocked", validation_requirements=(_reference_search_obligation(),))
     )[0]
     policy = RetrievalQueryPolicy(
         policy_id="pcf-retrieval-policy-v1",
@@ -224,7 +224,7 @@ def test_retrieval_query_policy_renders_reference_query_from_task_payload_and_co
 def test_retrieval_query_policy_leaves_obligation_open_without_matching_rule():
     report = ValidationReport(
         status="blocked",
-        obligations=(_reference_search_obligation(),),
+        validation_requirements=(_reference_search_obligation(),),
     )
     policy = RetrievalQueryPolicy(
         policy_id="pcf-retrieval-policy-v1",
@@ -255,7 +255,7 @@ def test_retrieval_query_policy_leaves_obligation_open_without_matching_rule():
 def test_retrieval_query_policy_leaves_obligation_open_without_required_context():
     report = ValidationReport(
         status="blocked",
-        obligations=(_reference_search_obligation(),),
+        validation_requirements=(_reference_search_obligation(),),
     )
     policy = RetrievalQueryPolicy(
         policy_id="pcf-retrieval-policy-v1",
@@ -286,7 +286,7 @@ def test_retrieval_query_policy_leaves_obligation_open_without_required_context(
 def test_profile_pinned_retrieval_policy_feeds_query_builder():
     report = ValidationReport(
         status="blocked",
-        obligations=(_reference_search_obligation(),),
+        validation_requirements=(_reference_search_obligation(),),
     )
     profile = CompilerProfile(
         profile_id="fixture-profile",
@@ -330,7 +330,7 @@ def test_profile_pinned_retrieval_policy_feeds_query_builder():
         ),
     )
 
-    assert [candidate.reference_id for candidate in resolved.reference_candidates] == [
+    assert [candidate.reference_id for candidate in resolved.reference_options] == [
         "factor.kr_grid.2024.location_based"
     ]
 
@@ -338,7 +338,7 @@ def test_profile_pinned_retrieval_policy_feeds_query_builder():
 def test_profile_retrieval_query_builder_rejects_inactive_policy_id():
     report = ValidationReport(
         status="blocked",
-        obligations=(_reference_search_obligation(),),
+        validation_requirements=(_reference_search_obligation(),),
     )
     profile = CompilerProfile(
         profile_id="fixture-profile",

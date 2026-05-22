@@ -677,11 +677,16 @@ def test_friendly_authority_vocabulary_names_rename_path_without_moving_authorit
     assert "The first helper lives in `comp.user_messages`" in vocabulary
     assert "user_message_for_reason(\"unsupported_unit\")" in vocabulary
     assert "## 6. Residual Field Vocabulary Audit" in vocabulary
-    assert "Safe active field rename candidates" in vocabulary
-    assert "`ValidationReport.evidence_witnesses` -> `ValidationReport.evidence_refs`" in vocabulary
-    assert "`ValidationReport.reference_candidates` -> `ValidationReport.reference_options`" in vocabulary
-    assert "`ValidationReport.reference_bindings` -> `ValidationReport.canonical_references`" in vocabulary
-    assert "`ValidationReport.derived_claims` -> `ValidationReport.calculated_claims`" in vocabulary
+    assert "active `ValidationReport` field names are" in vocabulary
+    assert "complete. Active Python-facing report fields" in vocabulary
+    assert "`ValidationReport.evidence_refs` | Grounding references" in vocabulary
+    assert "`ValidationReport.reference_options` | Candidate-only" in vocabulary
+    assert "`ValidationReport.canonical_references` | Deterministically" in vocabulary
+    assert "`ValidationReport.calculated_claims` | Calculated values" in vocabulary
+    assert "`ValidationReport.validation_requirements` | Open work" in vocabulary
+    assert "`ValidationReport.resolved_validation_requirements` | Completed" in vocabulary
+    assert "Do not add compatibility" in vocabulary
+    assert "aliases for the previous field names" in vocabulary
     assert "Codec-bound receipt and replay vocabulary" in vocabulary
     assert "`PublicOutputReceipt.projection_id`" in vocabulary
     assert "`DependencyFingerprint.dependency_kind=\"evidence_witness\"`" in vocabulary

@@ -125,19 +125,19 @@ def test_reference_grounded_calculation_flow_searches_binds_and_retries():
     )
 
     assert resolved.status == "accepted"
-    assert resolved.obligations == ()
-    assert [item.kind for item in resolved.resolved_obligations] == [
+    assert resolved.validation_requirements == ()
+    assert [item.kind for item in resolved.resolved_validation_requirements] == [
         "reference_search_required",
         "calculation_blocked",
     ]
-    assert [candidate.reference_id for candidate in resolved.reference_candidates] == [
+    assert [candidate.reference_id for candidate in resolved.reference_options] == [
         "factor.kr_grid.2024.location_based"
     ]
-    assert [binding.reference_id for binding in resolved.reference_bindings] == [
+    assert [binding.reference_id for binding in resolved.canonical_references] == [
         "factor.kr_grid.2024.location_based"
     ]
-    assert len(resolved.derived_claims) == 1
-    assert resolved.derived_claims[0].value == 0.48
+    assert len(resolved.calculated_claims) == 1
+    assert resolved.calculated_claims[0].value == 0.48
     assert resolved.can_build_public_output is False
 
 
@@ -153,10 +153,10 @@ def test_reference_grounded_calculation_flow_stops_when_search_has_no_candidates
     )
 
     assert resolved.status == "blocked"
-    assert resolved.reference_candidates == ()
-    assert resolved.reference_bindings == ()
-    assert resolved.derived_claims == ()
-    assert [item.kind for item in resolved.obligations] == [
+    assert resolved.reference_options == ()
+    assert resolved.canonical_references == ()
+    assert resolved.calculated_claims == ()
+    assert [item.kind for item in resolved.validation_requirements] == [
         "calculation_blocked",
         "reference_search_required",
     ]
@@ -174,10 +174,10 @@ def test_reference_grounded_calculation_flow_exposes_ambiguous_selection():
     )
 
     assert resolved.status == "blocked"
-    assert resolved.reference_bindings == ()
-    assert resolved.derived_claims == ()
-    assert [item.kind for item in resolved.obligations] == [
+    assert resolved.canonical_references == ()
+    assert resolved.calculated_claims == ()
+    assert [item.kind for item in resolved.validation_requirements] == [
         "calculation_blocked",
         "reference_selection_required",
     ]
-    assert resolved.obligations[1].reason == "ambiguous"
+    assert resolved.validation_requirements[1].reason == "ambiguous"

@@ -78,7 +78,7 @@ def _blocked_unknown_reference_report():
 
 def test_retry_blocked_calculation_resolves_old_obligation_and_adds_derived_claim():
     report = _blocked_unknown_reference_report()
-    old_obligation = report.obligations[0]
+    old_obligation = report.validation_requirements[0]
 
     updated = retry_blocked_calculation(
         report,
@@ -90,10 +90,10 @@ def test_retry_blocked_calculation_resolves_old_obligation_and_adds_derived_clai
     )
 
     assert updated.status == "accepted"
-    assert updated.obligations == ()
-    assert updated.resolved_obligations == (old_obligation,)
-    assert len(updated.derived_claims) == 1
-    derived = updated.derived_claims[0]
+    assert updated.validation_requirements == ()
+    assert updated.resolved_validation_requirements == (old_obligation,)
+    assert len(updated.calculated_claims) == 1
+    derived = updated.calculated_claims[0]
     assert derived.claim_id == "hyp-1:co2e_emission"
     assert derived.value == 0.48
     assert derived.unit == "tCO2e"
@@ -121,9 +121,9 @@ def test_retry_blocked_calculation_is_idempotent_after_success():
         output_claim_id="hyp-1:co2e_emission",
     )
 
-    assert twice.derived_claims == once.derived_claims
-    assert twice.resolved_obligations == once.resolved_obligations
-    assert twice.obligations == once.obligations
+    assert twice.calculated_claims == once.calculated_claims
+    assert twice.resolved_validation_requirements == once.resolved_validation_requirements
+    assert twice.validation_requirements == once.validation_requirements
 
 
 def test_retry_blocked_calculation_keeps_obligation_open_when_still_blocked():
@@ -138,6 +138,6 @@ def test_retry_blocked_calculation_keeps_obligation_open_when_still_blocked():
         output_claim_id="hyp-1:co2e_emission",
     )
 
-    assert updated.derived_claims == ()
-    assert updated.resolved_obligations == ()
-    assert updated.obligations == report.obligations
+    assert updated.calculated_claims == ()
+    assert updated.resolved_validation_requirements == ()
+    assert updated.validation_requirements == report.validation_requirements

@@ -30,7 +30,7 @@ def apply_semantic_judgments(
     newly_resolved: list[ValidationRequirement] = []
     hazards = list(report.hazards)
 
-    for obligation in report.obligations:
+    for obligation in report.validation_requirements:
         if obligation.kind != "semantic_judgment_required":
             open_obligations.append(obligation)
             continue
@@ -71,20 +71,20 @@ def apply_semantic_judgments(
     return with_recomputed_status(
         ValidationReport(
             status=report.status,
-            evidence_witnesses=report.evidence_witnesses,
+            evidence_refs=report.evidence_refs,
             checked_claims=report.checked_claims,
             failed_claims=report.failed_claims,
             unknowns=report.unknowns,
             unchecked_areas=report.unchecked_areas,
-            obligations=tuple(open_obligations),
-            resolved_obligations=(
-                *report.resolved_obligations,
+            validation_requirements=tuple(open_obligations),
+            resolved_validation_requirements=(
+                *report.resolved_validation_requirements,
                 *tuple(newly_resolved),
             ),
             hazards=tuple(hazards),
-            reference_candidates=report.reference_candidates,
-            reference_bindings=report.reference_bindings,
-            derived_claims=report.derived_claims,
+            reference_options=report.reference_options,
+            canonical_references=report.canonical_references,
+            calculated_claims=report.calculated_claims,
             can_build_public_output=report.can_build_public_output,
         )
     )

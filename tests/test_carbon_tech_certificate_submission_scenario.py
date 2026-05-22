@@ -27,7 +27,7 @@ def test_carbon_certificate_calculates_emission_from_certificate_factor():
     }
     assert tuple(
         (claim.field, claim.value, claim.unit)
-        for claim in result.report.derived_claims
+        for claim in result.report.calculated_claims
     ) == (("carbon_tech_final_emission_tco2e", 13390, "tCO2e"),)
 
 
@@ -36,7 +36,7 @@ def test_carbon_certificate_binds_certificate_factor_and_metadata():
 
     assert tuple(
         (binding.binding_id, binding.reference_id, binding.reference_type)
-        for binding in result.report.reference_bindings
+        for binding in result.report.canonical_references
     ) == (
         (
             CERTIFICATE_FACTOR_BINDING_ID,
@@ -64,11 +64,11 @@ def test_carbon_certificate_boundary_is_resolved_without_activity_inputs():
     result = run_carbon_tech_certificate_submission_scenario()
 
     assert result.report.status == "accepted"
-    assert result.report.obligations == ()
+    assert result.report.validation_requirements == ()
     assert result.report.hazards == ()
     assert tuple(
         (obligation.kind, obligation.field, obligation.reason)
-        for obligation in result.report.resolved_obligations
+        for obligation in result.report.resolved_validation_requirements
     ) == (
         (
             "certificate_boundary_supported",
@@ -87,7 +87,7 @@ def test_carbon_certificate_boundary_is_resolved_without_activity_inputs():
         claim.field for claim in result.report.checked_claims
     )
     assert tuple(
-        binding.reference_type for binding in result.report.reference_bindings
+        binding.reference_type for binding in result.report.canonical_references
     ) == ("certificate_factor",)
 
 
@@ -123,7 +123,7 @@ def test_carbon_certificate_scenario_is_registered_with_contract():
 
 
 def _trace_for(result, claim_id):
-    for claim in result.report.derived_claims:
+    for claim in result.report.calculated_claims:
         if claim.claim_id == claim_id:
             return claim.trace
     raise AssertionError(f"missing derived claim: {claim_id}")

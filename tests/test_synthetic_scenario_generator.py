@@ -53,7 +53,7 @@ def test_synthetic_expected_receipt_oracle_lives_outside_generator_module() -> N
 
     config = SyntheticScenarioConfig.pcf_smoke(seed=7)
     run = generate_synthetic_pcf_run(config)
-    derived_value = run.oracle.expected_derived_claims[0].value
+    derived_value = run.oracle.expected_calculated_claims[0].value
 
     assert expected_smoke_receipt.__module__ == "comp.scenarios.synthetic.oracle"
     assert build_synthetic_pcf_smoke_run.__globals__["expected_smoke_receipt"] is (
@@ -179,7 +179,7 @@ def test_synthetic_pcf_fixtures_live_outside_run_builders_module() -> None:
     )
     assert run.master == pcf_master(config)
     assert run.master.reference_catalog == (pcf_reference_record(config),)
-    assert run.oracle.expected_derived_claims[0].value == calculate_co2e_value(
+    assert run.oracle.expected_calculated_claims[0].value == calculate_co2e_value(
         raw_row.amount,
         config.factor_value,
     )
@@ -237,11 +237,11 @@ def test_synthetic_pcf_generator_writes_oracle_not_truth(tmp_path: Path) -> None
     assert (run_dir / "master" / "reference_catalog.csv").is_file()
     assert (run_dir / "raw_sources" / "erp_electricity.csv").is_file()
     assert (run_dir / "oracle" / "expected_claims.csv").is_file()
-    assert (run_dir / "oracle" / "expected_derived_claims.csv").is_file()
+    assert (run_dir / "oracle" / "expected_calculated_claims.csv").is_file()
     assert (run_dir / "oracle" / "source_to_expected_claim_map.csv").is_file()
     assert not (run_dir / "truth").exists()
 
-    with (run_dir / "oracle" / "expected_derived_claims.csv").open(
+    with (run_dir / "oracle" / "expected_calculated_claims.csv").open(
         encoding="utf-8",
         newline="",
     ) as handle:
@@ -280,14 +280,16 @@ def test_synthetic_pcf_anomaly_generator_writes_pressure_oracle(
     assert (run_dir / "raw_sources" / "erp_electricity.csv").is_file()
     assert (run_dir / "oracle" / "injected_anomalies.csv").is_file()
     assert (run_dir / "oracle" / "expected_failed_claims.csv").is_file()
-    assert (run_dir / "oracle" / "expected_obligations.csv").is_file()
+    assert (run_dir / "oracle" / "expected_validation_requirements.csv").is_file()
     assert (run_dir / "oracle" / "expected_hazards.csv").is_file()
     assert not (run_dir / "truth").exists()
 
     raw_rows = _read_csv(run_dir / "raw_sources" / "erp_electricity.csv")
     injected = _read_csv(run_dir / "oracle" / "injected_anomalies.csv")
     failed = _read_csv(run_dir / "oracle" / "expected_failed_claims.csv")
-    obligations = _read_csv(run_dir / "oracle" / "expected_obligations.csv")
+    obligations = _read_csv(
+        run_dir / "oracle" / "expected_validation_requirements.csv"
+    )
     hazards = _read_csv(run_dir / "oracle" / "expected_hazards.csv")
 
     assert [row["source_row_id"] for row in raw_rows] == [
@@ -348,7 +350,7 @@ def test_synthetic_pcf_resolution_generator_writes_recovery_contract(
     }
     assert (run_dir / "resolution_artifacts" / "unit_witnesses.csv").is_file()
     assert (run_dir / "oracle" / "expected_resolution_artifacts.csv").is_file()
-    assert (run_dir / "oracle" / "expected_resolved_obligations.csv").is_file()
+    assert (run_dir / "oracle" / "expected_resolved_validation_requirements.csv").is_file()
     assert (run_dir / "oracle" / "expected_receipt.json").is_file()
     assert not (run_dir / "truth").exists()
 
@@ -357,7 +359,7 @@ def test_synthetic_pcf_resolution_generator_writes_recovery_contract(
         run_dir / "resolution_artifacts" / "unit_witnesses.csv"
     )
     expected_resolved = _read_csv(
-        run_dir / "oracle" / "expected_resolved_obligations.csv"
+        run_dir / "oracle" / "expected_resolved_validation_requirements.csv"
     )
 
     assert raw_rows[0]["source_row_id"] == "ERP-SYN-PCF-MISSING-UNIT"
@@ -411,7 +413,7 @@ def test_synthetic_pcf_anomaly_adapter_reports_raw_source_pressure() -> None:
 
     assert_synthetic_oracle_matches_report(run.oracle, report)
     assert report.status == "blocked"
-    assert {witness.source for witness in report.evidence_witnesses} == {
+    assert {witness.source for witness in report.evidence_refs} == {
         "raw_sources/erp_electricity.csv",
     }
 
@@ -458,7 +460,7 @@ def test_synthetic_input_loader_roundtrips_disk_sources_without_oracle(
         for source in input_bundle.loaded_sources
     )
     assert report.status == "accepted"
-    assert {witness.source for witness in report.evidence_witnesses} == {
+    assert {witness.source for witness in report.evidence_refs} == {
         "raw_sources/erp_electricity.csv",
     }
 

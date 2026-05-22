@@ -477,7 +477,7 @@ ValidationRequirement(kind="reference_search_required")
 -> ReferenceQuery
 -> ReferenceResolver.search(...)
 -> ReferenceOption[]
--> ValidationReport.reference_candidates
+-> ValidationReport.reference_options
 ```
 
 The bridge may discharge the search obligation, but it must not create:

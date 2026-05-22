@@ -38,7 +38,7 @@ def test_raw_claim_conflict_keeps_source_candidates_separate():
     )
     assert {
         (claim.claim_id, claim.field, claim.value, claim.unit)
-        for claim in result.report.derived_claims
+        for claim in result.report.calculated_claims
     } == {
         (EMAIL_ELECTRICITY_CLAIM_ID, "email_electricity_mwh", 6400, "MWh"),
         (EMS_ELECTRICITY_CLAIM_ID, "ems_electricity_mwh", 6100, "MWh"),
@@ -49,7 +49,7 @@ def test_raw_claim_conflict_keeps_source_candidates_separate():
     }
     assert "electricity_mwh" not in {
         claim.field
-        for claim in result.report.derived_claims
+        for claim in result.report.calculated_claims
     }
 
 
@@ -58,7 +58,7 @@ def test_raw_claim_conflict_binds_context_but_blocks_winner_selection():
 
     assert tuple(
         (binding.binding_id, binding.reference_id, binding.reference_type)
-        for binding in result.report.reference_bindings
+        for binding in result.report.canonical_references
     ) == (
         (
             ALIAS_BINDING_ID,
@@ -98,7 +98,7 @@ def test_raw_claim_conflict_opens_obligation_and_blocks_receipt():
 def test_raw_claim_conflict_preserves_all_witness_fingerprints():
     result = run_raw_claim_conflict_scenario()
 
-    assert tuple(witness.witness_id for witness in result.report.evidence_witnesses) == (
+    assert tuple(witness.witness_id for witness in result.report.evidence_refs) == (
         "w-email-electricity-march",
         "w-ems-electricity-march",
         "w-site-alias-policy",
@@ -107,7 +107,7 @@ def test_raw_claim_conflict_preserves_all_witness_fingerprints():
     )
     assert result.preparation.package.dependency_fingerprints == tuple(
         evidence_ref_fingerprint(witness)
-        for witness in result.report.evidence_witnesses
+        for witness in result.report.evidence_refs
     )
 
 

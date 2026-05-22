@@ -86,7 +86,7 @@ def alpha_invalid_allocation_report() -> ValidationReport:
     return with_recomputed_status(
         ValidationReport(
             status="accepted",
-            evidence_witnesses=(
+            evidence_refs=(
                 EvidenceRef(
                     witness_id="source:alpha-metal-initial-submission",
                     field="raw_material_name",
@@ -112,7 +112,7 @@ def alpha_invalid_allocation_report() -> ValidationReport:
                     witness_id="source:alpha-metal-initial-submission",
                 ),
             ),
-            obligations=(
+            validation_requirements=(
                 ValidationRequirement(
                     kind="find_context",
                     field="rolling_residence_time",

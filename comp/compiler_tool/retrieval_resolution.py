@@ -19,11 +19,11 @@ def resolve_reference_retrieval_obligations(
     limit: int = 10,
 ) -> ValidationReport:
     obligations: list[ValidationRequirement] = []
-    candidates = report.reference_candidates
-    resolved_obligations = report.resolved_obligations
+    candidates = report.reference_options
+    resolved_validation_requirements = report.resolved_validation_requirements
     changed = False
 
-    for obligation in report.obligations:
+    for obligation in report.validation_requirements:
         if not _is_reference_search_obligation(obligation):
             obligations.append(obligation)
             continue
@@ -39,8 +39,8 @@ def resolve_reference_retrieval_obligations(
             continue
 
         candidates = _append_unique_candidates(candidates, found)
-        resolved_obligations = _append_unique_obligations(
-            resolved_obligations,
+        resolved_validation_requirements = _append_unique_obligations(
+            resolved_validation_requirements,
             (obligation,),
         )
         changed = True
@@ -51,9 +51,9 @@ def resolve_reference_retrieval_obligations(
     return with_recomputed_status(
         replace(
             report,
-            obligations=tuple(obligations),
-            resolved_obligations=resolved_obligations,
-            reference_candidates=candidates,
+            validation_requirements=tuple(obligations),
+            resolved_validation_requirements=resolved_validation_requirements,
+            reference_options=candidates,
             can_build_public_output=False,
         )
     )

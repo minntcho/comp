@@ -30,7 +30,7 @@ def test_alpha_revenue_share_requires_rolling_residence_time_context():
 
     assert tuple(
         (obligation.kind, obligation.field, obligation.reason)
-        for obligation in result.report.obligations
+        for obligation in result.report.validation_requirements
     ) == (
         (
             "find_context",
@@ -63,8 +63,8 @@ def test_alpha_normalization_suggestion_is_not_authoritative():
 def test_alpha_invalid_allocation_cannot_create_receipt_or_projection():
     result = run_alpha_invalid_allocation_rfi_scenario()
 
-    assert result.report.reference_bindings == ()
-    assert result.report.derived_claims == ()
+    assert result.report.canonical_references == ()
+    assert result.report.calculated_claims == ()
     assert result.preparation.receipt is None
     assert result.projection is None
     with pytest.raises(PublicOutputBlocked, match="public-output receipt"):

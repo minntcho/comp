@@ -45,14 +45,14 @@ def test_canonical_working_loop_extracts_and_compiles_raw_text():
         "reporting_year",
         "geography",
     ]
-    assert [witness.witness_id for witness in report.evidence_witnesses] == [
+    assert [witness.witness_id for witness in report.evidence_refs] == [
         "w-activity",
         "w-electricity-kwh",
         "w-unit",
         "w-reporting-year",
         "w-geography",
     ]
-    assert report.obligations == ()
+    assert report.validation_requirements == ()
     assert report.can_build_public_output is False
 
 
@@ -60,11 +60,11 @@ def test_canonical_working_loop_opens_calculation_obligation_after_compile():
     report = open_calculation_obligation(compile_raw_evidence(RAW_EVIDENCE))
 
     assert report.status == "blocked"
-    assert [obligation.kind for obligation in report.obligations] == [
+    assert [obligation.kind for obligation in report.validation_requirements] == [
         "calculation_blocked",
     ]
-    assert report.obligations[0].reason == "unknown_reference"
-    assert report.derived_claims == ()
+    assert report.validation_requirements[0].reason == "unknown_reference"
+    assert report.calculated_claims == ()
 
 
 def test_canonical_working_loop_runs_raw_text_to_receipt_projection():
@@ -88,12 +88,12 @@ def test_canonical_working_loop_runs_raw_text_to_receipt_projection():
     )
     assert_scenario_contract(result, SCENARIO.contract)
     assert [
-        candidate.retrieval_method for candidate in result.report.reference_candidates
+        candidate.retrieval_method for candidate in result.report.reference_options
     ] == [
         "embedding_stub:factor",
         "embedding_stub:factor",
     ]
-    assert result.report.reference_bindings[0].selected_candidate_id == (
+    assert result.report.canonical_references[0].selected_candidate_id == (
         "embedding_stub:factor:idx-canonical-kr-grid-2024"
     )
     assert result.projection == {

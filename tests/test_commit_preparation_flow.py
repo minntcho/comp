@@ -24,7 +24,7 @@ def test_prepare_commit_builds_package_decision_and_receipt_for_accepted_report(
                 origin="source_text",
             ),
         ),
-        reference_bindings=(
+        canonical_references=(
             CanonicalReference(
                 binding_id="bind-amount-factor",
                 claim_id="hyp-1:amount",
@@ -32,7 +32,7 @@ def test_prepare_commit_builds_package_decision_and_receipt_for_accepted_report(
                 reference_type="emission_factor",
             ),
         ),
-        derived_claims=(
+        calculated_claims=(
             CalculatedClaim(
                 claim_id="hyp-1:co2e_emission",
                 field="co2e_emission",
@@ -82,7 +82,7 @@ def test_prepare_commit_builds_package_decision_and_receipt_for_accepted_report(
 def test_prepare_commit_returns_hold_without_receipt_for_open_obligations():
     report = ValidationReport(
         status="accepted",
-        obligations=(
+        validation_requirements=(
             ValidationRequirement(
                 kind="reference_selection_required",
                 field="co2e_emission",

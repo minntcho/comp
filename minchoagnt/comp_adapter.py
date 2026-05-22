@@ -215,7 +215,7 @@ class DeterministicCompResolver:
     ) -> tuple[str, ...]:
         return tuple(
             resolver_task_from_obligation(obligation).obligation_id
-            for obligation in report.obligations
+            for obligation in report.validation_requirements
             if query_for_obligation(obligation) is not None
         )
 

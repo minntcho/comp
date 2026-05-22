@@ -58,7 +58,7 @@ def test_commit_preparation_to_facts_keeps_hold_visible_without_receipt_fact():
     preparation = prepare_commit(
         ValidationReport(
             status="accepted",
-            obligations=(
+            validation_requirements=(
                 ValidationRequirement(
                     kind="reference_selection_required",
                     field="co2e_emission",
