@@ -16,10 +16,13 @@ db = ["PyMySQL>=1.1"]
 [tool.setuptools]
 packages = [
   "comp",
+  "comp.cli",
   "comp.compiler_tool",
   "comp.explanation",
   "comp.judgment",
   "comp.persistence",
+  "comp.runtime",
+  "comp.scenario_contracts",
   "comp.scenarios",
   "comp.scenarios.synthetic",
   "comp.views",
@@ -30,5 +33,6 @@ packages = [
 "comp.scenarios.synthetic" = ["profiles/*.yaml"]
 
 [project.scripts]
+comp = "comp.cli.scenario:main"
 minchoagnt = "minchoagnt.cli:main"
 comp-receipt-graph = "comp.explanation.receipt_graph_cli:main"
