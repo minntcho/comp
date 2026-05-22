@@ -1,7 +1,7 @@
 from comp.compiler_tool import (
-    CompileReport,
-    ProofObligation,
-    ReferenceCandidate,
+    ValidationReport,
+    ValidationRequirement,
+    ReferenceOption,
     ReferenceCatalog,
     ReferenceRecord,
     ReferenceSelectionCriteria,
@@ -41,7 +41,7 @@ def _catalog():
 
 
 def _candidate(candidate_id, reference_id, score):
-    return ReferenceCandidate(
+    return ReferenceOption(
         candidate_id=candidate_id,
         reference_id=reference_id,
         reference_type="emission_factor",
@@ -67,7 +67,7 @@ def _criteria():
 
 
 def _selection_obligation(reason="ambiguous"):
-    return ProofObligation(
+    return ValidationRequirement(
         kind="reference_selection_required",
         field="co2e_emission",
         reason=reason,
@@ -79,7 +79,7 @@ def _selection_obligation(reason="ambiguous"):
 
 def test_reference_selection_adds_binding_and_resolves_matching_obligation():
     obligation = _selection_obligation()
-    report = CompileReport(
+    report = ValidationReport(
         status="blocked",
         obligations=(obligation,),
         reference_candidates=(
@@ -104,7 +104,7 @@ def test_reference_selection_adds_binding_and_resolves_matching_obligation():
     )
 
     assert updated.status == "accepted"
-    assert updated.can_project_public_row is False
+    assert updated.can_build_public_output is False
     assert updated.obligations == ()
     assert updated.resolved_obligations == (obligation,)
     assert len(updated.reference_bindings) == 1
@@ -119,7 +119,7 @@ def test_reference_selection_adds_binding_and_resolves_matching_obligation():
 
 
 def test_reference_selection_opens_obligation_when_candidates_are_ambiguous():
-    report = CompileReport(
+    report = ValidationReport(
         status="accepted",
         reference_candidates=(
             _candidate("cand-a", "factor.kr_grid.2024.location_based", 0.99),
@@ -140,7 +140,7 @@ def test_reference_selection_opens_obligation_when_candidates_are_ambiguous():
 
 
 def test_reference_selection_opens_obligation_when_no_candidate_matches():
-    report = CompileReport(
+    report = ValidationReport(
         status="accepted",
         reference_candidates=(
             _candidate(
@@ -164,7 +164,7 @@ def test_reference_selection_opens_obligation_when_no_candidate_matches():
 
 
 def test_reference_selection_report_application_is_idempotent():
-    report = CompileReport(
+    report = ValidationReport(
         status="accepted",
         reference_candidates=(
             _candidate("cand-a", "factor.kr_grid.2024.location_based", 0.99),

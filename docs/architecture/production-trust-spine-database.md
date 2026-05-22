@@ -126,7 +126,7 @@ point at an artifact.
 
 ### Commit Receipts
 
-`CommitReceipt` is the only public projection authority. A production ledger
+`PublicOutputReceipt` is the only public projection authority. A production ledger
 row should preserve:
 
 ```text
@@ -192,9 +192,9 @@ accepted artifacts are produced by deterministic compiler gates.
 ```
 
 LLM workers, human reviewers, importers, and UI actions may submit material for
-validation. They must not directly insert canonical `ReferenceBinding`,
-`DerivedClaim`, `CommitPackage`, `GovernanceDecision`, `CommitReceipt`, or
-`PublicProjection` authority.
+validation. They must not directly insert canonical `CanonicalReference`,
+`CalculatedClaim`, `ReviewPackage`, `ReviewDecision`, `PublicOutputReceipt`, or
+`PublicOutput` authority.
 
 ## 5. Registry State
 
@@ -376,7 +376,7 @@ without authority leaks.
 Use this checklist when adding production storage:
 
 ```text
-Does the schema preserve CommitReceipt as the projection authority?
+Does the schema preserve PublicOutputReceipt as the projection authority?
 Are receipt-cited artifacts immutable or conflict-detected?
 Can stored public rows be replayed from receipt-cited artifacts?
 Are reference catalogs and profiles version-pinned?
@@ -403,7 +403,7 @@ artifact_envelopes
   JSON.
 
 ledger_commit_receipts
-  stores append-only CommitReceipt roots keyed by receipt id and ledger key.
+  stores append-only PublicOutputReceipt roots keyed by receipt id and ledger key.
 
 ledger_receipt_value_commitments
 ledger_receipt_dependency_fingerprints
@@ -422,7 +422,7 @@ MySQL receipt/artifact stores
 ```
 
 The MySQL spine persists the replay inputs. It does not store a separate graph
-truth, run replay on its own, or authorize projection outside `CommitReceipt`.
+truth, run replay on its own, or authorize projection outside `PublicOutputReceipt`.
 
 The implemented V1 slice intentionally does not include workflow, registry,
 projection cache, typed artifact index, or domain-specific view tables yet.

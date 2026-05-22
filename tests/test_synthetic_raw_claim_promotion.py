@@ -1,7 +1,7 @@
 import pytest
 
-from comp import ProjectionBlocked, ProjectionSpec, project_public_row
-from comp.compiler_tool import evidence_witness_fingerprint, prepare_commit
+from comp import PublicOutputBlocked, PublicOutputSpec, build_public_output
+from comp.compiler_tool import evidence_ref_fingerprint, prepare_commit
 from comp.scenarios.synthetic.raw_claim_promotion import (
     AllocationSupport,
     PromotionClaimIds,
@@ -45,7 +45,7 @@ def test_promotes_supported_raw_candidates_without_projection_authority():
     )
 
     assert report.status == "accepted"
-    assert report.can_project_public_row is False
+    assert report.can_build_public_output is False
     assert ("site_id", "OCH-01") not in {
         (claim.field, claim.value) for claim in report.checked_claims
     }
@@ -91,10 +91,10 @@ def test_promotes_supported_raw_candidates_without_projection_authority():
         ALLOCATED_ELECTRICITY_CLAIM_ID,
     )
 
-    with pytest.raises(ProjectionBlocked, match="public-output receipt"):
-        project_public_row(
+    with pytest.raises(PublicOutputBlocked, match="public-output receipt"):
+        build_public_output(
             _projection_source(report),
-            ProjectionSpec(PROJECTION_ID, PROJECTION_FIELDS),
+            PublicOutputSpec(PROJECTION_ID, PROJECTION_FIELDS),
         )
 
 
@@ -110,7 +110,7 @@ def test_promoted_report_can_commit_only_through_prepare_commit():
         projection_id=PROJECTION_ID,
         profile_id=PROFILE_ID,
         dependency_fingerprints=tuple(
-            evidence_witness_fingerprint(witness)
+            evidence_ref_fingerprint(witness)
             for witness in report.evidence_witnesses
         ),
     )
@@ -130,9 +130,9 @@ def test_promoted_report_can_commit_only_through_prepare_commit():
         ALLOCATED_ELECTRICITY_CLAIM_ID,
     )
 
-    projection = project_public_row(
+    projection = build_public_output(
         _projection_source(report),
-        ProjectionSpec(PROJECTION_ID, PROJECTION_FIELDS),
+        PublicOutputSpec(PROJECTION_ID, PROJECTION_FIELDS),
         receipt=preparation.receipt,
     )
     assert projection == {

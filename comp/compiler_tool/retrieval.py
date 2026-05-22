@@ -4,7 +4,7 @@ import re
 from dataclasses import dataclass, field
 from typing import Protocol
 
-from comp.compiler_tool.references import ReferenceCandidate
+from comp.compiler_tool.references import ReferenceOption
 
 RetrievalLens = str
 
@@ -55,7 +55,7 @@ class ReferenceResolver(Protocol):
         query: ReferenceQuery,
         *,
         limit: int = 10,
-    ) -> tuple[ReferenceCandidate, ...]:
+    ) -> tuple[ReferenceOption, ...]:
         ...
 
 
@@ -68,7 +68,7 @@ class EmbeddingResolverStub:
         query: ReferenceQuery,
         *,
         limit: int = 10,
-    ) -> tuple[ReferenceCandidate, ...]:
+    ) -> tuple[ReferenceOption, ...]:
         scored: list[tuple[float, ReferenceIndexEntry]] = []
         for entry in self.entries:
             if entry.lens != query.lens:
@@ -93,8 +93,8 @@ def _candidate_from_entry(
     query: ReferenceQuery,
     entry: ReferenceIndexEntry,
     score: float,
-) -> ReferenceCandidate:
-    return ReferenceCandidate(
+) -> ReferenceOption:
+    return ReferenceOption(
         candidate_id=f"embedding_stub:{query.lens}:{entry.entry_id}",
         reference_id=entry.reference_id,
         reference_type=entry.reference_type,

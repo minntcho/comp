@@ -27,7 +27,7 @@ trust kernel.
 The receipt proof graph belongs outside the authority path:
 
 ```text
-CommitReceipt
+PublicOutputReceipt
 -> ProjectionReplayReport
 -> ReceiptProofGraph
 -> Viewer / CLI / UI / Mermaid / Graphviz
@@ -41,7 +41,7 @@ ReceiptProofGraph
 ```
 
 Graph export success must never imply that a public projection is valid. Validity
-comes from a clean `CommitReceipt` and successful `replay_public_projection(...)`.
+comes from a clean `PublicOutputReceipt` and successful `replay_public_projection(...)`.
 
 ## 2. Layer Placement
 
@@ -50,11 +50,11 @@ The graph layer is an explanation layer:
 ```text
 Trust Kernel
   CheckedClaim
-  ReferenceBinding
-  DerivedClaim
-  CommitPackage
-  GovernanceDecision
-  CommitReceipt
+  CanonicalReference
+  CalculatedClaim
+  ReviewPackage
+  ReviewDecision
+  PublicOutputReceipt
 
 Persistence / Replay
   ArtifactEnvelope
@@ -119,12 +119,12 @@ graph nodes and important dependencies can become graph edges later.
 This does not require a large graph system now. It does require these invariants:
 
 ```text
-EvidenceWitness keeps stable id, source/span/text, and fingerprint material.
+EvidenceRef keeps stable id, source/span/text, and fingerprint material.
 CheckedClaim keeps its witness id.
-ReferenceBinding keeps selected reference id and rejection context.
-DerivedClaim keeps its CalculationTrace.
+CanonicalReference keeps selected reference id and rejection context.
+CalculatedClaim keeps its CalculationTrace.
 CalculationTrace keeps formula and input/source references.
-CommitReceipt keeps projection, value, and dependency citations.
+PublicOutputReceipt keeps projection, value, and dependency citations.
 ProjectionReplayReport keeps artifact refs, digests, and dependency fingerprints.
 ```
 
@@ -136,7 +136,7 @@ gap in the system design.
 The first implementation slice should stay receipt-scoped:
 
 ```text
-CommitReceipt
+PublicOutputReceipt
 ProjectionReplayReport
 ArtifactStore
 -> ReceiptProofGraph
@@ -156,13 +156,13 @@ expose field-level proof paths
 Forbidden behavior:
 
 ```text
-minting CommitReceipt
-creating GovernanceDecision
+minting PublicOutputReceipt
+creating ReviewDecision
 authorizing projection
 selecting claims
 binding references
 recomputing calculations
-walking the entire CompileReport
+walking the entire ValidationReport
 walking all ResolverTask items
 including full retrieval candidate frontiers
 including LLM work-order histories
@@ -184,7 +184,7 @@ The graph exporter should be read-only:
 ```python
 def export_receipt_proof_graph(
     *,
-    receipt: CommitReceipt,
+    receipt: PublicOutputReceipt,
     replay: ProjectionReplayReport,
     artifacts: ArtifactStore,
 ) -> ReceiptProofGraph:
@@ -323,7 +323,7 @@ Graph tests should focus on authority boundaries and provenance completeness:
 ```text
 every replay artifact ref appears as a node
 every dependency fingerprint appears as a typed node
-every public projection field connects to the CommitReceipt
+every public projection field connects to the PublicOutputReceipt
 every cited checked claim connects to at least one evidence witness
 every derived claim connects to calculation trace, formula, and dependencies
 raw committed values are absent from graph payloads by default

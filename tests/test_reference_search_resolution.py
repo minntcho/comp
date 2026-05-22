@@ -1,8 +1,8 @@
 from comp.compiler_tool import (
     CalculationFormula,
     CalculationInput,
-    CompileReport,
-    ReferenceBinding,
+    ValidationReport,
+    CanonicalReference,
     ReferenceCatalog,
     ReferenceRecord,
     apply_calculation_result,
@@ -30,7 +30,7 @@ def _input():
 
 
 def _binding(reference_id="factor.missing"):
-    return ReferenceBinding(
+    return CanonicalReference(
         binding_id="bind-amount-factor",
         claim_id="hyp-1:amount",
         reference_id=reference_id,
@@ -71,7 +71,7 @@ def _planned_unknown_reference_report():
         formula=_formula(),
     )
     blocked = apply_calculation_result(
-        CompileReport(status="accepted"),
+        ValidationReport(status="accepted"),
         result,
         output_claim_id="hyp-1:co2e_emission",
         formula=_formula(),
@@ -90,7 +90,7 @@ def test_reference_search_resolution_adds_candidates_and_resolves_followup():
     )
 
     assert resolved.status == "blocked"
-    assert resolved.can_project_public_row is False
+    assert resolved.can_build_public_output is False
     assert [candidate.reference_id for candidate in resolved.reference_candidates] == [
         "factor.kr_grid.2024.location_based"
     ]
@@ -107,7 +107,7 @@ def test_reference_search_resolution_adds_candidates_and_resolves_followup():
 
 def test_reference_search_resolution_recomputes_status_after_resolving_only_blocker():
     obligation = _planned_unknown_reference_report().obligations[1]
-    report = CompileReport(status="blocked", obligations=(obligation,))
+    report = ValidationReport(status="blocked", obligations=(obligation,))
 
     resolved = resolve_reference_search_obligations(
         report,

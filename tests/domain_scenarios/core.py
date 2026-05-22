@@ -7,7 +7,7 @@ from typing import Any
 
 from comp.compiler_tool import (
     CommitPreparation,
-    CompileReport,
+    ValidationReport,
     commit_preparation_to_facts,
     compile_report_to_facts,
 )
@@ -57,7 +57,7 @@ class ScenarioDefinition:
 @dataclass(frozen=True)
 class DomainScenarioResult:
     scenario_id: str
-    report: CompileReport
+    report: ValidationReport
     preparation: CommitPreparation
     projection: dict[str, Any] | None
     report_facts: frozenset[Fact]
@@ -79,7 +79,7 @@ class DomainScenarioResult:
 def build_domain_scenario_result(
     *,
     scenario_id: str,
-    report: CompileReport,
+    report: ValidationReport,
     preparation: CommitPreparation,
     projection: dict[str, Any] | None,
     subject: SubjectRef,

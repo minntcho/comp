@@ -2,9 +2,9 @@ from comp.compiler_tool import (
     CalculationFormula,
     CalculationInput,
     CalculationRequirement,
-    CompileReport,
-    ProofObligation,
-    ReferenceBinding,
+    ValidationReport,
+    ValidationRequirement,
+    CanonicalReference,
     ReferenceCatalog,
     ReferenceRecord,
     apply_calculation_result,
@@ -33,7 +33,7 @@ def _catalog():
 
 
 def _binding():
-    return ReferenceBinding(
+    return CanonicalReference(
         binding_id="bind-amount-factor",
         claim_id="hyp-1:amount",
         reference_id="factor.kr_grid.2024.location_based",
@@ -70,7 +70,7 @@ def test_successful_calculation_adds_derived_claim_to_report():
         catalog=_catalog(),
         formula=_formula(),
     )
-    report = CompileReport(status="accepted", reference_bindings=(binding,))
+    report = ValidationReport(status="accepted", reference_bindings=(binding,))
 
     updated = apply_calculation_result(
         report,
@@ -83,7 +83,7 @@ def test_successful_calculation_adds_derived_claim_to_report():
     assert updated.reference_bindings == (binding,)
     assert updated.derived_claims == (calculation.derived_claim,)
     assert updated.obligations == ()
-    assert updated.can_project_public_row is False
+    assert updated.can_build_public_output is False
 
 
 def test_blocked_calculation_opens_blocking_obligation_on_report():
@@ -95,7 +95,7 @@ def test_blocked_calculation_opens_blocking_obligation_on_report():
         catalog=_catalog(),
         formula=_formula(),
     )
-    report = CompileReport(status="accepted", reference_bindings=(binding,))
+    report = ValidationReport(status="accepted", reference_bindings=(binding,))
 
     updated = apply_calculation_result(
         report,
@@ -108,7 +108,7 @@ def test_blocked_calculation_opens_blocking_obligation_on_report():
     assert updated.reference_bindings == (binding,)
     assert updated.derived_claims == ()
     assert updated.obligations == (
-        ProofObligation(
+        ValidationRequirement(
             kind="calculation_blocked",
             field="co2e_emission",
             reason="unit_mismatch",
@@ -130,7 +130,7 @@ def test_blocked_calculation_opens_blocking_obligation_on_report():
             ),
         ),
     )
-    assert updated.can_project_public_row is False
+    assert updated.can_build_public_output is False
 
 
 def test_calculation_obligation_maps_to_judgment_fact():
@@ -142,7 +142,7 @@ def test_calculation_obligation_maps_to_judgment_fact():
         formula=_formula(),
     )
     report = apply_calculation_result(
-        CompileReport(status="accepted"),
+        ValidationReport(status="accepted"),
         calculation,
         output_claim_id="hyp-1:co2e_emission",
         formula=_formula(),
@@ -184,7 +184,7 @@ def test_semantic_application_preserves_open_calculation_obligation_status():
         formula=_formula(),
     )
     report = apply_calculation_result(
-        CompileReport(status="accepted"),
+        ValidationReport(status="accepted"),
         calculation,
         output_claim_id="hyp-1:co2e_emission",
         formula=_formula(),

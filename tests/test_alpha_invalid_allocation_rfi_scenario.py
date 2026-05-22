@@ -1,6 +1,6 @@
 import pytest
 
-from comp import ProjectionBlocked, ProjectionSpec, project_public_row
+from comp import PublicOutputBlocked, PublicOutputSpec, build_public_output
 from tests.domain_scenarios.core import assert_scenario_contract, run_scenario
 from tests.domain_scenarios.l_energy_pcf_governance.alpha_invalid_allocation_rfi import (
     ALPHA_INVALID_ALLOCATION_SCENARIO,
@@ -67,10 +67,10 @@ def test_alpha_invalid_allocation_cannot_create_receipt_or_projection():
     assert result.report.derived_claims == ()
     assert result.preparation.receipt is None
     assert result.projection is None
-    with pytest.raises(ProjectionBlocked, match="public-output receipt"):
-        project_public_row(
+    with pytest.raises(PublicOutputBlocked, match="public-output receipt"):
+        build_public_output(
             {"raw_material_name": RAW_MATERIAL_NAME},
-            ProjectionSpec(PROJECTION_ID, PROJECTION_FIELDS),
+            PublicOutputSpec(PROJECTION_ID, PROJECTION_FIELDS),
         )
 
 

@@ -4,12 +4,12 @@ from dataclasses import replace
 from typing import TypeVar
 
 from comp.compiler_tool.models import (
-    ClaimHypothesis,
-    CompileReport,
-    EvidenceWitness,
+    ClaimCandidate,
+    ValidationReport,
+    EvidenceRef,
     FailedClaim,
     InterpretationHypothesis,
-    ProofObligation,
+    ValidationRequirement,
 )
 from comp.compiler_tool.profiles import (
     CompilerProfile,
@@ -28,7 +28,7 @@ T = TypeVar("T")
 def run_profile_rules(
     hypothesis: InterpretationHypothesis,
     profile: CompilerProfile,
-) -> CompileReport:
+) -> ValidationReport:
     """Run profile-active rules without taking over the CompilerTool baseline.
 
     This runner validates core source-witness grounding for submitted claims, then
@@ -39,7 +39,7 @@ def run_profile_rules(
 
     validate_compiler_profile(profile)
     failed_claims: list[FailedClaim] = []
-    obligations: list[ProofObligation] = []
+    obligations: list[ValidationRequirement] = []
     witnesses = {witness.witness_id: witness for witness in hypothesis.witnesses}
 
     for claim in hypothesis.claims:
@@ -48,7 +48,7 @@ def run_profile_rules(
             failed_claims.append(witness_failure)
             _add_obligation(
                 obligations,
-                ProofObligation(
+                ValidationRequirement(
                     kind="find_source_witness",
                     field=claim.field,
                     reason=witness_failure.reason,
@@ -59,16 +59,16 @@ def run_profile_rules(
             if rule.evaluate is None:
                 continue
             for result in rule.evaluate(claim, hypothesis, profile):
-                if isinstance(result, ProofObligation):
+                if isinstance(result, ValidationRequirement):
                     _add_obligation(obligations, result)
 
     return with_recomputed_status(
-        CompileReport(
+        ValidationReport(
             status="accepted",
             evidence_witnesses=hypothesis.witnesses,
             failed_claims=tuple(failed_claims),
             obligations=tuple(obligations),
-            can_project_public_row=False,
+            can_build_public_output=False,
         )
     )
 
@@ -76,7 +76,7 @@ def run_profile_rules(
 def compile_with_profile(
     hypothesis: InterpretationHypothesis,
     profile: CompilerProfile,
-) -> CompileReport:
+) -> ValidationReport:
     """Compile with profile-declared CompilerTool baseline plus active rules."""
 
     validate_compiler_profile(profile)
@@ -89,8 +89,8 @@ def compile_with_profile(
 
 
 def _validate_core_witness(
-    claim: ClaimHypothesis,
-    witnesses: dict[str, EvidenceWitness],
+    claim: ClaimCandidate,
+    witnesses: dict[str, EvidenceRef],
 ) -> FailedClaim | None:
     if claim.value is None:
         return None
@@ -136,17 +136,17 @@ def _validate_core_witness(
 
 
 def _add_obligation(
-    obligations: list[ProofObligation],
-    obligation: ProofObligation,
+    obligations: list[ValidationRequirement],
+    obligation: ValidationRequirement,
 ) -> None:
     if obligation not in obligations:
         obligations.append(obligation)
 
 
 def _merge_compile_reports(
-    baseline_report: CompileReport,
-    profile_rule_report: CompileReport,
-) -> CompileReport:
+    baseline_report: ValidationReport,
+    profile_rule_report: ValidationReport,
+) -> ValidationReport:
     return with_recomputed_status(
         replace(
             baseline_report,
@@ -194,9 +194,9 @@ def _merge_compile_reports(
                 baseline_report.derived_claims,
                 profile_rule_report.derived_claims,
             ),
-            can_project_public_row=(
-                baseline_report.can_project_public_row
-                and profile_rule_report.can_project_public_row
+            can_build_public_output=(
+                baseline_report.can_build_public_output
+                and profile_rule_report.can_build_public_output
             ),
         )
     )

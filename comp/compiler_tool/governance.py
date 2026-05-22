@@ -26,8 +26,6 @@ class ReviewDecision:
         return False
 
 
-GovernanceDecision = ReviewDecision
-
 
 def decide_governance(
     package: ReviewPackage,
@@ -75,7 +73,6 @@ def _incomplete_reasons(package: ReviewPackage) -> tuple[str, ...]:
 
 __all__ = [
     "ReviewDecision",
-    "GovernanceDecision",
     "GovernanceStatus",
     "decide_governance",
 ]

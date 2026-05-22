@@ -1,9 +1,9 @@
 from comp.compiler_tool import (
     CheckedClaim,
-    CompileReport,
+    ValidationReport,
     FailedClaim,
     Hazard,
-    ProofObligation,
+    ValidationRequirement,
     UncheckedArea,
     UnknownClaim,
     add_compile_report_facts,
@@ -14,7 +14,7 @@ from comp.judgment import Fact, JudgmentState, SubjectRef
 
 def test_compile_report_to_facts_maps_each_report_category():
     subject = SubjectRef("claim", "hyp-1")
-    report = CompileReport(
+    report = ValidationReport(
         status="blocked",
         checked_claims=(
             CheckedClaim(
@@ -41,7 +41,7 @@ def test_compile_report_to_facts_maps_each_report_category():
             ),
         ),
         obligations=(
-            ProofObligation(
+            ValidationRequirement(
                 kind="find_source_witness",
                 field="unit",
                 reason="unsupported_unit",
@@ -132,12 +132,12 @@ def test_compile_report_to_facts_maps_each_report_category():
 
 def test_resolved_obligations_discharge_matching_hazard_ids():
     subject = SubjectRef("claim", "hyp-1")
-    obligation = ProofObligation(
+    obligation = ValidationRequirement(
         kind="find_source_witness",
         field="unit",
         reason="unsupported_unit",
     )
-    report = CompileReport(status="accepted", resolved_obligations=(obligation,))
+    report = ValidationReport(status="accepted", resolved_obligations=(obligation,))
 
     facts = compile_report_to_facts(report, subject)
 
@@ -176,10 +176,10 @@ def test_resolved_obligations_discharge_matching_hazard_ids():
 
 def test_obligation_facts_preserve_explicit_obligation_ids():
     subject = SubjectRef("claim", "hyp-1")
-    report = CompileReport(
+    report = ValidationReport(
         status="review_required",
         obligations=(
-            ProofObligation(
+            ValidationRequirement(
                 kind="semantic_judgment_required",
                 field="scope2_method",
                 reason="support_required",
@@ -187,7 +187,7 @@ def test_obligation_facts_preserve_explicit_obligation_ids():
             ),
         ),
         resolved_obligations=(
-            ProofObligation(
+            ValidationRequirement(
                 kind="find_source_witness",
                 field="unit",
                 reason="unsupported_unit",
@@ -226,7 +226,7 @@ def test_obligation_facts_preserve_explicit_obligation_ids():
 
 def test_add_compile_report_facts_is_append_only_and_idempotent():
     subject = SubjectRef("claim", "hyp-1")
-    report = CompileReport(
+    report = ValidationReport(
         status="accepted",
         checked_claims=(
             CheckedClaim(

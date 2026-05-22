@@ -7,13 +7,13 @@ from comp.compiler_tool import (
     CalculationInput,
     CalculationTrace,
     CheckedClaim,
-    CompileReport,
+    ValidationReport,
     CompilerProfile,
-    DerivedClaim,
+    CalculatedClaim,
     DomainPack,
     EmbeddingResolverStub,
     ReferenceCatalog,
-    ReferenceBinding,
+    CanonicalReference,
     ReferenceIndexEntry,
     ReferenceRecord,
     ReferenceSelectionCriteria,
@@ -62,9 +62,9 @@ def checked_claims() -> tuple[CheckedClaim, ...]:
     )
 
 
-def reference_bindings() -> tuple[ReferenceBinding, ...]:
+def reference_bindings() -> tuple[CanonicalReference, ...]:
     return (
-        ReferenceBinding(
+        CanonicalReference(
             binding_id=ELECTRICITY_BINDING_ID,
             claim_id=SCENARIO_ID,
             reference_id="platform.factor.electricity_mwh",
@@ -72,7 +72,7 @@ def reference_bindings() -> tuple[ReferenceBinding, ...]:
             selector_rule_id="platform.expected_receipt.fixture",
             source_witness_ids=("source:dummy-data-mapping",),
         ),
-        ReferenceBinding(
+        CanonicalReference(
             binding_id="bind:pcf:lng_factor",
             claim_id=SCENARIO_ID,
             reference_id="platform.factor.lng_nm3",
@@ -80,7 +80,7 @@ def reference_bindings() -> tuple[ReferenceBinding, ...]:
             selector_rule_id="platform.expected_receipt.fixture",
             source_witness_ids=("source:dummy-data-mapping",),
         ),
-        ReferenceBinding(
+        CanonicalReference(
             binding_id="bind:pcf:steel_proxy_factor",
             claim_id=SCENARIO_ID,
             reference_id="platform.factor.steel_proxy_per_ton",
@@ -88,7 +88,7 @@ def reference_bindings() -> tuple[ReferenceBinding, ...]:
             selector_rule_id="platform.expected_receipt.fixture",
             source_witness_ids=("source:dummy-data-mapping",),
         ),
-        ReferenceBinding(
+        CanonicalReference(
             binding_id="bind:pcf:carbon_tech_certificate_factor",
             claim_id=SCENARIO_ID,
             reference_id="platform.factor.carbon_tech_certificate_per_ton",
@@ -96,7 +96,7 @@ def reference_bindings() -> tuple[ReferenceBinding, ...]:
             selector_rule_id="platform.expected_receipt.fixture",
             source_witness_ids=("source:expected-receipt",),
         ),
-        ReferenceBinding(
+        CanonicalReference(
             binding_id="bind:pcf:ncm811_factor",
             claim_id=SCENARIO_ID,
             reference_id="platform.factor.ncm811_composition",
@@ -107,7 +107,7 @@ def reference_bindings() -> tuple[ReferenceBinding, ...]:
     )
 
 
-def downstream_reference_bindings() -> tuple[ReferenceBinding, ...]:
+def downstream_reference_bindings() -> tuple[CanonicalReference, ...]:
     return tuple(
         binding
         for binding in reference_bindings()
@@ -115,7 +115,7 @@ def downstream_reference_bindings() -> tuple[ReferenceBinding, ...]:
     )
 
 
-def derived_claims() -> tuple[DerivedClaim, ...]:
+def derived_claims() -> tuple[CalculatedClaim, ...]:
     return (
         _derived_claim(
             claim_id=OUTPUT_CLAIM_ID,
@@ -189,17 +189,17 @@ def derived_claims() -> tuple[DerivedClaim, ...]:
     )
 
 
-def downstream_derived_claims() -> tuple[DerivedClaim, ...]:
+def downstream_derived_claims() -> tuple[CalculatedClaim, ...]:
     return tuple(
         claim for claim in derived_claims() if claim.claim_id != OUTPUT_CLAIM_ID
     )
 
 
-def blocked_report() -> CompileReport:
+def blocked_report() -> ValidationReport:
     result = calculate_derived_claim(
         output_claim_id=OUTPUT_CLAIM_ID,
         input_claim=input_claim(),
-        reference_binding=ReferenceBinding(
+        reference_binding=CanonicalReference(
             binding_id=ELECTRICITY_BINDING_ID,
             claim_id=SCENARIO_ID,
             reference_id="platform.factor.unresolved_l_energy_energy",
@@ -209,7 +209,7 @@ def blocked_report() -> CompileReport:
         formula=formula(),
     )
     return apply_calculation_result(
-        CompileReport(status="accepted", checked_claims=checked_claims()),
+        ValidationReport(status="accepted", checked_claims=checked_claims()),
         result,
         output_claim_id=OUTPUT_CLAIM_ID,
         formula=formula(),
@@ -493,7 +493,7 @@ def formula() -> CalculationFormula:
     )
 
 
-def attach_downstream_fixture_artifacts(report: CompileReport) -> CompileReport:
+def attach_downstream_fixture_artifacts(report: ValidationReport) -> ValidationReport:
     return with_recomputed_status(
         replace(
             report,
@@ -505,13 +505,13 @@ def attach_downstream_fixture_artifacts(report: CompileReport) -> CompileReport:
                 report.derived_claims,
                 downstream_derived_claims(),
             ),
-            can_project_public_row=False,
+            can_build_public_output=False,
         )
     )
 
 
-def compile_report() -> CompileReport:
-    return CompileReport(
+def compile_report() -> ValidationReport:
+    return ValidationReport(
         status="accepted",
         checked_claims=checked_claims(),
         reference_bindings=reference_bindings(),
@@ -526,8 +526,8 @@ def _derived_claim(
     value: float | int,
     input_claim_ids: tuple[str, ...] = (),
     reference_binding_ids: tuple[str, ...] = (),
-) -> DerivedClaim:
-    return DerivedClaim(
+) -> CalculatedClaim:
+    return CalculatedClaim(
         claim_id=claim_id,
         field=field,
         value=value,
@@ -543,9 +543,9 @@ def _derived_claim(
 
 
 def _append_missing_reference_bindings(
-    existing: tuple[ReferenceBinding, ...],
-    additions: tuple[ReferenceBinding, ...],
-) -> tuple[ReferenceBinding, ...]:
+    existing: tuple[CanonicalReference, ...],
+    additions: tuple[CanonicalReference, ...],
+) -> tuple[CanonicalReference, ...]:
     binding_ids = {binding.binding_id for binding in existing}
     return (
         *existing,
@@ -554,9 +554,9 @@ def _append_missing_reference_bindings(
 
 
 def _append_missing_derived_claims(
-    existing: tuple[DerivedClaim, ...],
-    additions: tuple[DerivedClaim, ...],
-) -> tuple[DerivedClaim, ...]:
+    existing: tuple[CalculatedClaim, ...],
+    additions: tuple[CalculatedClaim, ...],
+) -> tuple[CalculatedClaim, ...]:
     claim_ids = {claim.claim_id for claim in existing}
     return (
         *existing,

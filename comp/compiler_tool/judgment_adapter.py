@@ -1,11 +1,11 @@
 from __future__ import annotations
 
 from comp.compiler_tool.commit_flow import CommitPreparation
-from comp.compiler_tool.models import CompileReport, ProofObligation
+from comp.compiler_tool.models import ValidationReport, ValidationRequirement
 from comp.judgment import Fact, FactTag, JudgmentState, SubjectRef
 
 
-def compile_report_to_facts(report: CompileReport, subject: SubjectRef) -> set[Fact]:
+def compile_report_to_facts(report: ValidationReport, subject: SubjectRef) -> set[Fact]:
     facts: set[Fact] = set()
 
     for claim in report.checked_claims:
@@ -158,7 +158,7 @@ def compile_report_to_facts(report: CompileReport, subject: SubjectRef) -> set[F
 
 
 def add_compile_report_facts(
-    state: JudgmentState, report: CompileReport, subject: SubjectRef
+    state: JudgmentState, report: ValidationReport, subject: SubjectRef
 ) -> set[Fact]:
     return state.add_facts(compile_report_to_facts(report, subject))
 
@@ -260,7 +260,7 @@ def _obligation_fact(
     tag: FactTag,
     status: str,
     subject: SubjectRef,
-    obligation: ProofObligation,
+    obligation: ValidationRequirement,
     *,
     section: str = "proof_obligation",
 ) -> Fact:
@@ -299,7 +299,7 @@ def _unchecked_area_id(field: str, reason: str) -> str:
     return _stable_id("unchecked_area", field, reason)
 
 
-def _obligation_id(obligation: ProofObligation) -> str:
+def _obligation_id(obligation: ValidationRequirement) -> str:
     if obligation.obligation_id is not None:
         return obligation.obligation_id
     return _stable_id(

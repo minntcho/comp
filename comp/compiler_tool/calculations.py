@@ -6,7 +6,7 @@ from numbers import Number
 from typing import Any
 
 from comp.compiler_tool.reference_db import ReferenceCatalog, ReferenceLookupError
-from comp.compiler_tool.references import ReferenceBinding
+from comp.compiler_tool.references import CanonicalReference
 from comp.judgment.receipts import DependencyFingerprint
 
 
@@ -53,8 +53,6 @@ class CalculatedClaim:
         return False
 
 
-DerivedClaim = CalculatedClaim
-
 
 @dataclass(frozen=True)
 class CalculationInput:
@@ -94,7 +92,7 @@ class CalculationRequirement:
 @dataclass(frozen=True)
 class CalculationResult:
     status: str
-    derived_claim: DerivedClaim | None = None
+    derived_claim: CalculatedClaim | None = None
     reason: str | None = None
     requirement: CalculationRequirement | None = None
 
@@ -103,7 +101,7 @@ def calculate_derived_claim(
     *,
     output_claim_id: str,
     input_claim: CalculationInput,
-    reference_binding: ReferenceBinding,
+    reference_binding: CanonicalReference,
     catalog: ReferenceCatalog,
     formula: CalculationFormula,
 ) -> CalculationResult:
@@ -200,7 +198,7 @@ def calculate_derived_claim(
     )
     return CalculationResult(
         status="calculated",
-        derived_claim=DerivedClaim(
+        derived_claim=CalculatedClaim(
             claim_id=output_claim_id,
             field=formula.output_field,
             value=output_value,
@@ -242,7 +240,7 @@ def _requirement(
     reason: str,
     output_claim_id: str,
     input_claim: CalculationInput,
-    reference_binding: ReferenceBinding,
+    reference_binding: CanonicalReference,
     formula: CalculationFormula,
     expected_unit: str | None = None,
     actual_unit: str | None = None,
@@ -301,7 +299,6 @@ __all__ = [
     "CalculationStep",
     "CalculationTrace",
     "CalculatedClaim",
-    "DerivedClaim",
     "CalculationInput",
     "CalculationFormula",
     "calculation_formula_declaration_fingerprint",

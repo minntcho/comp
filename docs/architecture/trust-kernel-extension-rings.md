@@ -24,7 +24,7 @@ themselves.
 
 `comp` does not create truth. It compiles the conditions under which a value can
 be claimed, records how those conditions were satisfied, and gates public
-projection through a `CommitReceipt`.
+projection through a `PublicOutputReceipt`.
 
 New capabilities should therefore be judged by whether they keep this authority
 chain legible:
@@ -58,7 +58,7 @@ flowchart BT
 
   Extractors -->|candidate artifacts only| Kernel
   Resolvers -->|submitted artifacts only| Kernel
-  Retrieval -->|ReferenceCandidate only| Kernel
+  Retrieval -->|ReferenceOption only| Kernel
   Domain -->|profile-locked behavior| Kernel
   Kernel -->|validated report| Receipt
   Receipt -->|receipt-cited artifacts| Replay
@@ -74,8 +74,8 @@ input adapters live here.
 They may produce evidence and candidate artifacts such as:
 
 ```text
-EvidenceWitness
-ClaimHypothesis
+EvidenceRef
+ClaimCandidate
 ReadingCandidate
 ParseDerivation
 TableCellCandidate
@@ -106,11 +106,11 @@ ConflictFlag
 Retrieval is a special resolver path with one narrow output shape:
 
 ```text
-ReferenceQuery -> ReferenceCandidate[]
+ReferenceQuery -> ReferenceOption[]
 ```
 
-`ReferenceCandidate` remains candidate-only regardless of retrieval score or
-backend. The deterministic selector is the only path to `ReferenceBinding`.
+`ReferenceOption` remains candidate-only regardless of retrieval score or
+backend. The deterministic selector is the only path to `CanonicalReference`.
 
 ### Domain/Profile Ring
 
@@ -139,14 +139,14 @@ The compiler gate is intentionally small. It validates submitted artifacts and
 performs authority promotion:
 
 ```text
-ClaimHypothesis validation
-EvidenceWitness checking
-ProofObligation generation
+ClaimCandidate validation
+EvidenceRef checking
+ValidationRequirement generation
 SemanticJudgment protocol validation
-ReferenceCandidate -> ReferenceBinding deterministic selection
+ReferenceOption -> CanonicalReference deterministic selection
 CalculationRequirement handling
-CalculationTrace / DerivedClaim creation
-CompileReport status recomputation
+CalculationTrace / CalculatedClaim creation
+ValidationReport status recomputation
 ```
 
 It should not parse raw input, call real LLM providers, search vector databases,
@@ -157,14 +157,14 @@ render UI, persist durable storage, or hard-code ESG meaning.
 This ring is the public authority boundary:
 
 ```text
-CompileReport
--> CommitPackage
--> GovernanceDecision
--> CommitReceipt
+ValidationReport
+-> ReviewPackage
+-> ReviewDecision
+-> PublicOutputReceipt
 ```
 
-`CommitPackage` and `GovernanceDecision` may explain why a projection is close
-to publishable. They do not authorize projection. `CommitReceipt` is the public
+`ReviewPackage` and `ReviewDecision` may explain why a projection is close
+to publishable. They do not authorize projection. `PublicOutputReceipt` is the public
 projection authority.
 
 ### Persistence / Replay Layer
@@ -173,7 +173,7 @@ Persistence records the substrate needed to replay a receipt-authorized view:
 
 ```text
 ArtifactEnvelope = replay substrate
-CommitReceipt = ledger root
+PublicOutputReceipt = ledger root
 stored public row = cached view
 ProjectionReplayReport = explanation artifact
 ```
@@ -194,13 +194,13 @@ not be bypassed.
 
 ```mermaid
 flowchart LR
-  A["ClaimHypothesis"] -->|CompilerTool validates evidence| B["CheckedClaim"]
-  C["ReferenceCandidate"] -->|deterministic selector only| D["ReferenceBinding"]
-  E["CalculationResult"] -->|calculator plus trace| F["DerivedClaim"]
-  G["CompileReport"] -->|build_commit_package| H["CommitPackage"]
-  H -->|decide_governance| I["GovernanceDecision"]
-  I -->|build_commit_receipt| J["CommitReceipt"]
-  J -->|project_public_row| K["PublicProjection"]
+  A["ClaimCandidate"] -->|CompilerTool validates evidence| B["CheckedClaim"]
+  C["ReferenceOption"] -->|deterministic selector only| D["CanonicalReference"]
+  E["CalculationResult"] -->|calculator plus trace| F["CalculatedClaim"]
+  G["ValidationReport"] -->|build_commit_package| H["ReviewPackage"]
+  H -->|decide_governance| I["ReviewDecision"]
+  I -->|build_public_output_receipt| J["PublicOutputReceipt"]
+  J -->|build_public_output| K["PublicOutput"]
 ```
 
 Only the named deterministic gates may perform these promotions. Parsers,
@@ -231,7 +231,7 @@ class ReferenceResolver(Protocol):
         query: ReferenceQuery,
         *,
         limit: int = 10,
-    ) -> tuple[ReferenceCandidate, ...]:
+    ) -> tuple[ReferenceOption, ...]:
         ...
 
 
@@ -244,10 +244,10 @@ class ArtifactStore(Protocol):
 
 
 class ReceiptLedger(Protocol):
-    def record(self, receipt: CommitReceipt) -> CommitReceipt:
+    def record(self, receipt: PublicOutputReceipt) -> PublicOutputReceipt:
         ...
 
-    def get(self, key: ReceiptLedgerKey) -> CommitReceipt:
+    def get(self, key: ReceiptLedgerKey) -> PublicOutputReceipt:
         ...
 ```
 
@@ -280,7 +280,7 @@ Authority promotion happens only in deterministic gates.
 External output enters as submitted, candidate, proposed, non-authoritative data.
 Profile-active behavior is explicit and fingerprinted.
 Retrieval score never selects truth.
-Public output requires a clean CommitReceipt.
+Public output requires a clean PublicOutputReceipt.
 Stored public rows must be replayable from receipt-cited artifacts.
 Replay reports explain authority; they do not become authority.
 Product UI renders the authority path; it does not create it.

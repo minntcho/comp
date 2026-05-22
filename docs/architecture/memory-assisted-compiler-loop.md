@@ -64,7 +64,7 @@ The active `comp` architecture remains:
 ```text
 InterpretationHypothesis
 -> CompilerTool
--> CompileReport / ProofObligations
+-> ValidationReport / ValidationRequirements
 -> Judgment Facts
 -> Governance Decision
 -> Receipt
@@ -78,21 +78,21 @@ Memory / Skills / Session Trace
 -> LLM or deterministic proposer
 -> InterpretationHypothesis
 -> comp.CompilerTool
--> CompileReport
+-> ValidationReport
 -> comp.judgment Facts
 -> Receipt-gated Projection
 ```
 
 `minchoagnt` may improve the next `InterpretationHypothesis`. It must not mint
-`Fact`, `CommitReceipt`, or public projection authority.
+`Fact`, `PublicOutputReceipt`, or public projection authority.
 
 Allowed:
 
 ```text
 Read memory before proposing a hypothesis.
 Select skills for an obligation family.
-Revise a hypothesis after a CompileReport.
-Reflect on CompileReport traces.
+Revise a hypothesis after a ValidationReport.
+Reflect on ValidationReport traces.
 Propose memory or skill updates with provenance.
 ```
 
@@ -101,8 +101,8 @@ Forbidden:
 ```text
 Treat memory as evidence.
 Treat a skill as a compiler rule.
-Turn an accepted CompileReport into a public row.
-Create a CommitReceipt from an LLM response.
+Turn an accepted ValidationReport into a public row.
+Create a PublicOutputReceipt from an LLM response.
 Use session logs as receipt authority.
 Use row.status, merge_log, or legacy pipeline state as truth.
 ```
@@ -128,7 +128,7 @@ The orchestration layer may import `comp`:
 ```python
 from comp.compiler_tool import CompilerTool, InterpretationHypothesis
 from comp.compiler_tool import compile_report_to_facts
-from comp.judgment import JudgmentState, CommitReceipt, project_public_row
+from comp.judgment import JudgmentState, PublicOutputReceipt, build_public_output
 ```
 
 This keeps the dependency direction honest:
@@ -140,16 +140,16 @@ compiler authority does not depend on agent memory
 
 ---
 
-## 4. CompileReport As Learning Signal
+## 4. ValidationReport As Learning Signal
 
-`CompileReport` is not a receipt. It is a structured diagnostic and obligation
+`ValidationReport` is not a receipt. It is a structured diagnostic and obligation
 surface.
 
 Examples:
 
 ```text
 FailedClaim(field="unit", reason="missing_source_witness")
-ProofObligation(kind="find_source_witness", field="unit")
+ValidationRequirement(kind="find_source_witness", field="unit")
 UnknownClaim(field="reporting_year", reason="context_required")
 UncheckedArea(field="factor_period_compatibility", reason="missing_rule_coverage")
 ```
@@ -168,7 +168,7 @@ Which hypothesis habit caused repeated blocked reports?
 The loop is:
 
 ```text
-CompileReport / Judgment trace
+ValidationReport / Judgment trace
 -> reflection
 -> memory and skill candidates
 -> future hypothesis improvement
@@ -297,7 +297,7 @@ A useful future workbench should make the boundary visible:
 ```text
 Hypothesis
 -> CompilerTool
--> CompileReport
+-> ValidationReport
 -> Obligations
 -> Memory / Skill Reflection
 -> Revised Hypothesis
@@ -342,19 +342,19 @@ Initial shape:
 ```text
 InterpretationHypothesis
 -> CompilerTool.compile_interpretation(...)
--> CompileReport
+-> ValidationReport
 ```
 
 No real LLM call is required for this slice.
 
-### Phase C: CompileReport Reflection
+### Phase C: ValidationReport Reflection
 
-Translate selected `CompileReport` patterns into memory or skill candidates.
+Translate selected `ValidationReport` patterns into memory or skill candidates.
 
 Example:
 
 ```text
-ProofObligation(find_source_witness, unit)
+ValidationRequirement(find_source_witness, unit)
 -> candidate skill: resolve missing unit witness
 ```
 
@@ -364,9 +364,9 @@ Use fixtures first:
 
 ```text
 hypothesis_v1
--> CompileReport(blocked)
+-> ValidationReport(blocked)
 -> deterministic revised hypothesis fixture
--> CompileReport(review_required or accepted)
+-> ValidationReport(review_required or accepted)
 ```
 
 ### Phase E: Interpretation Engine
@@ -392,9 +392,9 @@ Importing minchoagnt into comp core.
 Adding an LLM provider to comp.
 Promoting memory entries into judgment facts.
 Promoting skills into compiler rules.
-Replacing CommitReceipt with SessionDB or ReviewPlan.
+Replacing PublicOutputReceipt with SessionDB or ReviewPlan.
 Restoring legacy row.status or merge_log authority.
-Creating public projection without CommitReceipt.
+Creating public projection without PublicOutputReceipt.
 ```
 
 ---

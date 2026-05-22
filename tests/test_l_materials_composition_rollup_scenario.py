@@ -1,6 +1,6 @@
 import pytest
 
-from comp import ProjectionBlocked, ProjectionSpec, project_public_row
+from comp import PublicOutputBlocked, PublicOutputSpec, build_public_output
 from comp.compiler_tool import prepare_commit
 from tests.domain_scenarios.core import assert_scenario_contract, run_scenario
 from tests.domain_scenarios.l_energy_pcf_governance.l_materials_composition_rollup import (
@@ -109,10 +109,10 @@ def test_l_materials_invalid_composition_blocks_mapping_and_projection():
     assert report.reference_bindings == ()
     assert report.derived_claims == ()
     assert preparation.receipt is None
-    with pytest.raises(ProjectionBlocked, match="public-output receipt"):
-        project_public_row(
+    with pytest.raises(PublicOutputBlocked, match="public-output receipt"):
+        build_public_output(
             {"composition_total": 0.95},
-            ProjectionSpec(PROJECTION_ID, PROJECTION_FIELDS),
+            PublicOutputSpec(PROJECTION_ID, PROJECTION_FIELDS),
         )
 
 

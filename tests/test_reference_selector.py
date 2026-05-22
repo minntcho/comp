@@ -1,5 +1,5 @@
 from comp.compiler_tool import (
-    ReferenceCandidate,
+    ReferenceOption,
     ReferenceCatalog,
     ReferenceRecord,
     ReferenceSelectionCriteria,
@@ -55,7 +55,7 @@ def _catalog():
 
 
 def _candidate(candidate_id, reference_id, score):
-    return ReferenceCandidate(
+    return ReferenceOption(
         candidate_id=candidate_id,
         reference_id=reference_id,
         reference_type="emission_factor",
@@ -144,7 +144,7 @@ def test_reference_selector_reports_no_match_and_unknown_references():
 def test_reference_selector_rejects_reference_type_mismatch():
     result = select_reference_binding(
         candidates=(
-            ReferenceCandidate(
+            ReferenceOption(
                 candidate_id="cand-unit",
                 reference_id="unit.kwh",
                 reference_type="unit",

@@ -2,11 +2,11 @@ import pytest
 
 from comp.compiler_tool import (
     CalculationRequirement,
-    CompileReport,
+    ValidationReport,
     CompilerProfile,
     DomainPack,
     EmbeddingResolverStub,
-    ProofObligation,
+    ValidationRequirement,
     ProfileValidationError,
     ReferenceIndexEntry,
     ReferenceQuery,
@@ -21,8 +21,8 @@ from comp.compiler_tool import (
 )
 
 
-def _reference_search_obligation() -> ProofObligation:
-    return ProofObligation(
+def _reference_search_obligation() -> ValidationRequirement:
+    return ValidationRequirement(
         kind="reference_search_required",
         field="co2e_emission",
         reason="unknown_reference",
@@ -57,7 +57,7 @@ def _resolver() -> EmbeddingResolverStub:
 
 def test_reference_query_from_resolver_task_preserves_task_identity():
     task = resolver_tasks_from_report(
-        CompileReport(status="blocked", obligations=(_reference_search_obligation(),))
+        ValidationReport(status="blocked", obligations=(_reference_search_obligation(),))
     )[0]
 
     query = reference_query_from_resolver_task(
@@ -85,10 +85,10 @@ def test_reference_query_from_resolver_task_preserves_task_identity():
 
 def test_reference_query_from_resolver_task_rejects_non_reference_search_task():
     task = resolver_tasks_from_report(
-        CompileReport(
+        ValidationReport(
             status="review_required",
             obligations=(
-                ProofObligation(
+                ValidationRequirement(
                     kind="find_source_witness",
                     field="unit",
                     reason="missing_unit",
@@ -106,7 +106,7 @@ def test_reference_query_from_resolver_task_rejects_non_reference_search_task():
 
 
 def test_reference_query_builder_from_tasks_feeds_retrieval_bridge():
-    report = CompileReport(
+    report = ValidationReport(
         status="blocked",
         obligations=(_reference_search_obligation(),),
     )
@@ -138,7 +138,7 @@ def test_reference_query_builder_from_tasks_feeds_retrieval_bridge():
 
 
 def test_reference_retrieval_resolution_recomputes_status_after_resolving_only_blocker():
-    report = CompileReport(
+    report = ValidationReport(
         status="blocked",
         obligations=(_reference_search_obligation(),),
     )
@@ -163,7 +163,7 @@ def test_reference_retrieval_resolution_recomputes_status_after_resolving_only_b
 
 
 def test_reference_query_builder_from_tasks_leaves_missing_query_open():
-    report = CompileReport(
+    report = ValidationReport(
         status="blocked",
         obligations=(_reference_search_obligation(),),
     )
@@ -184,7 +184,7 @@ def test_reference_query_builder_from_tasks_leaves_missing_query_open():
 
 def test_retrieval_query_policy_renders_reference_query_from_task_payload_and_context():
     task = resolver_tasks_from_report(
-        CompileReport(status="blocked", obligations=(_reference_search_obligation(),))
+        ValidationReport(status="blocked", obligations=(_reference_search_obligation(),))
     )[0]
     policy = RetrievalQueryPolicy(
         policy_id="pcf-retrieval-policy-v1",
@@ -222,7 +222,7 @@ def test_retrieval_query_policy_renders_reference_query_from_task_payload_and_co
 
 
 def test_retrieval_query_policy_leaves_obligation_open_without_matching_rule():
-    report = CompileReport(
+    report = ValidationReport(
         status="blocked",
         obligations=(_reference_search_obligation(),),
     )
@@ -253,7 +253,7 @@ def test_retrieval_query_policy_leaves_obligation_open_without_matching_rule():
 
 
 def test_retrieval_query_policy_leaves_obligation_open_without_required_context():
-    report = CompileReport(
+    report = ValidationReport(
         status="blocked",
         obligations=(_reference_search_obligation(),),
     )
@@ -284,7 +284,7 @@ def test_retrieval_query_policy_leaves_obligation_open_without_required_context(
 
 
 def test_profile_pinned_retrieval_policy_feeds_query_builder():
-    report = CompileReport(
+    report = ValidationReport(
         status="blocked",
         obligations=(_reference_search_obligation(),),
     )
@@ -336,7 +336,7 @@ def test_profile_pinned_retrieval_policy_feeds_query_builder():
 
 
 def test_profile_retrieval_query_builder_rejects_inactive_policy_id():
-    report = CompileReport(
+    report = ValidationReport(
         status="blocked",
         obligations=(_reference_search_obligation(),),
     )

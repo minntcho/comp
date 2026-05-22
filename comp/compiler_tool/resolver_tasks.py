@@ -5,8 +5,8 @@ from typing import Any
 
 from comp.compiler_tool.calculations import CalculationRequirement
 from comp.compiler_tool.models import (
-    CompileReport,
-    ProofObligation,
+    ValidationReport,
+    ValidationRequirement,
     SemanticJudgmentRequirement,
 )
 
@@ -25,14 +25,14 @@ class ResolverTask:
     payload: tuple[tuple[str, Any], ...] = field(default_factory=tuple)
 
 
-def resolver_tasks_from_report(report: CompileReport) -> tuple[ResolverTask, ...]:
+def resolver_tasks_from_report(report: ValidationReport) -> tuple[ResolverTask, ...]:
     return tuple(
         resolver_task_from_obligation(obligation)
         for obligation in report.obligations
     )
 
 
-def resolver_task_from_obligation(obligation: ProofObligation) -> ResolverTask:
+def resolver_task_from_obligation(obligation: ValidationRequirement) -> ResolverTask:
     obligation_id = _obligation_id(obligation)
     return ResolverTask(
         task_id=f"resolver-task:{obligation_id}",
@@ -72,7 +72,7 @@ def _required_artifact(obligation_kind: str) -> str:
     }.get(obligation_kind, "resolver_artifact")
 
 
-def _payload(obligation: ProofObligation) -> tuple[tuple[str, Any], ...]:
+def _payload(obligation: ValidationRequirement) -> tuple[tuple[str, Any], ...]:
     if obligation.semantic_requirement is not None:
         return _semantic_payload(obligation.semantic_requirement)
     if obligation.calculation_requirement is not None:
@@ -124,7 +124,7 @@ def _present_items(
     return tuple((key, value) for key, value in items if value is not None)
 
 
-def _obligation_id(obligation: ProofObligation) -> str:
+def _obligation_id(obligation: ValidationRequirement) -> str:
     if obligation.obligation_id is not None:
         return obligation.obligation_id
     return _stable_id(

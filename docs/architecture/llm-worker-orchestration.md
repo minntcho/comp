@@ -48,10 +48,10 @@ abstain when context is insufficient
 It must not:
 
 ```text
-create ReferenceBinding directly
-create DerivedClaim directly
-create GovernanceDecision
-create CommitReceipt
+create CanonicalReference directly
+create CalculatedClaim directly
+create ReviewDecision
+create PublicOutputReceipt
 project public rows
 mark missing evidence as satisfied by assumption
 turn embedding similarity into truth
@@ -128,7 +128,7 @@ ambiguous should preserve multiple plausible readings
 ```
 
 The compiler can convert missing, inferred, or ambiguous slots into
-ProofObligations. It can convert supported observed slots into checked claims
+ValidationRequirements. It can convert supported observed slots into checked claims
 only after deterministic validation.
 
 ---
@@ -169,7 +169,7 @@ invariants.
 
 ## 5. LLM Work Orders
 
-The orchestrator should not pass a raw CompileReport directly to the LLM.
+The orchestrator should not pass a raw ValidationReport directly to the LLM.
 Instead, it should create a small work order.
 
 ```text
@@ -200,7 +200,7 @@ allowed_tools:
 forbidden_outputs:
   create_reference_binding
   create_commit_receipt
-  project_public_row
+  build_public_output
 ```
 
 The same model can then act as different workers depending on the work order:
@@ -500,12 +500,12 @@ LLM tool calls submit artifacts only.
 Submitted artifacts do not mutate compiler authority directly.
 Embedding reports are routing context only.
 Embedding similarity never resolves an obligation.
-Top-1 retrieval never creates ReferenceBinding.
+Top-1 retrieval never creates CanonicalReference.
 Accepted neighbors do not prove the current case.
 Rejected neighbors do not reject the current case by themselves.
 LLMWorkOrder can restrict tools, but cannot weaken compiler invariants.
 Only compiler validation can discharge obligations.
-Only GovernanceDecision plus CommitReceipt can authorize public projection.
+Only ReviewDecision plus PublicOutputReceipt can authorize public projection.
 ```
 
 ---

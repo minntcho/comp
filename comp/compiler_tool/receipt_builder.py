@@ -38,8 +38,6 @@ def build_public_output_receipt(
     )
 
 
-build_commit_receipt = build_public_output_receipt
-
 
 def _validate_receipt_inputs(
     package: ReviewPackage,
@@ -111,5 +109,4 @@ def _unique(values: tuple[str, ...]) -> tuple[str, ...]:
 __all__ = [
     "ReceiptBuildBlocked",
     "build_public_output_receipt",
-    "build_commit_receipt",
 ]

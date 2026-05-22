@@ -1,9 +1,9 @@
 from comp.compiler_tool import (
     CalculationFormula,
     CalculationInput,
-    CompileReport,
+    ValidationReport,
     EmbeddingResolverStub,
-    ReferenceBinding,
+    CanonicalReference,
     ReferenceCatalog,
     ReferenceIndexEntry,
     ReferenceQuery,
@@ -36,7 +36,7 @@ def _input():
 
 
 def _missing_binding():
-    return ReferenceBinding(
+    return CanonicalReference(
         binding_id="bind-amount-factor",
         claim_id="hyp-1:amount",
         reference_id="factor.missing",
@@ -109,7 +109,7 @@ def _planned_unknown_reference_report():
         formula=_formula(),
     )
     blocked = apply_calculation_result(
-        CompileReport(status="accepted"),
+        ValidationReport(status="accepted"),
         result,
         output_claim_id="hyp-1:co2e_emission",
         formula=_formula(),
@@ -137,7 +137,7 @@ def test_retrieval_resolution_adds_candidate_only_candidates_and_resolves_search
     )
 
     assert resolved.status == "blocked"
-    assert resolved.can_project_public_row is False
+    assert resolved.can_build_public_output is False
     assert [candidate.reference_id for candidate in resolved.reference_candidates] == [
         "factor.kr_grid.2024.location_based"
     ]
@@ -214,4 +214,4 @@ def test_retrieval_resolution_candidates_can_continue_through_selection_and_retr
     assert retried.status == "accepted"
     assert retried.obligations == ()
     assert retried.derived_claims[0].value == 0.48
-    assert retried.can_project_public_row is False
+    assert retried.can_build_public_output is False

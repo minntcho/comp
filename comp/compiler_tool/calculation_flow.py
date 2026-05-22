@@ -3,7 +3,7 @@ from __future__ import annotations
 from comp.compiler_tool.calculation_resolution import plan_calculation_resolution
 from comp.compiler_tool.calculation_retry import retry_blocked_calculation
 from comp.compiler_tool.calculations import CalculationFormula, CalculationInput
-from comp.compiler_tool.models import CompileReport
+from comp.compiler_tool.models import ValidationReport
 from comp.compiler_tool.reference_db import ReferenceCatalog
 from comp.compiler_tool.reference_resolution import (
     ReferenceSearchQuery,
@@ -11,11 +11,11 @@ from comp.compiler_tool.reference_resolution import (
 )
 from comp.compiler_tool.reference_selection_report import apply_reference_selection
 from comp.compiler_tool.reference_selector import ReferenceSelectionCriteria
-from comp.compiler_tool.references import ReferenceBinding
+from comp.compiler_tool.references import CanonicalReference
 
 
 def resolve_reference_grounded_calculation(
-    report: CompileReport,
+    report: ValidationReport,
     catalog: ReferenceCatalog,
     *,
     query_for_obligation: ReferenceSearchQuery,
@@ -25,7 +25,7 @@ def resolve_reference_grounded_calculation(
     output_claim_id: str,
     limit: int = 10,
     retrieval_method: str = "keyword",
-) -> CompileReport:
+) -> ValidationReport:
     planned = plan_calculation_resolution(report)
     if not _has_reference_search_obligation(planned):
         return planned
@@ -61,7 +61,7 @@ def resolve_reference_grounded_calculation(
     )
 
 
-def _has_reference_search_obligation(report: CompileReport) -> bool:
+def _has_reference_search_obligation(report: ValidationReport) -> bool:
     return any(
         obligation.kind == "reference_search_required"
         for obligation in report.obligations
@@ -69,9 +69,9 @@ def _has_reference_search_obligation(report: CompileReport) -> bool:
 
 
 def _binding_for(
-    bindings: tuple[ReferenceBinding, ...],
+    bindings: tuple[CanonicalReference, ...],
     binding_id: str,
-) -> ReferenceBinding | None:
+) -> CanonicalReference | None:
     for binding in reversed(bindings):
         if binding.binding_id == binding_id:
             return binding

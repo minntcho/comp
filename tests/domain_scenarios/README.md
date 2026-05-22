@@ -75,10 +75,10 @@ being auto-discovered from the filesystem.
 Strong assertions are encouraged for core invariants:
 
 ```text
-ReferenceCandidate remains candidate_only
+ReferenceOption remains candidate_only
 retrieval_score never authorizes truth
-ReferenceBinding is required for calculation authority
-DerivedClaim cannot authorize public output
+CanonicalReference is required for calculation authority
+CalculatedClaim cannot authorize public output
 PublicOutputReceipt is required for public output
 open obligations prevent receipt issuance
 receipt traces binding, formula, calculation, and derived-claim evidence

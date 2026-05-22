@@ -1,7 +1,7 @@
 from comp.compiler_tool import (
-    CompileReport,
-    ReferenceBinding,
-    RejectedReferenceCandidate,
+    ValidationReport,
+    CanonicalReference,
+    RejectedReferenceOption,
     compile_report_to_facts,
 )
 from comp.judgment import Fact, SubjectRef
@@ -9,13 +9,13 @@ from comp.judgment import Fact, SubjectRef
 
 def test_compile_report_to_facts_maps_reference_binding_as_provenance_edge():
     subject = SubjectRef("claim", "hyp-1")
-    rejected = RejectedReferenceCandidate(
+    rejected = RejectedReferenceOption(
         candidate_id="cand-market",
         reference_id="factor.kr_residual_mix.2024.market_based",
         reason="attribute_mismatch:method",
         selector_rule_id="ghg.factor_selector.v1",
     )
-    binding = ReferenceBinding(
+    binding = CanonicalReference(
         binding_id="bind-amount-factor",
         claim_id="hyp-1:amount",
         reference_id="factor.kr_grid.2024.location_based",
@@ -25,7 +25,7 @@ def test_compile_report_to_facts_maps_reference_binding_as_provenance_edge():
         source_witness_ids=("span-amount", "ref-factor-row-17"),
         rejected_candidates=(rejected,),
     )
-    report = CompileReport(status="accepted", reference_bindings=(binding,))
+    report = ValidationReport(status="accepted", reference_bindings=(binding,))
 
     facts = compile_report_to_facts(report, subject)
 

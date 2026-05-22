@@ -1,10 +1,10 @@
 import pytest
 
 from comp.compiler_tool import (
-    CompileReport,
+    ValidationReport,
     FailedClaim,
     Hazard,
-    ProofObligation,
+    ValidationRequirement,
     UncheckedArea,
     UnknownClaim,
     recompute_report_status,
@@ -16,7 +16,7 @@ from comp.compiler_tool import (
     ("report", "expected_status"),
     (
         (
-            CompileReport(
+            ValidationReport(
                 status="accepted",
                 failed_claims=(
                     FailedClaim(
@@ -30,10 +30,10 @@ from comp.compiler_tool import (
             "blocked",
         ),
         (
-            CompileReport(
+            ValidationReport(
                 status="accepted",
                 obligations=(
-                    ProofObligation(
+                    ValidationRequirement(
                         kind="calculation_blocked",
                         field="co2e_emission",
                         reason="unit_mismatch",
@@ -43,17 +43,17 @@ from comp.compiler_tool import (
             "blocked",
         ),
         (
-            CompileReport(
+            ValidationReport(
                 status="accepted",
                 hazards=(Hazard(kind="conflict", field="scope2_method", severity="review"),),
             ),
             "review_required",
         ),
         (
-            CompileReport(
+            ValidationReport(
                 status="accepted",
                 obligations=(
-                    ProofObligation(
+                    ValidationRequirement(
                         kind="semantic_judgment_required",
                         field="scope2_method",
                         reason="semantic_support_required",
@@ -63,7 +63,7 @@ from comp.compiler_tool import (
             "review_required",
         ),
         (
-            CompileReport(
+            ValidationReport(
                 status="accepted",
                 unchecked_areas=(
                     UncheckedArea(field="factor_policy", reason="missing_rule_family"),
@@ -72,17 +72,17 @@ from comp.compiler_tool import (
             "unchecked",
         ),
         (
-            CompileReport(
+            ValidationReport(
                 status="accepted",
                 unknowns=(UnknownClaim(field="period", reason="context_required"),),
             ),
             "underconstrained",
         ),
         (
-            CompileReport(
+            ValidationReport(
                 status="accepted",
                 obligations=(
-                    ProofObligation(
+                    ValidationRequirement(
                         kind="reference_selection_required",
                         field="co2e_emission",
                         reason="ambiguous",
@@ -92,10 +92,10 @@ from comp.compiler_tool import (
             "review_required",
         ),
         (
-            CompileReport(
+            ValidationReport(
                 status="review_required",
                 obligations=(
-                    ProofObligation(
+                    ValidationRequirement(
                         kind="nonblocking_hint",
                         field="co2e_emission",
                         reason="candidate_available",
@@ -112,14 +112,14 @@ def test_recompute_report_status_uses_single_priority_policy(report, expected_st
 
 
 def test_with_recomputed_status_preserves_report_payload():
-    report = CompileReport(
+    report = ValidationReport(
         status="accepted",
         hazards=(Hazard(kind="conflict", field="scope2_method", severity="review"),),
-        can_project_public_row=True,
+        can_build_public_output=True,
     )
 
     updated = with_recomputed_status(report)
 
     assert updated.status == "review_required"
     assert updated.hazards == report.hazards
-    assert updated.can_project_public_row is True
+    assert updated.can_build_public_output is True

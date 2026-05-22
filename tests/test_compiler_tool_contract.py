@@ -1,13 +1,13 @@
 from comp.compiler_tool import (
-    ClaimHypothesis,
+    ClaimCandidate,
     CheckedClaim,
-    CompileReport,
+    ValidationReport,
     CompilerTool,
-    EvidenceWitness,
+    EvidenceRef,
     FailedClaim,
     Hazard,
     InterpretationHypothesis,
-    ProofObligation,
+    ValidationRequirement,
     UnknownClaim,
     UncheckedArea,
 )
@@ -25,7 +25,7 @@ def _hypothesis(*, claims, witnesses=()):
 
 
 def _claim(field, value, witness_id=None):
-    return ClaimHypothesis(
+    return ClaimCandidate(
         field=field,
         value=value,
         witness_id=witness_id,
@@ -34,7 +34,7 @@ def _claim(field, value, witness_id=None):
 
 
 def _witness(witness_id, field, *, source="invoice.csv", span="A1"):
-    return EvidenceWitness(
+    return EvidenceRef(
         witness_id=witness_id,
         field=field,
         source=source,
@@ -44,18 +44,18 @@ def _witness(witness_id, field, *, source="invoice.csv", span="A1"):
 
 def test_compiler_tool_contract_model_set_is_exported():
     assert InterpretationHypothesis is not None
-    assert ClaimHypothesis is not None
-    assert EvidenceWitness is not None
-    assert CompileReport is not None
+    assert ClaimCandidate is not None
+    assert EvidenceRef is not None
+    assert ValidationReport is not None
     assert CheckedClaim is not None
     assert FailedClaim is not None
     assert UnknownClaim is not None
     assert UncheckedArea is not None
-    assert ProofObligation is not None
+    assert ValidationRequirement is not None
     assert Hazard is not None
 
 
-def test_friendly_intake_validation_names_are_canonical_with_legacy_aliases():
+def test_friendly_intake_validation_names_are_canonical():
     from comp.compiler_tool import (
         ClaimCandidate,
         EvidenceRef,
@@ -63,70 +63,59 @@ def test_friendly_intake_validation_names_are_canonical_with_legacy_aliases():
         evidence_ref_fingerprint,
     )
 
-    claim = ClaimHypothesis(field="amount", value=1200, witness_id="w-amount")
-    witness = EvidenceWitness(
+    claim = ClaimCandidate(field="amount", value=1200, witness_id="w-amount")
+    witness = EvidenceRef(
         witness_id="w-amount",
         field="amount",
         source="invoice.csv",
     )
-    requirement = ProofObligation(
+    requirement = ValidationRequirement(
         kind="find_source_witness",
         field="amount",
         reason="missing_source_witness",
     )
 
-    assert ClaimHypothesis is ClaimCandidate
-    assert EvidenceWitness is EvidenceRef
-    assert ProofObligation is ValidationRequirement
     assert type(claim).__name__ == "ClaimCandidate"
     assert type(witness).__name__ == "EvidenceRef"
     assert type(requirement).__name__ == "ValidationRequirement"
     assert evidence_ref_fingerprint(witness).dependency_kind == "evidence_witness"
 
 
-def test_friendly_reference_calculation_report_names_are_canonical_with_legacy_aliases():
+def test_friendly_reference_calculation_report_names_are_canonical():
     from comp.compiler_tool import (
         CalculatedClaim,
         CanonicalReference,
         CalculationTrace,
-        CompileReport,
-        DerivedClaim,
-        ReferenceBinding,
-        ReferenceCandidate,
         ReferenceOption,
         ValidationReport,
     )
 
-    option = ReferenceCandidate(
+    option = ReferenceOption(
         candidate_id="candidate-1",
         reference_id="factor.kr.2024",
         reference_type="emission_factor",
         retrieval_method="profile_rule",
     )
-    reference = ReferenceBinding(
+    reference = CanonicalReference(
         binding_id="binding-1",
         claim_id="claim:electricity",
         reference_id="factor.kr.2024",
         reference_type="emission_factor",
     )
-    calculated = DerivedClaim(
+    calculated = CalculatedClaim(
         claim_id="claim:co2e",
         field="co2e_kg",
         value=1200,
         unit="kg",
         trace=CalculationTrace(trace_id="trace-1", formula_id="formula:co2e"),
     )
-    report = CompileReport(
+    report = ValidationReport(
         status="accepted",
         reference_candidates=(option,),
         reference_bindings=(reference,),
         derived_claims=(calculated,),
     )
 
-    assert ReferenceCandidate is ReferenceOption
-    assert ReferenceBinding is CanonicalReference
-    assert DerivedClaim is CalculatedClaim
-    assert CompileReport is ValidationReport
     assert type(option).__name__ == "ReferenceOption"
     assert type(reference).__name__ == "CanonicalReference"
     assert type(calculated).__name__ == "CalculatedClaim"
@@ -179,7 +168,7 @@ def test_unsupported_unit_blocks_and_requests_source_witness():
         obligation.kind == "find_source_witness" and obligation.field == "unit"
         for obligation in report.obligations
     )
-    assert report.can_project_public_row is False
+    assert report.can_build_public_output is False
 
 
 def test_witness_id_must_resolve_to_grounded_matching_witness():
@@ -240,7 +229,7 @@ def test_unknown_and_unchecked_are_distinct_and_not_pass():
         ),
     )
     assert [claim.field for claim in report.checked_claims] == ["unit"]
-    assert report.can_project_public_row is False
+    assert report.can_build_public_output is False
 
 
 def test_missing_unit_is_review_required_hazard_not_public_projection():
@@ -269,7 +258,7 @@ def test_missing_unit_is_review_required_hazard_not_public_projection():
         obligation.kind == "find_source_witness" and obligation.field == "unit"
         for obligation in report.obligations
     )
-    assert report.can_project_public_row is False
+    assert report.can_build_public_output is False
 
 
 def test_accepted_report_is_not_public_projection_authority():
@@ -297,4 +286,4 @@ def test_accepted_report_is_not_public_projection_authority():
         "amount",
         "unit",
     ]
-    assert report.can_project_public_row is False
+    assert report.can_build_public_output is False

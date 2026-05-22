@@ -1,6 +1,6 @@
 from comp.compiler_tool import (
-    CompileReport,
-    ProofObligation,
+    ValidationReport,
+    ValidationRequirement,
     SemanticJudgment,
     SemanticJudgmentRequirement,
     UncheckedArea,
@@ -9,7 +9,7 @@ from comp.compiler_tool import (
 
 
 def _semantic_obligation():
-    return ProofObligation(
+    return ValidationRequirement(
         kind="semantic_judgment_required",
         field="scope2_method",
         reason="semantic_support_required",
@@ -50,7 +50,7 @@ def test_semantic_judgment_model_set_is_exported():
 
 def test_matching_semantic_judgment_discharges_obligation():
     obligation = _semantic_obligation()
-    report = CompileReport(status="review_required", obligations=(obligation,))
+    report = ValidationReport(status="review_required", obligations=(obligation,))
 
     resolved = apply_semantic_judgments(
         report,
@@ -66,7 +66,7 @@ def test_matching_semantic_judgment_discharges_obligation():
 
 def test_wrong_rubric_does_not_discharge_obligation():
     obligation = _semantic_obligation()
-    report = CompileReport(status="review_required", obligations=(obligation,))
+    report = ValidationReport(status="review_required", obligations=(obligation,))
 
     resolved = apply_semantic_judgments(
         report,
@@ -81,7 +81,7 @@ def test_wrong_rubric_does_not_discharge_obligation():
 
 def test_unaccepted_or_non_required_verdict_does_not_discharge_obligation():
     obligation = _semantic_obligation()
-    report = CompileReport(status="review_required", obligations=(obligation,))
+    report = ValidationReport(status="review_required", obligations=(obligation,))
 
     refuted = apply_semantic_judgments(
         report,
@@ -104,7 +104,7 @@ def test_unaccepted_or_non_required_verdict_does_not_discharge_obligation():
 
 def test_unallowed_judge_or_missing_cited_span_does_not_discharge_obligation():
     obligation = _semantic_obligation()
-    report = CompileReport(status="review_required", obligations=(obligation,))
+    report = ValidationReport(status="review_required", obligations=(obligation,))
 
     unallowed_judge = apply_semantic_judgments(
         report,
@@ -125,7 +125,7 @@ def test_unallowed_judge_or_missing_cited_span_does_not_discharge_obligation():
 
 def test_conflicting_semantic_judgments_keep_obligation_open_and_add_hazard():
     obligation = _semantic_obligation()
-    report = CompileReport(status="review_required", obligations=(obligation,))
+    report = ValidationReport(status="review_required", obligations=(obligation,))
 
     resolved = apply_semantic_judgments(
         report,
@@ -145,12 +145,12 @@ def test_conflicting_semantic_judgments_keep_obligation_open_and_add_hazard():
 
 
 def test_nonsemantic_obligations_do_not_reclassify_unchecked_report():
-    obligation = ProofObligation(
+    obligation = ValidationRequirement(
         kind="define_rule_coverage",
         field="factor_period_compatibility",
         reason="missing_rule_coverage",
     )
-    report = CompileReport(
+    report = ValidationReport(
         status="unchecked",
         unchecked_areas=(
             UncheckedArea(

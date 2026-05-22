@@ -5,9 +5,9 @@ from typing import Any
 
 from comp.compiler_tool.reference_db import ReferenceCatalog, ReferenceLookupError
 from comp.compiler_tool.references import (
-    ReferenceBinding,
-    ReferenceCandidate,
-    RejectedReferenceCandidate,
+    CanonicalReference,
+    ReferenceOption,
+    RejectedReferenceOption,
 )
 
 
@@ -23,27 +23,27 @@ class ReferenceSelectionCriteria:
 @dataclass(frozen=True)
 class ReferenceSelectionResult:
     status: str
-    binding: ReferenceBinding | None = None
+    binding: CanonicalReference | None = None
     accepted_candidate_ids: tuple[str, ...] = field(default_factory=tuple)
-    rejected_candidates: tuple[RejectedReferenceCandidate, ...] = field(
+    rejected_candidates: tuple[RejectedReferenceOption, ...] = field(
         default_factory=tuple
     )
 
 
 def select_reference_binding(
     *,
-    candidates: tuple[ReferenceCandidate, ...],
+    candidates: tuple[ReferenceOption, ...],
     catalog: ReferenceCatalog,
     criteria: ReferenceSelectionCriteria,
 ) -> ReferenceSelectionResult:
-    accepted: list[tuple[ReferenceCandidate, tuple[str, ...]]] = []
-    rejected: list[RejectedReferenceCandidate] = []
+    accepted: list[tuple[ReferenceOption, tuple[str, ...]]] = []
+    rejected: list[RejectedReferenceOption] = []
 
     for candidate in candidates:
         rejection = _rejection_reason(candidate, catalog, criteria)
         if rejection is not None:
             rejected.append(
-                RejectedReferenceCandidate(
+                RejectedReferenceOption(
                     candidate_id=candidate.candidate_id,
                     reference_id=candidate.reference_id,
                     reason=rejection,
@@ -65,7 +65,7 @@ def select_reference_binding(
         )
 
     selected, witness_ids = accepted[0]
-    binding = ReferenceBinding(
+    binding = CanonicalReference(
         binding_id=criteria.binding_id,
         claim_id=criteria.claim_id,
         reference_id=selected.reference_id,
@@ -84,7 +84,7 @@ def select_reference_binding(
 
 
 def _rejection_reason(
-    candidate: ReferenceCandidate,
+    candidate: ReferenceOption,
     catalog: ReferenceCatalog,
     criteria: ReferenceSelectionCriteria,
 ) -> str | None:

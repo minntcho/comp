@@ -5,10 +5,10 @@ from dataclasses import dataclass, field, replace
 from typing import Any
 
 from comp.compiler_tool import (
-    CompileReport,
+    ValidationReport,
     CompilerTool,
     InterpretationHypothesis,
-    ProofObligation,
+    ValidationRequirement,
     ReferenceCatalog,
     ReferenceResolver,
     RetrievalQueryPolicy,
@@ -23,16 +23,16 @@ from comp.compiler_tool import (
     resolver_task_from_obligation,
     resolver_tasks_from_report,
 )
-from comp.judgment import CommitReceipt, Fact, JudgmentState, SubjectRef
+from comp.judgment import PublicOutputReceipt, Fact, JudgmentState, SubjectRef
 
 
 @dataclass(frozen=True)
 class CompCompileResult:
     hypothesis: InterpretationHypothesis
     subject: SubjectRef
-    report: CompileReport
+    report: ValidationReport
     judgment: JudgmentState = field(default_factory=JudgmentState)
-    receipt: CommitReceipt | None = None
+    receipt: PublicOutputReceipt | None = None
 
 
 @dataclass(frozen=True)
@@ -190,7 +190,7 @@ class DeterministicCompResolver:
             and task.obligation_id in self.reference_queries
         )
 
-    def _query_for_obligation(self, obligation: ProofObligation) -> str | None:
+    def _query_for_obligation(self, obligation: ValidationRequirement) -> str | None:
         task = resolver_task_from_obligation(obligation)
         return self.reference_queries.get(task.obligation_id)
 
@@ -210,7 +210,7 @@ class DeterministicCompResolver:
 
     def _retrieval_query_obligation_ids(
         self,
-        report: CompileReport,
+        report: ValidationReport,
         query_for_obligation,
     ) -> tuple[str, ...]:
         return tuple(

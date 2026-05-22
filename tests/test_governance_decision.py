@@ -1,8 +1,8 @@
-from comp.compiler_tool import CommitPackage, decide_governance
+from comp.compiler_tool import ReviewPackage, decide_governance
 
 
 def test_governance_decision_commits_complete_package_without_projection_authority():
-    package = CommitPackage(
+    package = ReviewPackage(
         package_id="commit-package:facility-1",
         subject_id="facility-1",
         report_status="accepted",
@@ -25,7 +25,7 @@ def test_governance_decision_commits_complete_package_without_projection_authori
 
 
 def test_governance_decision_holds_open_obligations():
-    package = CommitPackage(
+    package = ReviewPackage(
         package_id="commit-package:facility-1",
         subject_id="facility-1",
         report_status="review_required",
@@ -44,7 +44,7 @@ def test_governance_decision_holds_open_obligations():
 
 
 def test_governance_decision_holds_hazards_for_review():
-    package = CommitPackage(
+    package = ReviewPackage(
         package_id="commit-package:facility-1",
         subject_id="facility-1",
         report_status="review_required",
@@ -62,7 +62,7 @@ def test_governance_decision_holds_hazards_for_review():
 
 
 def test_governance_decision_rejects_blocked_terminal_package():
-    package = CommitPackage(
+    package = ReviewPackage(
         package_id="commit-package:facility-1",
         subject_id="facility-1",
         report_status="blocked",
@@ -76,7 +76,7 @@ def test_governance_decision_rejects_blocked_terminal_package():
 
 
 def test_governance_decision_uses_explicit_decision_id():
-    package = CommitPackage(
+    package = ReviewPackage(
         package_id="commit-package:facility-1",
         subject_id="facility-1",
         report_status="accepted",

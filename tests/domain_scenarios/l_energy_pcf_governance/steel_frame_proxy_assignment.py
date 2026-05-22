@@ -2,16 +2,16 @@ from __future__ import annotations
 
 from decimal import Decimal
 
-from comp import ProjectionSpec, SubjectRef, project_public_row
+from comp import PublicOutputSpec, SubjectRef, build_public_output
 from comp.compiler_tool import (
     CalculationStep,
     CalculationTrace,
     CheckedClaim,
-    CompileReport,
-    DerivedClaim,
-    EvidenceWitness,
-    ProofObligation,
-    ReferenceBinding,
+    ValidationReport,
+    CalculatedClaim,
+    EvidenceRef,
+    ValidationRequirement,
+    CanonicalReference,
     prepare_commit,
     with_recomputed_status,
 )
@@ -107,9 +107,9 @@ def run_steel_frame_proxy_assignment_scenario():
     )
     projection = None
     if preparation.receipt is not None:
-        projection = project_public_row(
+        projection = build_public_output(
             _projection_source(report),
-            ProjectionSpec(PROJECTION_ID, PROJECTION_FIELDS),
+            PublicOutputSpec(PROJECTION_ID, PROJECTION_FIELDS),
             receipt=preparation.receipt,
         )
     return build_domain_scenario_result(
@@ -122,37 +122,37 @@ def run_steel_frame_proxy_assignment_scenario():
     )
 
 
-def steel_frame_proxy_assignment_report() -> CompileReport:
+def steel_frame_proxy_assignment_report() -> ValidationReport:
     return with_recomputed_status(
-        CompileReport(
+        ValidationReport(
             status="accepted",
             evidence_witnesses=_evidence_witnesses(),
             checked_claims=_checked_claims(),
             resolved_obligations=_resolved_obligations(),
             reference_bindings=_reference_bindings(),
             derived_claims=_derived_claims(),
-            can_project_public_row=True,
+            can_build_public_output=True,
         )
     )
 
 
-def _evidence_witnesses() -> tuple[EvidenceWitness, ...]:
+def _evidence_witnesses() -> tuple[EvidenceRef, ...]:
     return (
-        EvidenceWitness(
+        EvidenceRef(
             witness_id="source:c-pack-lower-tier-requirement",
             field="required_lower_tier_input_ton",
             source="tests/e2e/cases/001-l-energy-pcf-governance.yaml",
             span="data_setup.c_pack.required_lower_tier_input_ton",
             text="required lower-tier input 6,300 ton",
         ),
-        EvidenceWitness(
+        EvidenceRef(
             witness_id="source:alpha-metal-verified-input",
             field="verified_alpha_input_ton",
             source="tests/e2e/cases/001-l-energy-pcf-governance.yaml",
             span="data_setup.alpha_metal.corrected_submission.target_panel_ton",
             text="Alpha Metal verified input 4,400 ton",
         ),
-        EvidenceWitness(
+        EvidenceRef(
             witness_id="source:steel-frame-submission-absence",
             field="supplier_submission_status",
             source="tests/e2e/cases/001-l-energy-pcf-governance.yaml",
@@ -197,15 +197,15 @@ def _checked_claims() -> tuple[CheckedClaim, ...]:
     )
 
 
-def _resolved_obligations() -> tuple[ProofObligation, ...]:
+def _resolved_obligations() -> tuple[ValidationRequirement, ...]:
     return (
-        ProofObligation(
+        ValidationRequirement(
             kind="find_source_witness",
             field="steel_frame_supplier_submission",
             reason="supplier_submission_absent",
             obligation_id=SUPPLIER_ABSENCE_OBLIGATION_ID,
         ),
-        ProofObligation(
+        ValidationRequirement(
             kind="proxy_factor_required",
             field="steel_frame_proxy_factor",
             reason="missing_supplier_evidence_requires_proxy",
@@ -214,9 +214,9 @@ def _resolved_obligations() -> tuple[ProofObligation, ...]:
     )
 
 
-def _reference_bindings() -> tuple[ReferenceBinding, ...]:
+def _reference_bindings() -> tuple[CanonicalReference, ...]:
     return (
-        ReferenceBinding(
+        CanonicalReference(
             binding_id=PROXY_BINDING_ID,
             claim_id=SCENARIO_ID,
             reference_id="platform.factor.steel_proxy_per_ton",
@@ -227,7 +227,7 @@ def _reference_bindings() -> tuple[ReferenceBinding, ...]:
     )
 
 
-def _derived_claims() -> tuple[DerivedClaim, ...]:
+def _derived_claims() -> tuple[CalculatedClaim, ...]:
     missing_mass = REQUIRED_LOWER_TIER_INPUT_TON - VERIFIED_ALPHA_INPUT_TON
     proxy_emission = int(Decimal(missing_mass) * PROXY_FACTOR_TCO2E_PER_TON)
     missing_mass_step = CalculationStep(
@@ -245,7 +245,7 @@ def _derived_claims() -> tuple[DerivedClaim, ...]:
         output_unit="tCO2e",
     )
     return (
-        DerivedClaim(
+        CalculatedClaim(
             claim_id=MISSING_MASS_CLAIM_ID,
             field="missing_mass_ton",
             value=missing_mass,
@@ -257,7 +257,7 @@ def _derived_claims() -> tuple[DerivedClaim, ...]:
                 steps=(missing_mass_step,),
             ),
         ),
-        DerivedClaim(
+        CalculatedClaim(
             claim_id=FINAL_EMISSION_CLAIM_ID,
             field="steel_frame_final_emission_tco2e",
             value=proxy_emission,
@@ -274,7 +274,7 @@ def _derived_claims() -> tuple[DerivedClaim, ...]:
     )
 
 
-def _projection_source(report: CompileReport) -> dict[str, object]:
+def _projection_source(report: ValidationReport) -> dict[str, object]:
     values = {claim.field: claim.value for claim in report.checked_claims}
     values.update({claim.field: claim.value for claim in report.derived_claims})
     return values

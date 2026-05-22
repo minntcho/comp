@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from comp import ProjectionSpec, SubjectRef, project_public_row
+from comp import PublicOutputSpec, SubjectRef, build_public_output
 from comp.compiler_tool import prepare_commit, resolve_reference_grounded_calculation
 from tests.domain_scenarios.core import (
     DomainScenarioResult,
@@ -79,9 +79,9 @@ def run_tiny_pcf_scenario() -> DomainScenarioResult:
     )
     projection = None
     if preparation.receipt is not None:
-        projection = project_public_row(
+        projection = build_public_output(
             _projection_source(resolved_report),
-            ProjectionSpec("pcf-public-row", ("electricity_kwh", "co2e_kg")),
+            PublicOutputSpec("pcf-public-row", ("electricity_kwh", "co2e_kg")),
             receipt=preparation.receipt,
         )
 

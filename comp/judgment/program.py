@@ -41,8 +41,6 @@ class PublicOutputSpec:
     output_fields: tuple[str, ...]
 
 
-ProjectionSpec = PublicOutputSpec
-
 
 @dataclass(frozen=True)
 class CompiledJudgmentProgram:
@@ -58,6 +56,5 @@ __all__ = [
     "BundleSpec",
     "CommitSpec",
     "PublicOutputSpec",
-    "ProjectionSpec",
     "CompiledJudgmentProgram",
 ]

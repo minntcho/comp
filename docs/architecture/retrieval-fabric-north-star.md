@@ -52,18 +52,18 @@ contracts.
 flowchart TD
     source["Source Evidence"]
     extractor["Extractor / LLM / Table / Lark"]
-    hypothesis["ClaimHypothesis"]
+    hypothesis["ClaimCandidate"]
     compiler1["Deterministic Compiler Gate"]
-    report["CompileReport"]
-    task["ProofObligation / ResolverTask"]
+    report["ValidationReport"]
+    task["ValidationRequirement / ResolverTask"]
     retrieval["Embedding Retrieval Fabric"]
     artifacts["Resolver Artifacts"]
     compiler2["Artifact / Binding Gate"]
-    binding["ReferenceBinding / SemanticJudgment / ContextAttachment"]
-    calculation["CalculationTrace / DerivedClaim"]
-    package["CommitPackage"]
-    governance["GovernanceDecision"]
-    receipt["CommitReceipt"]
+    binding["CanonicalReference / SemanticJudgment / ContextAttachment"]
+    calculation["CalculationTrace / CalculatedClaim"]
+    package["ReviewPackage"]
+    governance["ReviewDecision"]
+    receipt["PublicOutputReceipt"]
     projection["Receipt-gated Projection"]
 
     source --> extractor
@@ -96,7 +96,7 @@ flowchart LR
     end
 
     subgraph submitted["Submitted artifacts"]
-        candidate["ReferenceCandidate"]
+        candidate["ReferenceOption"]
         query["ReferenceQuery"]
         judgment["SemanticJudgment"]
         objection["LLMObjection"]
@@ -111,10 +111,10 @@ flowchart LR
 
     subgraph authority["Authority chain"]
         db["Typed Reference DB Row"]
-        binding["ReferenceBinding"]
-        derived["DerivedClaim"]
-        receipt["CommitReceipt"]
-        public["PublicProjection"]
+        binding["CanonicalReference"]
+        derived["CalculatedClaim"]
+        receipt["PublicOutputReceipt"]
+        public["PublicOutput"]
     end
 
     embedding --> candidate
@@ -146,7 +146,7 @@ flowchart LR
 
 ```mermaid
 flowchart TD
-    task["ProofObligation / ResolverTask"]
+    task["ValidationRequirement / ResolverTask"]
 
     concept["ConceptLens"]
     metric["MetricLens"]
@@ -196,9 +196,9 @@ The first invariant is that recall is not authority:
 
 ```text
 Embedding / LLM -> candidate or submitted artifact only
-ReferenceCandidate != ReferenceBinding
-DerivedClaim != public output
-CommitReceipt == public projection authority
+ReferenceOption != CanonicalReference
+CalculatedClaim != public output
+PublicOutputReceipt == public projection authority
 ```
 
 An embedding result must remain candidate-only, even when it is top-ranked.
@@ -208,7 +208,7 @@ An LLM does not resolve obligations by declaration. It submits resolver artifact
 for obligations, such as:
 
 ```text
-ClaimHypothesis
+ClaimCandidate
 ReferenceQuery
 SemanticJudgment
 EvidenceLink
@@ -225,11 +225,11 @@ invariants.
 LLM and embedding results must not directly create:
 
 ```text
-ReferenceBinding
-DerivedClaim
-GovernanceDecision
-CommitReceipt
-PublicProjection
+CanonicalReference
+CalculatedClaim
+ReviewDecision
+PublicOutputReceipt
+PublicOutput
 Core invariant changes
 ```
 
@@ -242,7 +242,7 @@ Retrieval should usually begin from an obligation or resolver task, not from a
 free-form claim alone.
 
 ```text
-ProofObligation / ResolverTask
+ValidationRequirement / ResolverTask
 -> choose retrieval lens
 -> recall candidates
 -> submit resolver artifact
@@ -261,7 +261,7 @@ find_source_witness(unit)
 
 reference_search_required(emission_factor)
 -> FactorLens / FormulaLens / ConceptLens
--> ReferenceCandidate artifacts
+-> ReferenceOption artifacts
 
 missing_rule_coverage(factor_period_compatibility)
 -> RuleLens / RubricLens / DomainPackLens
@@ -312,7 +312,7 @@ retrieval intent explicit.
 Retrieval outputs should look like candidate artifacts:
 
 ```text
-ReferenceCandidate:
+ReferenceOption:
   candidate_id
   reference_id
   reference_type
@@ -328,16 +328,16 @@ stays candidate-only.
 The next gate is deterministic selection:
 
 ```text
-ReferenceCandidateSet
+ReferenceOptionSet
 -> reference_type check
 -> catalog row exists
 -> unit / period / geography / method / source compatibility
 -> required witness checks
 -> conflict / ambiguity checks
--> ReferenceBinding or blocking obligation
+-> CanonicalReference or blocking obligation
 ```
 
-`ReferenceBinding` is the point where a candidate becomes usable for
+`CanonicalReference` is the point where a candidate becomes usable for
 calculation. It should cite the selected candidate, selector rule, witnesses,
 and rejected candidates.
 
@@ -417,14 +417,14 @@ and which artifacts eventually reached receipt:
 
 ```text
 EvidenceSpan
-ClaimHypothesis
-ReferenceCandidate
-ReferenceBinding
+ClaimCandidate
+ReferenceOption
+CanonicalReference
 SemanticRubric
 RuleFamily
 SemanticJudgment
-DerivedClaim
-ProofObligation
+CalculatedClaim
+ValidationRequirement
 LLMObjection
 ```
 
@@ -473,21 +473,21 @@ It connects an open retrieval obligation to the resolver interface without
 creating authority:
 
 ```text
-ProofObligation(kind="reference_search_required")
+ValidationRequirement(kind="reference_search_required")
 -> ReferenceQuery
 -> ReferenceResolver.search(...)
--> ReferenceCandidate[]
--> CompileReport.reference_candidates
+-> ReferenceOption[]
+-> ValidationReport.reference_candidates
 ```
 
 The bridge may discharge the search obligation, but it must not create:
 
 ```text
-ReferenceBinding
-DerivedClaim
-GovernanceDecision
-CommitReceipt
-PublicProjection
+CanonicalReference
+CalculatedClaim
+ReviewDecision
+PublicOutputReceipt
+PublicOutput
 ```
 
 Those remain separate deterministic gates.
@@ -515,10 +515,10 @@ raw evidence
 -> profile-active RetrievalQueryPolicy
 -> ReferenceQuery
 -> retrieval bridge
--> candidate-only ReferenceCandidate
--> deterministic ReferenceBinding
+-> candidate-only ReferenceOption
+-> deterministic CanonicalReference
 -> calculation retry
--> CommitReceipt
+-> PublicOutputReceipt
 -> receipt-gated projection
 ```
 

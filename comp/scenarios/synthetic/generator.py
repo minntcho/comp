@@ -16,7 +16,7 @@ from comp.scenarios.synthetic.models import (
     ExpectedArtifactRef,
     ExpectedClaim,
     ExpectedDependencyRef,
-    ExpectedDerivedClaim,
+    ExpectedCalculatedClaim,
     ExpectedFailedClaim,
     ExpectedHazard,
     ExpectedObligation,
@@ -44,7 +44,6 @@ from comp.scenarios.synthetic.sources import (
     build_synthetic_loaded_sources,
     synthetic_source_input_dependency_id,
 )
-
 
 def generate_synthetic_pcf_run(config: SyntheticScenarioConfig) -> SyntheticRun:
     if config.scenario_id == "synthetic_pcf.resolution.v1":
@@ -109,7 +108,7 @@ def generate_synthetic_pcf_run(config: SyntheticScenarioConfig) -> SyntheticRun:
         oracle=SyntheticOracle(
             expected_claims=(expected_claim,),
             expected_derived_claims=(
-                ExpectedDerivedClaim(
+                ExpectedCalculatedClaim(
                     claim_id=config.output_claim_id,
                     field="co2e_kg",
                     value=derived_value,
@@ -200,7 +199,7 @@ def _generate_synthetic_pcf_resolution_run(
                 ),
             ),
             expected_derived_claims=(
-                ExpectedDerivedClaim(
+                ExpectedCalculatedClaim(
                     claim_id=config.output_claim_id,
                     field="co2e_kg",
                     value=derived_value,
@@ -631,7 +630,7 @@ def _calculation_obligation_id(config: SyntheticScenarioConfig) -> str:
 
 __all__ = [
     "ExpectedClaim",
-    "ExpectedDerivedClaim",
+    "ExpectedCalculatedClaim",
     "ExpectedFailedClaim",
     "ExpectedHazard",
     "ExpectedObligation",

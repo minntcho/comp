@@ -40,7 +40,7 @@ def test_schema_labels_are_display_metadata_not_authority_state():
     receipt_label = schema_label("PublicOutputReceipt")
 
     assert not hasattr(receipt_label, "can_authorize_public_output")
-    assert not hasattr(receipt_label, "can_project_public_row")
+    assert not hasattr(receipt_label, "can_build_public_output")
     with pytest.raises(FrozenInstanceError):
         receipt_label.ko = "다른 표시명"
     with pytest.raises(TypeError):

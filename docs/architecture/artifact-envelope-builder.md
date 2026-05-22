@@ -14,7 +14,7 @@ It sits below `trust-kernel-extension-rings.md`,
 The builder exists to answer one question:
 
 ```text
-Given a CommitReceipt, which artifact envelopes must exist so replay can
+Given a PublicOutputReceipt, which artifact envelopes must exist so replay can
 explain the receipt-authorized public projection?
 ```
 
@@ -25,7 +25,7 @@ dependencies into replay substrate.
 ## Core Rule
 
 ```text
-CommitReceipt is authority.
+PublicOutputReceipt is authority.
 ArtifactEnvelope is integrity and replay substrate.
 Builder output is not authority.
 ```
@@ -40,9 +40,9 @@ The production builder should accept the smallest set that can explain a
 committed projection:
 
 ```text
-CompileReport
+ValidationReport
 CommitPreparation
-EvidenceWitness artifacts used by checked claims
+EvidenceRef artifacts used by checked claims
 SemanticJudgment artifacts used to resolve semantic obligations
 Dependency manifests for profile, domain, formula, source evidence, reference
 records, and reference catalog snapshots
@@ -129,7 +129,7 @@ origin
 ```
 
 The `value` field is required when the claim is the source of a
-`ProjectionValueCommitment`.
+`PublicOutputValueCommitment`.
 
 ### semantic_judgment
 
@@ -184,7 +184,7 @@ origin
 ```
 
 The `value` field is required when the derived claim is the source of a
-`ProjectionValueCommitment`.
+`PublicOutputValueCommitment`.
 
 ### calculation_trace
 
@@ -257,7 +257,7 @@ profile_id
 ```
 
 Governance decisions do not authorize projection without a clean
-`CommitReceipt`, but they are receipt issuance preconditions.
+`PublicOutputReceipt`, but they are receipt issuance preconditions.
 
 ### compiler_profile
 
@@ -397,9 +397,9 @@ It must not:
 ```text
 invent projection values
 drop open obligations from a package body
-create synthetic ReferenceBinding
-create synthetic DerivedClaim
-mint CommitReceipt
+create synthetic CanonicalReference
+create synthetic CalculatedClaim
+mint PublicOutputReceipt
 rewrite a stored envelope body to match a receipt
 ```
 
@@ -444,7 +444,7 @@ Use this checklist for PRs that add or change envelope builders:
 ```text
 Does the builder derive required artifacts from receipt citations?
 Does every envelope body contain the fields replay checks need?
-Does the builder preserve values used by ProjectionValueCommitment?
+Does the builder preserve values used by PublicOutputValueCommitment?
 Does the builder fail when cited artifacts are missing?
 Does the builder avoid minting receipts or promoting authority?
 Does replay still fail on tampered values, fingerprints, or artifact kinds?

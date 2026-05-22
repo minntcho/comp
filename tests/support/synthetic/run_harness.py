@@ -4,10 +4,10 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
-from comp import ProjectionSpec, project_public_row
+from comp import PublicOutputSpec, build_public_output
 from comp.compiler_tool import (
     CommitPreparation,
-    CompileReport,
+    ValidationReport,
     prepare_commit,
     resolve_reference_grounded_calculation,
 )
@@ -38,7 +38,7 @@ class MaterializedSyntheticRun:
     run_dir: Path
     oracle: SyntheticOracle
     adapter: SyntheticPcfAdapter
-    report: CompileReport
+    report: ValidationReport
     preparation: CommitPreparation
     projection: dict[str, Any] | None
     replay_report: ProjectionReplayReport | None
@@ -66,7 +66,7 @@ def materialize_synthetic_run(
         profile_id=adapter.profile_id,
         dependency_fingerprints=adapter.dependency_fingerprints(),
     )
-    projection_spec = ProjectionSpec(adapter.projection_id, adapter.projection_fields)
+    projection_spec = PublicOutputSpec(adapter.projection_id, adapter.projection_fields)
     projection = _project_if_authorized(adapter, report, preparation, projection_spec)
     replay_report = _replay_if_authorized(
         adapter,
@@ -97,7 +97,7 @@ def materialize_synthetic_run(
     )
 
 
-def _compile_report(adapter: SyntheticPcfAdapter) -> CompileReport:
+def _compile_report(adapter: SyntheticPcfAdapter) -> ValidationReport:
     if adapter.has_resolution_artifacts():
         return resolve_reference_grounded_calculation(
             adapter.resolution_seed_report(),
@@ -123,13 +123,13 @@ def _compile_report(adapter: SyntheticPcfAdapter) -> CompileReport:
 
 def _project_if_authorized(
     adapter: SyntheticPcfAdapter,
-    report: CompileReport,
+    report: ValidationReport,
     preparation: CommitPreparation,
-    projection_spec: ProjectionSpec,
+    projection_spec: PublicOutputSpec,
 ) -> dict[str, Any] | None:
     if preparation.receipt is None:
         return None
-    return project_public_row(
+    return build_public_output(
         adapter.projection_source(report),
         projection_spec,
         receipt=preparation.receipt,
@@ -138,10 +138,10 @@ def _project_if_authorized(
 
 def _replay_if_authorized(
     adapter: SyntheticPcfAdapter,
-    report: CompileReport,
+    report: ValidationReport,
     preparation: CommitPreparation,
     projection: dict[str, Any] | None,
-    projection_spec: ProjectionSpec,
+    projection_spec: PublicOutputSpec,
 ) -> ProjectionReplayReport | None:
     if preparation.receipt is None or projection is None:
         return None

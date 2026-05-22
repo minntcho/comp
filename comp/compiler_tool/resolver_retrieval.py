@@ -5,7 +5,7 @@ from dataclasses import dataclass, field
 from string import Formatter
 from typing import Any
 
-from comp.compiler_tool.models import ProofObligation
+from comp.compiler_tool.models import ValidationRequirement
 from comp.compiler_tool.resolver_tasks import ResolverTask, resolver_task_from_obligation
 from comp.compiler_tool.retrieval import ReferenceQuery, RetrievalLens
 
@@ -54,7 +54,7 @@ def reference_query_for_obligation_from_policy(
     *,
     policy: RetrievalQueryPolicy,
     context: Mapping[str, Any] | None = None,
-) -> Callable[[ProofObligation], ReferenceQuery | None]:
+) -> Callable[[ValidationRequirement], ReferenceQuery | None]:
     return reference_query_for_obligation_from_policies(
         tasks,
         policies=(policy,),
@@ -67,7 +67,7 @@ def reference_query_for_obligation_from_policies(
     *,
     policies: tuple[RetrievalQueryPolicy, ...],
     context: Mapping[str, Any] | None = None,
-) -> Callable[[ProofObligation], ReferenceQuery | None]:
+) -> Callable[[ValidationRequirement], ReferenceQuery | None]:
     context = context or {}
     queries_by_obligation_id: dict[str, ReferenceQuery] = {}
     for task in tasks:
@@ -75,7 +75,7 @@ def reference_query_for_obligation_from_policies(
         if query is not None:
             queries_by_obligation_id[task.obligation_id] = query
 
-    def query_for_obligation(obligation: ProofObligation) -> ReferenceQuery | None:
+    def query_for_obligation(obligation: ValidationRequirement) -> ReferenceQuery | None:
         obligation_id = resolver_task_from_obligation(obligation).obligation_id
         return queries_by_obligation_id.get(obligation_id)
 
@@ -88,7 +88,7 @@ def reference_query_for_obligation_from_profile_policy(
     profile,
     policy_id: str | None = None,
     context: Mapping[str, Any] | None = None,
-) -> Callable[[ProofObligation], ReferenceQuery | None]:
+) -> Callable[[ValidationRequirement], ReferenceQuery | None]:
     from comp.compiler_tool.profiles import (
         ProfileValidationError,
         active_retrieval_query_policies,
@@ -117,7 +117,7 @@ def reference_query_for_obligation_from_resolver_tasks(
     query_texts: Mapping[str, str],
     lens: RetrievalLens,
     reference_type: str | None = None,
-) -> Callable[[ProofObligation], ReferenceQuery | None]:
+) -> Callable[[ValidationRequirement], ReferenceQuery | None]:
     queries_by_obligation_id = {
         task.obligation_id: reference_query_from_resolver_task(
             task,
@@ -129,7 +129,7 @@ def reference_query_for_obligation_from_resolver_tasks(
         if task.task_type == "reference_search" and task.obligation_id in query_texts
     }
 
-    def query_for_obligation(obligation: ProofObligation) -> ReferenceQuery | None:
+    def query_for_obligation(obligation: ValidationRequirement) -> ReferenceQuery | None:
         obligation_id = resolver_task_from_obligation(obligation).obligation_id
         return queries_by_obligation_id.get(obligation_id)
 

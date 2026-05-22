@@ -1,6 +1,6 @@
 import pytest
 
-from comp import ProjectionSpec
+from comp import PublicOutputSpec
 from comp.compiler_tool import active_retrieval_query_policies
 from comp.persistence import ArtifactEnvelope, ArtifactRef, ProjectionReplayBlocked
 from tests.domain_scenarios.assertions import assert_projection_tamper_blocked
@@ -53,7 +53,7 @@ def test_canonical_working_loop_extracts_and_compiles_raw_text():
         "w-geography",
     ]
     assert report.obligations == ()
-    assert report.can_project_public_row is False
+    assert report.can_build_public_output is False
 
 
 def test_canonical_working_loop_opens_calculation_obligation_after_compile():
@@ -120,7 +120,7 @@ def test_canonical_working_loop_receipt_rejects_tampered_projection_value():
 
     assert_projection_tamper_blocked(
         result,
-        ProjectionSpec(
+        PublicOutputSpec(
             "canonical-pcf-public-row",
             ("electricity_kwh", "reporting_year", "co2e_kg"),
         ),
@@ -131,7 +131,7 @@ def test_canonical_working_loop_receipt_rejects_tampered_projection_value():
 
 def test_canonical_working_loop_replays_projection_from_stored_artifacts():
     result = run_canonical_working_loop_scenario()
-    projection = ProjectionSpec(
+    projection = PublicOutputSpec(
         "canonical-pcf-public-row",
         ("electricity_kwh", "reporting_year", "co2e_kg"),
     )
@@ -187,7 +187,7 @@ def test_canonical_working_loop_replays_projection_from_stored_artifacts():
 
 def test_canonical_working_loop_replay_blocks_when_source_span_drifts():
     result = run_canonical_working_loop_scenario()
-    projection = ProjectionSpec(
+    projection = PublicOutputSpec(
         "canonical-pcf-public-row",
         ("electricity_kwh", "reporting_year", "co2e_kg"),
     )
@@ -227,7 +227,7 @@ def test_canonical_working_loop_replay_blocks_when_source_span_drifts():
 
 def test_canonical_working_loop_replay_blocks_when_cited_artifact_is_missing():
     result = run_canonical_working_loop_scenario()
-    projection = ProjectionSpec(
+    projection = PublicOutputSpec(
         "canonical-pcf-public-row",
         ("electricity_kwh", "reporting_year", "co2e_kg"),
     )

@@ -1,27 +1,25 @@
 import pytest
 
-from comp import ProjectionBlocked, ProjectionSpec, project_public_row
+from comp import PublicOutputBlocked, PublicOutputSpec, build_public_output
 from comp.compiler_tool import (
     CalculationTrace,
     CheckedClaim,
-    CommitPackage,
-    CommitReceiptCitations,
-    CompileReport,
-    DerivedClaim,
+    ReviewPackage,
+    ValidationReport,
+    CalculatedClaim,
     DependencyFingerprint,
-    ProjectionValueCommitment,
+    PublicOutputValueCommitment,
     PublicOutputReceipt,
     PublicOutputReceiptCitations,
     ReceiptBuildBlocked,
     build_commit_package,
-    build_commit_receipt,
     build_public_output_receipt,
     decide_governance,
 )
 
 
 def test_commit_receipt_builder_cites_package_and_governance_artifacts():
-    package = CommitPackage(
+    package = ReviewPackage(
         package_id="commit-package:facility-1",
         subject_id="facility-1",
         report_status="accepted",
@@ -39,7 +37,7 @@ def test_commit_receipt_builder_cites_package_and_governance_artifacts():
     )
     decision = decide_governance(package)
 
-    receipt = build_commit_receipt(
+    receipt = build_public_output_receipt(
         package,
         decision,
         public_row_id="public-row-1",
@@ -74,8 +72,8 @@ def test_commit_receipt_builder_cites_package_and_governance_artifacts():
     assert snapshot["hazard_ids"] == ()
 
 
-def test_friendly_receipt_builder_name_is_canonical_with_legacy_alias():
-    package = CommitPackage(
+def test_friendly_receipt_builder_name_is_canonical():
+    package = ReviewPackage(
         package_id="commit-package:facility-1",
         subject_id="facility-1",
         report_status="accepted",
@@ -92,15 +90,13 @@ def test_friendly_receipt_builder_name_is_canonical_with_legacy_alias():
         projection_id="public-row",
     )
 
-    assert build_commit_receipt is build_public_output_receipt
     assert isinstance(receipt, PublicOutputReceipt)
     assert isinstance(receipt.citations, PublicOutputReceiptCitations)
-    assert CommitReceiptCitations is PublicOutputReceiptCitations
     assert type(receipt).__name__ == "PublicOutputReceipt"
 
 
 def test_commit_receipt_builder_exposes_typed_citations():
-    package = CommitPackage(
+    package = ReviewPackage(
         package_id="commit-package:facility-1",
         subject_id="facility-1",
         report_status="accepted",
@@ -118,14 +114,14 @@ def test_commit_receipt_builder_exposes_typed_citations():
     )
     decision = decide_governance(package)
 
-    receipt = build_commit_receipt(
+    receipt = build_public_output_receipt(
         package,
         decision,
         public_row_id="public-row-1",
         projection_id="public-row",
     )
 
-    assert isinstance(receipt.citations, CommitReceiptCitations)
+    assert isinstance(receipt.citations, PublicOutputReceiptCitations)
     assert receipt.citations.governance_decision_id == decision.decision_id
     assert receipt.citations.commit_package_id == "commit-package:facility-1"
     assert receipt.citations.subject_id == "facility-1"
@@ -150,7 +146,7 @@ def test_commit_receipt_builder_cites_dependency_fingerprints():
         dependency_id="esg-ghg-v1",
         fingerprint="sha256:profile",
     )
-    package = CommitPackage(
+    package = ReviewPackage(
         package_id="commit-package:facility-1",
         subject_id="facility-1",
         report_status="accepted",
@@ -162,7 +158,7 @@ def test_commit_receipt_builder_cites_dependency_fingerprints():
     )
     decision = decide_governance(package)
 
-    receipt = build_commit_receipt(
+    receipt = build_public_output_receipt(
         package,
         decision,
         public_row_id="public-row-1",
@@ -177,7 +173,7 @@ def test_commit_receipt_builder_cites_dependency_fingerprints():
 
 
 def test_commit_receipt_builder_commits_checked_and_derived_projection_values():
-    report = CompileReport(
+    report = ValidationReport(
         status="accepted",
         checked_claims=(
             CheckedClaim(
@@ -188,7 +184,7 @@ def test_commit_receipt_builder_commits_checked_and_derived_projection_values():
             ),
         ),
         derived_claims=(
-            DerivedClaim(
+            CalculatedClaim(
                 claim_id="hyp-1:co2e_emission",
                 field="co2e_emission",
                 value=0.48,
@@ -206,7 +202,7 @@ def test_commit_receipt_builder_commits_checked_and_derived_projection_values():
         profile_id="esg-ghg-v1",
     )
 
-    receipt = build_commit_receipt(
+    receipt = build_public_output_receipt(
         package,
         decide_governance(package),
         public_row_id="public-row-1",
@@ -215,13 +211,13 @@ def test_commit_receipt_builder_commits_checked_and_derived_projection_values():
 
     commitments = receipt.citations.projection_value_commitments
     assert commitments == (
-        ProjectionValueCommitment.from_value(
+        PublicOutputValueCommitment.from_value(
             field="amount",
             source_kind="checked_claim",
             source_id="checked_claim:amount:span-amount",
             value=1200,
         ),
-        ProjectionValueCommitment.from_value(
+        PublicOutputValueCommitment.from_value(
             field="co2e_emission",
             source_kind="derived_claim",
             source_id="hyp-1:co2e_emission",
@@ -231,7 +227,7 @@ def test_commit_receipt_builder_commits_checked_and_derived_projection_values():
 
     snapshot = dict(receipt.barrier_snapshot)
     assert snapshot["projection_value_commitments"] == commitments
-    assert tuple(ProjectionValueCommitment.__dataclass_fields__) == (
+    assert tuple(PublicOutputValueCommitment.__dataclass_fields__) == (
         "field",
         "source_kind",
         "source_id",
@@ -242,7 +238,7 @@ def test_commit_receipt_builder_commits_checked_and_derived_projection_values():
 
 
 def test_commit_receipt_value_digests_preserve_value_type():
-    report = CompileReport(
+    report = ValidationReport(
         status="accepted",
         checked_claims=(
             CheckedClaim(
@@ -272,7 +268,7 @@ def test_commit_receipt_value_digests_preserve_value_type():
         ),
     )
     package = build_commit_package(report, subject_id="facility-1")
-    receipt = build_commit_receipt(
+    receipt = build_public_output_receipt(
         package,
         decide_governance(package),
         public_row_id="public-row-1",
@@ -300,7 +296,7 @@ def test_commit_receipt_value_digests_preserve_value_type():
 
 
 def test_generated_commit_receipt_can_authorize_existing_projection_gate():
-    report = CompileReport(
+    report = ValidationReport(
         status="accepted",
         checked_claims=(
             CheckedClaim(
@@ -318,16 +314,16 @@ def test_generated_commit_receipt_can_authorize_existing_projection_gate():
         ),
     )
     package = build_commit_package(report, subject_id="facility-1")
-    receipt = build_commit_receipt(
+    receipt = build_public_output_receipt(
         package,
         decide_governance(package),
         public_row_id="public-row-1",
         projection_id="public-row",
     )
 
-    row = project_public_row(
+    row = build_public_output(
         {"site": "plant-a", "amount": 100, "internal_note": "hidden"},
-        ProjectionSpec("public-row", ("site", "amount")),
+        PublicOutputSpec("public-row", ("site", "amount")),
         receipt=receipt,
     )
 
@@ -335,53 +331,53 @@ def test_generated_commit_receipt_can_authorize_existing_projection_gate():
 
 
 def test_commit_receipt_cannot_authorize_different_projection():
-    package = CommitPackage(
+    package = ReviewPackage(
         package_id="commit-package:facility-1",
         subject_id="facility-1",
         report_status="accepted",
         checked_claim_fields=("site", "amount"),
         complete=True,
     )
-    receipt = build_commit_receipt(
+    receipt = build_public_output_receipt(
         package,
         decide_governance(package),
         public_row_id="public-row-1",
         projection_id="public-row",
     )
 
-    with pytest.raises(ProjectionBlocked, match="authorize this public output"):
-        project_public_row(
+    with pytest.raises(PublicOutputBlocked, match="authorize this public output"):
+        build_public_output(
             {"site": "plant-a", "amount": 100},
-            ProjectionSpec("audit-row", ("site", "amount")),
+            PublicOutputSpec("audit-row", ("site", "amount")),
             receipt=receipt,
         )
 
 
 def test_commit_receipt_cannot_authorize_unscoped_projection_fields():
-    package = CommitPackage(
+    package = ReviewPackage(
         package_id="commit-package:facility-1",
         subject_id="facility-1",
         report_status="accepted",
         checked_claim_fields=("site", "amount"),
         complete=True,
     )
-    receipt = build_commit_receipt(
+    receipt = build_public_output_receipt(
         package,
         decide_governance(package),
         public_row_id="public-row-1",
         projection_id="public-row",
     )
 
-    with pytest.raises(ProjectionBlocked, match="unauthorized field"):
-        project_public_row(
+    with pytest.raises(PublicOutputBlocked, match="unauthorized field"):
+        build_public_output(
             {"site": "plant-a", "amount": 100, "internal_note": "hidden"},
-            ProjectionSpec("public-row", ("site", "internal_note")),
+            PublicOutputSpec("public-row", ("site", "internal_note")),
             receipt=receipt,
         )
 
 
 def test_commit_receipt_builder_blocks_hold_decision():
-    package = CommitPackage(
+    package = ReviewPackage(
         package_id="commit-package:facility-1",
         subject_id="facility-1",
         report_status="review_required",
@@ -390,7 +386,7 @@ def test_commit_receipt_builder_blocks_hold_decision():
     )
 
     with pytest.raises(ReceiptBuildBlocked, match="commit decision"):
-        build_commit_receipt(
+        build_public_output_receipt(
             package,
             decide_governance(package),
             public_row_id="public-row-1",
@@ -399,13 +395,13 @@ def test_commit_receipt_builder_blocks_hold_decision():
 
 
 def test_commit_receipt_builder_blocks_package_mismatch():
-    package = CommitPackage(
+    package = ReviewPackage(
         package_id="commit-package:facility-1",
         subject_id="facility-1",
         report_status="accepted",
         complete=True,
     )
-    other_package = CommitPackage(
+    other_package = ReviewPackage(
         package_id="commit-package:facility-2",
         subject_id="facility-2",
         report_status="accepted",
@@ -413,7 +409,7 @@ def test_commit_receipt_builder_blocks_package_mismatch():
     )
 
     with pytest.raises(ReceiptBuildBlocked, match="package mismatch"):
-        build_commit_receipt(
+        build_public_output_receipt(
             package,
             decide_governance(other_package),
             public_row_id="public-row-1",

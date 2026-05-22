@@ -250,7 +250,7 @@ def _verify_source_evidence_span_fingerprints(
         if fingerprint.dependency_kind != "evidence_witness":
             continue
         envelope = artifacts.get(fingerprint.dependency_id)
-        actual = _evidence_witness_fingerprint_from_body(envelope.body)
+        actual = _evidence_ref_fingerprint_from_body(envelope.body)
         if actual.fingerprint != fingerprint.fingerprint:
             raise ProjectionReplayBlocked(
                 "Projection replay source evidence fingerprint mismatch: "
@@ -258,7 +258,7 @@ def _verify_source_evidence_span_fingerprints(
             )
 
 
-def _evidence_witness_fingerprint_from_body(
+def _evidence_ref_fingerprint_from_body(
     body: Mapping[str, Any],
 ) -> DependencyFingerprint:
     return DependencyFingerprint.from_payload(

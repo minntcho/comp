@@ -8,11 +8,11 @@ from comp.compiler_tool import (
     CalculationStep,
     CalculationTrace,
     CheckedClaim,
-    CompileReport,
-    DerivedClaim,
-    EvidenceWitness,
-    ProofObligation,
-    ReferenceBinding,
+    ValidationReport,
+    CalculatedClaim,
+    EvidenceRef,
+    ValidationRequirement,
+    CanonicalReference,
     with_recomputed_status,
 )
 from comp.compiler_tool.models import InterpretationHypothesis
@@ -89,7 +89,7 @@ class SyntheticRawClaimPromotionProfile:
 def promote_raw_claim_hypothesis(
     hypothesis: InterpretationHypothesis,
     profile: SyntheticRawClaimPromotionProfile,
-) -> CompileReport:
+) -> ValidationReport:
     raw = _raw_claim_values(hypothesis)
     electricity = _electricity_claim(raw)
     electricity_gwh = _decimal(electricity["amount"])
@@ -98,7 +98,7 @@ def promote_raw_claim_hypothesis(
     allocated_electricity_mwh = electricity_mwh * allocation_share
 
     return with_recomputed_status(
-        CompileReport(
+        ValidationReport(
             status="accepted",
             evidence_witnesses=(
                 *hypothesis.witnesses,
@@ -144,7 +144,7 @@ def promote_raw_claim_hypothesis(
                 allocation_share=allocation_share,
                 allocated_electricity_mwh=allocated_electricity_mwh,
             ),
-            can_project_public_row=False,
+            can_build_public_output=False,
         )
     )
 
@@ -167,30 +167,30 @@ def _electricity_claim(values: dict[str, Any]) -> dict[str, Any]:
 
 def _support_witnesses(
     profile: SyntheticRawClaimPromotionProfile,
-) -> tuple[EvidenceWitness, ...]:
+) -> tuple[EvidenceRef, ...]:
     return (
-        EvidenceWitness(
+        EvidenceRef(
             witness_id=profile.site_alias.witness_id,
             field="site_alias",
             source=profile.site_alias.source,
             span=profile.site_alias.span,
             text=profile.site_alias.text,
         ),
-        EvidenceWitness(
+        EvidenceRef(
             witness_id=profile.unit_conversion.witness_id,
             field="unit_conversion",
             source=profile.unit_conversion.source,
             span=profile.unit_conversion.span,
             text=profile.unit_conversion.text,
         ),
-        EvidenceWitness(
+        EvidenceRef(
             witness_id=profile.reporting_period.witness_id,
             field="period",
             source=profile.reporting_period.source,
             span=profile.reporting_period.span,
             text=profile.reporting_period.text,
         ),
-        EvidenceWitness(
+        EvidenceRef(
             witness_id=profile.allocation_support.witness_id,
             field="allocation_support",
             source=profile.allocation_support.source,
@@ -202,9 +202,9 @@ def _support_witnesses(
 
 def _resolved_obligations(
     profile: SyntheticRawClaimPromotionProfile,
-) -> tuple[ProofObligation, ...]:
+) -> tuple[ValidationRequirement, ...]:
     return (
-        ProofObligation(
+        ValidationRequirement(
             kind="site_alias_resolved",
             field="site_id",
             reason=(
@@ -213,7 +213,7 @@ def _resolved_obligations(
             ),
             obligation_id=profile.site_alias.obligation_id,
         ),
-        ProofObligation(
+        ValidationRequirement(
             kind="unit_conversion_policy_applied",
             field="electricity_mwh",
             reason=(
@@ -223,13 +223,13 @@ def _resolved_obligations(
             ),
             obligation_id=profile.unit_conversion.obligation_id,
         ),
-        ProofObligation(
+        ValidationRequirement(
             kind="period_validated",
             field="period",
             reason="period_inside_active_reporting_window",
             obligation_id=profile.reporting_period.obligation_id,
         ),
-        ProofObligation(
+        ValidationRequirement(
             kind="physical_allocation_support_validated",
             field="allocation_share",
             reason="line_a_mass_over_total_line_mass",
@@ -240,9 +240,9 @@ def _resolved_obligations(
 
 def _reference_bindings(
     profile: SyntheticRawClaimPromotionProfile,
-) -> tuple[ReferenceBinding, ...]:
+) -> tuple[CanonicalReference, ...]:
     return (
-        ReferenceBinding(
+        CanonicalReference(
             binding_id=profile.site_alias.binding_id,
             claim_id=profile.scenario_id,
             reference_id=(
@@ -253,7 +253,7 @@ def _reference_bindings(
             selector_rule_id=profile.selector_rule_id,
             source_witness_ids=(profile.site_alias.witness_id,),
         ),
-        ReferenceBinding(
+        CanonicalReference(
             binding_id=profile.unit_conversion.binding_id,
             claim_id=profile.scenario_id,
             reference_id=(
@@ -264,7 +264,7 @@ def _reference_bindings(
             selector_rule_id=profile.selector_rule_id,
             source_witness_ids=(profile.unit_conversion.witness_id,),
         ),
-        ReferenceBinding(
+        CanonicalReference(
             binding_id=profile.allocation_support.binding_id,
             claim_id=profile.scenario_id,
             reference_id="physical-allocation-support:line_a_mass_share",
@@ -281,7 +281,7 @@ def _derived_claims(
     electricity_mwh: Decimal,
     allocation_share: Decimal,
     allocated_electricity_mwh: Decimal,
-) -> tuple[DerivedClaim, ...]:
+) -> tuple[CalculatedClaim, ...]:
     return (
         _derived_claim(
             claim_id=profile.claim_ids.electricity_mwh,
@@ -362,8 +362,8 @@ def _derived_claim(
     input_claim_ids: tuple[str, ...],
     reference_binding_ids: tuple[str, ...],
     steps: tuple[CalculationStep, ...],
-) -> DerivedClaim:
-    return DerivedClaim(
+) -> CalculatedClaim:
+    return CalculatedClaim(
         claim_id=claim_id,
         field=field,
         value=value,

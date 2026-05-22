@@ -1,11 +1,11 @@
 import pytest
 
 from comp.compiler_tool import (
-    CompileReport,
-    ProofObligation,
-    ReferenceBinding,
-    ReferenceCandidate,
-    RejectedReferenceCandidate,
+    ValidationReport,
+    ValidationRequirement,
+    CanonicalReference,
+    ReferenceOption,
+    RejectedReferenceOption,
     SemanticJudgment,
     SemanticJudgmentRequirement,
     apply_semantic_judgments,
@@ -13,7 +13,7 @@ from comp.compiler_tool import (
 
 
 def test_reference_candidate_is_candidate_only_authority():
-    candidate = ReferenceCandidate(
+    candidate = ReferenceOption(
         candidate_id="cand-kr-grid-2024",
         reference_id="factor.kr_grid.2024",
         reference_type="emission_factor",
@@ -26,7 +26,7 @@ def test_reference_candidate_is_candidate_only_authority():
     assert candidate.authority == "candidate_only"
     assert candidate.can_authorize_calculation is False
 
-    report = CompileReport(
+    report = ValidationReport(
         status="review_required",
         reference_candidates=(candidate,),
     )
@@ -37,7 +37,7 @@ def test_reference_candidate_is_candidate_only_authority():
 
 def test_reference_candidate_cannot_claim_binding_authority():
     with pytest.raises(ValueError, match="candidate_only"):
-        ReferenceCandidate(
+        ReferenceOption(
             candidate_id="cand-1",
             reference_id="factor.kr_grid.2024",
             reference_type="emission_factor",
@@ -47,13 +47,13 @@ def test_reference_candidate_cannot_claim_binding_authority():
 
 
 def test_reference_binding_records_selector_and_rejected_candidates():
-    rejected = RejectedReferenceCandidate(
+    rejected = RejectedReferenceOption(
         candidate_id="cand-residual-mix",
         reference_id="factor.kr_residual_mix.2024",
         reason="method_mismatch",
         selector_rule_id="ghg.factor_selector.v1",
     )
-    binding = ReferenceBinding(
+    binding = CanonicalReference(
         binding_id="bind-amount-factor",
         claim_id="hyp-1:amount",
         reference_id="factor.kr_grid.2024",
@@ -68,7 +68,7 @@ def test_reference_binding_records_selector_and_rejected_candidates():
     assert binding.can_authorize_calculation is True
     assert binding.rejected_candidates == (rejected,)
 
-    report = CompileReport(status="accepted", reference_bindings=(binding,))
+    report = ValidationReport(status="accepted", reference_bindings=(binding,))
 
     assert report.reference_bindings == (binding,)
     assert report.reference_candidates == ()
@@ -76,7 +76,7 @@ def test_reference_binding_records_selector_and_rejected_candidates():
 
 def test_reference_binding_cannot_be_downgraded_to_candidate_authority():
     with pytest.raises(ValueError, match="canonical_binding"):
-        ReferenceBinding(
+        CanonicalReference(
             binding_id="bind-1",
             claim_id="hyp-1:amount",
             reference_id="factor.kr_grid.2024",
@@ -86,13 +86,13 @@ def test_reference_binding_cannot_be_downgraded_to_candidate_authority():
 
 
 def test_semantic_judgment_application_preserves_reference_artifacts():
-    candidate = ReferenceCandidate(
+    candidate = ReferenceOption(
         candidate_id="cand-kr-grid-2024",
         reference_id="factor.kr_grid.2024",
         reference_type="emission_factor",
         retrieval_method="embedding",
     )
-    binding = ReferenceBinding(
+    binding = CanonicalReference(
         binding_id="bind-amount-factor",
         claim_id="hyp-1:amount",
         reference_id="factor.kr_grid.2024",
@@ -100,7 +100,7 @@ def test_semantic_judgment_application_preserves_reference_artifacts():
         selected_candidate_id=candidate.candidate_id,
         selector_rule_id="ghg.factor_selector.v1",
     )
-    obligation = ProofObligation(
+    obligation = ValidationRequirement(
         kind="semantic_judgment_required",
         field="scope2_method",
         reason="semantic_support_required",
@@ -113,7 +113,7 @@ def test_semantic_judgment_application_preserves_reference_artifacts():
             acceptable_verdicts=("supports", "refutes", "ambiguous"),
         ),
     )
-    report = CompileReport(
+    report = ValidationReport(
         status="review_required",
         obligations=(obligation,),
         reference_candidates=(candidate,),

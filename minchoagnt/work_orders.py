@@ -168,7 +168,7 @@ def _semantic_work_order(task: ResolverTask) -> LLMWorkOrder:
         forbidden_outputs=(
             "create_reference_binding",
             "create_commit_receipt",
-            "project_public_row",
+            "build_public_output",
         ),
         expected_artifacts=("semantic_judgment", "abstention"),
         budget=(("max_artifacts", 1),),

@@ -6,21 +6,21 @@ from comp.compiler_tool import (
     CalculationFormula,
     CalculationInput,
     CheckedClaim,
-    ClaimHypothesis,
+    ClaimCandidate,
     CompilerTool,
     DependencyFingerprint,
-    EvidenceWitness,
+    EvidenceRef,
     FailedClaim,
     Hazard,
     InterpretationHypothesis,
-    ReferenceBinding,
+    CanonicalReference,
     ReferenceCatalog,
     ReferenceSelectionCriteria,
     with_recomputed_status,
     apply_calculation_result,
     calculate_derived_claim,
 )
-from comp.compiler_tool.models import CompileReport, ProofObligation
+from comp.compiler_tool.models import ValidationReport, ValidationRequirement
 from comp.scenarios.synthetic.models import (
     SYNTHETIC_SOURCE_INPUT_KIND,
     SyntheticInputBundle,
@@ -114,19 +114,19 @@ class SyntheticPcfAdapter:
             ),
         )
 
-    def query_for_obligation(self, obligation: ProofObligation) -> str | None:
+    def query_for_obligation(self, obligation: ValidationRequirement) -> str | None:
         if obligation.kind != "reference_search_required":
             return None
         return f"{self.config.geography} grid electricity factor {self.config.reporting_period}"
 
-    def blocked_report(self) -> CompileReport:
+    def blocked_report(self) -> ValidationReport:
         report = CompilerTool(
             known_fields=frozenset({"electricity_kwh"}),
         ).compile_interpretation(self._hypothesis_from_raw())
         result = calculate_derived_claim(
             output_claim_id=self.config.output_claim_id,
             input_claim=self.input_claim(),
-            reference_binding=ReferenceBinding(
+            reference_binding=CanonicalReference(
                 binding_id=self.config.binding_id,
                 claim_id=self.config.input_claim_id,
                 reference_id="synthetic.factor.pending",
@@ -142,7 +142,7 @@ class SyntheticPcfAdapter:
             formula=self.formula(),
         )
 
-    def resolution_seed_report(self) -> CompileReport:
+    def resolution_seed_report(self) -> ValidationReport:
         report = self.blocked_report()
         resolved_obligations = self._resolved_unit_obligations()
         if not resolved_obligations:
@@ -154,21 +154,21 @@ class SyntheticPcfAdapter:
                     *report.resolved_obligations,
                     *resolved_obligations,
                 ),
-                can_project_public_row=False,
+                can_build_public_output=False,
             )
         )
 
-    def anomaly_report(self) -> CompileReport:
-        witnesses: list[EvidenceWitness] = []
+    def anomaly_report(self) -> ValidationReport:
+        witnesses: list[EvidenceRef] = []
         checked: list[CheckedClaim] = []
         failed: list[FailedClaim] = []
-        obligations: list[ProofObligation] = []
+        obligations: list[ValidationRequirement] = []
         hazards: list[Hazard] = []
 
         for row in self.input_bundle.raw_sources.electricity_rows:
             amount_witness_id = f"witness:{row.source_row_id}:electricity_kwh"
             witnesses.append(
-                EvidenceWitness(
+                EvidenceRef(
                     witness_id=amount_witness_id,
                     field="electricity_kwh",
                     source=f"raw_sources/{row.source_ref}",
@@ -187,7 +187,7 @@ class SyntheticPcfAdapter:
                     )
                 )
                 obligations.append(
-                    ProofObligation(
+                    ValidationRequirement(
                         kind="investigate_activity_amount",
                         field="electricity_kwh",
                         reason="negative_amount",
@@ -213,7 +213,7 @@ class SyntheticPcfAdapter:
 
             if not row.unit:
                 obligations.append(
-                    ProofObligation(
+                    ValidationRequirement(
                         kind="find_source_witness",
                         field="unit",
                         reason="missing_unit",
@@ -224,7 +224,7 @@ class SyntheticPcfAdapter:
             elif row.unit.lower() != self.config.electricity_unit.lower():
                 unit_witness_id = f"witness:{row.source_row_id}:unit"
                 witnesses.append(
-                    EvidenceWitness(
+                    EvidenceRef(
                         witness_id=unit_witness_id,
                         field="unit",
                         source=f"raw_sources/{row.source_ref}",
@@ -242,7 +242,7 @@ class SyntheticPcfAdapter:
                     )
                 )
                 obligations.append(
-                    ProofObligation(
+                    ValidationRequirement(
                         kind="find_source_witness",
                         field="unit",
                         reason="unsupported_unit",
@@ -252,7 +252,7 @@ class SyntheticPcfAdapter:
 
             if row.period != self.config.reporting_period:
                 obligations.append(
-                    ProofObligation(
+                    ValidationRequirement(
                         kind="find_context",
                         field="period",
                         reason="period_mismatch",
@@ -265,7 +265,7 @@ class SyntheticPcfAdapter:
 
             if row.site_id != self.config.site_id:
                 obligations.append(
-                    ProofObligation(
+                    ValidationRequirement(
                         kind="resolve_site_identity",
                         field="site_id",
                         reason="site_alias",
@@ -275,18 +275,18 @@ class SyntheticPcfAdapter:
                 hazards.append(Hazard(kind="site_alias", field="site_id", severity="review"))
 
         return with_recomputed_status(
-            CompileReport(
+            ValidationReport(
                 status="accepted",
                 evidence_witnesses=tuple(witnesses),
                 checked_claims=tuple(checked),
                 failed_claims=tuple(failed),
                 obligations=tuple(obligations),
                 hazards=tuple(hazards),
-                can_project_public_row=False,
+                can_build_public_output=False,
             )
         )
 
-    def projection_source(self, report: CompileReport) -> dict[str, object]:
+    def projection_source(self, report: ValidationReport) -> dict[str, object]:
         values = {claim.field: claim.value for claim in report.checked_claims}
         values.update({claim.field: claim.value for claim in report.derived_claims})
         return values
@@ -358,7 +358,7 @@ class SyntheticPcfAdapter:
             hypothesis_id=self.config.subject_id,
             subject_id=self.config.subject_id,
             claims=(
-                ClaimHypothesis(
+                ClaimCandidate(
                     field="electricity_kwh",
                     value=row.amount,
                     witness_id=witness_id,
@@ -366,7 +366,7 @@ class SyntheticPcfAdapter:
                 ),
             ),
             witnesses=(
-                EvidenceWitness(
+                EvidenceRef(
                     witness_id=witness_id,
                     field="electricity_kwh",
                     source=f"raw_sources/{row.source_ref}",
@@ -376,9 +376,9 @@ class SyntheticPcfAdapter:
             ),
         )
 
-    def _resolved_unit_obligations(self) -> tuple[ProofObligation, ...]:
+    def _resolved_unit_obligations(self) -> tuple[ValidationRequirement, ...]:
         return tuple(
-            ProofObligation(
+            ValidationRequirement(
                 kind="find_source_witness",
                 field=artifact.field,
                 reason="missing_unit",

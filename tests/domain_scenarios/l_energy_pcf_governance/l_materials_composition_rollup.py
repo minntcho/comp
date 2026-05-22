@@ -2,18 +2,18 @@ from __future__ import annotations
 
 from decimal import Decimal
 
-from comp import ProjectionSpec, SubjectRef, project_public_row
+from comp import PublicOutputSpec, SubjectRef, build_public_output
 from comp.compiler_tool import (
     CalculationStep,
     CalculationTrace,
     CheckedClaim,
-    CompileReport,
-    DerivedClaim,
-    EvidenceWitness,
+    ValidationReport,
+    CalculatedClaim,
+    EvidenceRef,
     FailedClaim,
     Hazard,
-    ProofObligation,
-    ReferenceBinding,
+    ValidationRequirement,
+    CanonicalReference,
     prepare_commit,
     with_recomputed_status,
 )
@@ -103,9 +103,9 @@ def run_l_materials_composition_rollup_scenario():
     )
     projection = None
     if preparation.receipt is not None:
-        projection = project_public_row(
+        projection = build_public_output(
             _projection_source(report),
-            ProjectionSpec(PROJECTION_ID, PROJECTION_FIELDS),
+            PublicOutputSpec(PROJECTION_ID, PROJECTION_FIELDS),
             receipt=preparation.receipt,
         )
     return build_domain_scenario_result(
@@ -118,24 +118,24 @@ def run_l_materials_composition_rollup_scenario():
     )
 
 
-def l_materials_composition_rollup_report() -> CompileReport:
+def l_materials_composition_rollup_report() -> ValidationReport:
     return with_recomputed_status(
-        CompileReport(
+        ValidationReport(
             status="accepted",
             evidence_witnesses=_evidence_witnesses(),
             checked_claims=_checked_claims(),
             resolved_obligations=_resolved_obligations(),
             reference_bindings=_reference_bindings(),
             derived_claims=_derived_claims(),
-            can_project_public_row=True,
+            can_build_public_output=True,
         )
     )
 
 
-def invalid_l_materials_composition_report() -> CompileReport:
+def invalid_l_materials_composition_report() -> ValidationReport:
     composition_total = _number(NI_SHARE + CO_SHARE + INVALID_MN_SHARE)
     return with_recomputed_status(
-        CompileReport(
+        ValidationReport(
             status="accepted",
             evidence_witnesses=_evidence_witnesses(),
             checked_claims=_checked_claims(mn_share=INVALID_MN_SHARE),
@@ -155,28 +155,28 @@ def invalid_l_materials_composition_report() -> CompileReport:
                     severity="block",
                 ),
             ),
-            can_project_public_row=False,
+            can_build_public_output=False,
         )
     )
 
 
-def _evidence_witnesses() -> tuple[EvidenceWitness, ...]:
+def _evidence_witnesses() -> tuple[EvidenceRef, ...]:
     return (
-        EvidenceWitness(
+        EvidenceRef(
             witness_id="source:l-materials-composition",
             field="ncm_composition",
             source="tests/e2e/cases/001-l-energy-pcf-governance.yaml",
             span="data_setup.l_materials.composition",
             text="Ni 80%, Co 10%, Mn 10%",
         ),
-        EvidenceWitness(
+        EvidenceRef(
             witness_id="source:l-materials-production",
             field="production_ton",
             source="tests/e2e/cases/001-l-energy-pcf-governance.yaml",
             span="data_setup.l_materials.production_ton",
             text="11,250 ton",
         ),
-        EvidenceWitness(
+        EvidenceRef(
             witness_id="source:l-materials-ncm-factor",
             field="mapped_ncm_factor_tco2e_per_ton",
             source="tests/e2e/expected/001-l-energy-pcf-governance.receipt.json",
@@ -236,9 +236,9 @@ def _checked_claims(
     )
 
 
-def _resolved_obligations() -> tuple[ProofObligation, ...]:
+def _resolved_obligations() -> tuple[ValidationRequirement, ...]:
     return (
-        ProofObligation(
+        ValidationRequirement(
             kind="composition_total_validated",
             field="ncm_composition",
             reason="shares_sum_to_one",
@@ -247,9 +247,9 @@ def _resolved_obligations() -> tuple[ProofObligation, ...]:
     )
 
 
-def _reference_bindings() -> tuple[ReferenceBinding, ...]:
+def _reference_bindings() -> tuple[CanonicalReference, ...]:
     return (
-        ReferenceBinding(
+        CanonicalReference(
             binding_id=COMPOSITION_FACTOR_BINDING_ID,
             claim_id=SCENARIO_ID,
             reference_id="platform.factor.ncm811_composition",
@@ -260,7 +260,7 @@ def _reference_bindings() -> tuple[ReferenceBinding, ...]:
     )
 
 
-def _derived_claims() -> tuple[DerivedClaim, ...]:
+def _derived_claims() -> tuple[CalculatedClaim, ...]:
     composition_total = NI_SHARE + CO_SHARE + MN_SHARE
     emission = Decimal(PRODUCTION_TON) * MAPPED_NCM_FACTOR_TCO2E_PER_TON
     composition_step = CalculationStep(
@@ -277,7 +277,7 @@ def _derived_claims() -> tuple[DerivedClaim, ...]:
         output_unit="tCO2e",
     )
     return (
-        DerivedClaim(
+        CalculatedClaim(
             claim_id=COMPOSITION_TOTAL_CLAIM_ID,
             field="composition_total",
             value=_number(composition_total),
@@ -289,7 +289,7 @@ def _derived_claims() -> tuple[DerivedClaim, ...]:
                 steps=(composition_step,),
             ),
         ),
-        DerivedClaim(
+        CalculatedClaim(
             claim_id=FINAL_EMISSION_CLAIM_ID,
             field="l_materials_final_emission_tco2e",
             value=_number(emission),
@@ -306,7 +306,7 @@ def _derived_claims() -> tuple[DerivedClaim, ...]:
     )
 
 
-def _projection_source(report: CompileReport) -> dict[str, object]:
+def _projection_source(report: ValidationReport) -> dict[str, object]:
     values = {claim.field: claim.value for claim in report.checked_claims}
     values.update({claim.field: claim.value for claim in report.derived_claims})
     return values

@@ -1,5 +1,9 @@
 """Deterministic compiler-tool contract surface."""
 
+from comp.compiler_tool.calculation_flow import resolve_reference_grounded_calculation
+from comp.compiler_tool.calculation_report import apply_calculation_result
+from comp.compiler_tool.calculation_resolution import plan_calculation_resolution
+from comp.compiler_tool.calculation_retry import retry_blocked_calculation
 from comp.compiler_tool.calculations import (
     CalculatedClaim,
     CalculationFormula,
@@ -8,46 +12,38 @@ from comp.compiler_tool.calculations import (
     CalculationResult,
     CalculationStep,
     CalculationTrace,
-    DerivedClaim,
     calculation_formula_declaration_fingerprint,
     calculate_derived_claim,
 )
-from comp.compiler_tool.calculation_flow import resolve_reference_grounded_calculation
-from comp.compiler_tool.calculation_report import apply_calculation_result
-from comp.compiler_tool.calculation_resolution import plan_calculation_resolution
-from comp.compiler_tool.calculation_retry import retry_blocked_calculation
 from comp.compiler_tool.commit_flow import CommitPreparation, prepare_commit
-from comp.compiler_tool.commit_package import (
-    CommitPackage,
-    ReviewPackage,
-    build_commit_package,
-)
+from comp.compiler_tool.commit_package import ReviewPackage, build_commit_package
 from comp.compiler_tool.governance import (
-    GovernanceDecision,
     GovernanceStatus,
     ReviewDecision,
     decide_governance,
 )
+from comp.compiler_tool.judgment_adapter import (
+    add_commit_preparation_facts,
+    add_compile_report_facts,
+    commit_preparation_to_facts,
+    compile_report_to_facts,
+)
 from comp.compiler_tool.models import (
     CheckedClaim,
     ClaimCandidate,
-    ClaimHypothesis,
-    CompileReport,
     EvidenceRef,
-    EvidenceWitness,
     FailedClaim,
     Hazard,
     InterpretationHypothesis,
-    ProofObligation,
     SemanticJudgment,
     SemanticJudgmentRequirement,
     UncheckedArea,
     UnknownClaim,
-    ValidationRequirement,
     ValidationReport,
+    ValidationRequirement,
     evidence_ref_fingerprint,
-    evidence_witness_fingerprint,
 )
+from comp.compiler_tool.profile_runner import compile_with_profile, run_profile_rules
 from comp.compiler_tool.profiles import (
     CompilerProfile,
     DomainPack,
@@ -55,11 +51,11 @@ from comp.compiler_tool.profiles import (
     ProfileValidationError,
     RuleFamily,
     SemanticRubric,
-    active_rule_families,
     active_retrieval_query_policies,
+    active_rule_families,
     domain_pack_declaration_fingerprint,
-    profile_declaration_fingerprint,
     profile_allowed_units,
+    profile_declaration_fingerprint,
     profile_known_fields,
     profile_lock_body,
     profile_lock_envelope_body,
@@ -67,7 +63,10 @@ from comp.compiler_tool.profiles import (
     semantic_rubric_declaration_fingerprint,
     validate_compiler_profile,
 )
-from comp.compiler_tool.profile_runner import compile_with_profile, run_profile_rules
+from comp.compiler_tool.receipt_builder import (
+    ReceiptBuildBlocked,
+    build_public_output_receipt,
+)
 from comp.compiler_tool.reference_db import (
     ReferenceCatalog,
     ReferenceCatalogSnapshot,
@@ -88,40 +87,26 @@ from comp.compiler_tool.reference_selector import (
 )
 from comp.compiler_tool.references import (
     CanonicalReference,
-    ReferenceBinding,
-    ReferenceCandidate,
     ReferenceOption,
-    RejectedReferenceCandidate,
-)
-from comp.compiler_tool.receipt_builder import (
-    ReceiptBuildBlocked,
-    build_commit_receipt,
-    build_public_output_receipt,
-)
-from comp.judgment.receipts import (
-    CommitReceiptCitations,
-    DependencyFingerprint,
-    ProjectionValueCommitment,
-    PublicOutputReceipt,
-    PublicOutputReceiptCitations,
+    RejectedReferenceOption,
 )
 from comp.compiler_tool.report_status import (
     recompute_report_status,
     with_recomputed_status,
 )
+from comp.compiler_tool.resolver_retrieval import (
+    RetrievalQueryPolicy,
+    RetrievalQueryRule,
+    reference_query_for_obligation_from_policies,
+    reference_query_for_obligation_from_policy,
+    reference_query_for_obligation_from_profile_policy,
+    reference_query_for_obligation_from_resolver_tasks,
+    reference_query_from_resolver_task,
+)
 from comp.compiler_tool.resolver_tasks import (
     ResolverTask,
     resolver_task_from_obligation,
     resolver_tasks_from_report,
-)
-from comp.compiler_tool.resolver_retrieval import (
-    RetrievalQueryPolicy,
-    RetrievalQueryRule,
-    reference_query_for_obligation_from_profile_policy,
-    reference_query_for_obligation_from_policies,
-    reference_query_for_obligation_from_policy,
-    reference_query_for_obligation_from_resolver_tasks,
-    reference_query_from_resolver_task,
 )
 from comp.compiler_tool.retrieval import (
     RETRIEVAL_LENSES,
@@ -137,29 +122,24 @@ from comp.compiler_tool.retrieval_resolution import (
 )
 from comp.compiler_tool.semantic import apply_semantic_judgments
 from comp.compiler_tool.tool import CompilerTool
-from comp.compiler_tool.judgment_adapter import (
-    add_commit_preparation_facts,
-    add_compile_report_facts,
-    commit_preparation_to_facts,
-    compile_report_to_facts,
+from comp.judgment.receipts import (
+    DependencyFingerprint,
+    PublicOutputReceipt,
+    PublicOutputReceiptCitations,
+    PublicOutputValueCommitment,
 )
 
 __all__ = [
     "InterpretationHypothesis",
     "ClaimCandidate",
-    "ClaimHypothesis",
     "EvidenceRef",
-    "EvidenceWitness",
     "evidence_ref_fingerprint",
-    "evidence_witness_fingerprint",
     "ValidationReport",
-    "CompileReport",
     "CheckedClaim",
     "FailedClaim",
     "UnknownClaim",
     "UncheckedArea",
     "ValidationRequirement",
-    "ProofObligation",
     "SemanticJudgmentRequirement",
     "SemanticJudgment",
     "Hazard",
@@ -170,7 +150,6 @@ __all__ = [
     "CalculationStep",
     "CalculationTrace",
     "CalculatedClaim",
-    "DerivedClaim",
     "calculation_formula_declaration_fingerprint",
     "calculate_derived_claim",
     "resolve_reference_grounded_calculation",
@@ -179,26 +158,20 @@ __all__ = [
     "retry_blocked_calculation",
     "CommitPreparation",
     "prepare_commit",
-    "CommitPackage",
     "ReviewPackage",
     "build_commit_package",
-    "GovernanceDecision",
     "ReviewDecision",
     "GovernanceStatus",
     "decide_governance",
     "ReferenceOption",
-    "ReferenceCandidate",
-    "RejectedReferenceCandidate",
+    "RejectedReferenceOption",
     "CanonicalReference",
-    "ReferenceBinding",
     "ReceiptBuildBlocked",
     "PublicOutputReceipt",
     "PublicOutputReceiptCitations",
-    "CommitReceiptCitations",
-    "ProjectionValueCommitment",
+    "PublicOutputValueCommitment",
     "DependencyFingerprint",
     "build_public_output_receipt",
-    "build_commit_receipt",
     "ReferenceLookupError",
     "ReferenceRecord",
     "ReferenceCatalog",

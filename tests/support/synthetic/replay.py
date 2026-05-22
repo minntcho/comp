@@ -6,10 +6,10 @@ from typing import Any
 
 from comp.compiler_tool import (
     CommitPreparation,
-    CompileReport,
-    evidence_witness_fingerprint,
+    ValidationReport,
+    evidence_ref_fingerprint,
 )
-from comp.judgment import ProjectionSpec
+from comp.judgment import PublicOutputSpec
 from comp.persistence import (
     ArtifactEnvelope,
     ArtifactRef,
@@ -28,7 +28,7 @@ class SyntheticReplayBundle:
 
 
 def synthetic_replay_bundle(
-    report: CompileReport,
+    report: ValidationReport,
     preparation: CommitPreparation,
     dependency_artifact_bodies: Mapping[tuple[str, str], Mapping[str, Any]],
 ) -> SyntheticReplayBundle:
@@ -57,7 +57,7 @@ def synthetic_replay_bundle(
 
 def replay_synthetic_projection(
     row: Mapping[str, Any],
-    projection: ProjectionSpec,
+    projection: PublicOutputSpec,
     preparation: CommitPreparation,
     *,
     bundle: SyntheticReplayBundle,
@@ -80,7 +80,7 @@ def replay_synthetic_projection(
 
 
 def _artifact_envelope_for_ref(
-    report: CompileReport,
+    report: ValidationReport,
     preparation: CommitPreparation,
     dependency_artifact_bodies: Mapping[tuple[str, str], Mapping[str, Any]],
     ref: ArtifactRef,
@@ -99,7 +99,7 @@ def _artifact_envelope_for_ref(
 
 
 def _artifact_body_for_ref(
-    report: CompileReport,
+    report: ValidationReport,
     preparation: CommitPreparation,
     dependency_artifact_bodies: Mapping[tuple[str, str], Mapping[str, Any]],
     ref: ArtifactRef,
@@ -145,7 +145,7 @@ def _artifact_body_for_ref(
         }
     if ref.artifact_kind == "evidence_witness":
         witness = _evidence_witness_by_id(report, ref.artifact_id)
-        fingerprint = evidence_witness_fingerprint(witness)
+        fingerprint = evidence_ref_fingerprint(witness)
         return {
             "dependency_kind": fingerprint.dependency_kind,
             "dependency_id": fingerprint.dependency_id,
@@ -213,21 +213,21 @@ def _artifact_body_for_ref(
     raise AssertionError(f"Unsupported synthetic artifact ref: {ref}.")
 
 
-def _checked_claim_by_source_id(report: CompileReport, source_id: str):
+def _checked_claim_by_source_id(report: ValidationReport, source_id: str):
     for claim in report.checked_claims:
         if source_id == f"checked_claim:{claim.field}:{claim.witness_id}":
             return claim
     raise AssertionError(f"Synthetic checked claim not found: {source_id}.")
 
 
-def _evidence_witness_by_id(report: CompileReport, witness_id: str):
+def _evidence_witness_by_id(report: ValidationReport, witness_id: str):
     for witness in report.evidence_witnesses:
         if witness.witness_id == witness_id:
             return witness
     raise AssertionError(f"Synthetic evidence witness not found: {witness_id}.")
 
 
-def _trace_by_id(report: CompileReport, trace_id: str):
+def _trace_by_id(report: ValidationReport, trace_id: str):
     for claim in report.derived_claims:
         if claim.trace.trace_id == trace_id:
             return claim.trace

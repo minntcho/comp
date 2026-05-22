@@ -1,14 +1,14 @@
 import pytest
 
 import comp
-from comp import ProjectionBlocked, ProjectionSpec, project_public_row
+from comp import PublicOutputBlocked, PublicOutputSpec, build_public_output
 from comp.compiler_tool import (
     CalculationRequirement,
-    ClaimHypothesis,
-    CompileReport,
-    EvidenceWitness,
+    ClaimCandidate,
+    ValidationReport,
+    EvidenceRef,
     InterpretationHypothesis,
-    ProofObligation,
+    ValidationRequirement,
     EmbeddingResolverStub,
     ReferenceCatalog,
     ReferenceIndexEntry,
@@ -53,14 +53,14 @@ def test_comp_adapter_calls_compiler_tool_without_projection_authority():
         hypothesis_id="hyp-1",
         subject_id="claim-1",
         claims=(
-            ClaimHypothesis("activity", "electricity", witness_id="w-activity"),
-            ClaimHypothesis("amount", 1200, witness_id="w-amount"),
-            ClaimHypothesis("unit", "kwh", witness_id="w-unit"),
+            ClaimCandidate("activity", "electricity", witness_id="w-activity"),
+            ClaimCandidate("amount", 1200, witness_id="w-amount"),
+            ClaimCandidate("unit", "kwh", witness_id="w-unit"),
         ),
         witnesses=(
-            EvidenceWitness("w-activity", "activity", source="fragment-1"),
-            EvidenceWitness("w-amount", "amount", source="fragment-1"),
-            EvidenceWitness("w-unit", "unit", source="header-1"),
+            EvidenceRef("w-activity", "activity", source="fragment-1"),
+            EvidenceRef("w-amount", "amount", source="fragment-1"),
+            EvidenceRef("w-unit", "unit", source="header-1"),
         ),
     )
 
@@ -69,11 +69,11 @@ def test_comp_adapter_calls_compiler_tool_without_projection_authority():
     assert result.subject.kind == "claim"
     assert result.subject.id == "hyp-1"
     assert result.report.status == "accepted"
-    assert result.report.can_project_public_row is False
+    assert result.report.can_build_public_output is False
 
-    projection = ProjectionSpec("public-row", ("activity", "amount", "unit"))
-    with pytest.raises(ProjectionBlocked):
-        project_public_row(
+    projection = PublicOutputSpec("public-row", ("activity", "amount", "unit"))
+    with pytest.raises(PublicOutputBlocked):
+        build_public_output(
             {"activity": "electricity", "amount": 1200, "unit": "kwh"},
             projection,
         )
@@ -87,8 +87,8 @@ def test_comp_adapter_can_append_report_facts_without_minting_receipts():
     hypothesis = InterpretationHypothesis(
         hypothesis_id="hyp-2",
         subject_id="claim-2",
-        claims=(ClaimHypothesis("unit", "mwh", witness_id="w-unit"),),
-        witnesses=(EvidenceWitness("w-unit", "unit", source="fragment-1"),),
+        claims=(ClaimCandidate("unit", "mwh", witness_id="w-unit"),),
+        witnesses=(EvidenceRef("w-unit", "unit", source="fragment-1"),),
     )
 
     result = adapter.compile(hypothesis)
@@ -109,8 +109,8 @@ def test_comp_adapter_exposes_resolver_tasks_for_agent_loop():
         InterpretationHypothesis(
             hypothesis_id="hyp-3",
             subject_id="claim-3",
-            claims=(ClaimHypothesis("unit", "mwh", witness_id="w-unit"),),
-            witnesses=(EvidenceWitness("w-unit", "unit", source="fragment-1"),),
+            claims=(ClaimCandidate("unit", "mwh", witness_id="w-unit"),),
+            witnesses=(EvidenceRef("w-unit", "unit", source="fragment-1"),),
         )
     )
 
@@ -124,7 +124,7 @@ def test_comp_adapter_exposes_resolver_tasks_for_agent_loop():
 
 
 def test_deterministic_comp_resolver_applies_semantic_judgment_without_receipt():
-    obligation = ProofObligation(
+    obligation = ValidationRequirement(
         kind="semantic_judgment_required",
         field="scope2_method",
         reason="support_required",
@@ -141,7 +141,7 @@ def test_deterministic_comp_resolver_applies_semantic_judgment_without_receipt()
     compile_result = CompCompileResult(
         hypothesis=InterpretationHypothesis("hyp-sem", "facility-1"),
         subject=SubjectRef("claim", "hyp-sem"),
-        report=CompileReport(status="review_required", obligations=(obligation,)),
+        report=ValidationReport(status="review_required", obligations=(obligation,)),
     )
     resolver = DeterministicCompResolver(
         semantic_judgments=(
@@ -181,7 +181,7 @@ def test_deterministic_comp_resolver_runs_reference_search_from_task_query():
         reference_binding_id="bind-amount-factor",
         reference_id="factor.missing",
     )
-    obligation = ProofObligation(
+    obligation = ValidationRequirement(
         kind="reference_search_required",
         field="co2e_emission",
         reason="unknown_reference",
@@ -192,7 +192,7 @@ def test_deterministic_comp_resolver_runs_reference_search_from_task_query():
     compile_result = CompCompileResult(
         hypothesis=InterpretationHypothesis("hyp-ref", "facility-1"),
         subject=SubjectRef("claim", "hyp-ref"),
-        report=CompileReport(status="blocked", obligations=(obligation,)),
+        report=ValidationReport(status="blocked", obligations=(obligation,)),
     )
     catalog = ReferenceCatalog(
         records=(
@@ -235,7 +235,7 @@ def test_deterministic_comp_resolver_runs_reference_retrieval_from_task_query():
         reference_binding_id="bind-amount-factor",
         reference_id="factor.missing",
     )
-    obligation = ProofObligation(
+    obligation = ValidationRequirement(
         kind="reference_search_required",
         field="co2e_emission",
         reason="unknown_reference",
@@ -246,7 +246,7 @@ def test_deterministic_comp_resolver_runs_reference_retrieval_from_task_query():
     compile_result = CompCompileResult(
         hypothesis=InterpretationHypothesis("hyp-ref", "facility-1"),
         subject=SubjectRef("claim", "hyp-ref"),
-        report=CompileReport(status="blocked", obligations=(obligation,)),
+        report=ValidationReport(status="blocked", obligations=(obligation,)),
     )
     resolver = DeterministicCompResolver(
         reference_resolver=EmbeddingResolverStub(
@@ -298,7 +298,7 @@ def test_deterministic_comp_resolver_runs_reference_retrieval_from_query_policy(
         reference_binding_id="bind-amount-factor",
         reference_id="factor.missing",
     )
-    obligation = ProofObligation(
+    obligation = ValidationRequirement(
         kind="reference_search_required",
         field="co2e_emission",
         reason="unknown_reference",
@@ -309,7 +309,7 @@ def test_deterministic_comp_resolver_runs_reference_retrieval_from_query_policy(
     compile_result = CompCompileResult(
         hypothesis=InterpretationHypothesis("hyp-ref", "facility-1"),
         subject=SubjectRef("claim", "hyp-ref"),
-        report=CompileReport(status="blocked", obligations=(obligation,)),
+        report=ValidationReport(status="blocked", obligations=(obligation,)),
     )
     resolver = DeterministicCompResolver(
         reference_resolver=EmbeddingResolverStub(
@@ -360,7 +360,7 @@ def test_deterministic_comp_resolver_leaves_reference_policy_task_open_without_c
         "resolve:ghg.electricity_factor_multiplication.v1:"
         "hyp-1:co2e_emission:reference_search_required"
     )
-    obligation = ProofObligation(
+    obligation = ValidationRequirement(
         kind="reference_search_required",
         field="co2e_emission",
         reason="unknown_reference",
@@ -375,7 +375,7 @@ def test_deterministic_comp_resolver_leaves_reference_policy_task_open_without_c
     compile_result = CompCompileResult(
         hypothesis=InterpretationHypothesis("hyp-ref", "facility-1"),
         subject=SubjectRef("claim", "hyp-ref"),
-        report=CompileReport(status="blocked", obligations=(obligation,)),
+        report=ValidationReport(status="blocked", obligations=(obligation,)),
     )
     resolver = DeterministicCompResolver(
         reference_resolver=EmbeddingResolverStub(entries=()),

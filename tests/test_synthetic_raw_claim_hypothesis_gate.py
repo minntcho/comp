@@ -1,4 +1,4 @@
-from comp.compiler_tool import evidence_witness_fingerprint
+from comp.compiler_tool import evidence_ref_fingerprint
 from tests.domain_scenarios.core import assert_scenario_contract, run_scenario
 from tests.domain_scenarios.registry import registered_scenarios
 from tests.domain_scenarios.synthetic_raw_claim_hypothesis_gate.scenario import (
@@ -47,7 +47,7 @@ def test_raw_evidence_witnesses_are_preserved_and_fingerprinted():
         ),
     )
     assert result.preparation.package.dependency_fingerprints == tuple(
-        evidence_witness_fingerprint(witness)
+        evidence_ref_fingerprint(witness)
         for witness in result.report.evidence_witnesses
     )
 

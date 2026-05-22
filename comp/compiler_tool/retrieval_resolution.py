@@ -3,22 +3,22 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import replace
 
-from comp.compiler_tool.models import CompileReport, ProofObligation
-from comp.compiler_tool.references import ReferenceCandidate
+from comp.compiler_tool.models import ValidationReport, ValidationRequirement
+from comp.compiler_tool.references import ReferenceOption
 from comp.compiler_tool.report_status import with_recomputed_status
 from comp.compiler_tool.retrieval import ReferenceQuery, ReferenceResolver
 
-ReferenceRetrievalQuery = Callable[[ProofObligation], ReferenceQuery | None]
+ReferenceRetrievalQuery = Callable[[ValidationRequirement], ReferenceQuery | None]
 
 
 def resolve_reference_retrieval_obligations(
-    report: CompileReport,
+    report: ValidationReport,
     resolver: ReferenceResolver,
     *,
     query_for_obligation: ReferenceRetrievalQuery,
     limit: int = 10,
-) -> CompileReport:
-    obligations: list[ProofObligation] = []
+) -> ValidationReport:
+    obligations: list[ValidationRequirement] = []
     candidates = report.reference_candidates
     resolved_obligations = report.resolved_obligations
     changed = False
@@ -54,12 +54,12 @@ def resolve_reference_retrieval_obligations(
             obligations=tuple(obligations),
             resolved_obligations=resolved_obligations,
             reference_candidates=candidates,
-            can_project_public_row=False,
+            can_build_public_output=False,
         )
     )
 
 
-def _is_reference_search_obligation(obligation: ProofObligation) -> bool:
+def _is_reference_search_obligation(obligation: ValidationRequirement) -> bool:
     return (
         obligation.kind == "reference_search_required"
         and obligation.calculation_requirement is not None
@@ -67,9 +67,9 @@ def _is_reference_search_obligation(obligation: ProofObligation) -> bool:
 
 
 def _append_unique_candidates(
-    existing: tuple[ReferenceCandidate, ...],
-    additions: tuple[ReferenceCandidate, ...],
-) -> tuple[ReferenceCandidate, ...]:
+    existing: tuple[ReferenceOption, ...],
+    additions: tuple[ReferenceOption, ...],
+) -> tuple[ReferenceOption, ...]:
     result = existing
     for candidate in additions:
         if candidate not in result:
@@ -78,9 +78,9 @@ def _append_unique_candidates(
 
 
 def _append_unique_obligations(
-    existing: tuple[ProofObligation, ...],
-    additions: tuple[ProofObligation, ...],
-) -> tuple[ProofObligation, ...]:
+    existing: tuple[ValidationRequirement, ...],
+    additions: tuple[ValidationRequirement, ...],
+) -> tuple[ValidationRequirement, ...]:
     result = existing
     for obligation in additions:
         if obligation not in result:

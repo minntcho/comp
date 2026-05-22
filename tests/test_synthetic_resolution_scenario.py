@@ -1,4 +1,4 @@
-from comp import ProjectionSpec
+from comp import PublicOutputSpec
 from tests.domain_scenarios.assertions import assert_projection_tamper_blocked
 from tests.domain_scenarios.core import assert_scenario_contract, run_scenario
 from tests.domain_scenarios.registry import registered_scenarios
@@ -32,7 +32,7 @@ def test_synthetic_pcf_resolution_receipt_blocks_tampered_projection():
 
     assert_projection_tamper_blocked(
         result,
-        ProjectionSpec(
+        PublicOutputSpec(
             "synthetic-pcf-resolution-public-row",
             ("electricity_kwh", "co2e_kg"),
         ),

@@ -6,7 +6,7 @@ from comp.judgment import (
     Fact,
     FixpointEngine,
     JudgmentState,
-    ProjectionSpec,
+    PublicOutputSpec,
     SubjectRef,
     TransferRule,
     committable,
@@ -125,7 +125,7 @@ def test_frontier_and_commit_helpers_work_together():
         blocking_hazards=("missing_unit",),
         min_provenance_edges=1,
     )
-    projection = ProjectionSpec("public-row", ("site", "amount"))
+    projection = PublicOutputSpec("public-row", ("site", "amount"))
 
     assert committable(snapshot, spec) is True
     assert projection.output_fields == ("site", "amount")

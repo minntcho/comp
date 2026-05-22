@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from comp import ProjectionSpec, SubjectRef, project_public_row
+from comp import PublicOutputSpec, SubjectRef, build_public_output
 from comp.compiler_tool import prepare_commit, resolve_reference_grounded_calculation
 from comp.scenarios.synthetic import (
     SyntheticPcfAdapter,
@@ -86,9 +86,9 @@ def run_synthetic_pcf_smoke_scenario() -> DomainScenarioResult:
     )
     projection = None
     if preparation.receipt is not None:
-        projection = project_public_row(
+        projection = build_public_output(
             adapter.projection_source(report),
-            ProjectionSpec(adapter.projection_id, adapter.projection_fields),
+            PublicOutputSpec(adapter.projection_id, adapter.projection_fields),
             receipt=preparation.receipt,
         )
 

@@ -1,7 +1,7 @@
 import pytest
 
-from comp import ProjectionBlocked, ProjectionSpec, project_public_row
-from comp.compiler_tool import evidence_witness_fingerprint
+from comp import PublicOutputBlocked, PublicOutputSpec, build_public_output
+from comp.compiler_tool import evidence_ref_fingerprint
 from tests.domain_scenarios.core import assert_scenario_contract, run_scenario
 from tests.domain_scenarios.registry import registered_scenarios
 from tests.domain_scenarios.synthetic_raw_claim_hypothesis_acceptance.scenario import (
@@ -125,17 +125,17 @@ def test_raw_claim_acceptance_creates_receipt_and_projection():
     assert result.preparation.receipt is not None
     assert result.projection == EXPECTED_PROJECTION
     assert result.preparation.receipt.citations.dependency_fingerprints == tuple(
-        evidence_witness_fingerprint(witness)
+        evidence_ref_fingerprint(witness)
         for witness in result.report.evidence_witnesses
     )
 
-    with pytest.raises(ProjectionBlocked, match="value commitment mismatch"):
-        project_public_row(
+    with pytest.raises(PublicOutputBlocked, match="value commitment mismatch"):
+        build_public_output(
             {
                 **EXPECTED_PROJECTION,
                 "electricity_mwh": 9999,
             },
-            ProjectionSpec(PROJECTION_ID, PROJECTION_FIELDS),
+            PublicOutputSpec(PROJECTION_ID, PROJECTION_FIELDS),
             receipt=result.preparation.receipt,
         )
 

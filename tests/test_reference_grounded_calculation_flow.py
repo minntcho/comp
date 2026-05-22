@@ -1,8 +1,8 @@
 from comp.compiler_tool import (
     CalculationFormula,
     CalculationInput,
-    CompileReport,
-    ReferenceBinding,
+    ValidationReport,
+    CanonicalReference,
     ReferenceCatalog,
     ReferenceRecord,
     ReferenceSelectionCriteria,
@@ -30,7 +30,7 @@ def _input():
 
 
 def _missing_binding():
-    return ReferenceBinding(
+    return CanonicalReference(
         binding_id="bind-amount-factor",
         claim_id="hyp-1:amount",
         reference_id="factor.missing",
@@ -106,7 +106,7 @@ def _blocked_report():
         formula=_formula(),
     )
     return apply_calculation_result(
-        CompileReport(status="accepted"),
+        ValidationReport(status="accepted"),
         result,
         output_claim_id="hyp-1:co2e_emission",
         formula=_formula(),
@@ -138,7 +138,7 @@ def test_reference_grounded_calculation_flow_searches_binds_and_retries():
     ]
     assert len(resolved.derived_claims) == 1
     assert resolved.derived_claims[0].value == 0.48
-    assert resolved.can_project_public_row is False
+    assert resolved.can_build_public_output is False
 
 
 def test_reference_grounded_calculation_flow_stops_when_search_has_no_candidates():

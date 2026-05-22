@@ -2,15 +2,15 @@ from __future__ import annotations
 
 from decimal import Decimal, ROUND_HALF_UP
 
-from comp import ProjectionSpec, SubjectRef, project_public_row
+from comp import PublicOutputSpec, SubjectRef, build_public_output
 from comp.compiler_tool import (
     CalculationStep,
     CalculationTrace,
     CheckedClaim,
-    CompileReport,
-    DerivedClaim,
-    EvidenceWitness,
-    ReferenceBinding,
+    ValidationReport,
+    CalculatedClaim,
+    EvidenceRef,
+    CanonicalReference,
     prepare_commit,
     with_recomputed_status,
 )
@@ -110,9 +110,9 @@ def run_tier0_physical_allocation_scenario():
     )
     projection = None
     if preparation.receipt is not None:
-        projection = project_public_row(
+        projection = build_public_output(
             _projection_source(report),
-            ProjectionSpec(PROJECTION_ID, PROJECTION_FIELDS),
+            PublicOutputSpec(PROJECTION_ID, PROJECTION_FIELDS),
             receipt=preparation.receipt,
         )
     return build_domain_scenario_result(
@@ -125,29 +125,29 @@ def run_tier0_physical_allocation_scenario():
     )
 
 
-def tier0_physical_allocation_report() -> CompileReport:
+def tier0_physical_allocation_report() -> ValidationReport:
     return with_recomputed_status(
-        CompileReport(
+        ValidationReport(
             status="accepted",
             evidence_witnesses=_evidence_witnesses(),
             checked_claims=_checked_claims(),
             reference_bindings=_reference_bindings(),
             derived_claims=_derived_claims(),
-            can_project_public_row=True,
+            can_build_public_output=True,
         )
     )
 
 
-def _evidence_witnesses() -> tuple[EvidenceWitness, ...]:
+def _evidence_witnesses() -> tuple[EvidenceRef, ...]:
     return (
-        EvidenceWitness(
+        EvidenceRef(
             witness_id="source:l-energy-site-energy",
             field="site_energy",
             source="tests/e2e/cases/001-l-energy-pcf-governance.yaml",
             span="data_setup.l_energy.site_energy",
             text="6,400 MWh electricity; 150,000 Nm3 LNG",
         ),
-        EvidenceWitness(
+        EvidenceRef(
             witness_id="source:l-energy-line-masses",
             field="line_masses",
             source="tests/e2e/cases/001-l-energy-pcf-governance.yaml",
@@ -201,9 +201,9 @@ def _checked_claims() -> tuple[CheckedClaim, ...]:
     )
 
 
-def _reference_bindings() -> tuple[ReferenceBinding, ...]:
+def _reference_bindings() -> tuple[CanonicalReference, ...]:
     return (
-        ReferenceBinding(
+        CanonicalReference(
             binding_id=ELECTRICITY_BINDING_ID,
             claim_id=SCENARIO_ID,
             reference_id="platform.factor.electricity_mwh",
@@ -211,7 +211,7 @@ def _reference_bindings() -> tuple[ReferenceBinding, ...]:
             selector_rule_id="platform.expected_receipt.fixture",
             source_witness_ids=("source:l-energy-site-energy",),
         ),
-        ReferenceBinding(
+        CanonicalReference(
             binding_id=LNG_BINDING_ID,
             claim_id=SCENARIO_ID,
             reference_id="platform.factor.lng_nm3",
@@ -222,7 +222,7 @@ def _reference_bindings() -> tuple[ReferenceBinding, ...]:
     )
 
 
-def _derived_claims() -> tuple[DerivedClaim, ...]:
+def _derived_claims() -> tuple[CalculatedClaim, ...]:
     values = _calculated_values()
     return (
         _derived_claim(
@@ -295,8 +295,8 @@ def _derived_claim(
     input_claim_ids: tuple[str, ...] = (),
     reference_binding_ids: tuple[str, ...] = (),
     steps: tuple[CalculationStep, ...],
-) -> DerivedClaim:
-    return DerivedClaim(
+) -> CalculatedClaim:
+    return CalculatedClaim(
         claim_id=claim_id,
         field=field,
         value=value,
@@ -379,7 +379,7 @@ def _calculated_values() -> dict[str, object]:
     }
 
 
-def _projection_source(report: CompileReport) -> dict[str, object]:
+def _projection_source(report: ValidationReport) -> dict[str, object]:
     values = {claim.field: claim.value for claim in report.checked_claims}
     values.update({claim.field: claim.value for claim in report.derived_claims})
     return values

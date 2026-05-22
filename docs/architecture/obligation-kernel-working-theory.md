@@ -84,12 +84,12 @@ Core owns generic protocol objects and invariants:
 ```text
 EvidenceSpan
 Claim envelope
-CompileReport
-ProofObligation
+ValidationReport
+ValidationRequirement
 SemanticJudgment
 Judgment facts
-GovernanceDecision
-CommitReceipt
+ReviewDecision
+PublicOutputReceipt
 Receipt-gated projection
 ```
 
@@ -191,7 +191,7 @@ Candidate
   |
 Deterministic validator / obligation compiler
   |
-CompileReport
+ValidationReport
   - checked claims
   - failed claims
   - unknown claims
@@ -211,7 +211,7 @@ Judgment facts
         |
 Governance decision
         |
-CommitReceipt
+PublicOutputReceipt
         |
 Projection
 ```
@@ -232,7 +232,7 @@ what conflicts remain unresolved
 
 ## 5. Obligation Types
 
-The current `ProofObligation` concept should grow toward a small family of
+The current `ValidationRequirement` concept should grow toward a small family of
 obligation types:
 
 ```text
@@ -317,7 +317,7 @@ class Scope2MethodSupportRule:
             return ()
 
         return (
-            ProofObligation(
+            ValidationRequirement(
                 kind="semantic_judgment_required",
                 claim_id=claim.claim_id,
                 opened_by_rule_id=self.rule_id,
@@ -341,8 +341,8 @@ satisfies the protocol.
 Domain packs may add requirements. They must not weaken these invariants:
 
 ```text
-CommitReceipt is required for public projection.
-An accepted CompileReport alone is not projection authority.
+PublicOutputReceipt is required for public projection.
+An accepted ValidationReport alone is not projection authority.
 Open blocking obligations block commit and projection.
 Unchecked areas are not pass.
 Unknown claims are not public claims.
@@ -367,7 +367,7 @@ The useful target for DSL is a domain pack:
 ```text
 DSL source
 -> DomainPack
--> RuleFamily / SemanticRubric / JudgePolicy candidate / ProjectionSpec
+-> RuleFamily / SemanticRubric / JudgePolicy candidate / PublicOutputSpec
 -> CompilerProfile activation
 ```
 
@@ -406,7 +406,7 @@ Extractor outputs should enter the system as generic artifacts:
 
 ```text
 EvidenceSpan
-ClaimHypothesis
+ClaimCandidate
 ParseDerivation
 CandidateMapping
 ```
@@ -447,26 +447,26 @@ The intended flow is:
 ```text
 Source evidence
 -> extractor / LLM / Lark / table parser
--> ClaimHypothesis
+-> ClaimCandidate
 -> reference resolver
    - embedding search
    - alias search
    - taxonomy lookup
    - factor candidate retrieval
--> ReferenceCandidateSet
+-> ReferenceOptionSet
 -> deterministic filter
    - unit compatible?
    - period compatible?
    - geography compatible?
    - method compatible?
    - source priority acceptable?
--> ReferenceBinding
+-> CanonicalReference
 -> calculator
    - unit conversion
    - factor application
    - uncertainty metadata
    - calculation trace
--> DerivedClaim
+-> CalculatedClaim
 -> validator
 -> governance
 -> receipt
@@ -526,7 +526,7 @@ Rubric
   acceptable verdicts
   allowed judge candidates
 
-ProjectionSpec
+PublicOutputSpec
   projection_id
   output fields
   required receipt authority
@@ -551,7 +551,7 @@ Retrieval output should remain candidate-only:
 
 ```python
 @dataclass(frozen=True)
-class ReferenceCandidate:
+class ReferenceOption:
     candidate_id: str
     reference_id: str
     reference_type: str
@@ -573,7 +573,7 @@ A binding should record the deterministic compatibility checks that selected one
 canonical reference and rejected the others:
 
 ```text
-ReferenceBinding:
+CanonicalReference:
   binding_id
   claim_id
   concept_id
@@ -591,7 +591,7 @@ ReferenceBinding:
 Example:
 
 ```text
-ReferenceBinding:
+CanonicalReference:
   claim_id: electricity_amount_123
   concept_id: taxonomy.electricity_consumption
   factor_id: emission_factor.kr_grid_2024
@@ -639,7 +639,7 @@ Example:
 Architecture shape:
 
 ```text
-DerivedClaim:
+CalculatedClaim:
   claim_type: co2e_emission
   value: 0.48
   unit: tCO2e
@@ -699,7 +699,7 @@ coverage vector. It is a quality indicator, not publication authority.
 Blocking gates override scores:
 
 ```text
-score 95 but no CommitReceipt
+score 95 but no PublicOutputReceipt
 -> projection blocked
 
 score 95 but unresolved SemanticJudgmentObligation
@@ -717,11 +717,11 @@ These invariants belong with the core / profile boundary:
 Embedding top-1 cannot bind a reference.
 LLM cannot assign evidence quality authority.
 Retrieval score cannot select a factor.
-ReferenceBinding requires deterministic compatibility checks or open obligations.
-Calculator output is a DerivedClaim, not public output.
-DerivedClaim requires formula_id and calculation trace.
+CanonicalReference requires deterministic compatibility checks or open obligations.
+Calculator output is a CalculatedClaim, not public output.
+CalculatedClaim requires formula_id and calculation trace.
 Quality score cannot override open obligations, failed checks, or missing receipt.
-CommitReceipt should cite input claim ids, reference binding ids, formula ids, trace ids, and evidence span ids.
+PublicOutputReceipt should cite input claim ids, reference binding ids, formula ids, trace ids, and evidence span ids.
 ```
 
 ---
@@ -797,8 +797,8 @@ Question:
   Why was this value published?
 
 Expected trace:
-  CommitReceipt
-  -> GovernanceDecision
+  PublicOutputReceipt
+  -> ReviewDecision
   -> discharged obligation ids
   -> SemanticJudgment ids
   -> evidence span ids
@@ -843,9 +843,9 @@ Candidate:
   formula is active in profile
 
 Expected:
-  Calculator creates DerivedClaim for emissions.
-  DerivedClaim contains formula id, input claim ids, binding ids, and calculation trace.
-  DerivedClaim still requires validator / governance / receipt before projection.
+  Calculator creates CalculatedClaim for emissions.
+  CalculatedClaim contains formula id, input claim ids, binding ids, and calculation trace.
+  CalculatedClaim still requires validator / governance / receipt before projection.
 ```
 
 ### Evidence Quality Score
@@ -882,27 +882,27 @@ SemanticJudgment obligation validation
   Submitted SemanticJudgment artifacts are validated against obligation id,
   rubric id, verdict, judge policy, cited spans, and conflicts.
 
-ReferenceCandidate / ReferenceBinding
-  ReferenceCandidate remains candidate_only.
-  Deterministic selection creates canonical ReferenceBinding artifacts and
+ReferenceOption / CanonicalReference
+  ReferenceOption remains candidate_only.
+  Deterministic selection creates canonical CanonicalReference artifacts and
   preserves rejected near-miss candidates.
 
 Reference-grounded calculation
   CalculationRequirement explains blocked calculations.
   Reference search and selection can discharge calculation blockers.
-  CalculationTrace and DerivedClaim record reproducible calculated claims.
+  CalculationTrace and CalculatedClaim record reproducible calculated claims.
 
 ResolverTask bridge
-  CompileReport obligations can be converted into resolver-facing tasks.
+  ValidationReport obligations can be converted into resolver-facing tasks.
   Agents may submit artifacts, but they do not mint receipts.
 
-CommitPackage / GovernanceDecision / CommitReceipt
-  Proof artifacts are bundled into CommitPackage.
-  GovernanceDecision decides commit / hold / reject.
-  CommitReceipt is the public projection authority.
+ReviewPackage / ReviewDecision / PublicOutputReceipt
+  Proof artifacts are bundled into ReviewPackage.
+  ReviewDecision decides commit / hold / reject.
+  PublicOutputReceipt is the public projection authority.
 
 Judgment Facts adapter
-  CompileReport and CommitPreparation artifacts become Fact records for
+  ValidationReport and CommitPreparation artifacts become Fact records for
   evidence, provenance, open hazards, and discharged obligations.
 
 Domain Scenario Lab
@@ -941,7 +941,7 @@ Purpose:
 Turn the retrieval north star into a small deterministic interface.
 Keep embedding as candidate recall, not authority.
 Let obligations choose a retrieval lens before candidate generation.
-Preserve the ReferenceCandidate != ReferenceBinding boundary.
+Preserve the ReferenceOption != CanonicalReference boundary.
 ```
 
 Candidate deliverables:
@@ -967,7 +967,7 @@ Acceptance criteria:
 ```text
 Retrieval lens interface can return candidate_only artifacts.
 EmbeddingResolverStub can produce deterministic candidates for tests.
-Retrieval score is never enough to create ReferenceBinding.
+Retrieval score is never enough to create CanonicalReference.
 Top-1 retrieval cannot authorize calculation.
 No vector DB dependency is introduced.
 No real LLM call is introduced.
@@ -983,22 +983,22 @@ Purpose:
 
 ```text
 Connect reference_search_required obligations to ReferenceResolver.search.
-Add candidate_only ReferenceCandidate artifacts to CompileReport.
+Add candidate_only ReferenceOption artifacts to ValidationReport.
 Resolve only the search obligation, not calculation or publication authority.
-Leave ReferenceBinding to deterministic reference selection.
-Leave DerivedClaim to deterministic calculation retry.
+Leave CanonicalReference to deterministic reference selection.
+Leave CalculatedClaim to deterministic calculation retry.
 ```
 
 Acceptance criteria:
 
 ```text
-ProofObligation(reference_search_required)
+ValidationRequirement(reference_search_required)
 -> ReferenceQuery
 -> ReferenceResolver.search(...)
--> CompileReport.reference_candidates
+-> ValidationReport.reference_candidates
 
-No ReferenceBinding is created by retrieval.
-No DerivedClaim is created by retrieval.
+No CanonicalReference is created by retrieval.
+No CalculatedClaim is created by retrieval.
 No public projection authority is created by retrieval.
 No vector DB dependency is introduced.
 No real LLM call is introduced.
@@ -1060,10 +1060,10 @@ Is SemanticJudgment evidence, review artifact, or a separate proof artifact?
 Should profiles be plain Python objects, DSL output, TOML/YAML, or all of the above?
 How strict should judge policy be for LLM-generated judgments?
 How are rubric version migrations handled?
-What belongs in GovernanceDecision versus CommitReceipt?
+What belongs in ReviewDecision versus PublicOutputReceipt?
 How much of DomainPack should be serializable?
 Should DSL compile to DomainPack only, or also to CompilerProfile candidates?
-Should ReferenceCandidate / ReferenceBinding / DerivedClaim live in core or compiler_tool?
+Should ReferenceOption / CanonicalReference / CalculatedClaim live in core or compiler_tool?
 Should reference DB rows be part of DomainPack, external resources, or both?
 How should reference DB versions and vector index versions be pinned in CompilerProfile?
 How should evidence quality vectors map to scalar UI indicators without becoming authority?

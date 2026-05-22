@@ -5,7 +5,7 @@ Owner: persistence
 Last checked against code: 2026-05-21
 Can block PRs: yes
 
-CommitReceipt as the durable explanation root.
+PublicOutputReceipt as the durable explanation root.
 
 This document fixes the persistence boundary for the active `comp` rebuild. It
 is not a database schema, ORM design, or production retention policy. Its goal
@@ -17,7 +17,7 @@ The short version:
 
 ```text
 Public row is a view.
-CommitReceipt is the ledger root.
+PublicOutputReceipt is the ledger root.
 Artifact envelopes are the replay substrate.
 Fingerprints pin the world that made the receipt meaningful.
 ```
@@ -32,13 +32,13 @@ final migration schema.
 The current implementation now has the first in-memory replay substrate:
 
 ```text
-CommitReceipt
+PublicOutputReceipt
   projection_id
   authorized_fields
-  CommitReceiptCitations
+  PublicOutputReceiptCitations
   projection_value_commitments
 
-project_public_row(...)
+build_public_output(...)
   requires receipt
   requires clean citations
   checks projection id
@@ -109,7 +109,7 @@ case record
 
 ledger
   Append-only authorization root. In the current architecture this is
-  CommitReceipt and the receipt barrier snapshot.
+  PublicOutputReceipt and the receipt barrier snapshot.
 
 view
   Regenerable output for serving or inspection. A view may be stored for
@@ -147,7 +147,7 @@ Recompute
   -> produce a new candidate commit package now.
 ```
 
-A `CommitReceipt` supports replay. It does not guarantee that current rules,
+A `PublicOutputReceipt` supports replay. It does not guarantee that current rules,
 current references, or current retrieval behavior will recompute the same
 result.
 
@@ -171,19 +171,19 @@ Recompute may use current compiler/profile/catalog state and may differ.
 | --- | --- | --- | --- | --- | --- |
 | Raw source reference | case record | yes, if cited | immutable after receipt citation | evidence location, not claim truth | locates the original source or source container |
 | Source span digest | case record | yes, if available | immutable after receipt citation | evidence integrity | proves cited source text did not drift |
-| EvidenceWitness | case record | yes | immutable after receipt citation | grounding for checked claims | connects checked claims to source/span |
+| EvidenceRef | case record | yes | immutable after receipt citation | grounding for checked claims | connects checked claims to source/span |
 | InterpretationHypothesis | scratch / case record | optional final only | immutable if cited | proposal only | explains what entered the compiler |
-| ReferenceCandidate | scratch / cited case record | optional | discardable unless cited | none | only useful when cited by selection explanation |
-| RejectedReferenceCandidate | case record inside binding | yes, if cited by binding | immutable after binding | selector explanation | explains near misses and rejection reasons |
+| ReferenceOption | scratch / cited case record | optional | discardable unless cited | none | only useful when cited by selection explanation |
+| RejectedReferenceOption | case record inside binding | yes, if cited by binding | immutable after binding | selector explanation | explains near misses and rejection reasons |
 | SemanticJudgment | case record | yes, if accepted | immutable after accepted | resolver artifact, not receipt authority | discharges semantic obligations |
-| ReferenceBinding | case record | yes | immutable after commit | canonical reference binding | authorizes reference input to calculation |
+| CanonicalReference | case record | yes | immutable after commit | canonical reference binding | authorizes reference input to calculation |
 | CalculationTrace | case record | yes | immutable after commit | calculation provenance | explains derived claim calculation |
-| DerivedClaim | case record | yes | immutable after commit | calculated claim, not public authority | source of projection value commitment |
-| CompileReport | case record | final only | immutable after commit | compiler result, not projection authority | summarizes checked claims, obligations, hazards, bindings, and derived claims |
-| CommitPackage | case record | yes | immutable once cited | frozen commit candidate, not public authority | bundle digest cited by receipt |
-| GovernanceDecision | case record / ledger-cited | yes | immutable | commit, hold, or reject decision | receipt issuance precondition |
-| CommitReceipt | ledger | yes | append-only | projection authority | durable replay root |
-| PublicProjection | view | optional | replaceable if receipt-verifiable | none | materialized output only |
+| CalculatedClaim | case record | yes | immutable after commit | calculated claim, not public authority | source of projection value commitment |
+| ValidationReport | case record | final only | immutable after commit | compiler result, not projection authority | summarizes checked claims, obligations, hazards, bindings, and derived claims |
+| ReviewPackage | case record | yes | immutable once cited | frozen commit candidate, not public authority | bundle digest cited by receipt |
+| ReviewDecision | case record / ledger-cited | yes | immutable | commit, hold, or reject decision | receipt issuance precondition |
+| PublicOutputReceipt | ledger | yes | append-only | projection authority | durable replay root |
+| PublicOutput | view | optional | replaceable if receipt-verifiable | none | materialized output only |
 | ReferenceRecord | case dependency | yes if used, or via snapshot | version-pinned | reference authority source | verifies binding context |
 | ReferenceCatalog | case dependency | fingerprint or snapshot | version-pinned | reference authority collection | proves which reference world was used |
 | CompilerProfile | case dependency | fingerprint plus optional snapshot | version-pinned | active behavior lock | explains active rules, rubrics, judge policy, and projection policy |
@@ -191,18 +191,18 @@ Recompute may use current compiler/profile/catalog state and may differ.
 | Retrieval index | index/cache | operational only | rebuildable | none | recall trace only if cited separately |
 | Resolver task queue state | index/cache | operational only | rebuildable | none | not part of receipt authority |
 
-`CompileReport` needs special care. Draft reports are scratch/debug material.
+`ValidationReport` needs special care. Draft reports are scratch/debug material.
 The final report cited by a commit package is a case record.
 
-`PublicProjection` also needs special care. Persisting a public row must not
+`PublicOutput` also needs special care. Persisting a public row must not
 make the row authoritative. If a stored row conflicts with the receipt value
 commitments, the row is invalid.
 
 ---
 
-## 5. CommitReceipt As Ledger Root
+## 5. PublicOutputReceipt As Ledger Root
 
-`CommitReceipt` should be the durable root of projection explanation, not a
+`PublicOutputReceipt` should be the durable root of projection explanation, not a
 container for every artifact body.
 
 The receipt should carry or cite:
@@ -223,7 +223,7 @@ formula fingerprints
 source evidence fingerprints
 ```
 
-The current `ProjectionValueCommitment` design is the right shape:
+The current `PublicOutputValueCommitment` design is the right shape:
 
 ```text
 field
@@ -240,7 +240,7 @@ for public row values.
 The long-term rule:
 
 ```text
-CommitReceipt is the append-only authorization root.
+PublicOutputReceipt is the append-only authorization root.
 Artifact envelopes hold the replay bodies.
 Digest references connect the root to the replay graph.
 ```
@@ -310,7 +310,7 @@ scratch
 
 case record
   Mutable while a case is still draft.
-  Immutable after a CommitReceipt cites it.
+  Immutable after a PublicOutputReceipt cites it.
 
 ledger
   Append-only.
@@ -341,18 +341,18 @@ domain pack, latest reference catalog, latest retrieval index, or latest LLM.
 Target replay graph:
 
 ```text
-CommitReceipt
-  -> CommitPackage envelope
-  -> GovernanceDecision envelope
-  -> final CompileReport envelope
-  -> EvidenceWitness / source evidence envelopes
+PublicOutputReceipt
+  -> ReviewPackage envelope
+  -> ReviewDecision envelope
+  -> final ValidationReport envelope
+  -> EvidenceRef / source evidence envelopes
   -> accepted SemanticJudgment envelopes
-  -> ReferenceBinding envelopes
+  -> CanonicalReference envelopes
   -> ReferenceRecord or ReferenceCatalog fingerprints
   -> CalculationTrace envelopes
-  -> DerivedClaim envelopes
-  -> ProjectionValueCommitment verification
-  -> PublicProjection view
+  -> CalculatedClaim envelopes
+  -> PublicOutputValueCommitment verification
+  -> PublicOutput view
 ```
 
 Replay should answer:
@@ -388,7 +388,7 @@ Reference and profile dependencies should be pinned gradually.
 First practical layer:
 
 ```text
-ReferenceBinding
+CanonicalReference
   cites selected ReferenceRecord envelope or selected record digest
 
 CompilerProfile
@@ -426,7 +426,7 @@ DomainPackFingerprint
   implementation package version or git revision
 ```
 
-A `ReferenceBinding` should be replayable against either the exact selected
+A `CanonicalReference` should be replayable against either the exact selected
 `ReferenceRecord` envelope or a catalog snapshot manifest that contains the
 selected record digest.
 
@@ -469,7 +469,7 @@ comp/persistence/ledger.py
   root semantics, and materialized projection verification.
 
 comp/persistence/replay.py
-  derives ArtifactRef items from CommitReceipt citations and replays a public
+  derives ArtifactRef items from PublicOutputReceipt citations and replays a public
   row by checking receipt value commitments plus cited artifact envelopes.
 
 tests/support/persistence_cases.py
@@ -477,12 +477,12 @@ tests/support/persistence_cases.py
 
 tests/domain_scenarios/persistence.py
   records receipt-cited scenario artifacts into an in-memory artifact store,
-  records the CommitReceipt into an in-memory receipt ledger, and replays the
+  records the PublicOutputReceipt into an in-memory receipt ledger, and replays the
   materialized scenario projection from those stored envelopes.
 
 CompilerProfile / DomainPack / RuleFamily / SemanticRubric fingerprints
   expose stable declaration fingerprints for the active profile and domain
-  declaration world. CommitReceiptCitations can carry these dependency
+  declaration world. PublicOutputReceiptCitations can carry these dependency
   fingerprints, and replay reports surface the profile/domain/rule world the
   receipt depended on.
 
@@ -491,7 +491,7 @@ CalculationFormula / ReferenceRecord fingerprints
   reference rows. This lets replay explain both the calculation formula world
   and the reference world behind derived claims.
 
-EvidenceWitness fingerprints
+EvidenceRef fingerprints
   expose stable source evidence fingerprints for checked claim witnesses. Replay
   can recompute the witness source/span/text fingerprint from the stored
   evidence witness artifact and block if the source span drifts.
@@ -515,7 +515,7 @@ The implemented minimum behavior is:
 ArtifactEnvelope body digest is stable canonical JSON.
 Changing body changes digest.
 Changing metadata does not change digest.
-CommitReceipt can be recorded as an append-only ledger root.
+PublicOutputReceipt can be recorded as an append-only ledger root.
 Materialized public projection is treated as a view, not authority.
 Replay verifies projection values against receipt commitments.
 Replay blocks when an artifact body or projected value no longer matches its digest.

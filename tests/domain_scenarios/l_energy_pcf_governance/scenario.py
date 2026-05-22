@@ -1,10 +1,10 @@
 from __future__ import annotations
 
-from comp import ProjectionSpec, SubjectRef, project_public_row
+from comp import PublicOutputSpec, SubjectRef, build_public_output
 from comp.compiler_tool import (
-    CompileReport,
+    ValidationReport,
     ReferenceCatalogSnapshot,
-    ReferenceBinding,
+    CanonicalReference,
     apply_reference_selection,
     calculation_formula_declaration_fingerprint,
     domain_pack_declaration_fingerprint,
@@ -172,9 +172,9 @@ def run_l_energy_pcf_governance_scenario(
     )
     projection = None
     if preparation.receipt is not None:
-        projection = project_public_row(
+        projection = build_public_output(
             _projection_source(report),
-            ProjectionSpec(PROJECTION_ID, PROJECTION_FIELDS),
+            PublicOutputSpec(PROJECTION_ID, PROJECTION_FIELDS),
             receipt=preparation.receipt,
         )
 
@@ -203,7 +203,7 @@ def _compile_retrieval_backed_report(
     *,
     reference_pack_override: ScenarioReferencePack,
     scenario_profile,
-) -> CompileReport:
+) -> ValidationReport:
     pack = reference_pack_override
     opened_report = blocked_report()
     planned_report = plan_calculation_resolution(opened_report)
@@ -240,7 +240,7 @@ def _compile_retrieval_backed_report(
 def _dependency_fingerprints(
     scenario_profile,
     pack: ScenarioReferencePack,
-    report: CompileReport,
+    report: ValidationReport,
 ):
     return _dependency_fingerprints_for_reference_ids(
         scenario_profile,
@@ -250,9 +250,9 @@ def _dependency_fingerprints(
 
 
 def _binding_for(
-    bindings: tuple[ReferenceBinding, ...],
+    bindings: tuple[CanonicalReference, ...],
     binding_id: str,
-) -> ReferenceBinding | None:
+) -> CanonicalReference | None:
     for binding in reversed(bindings):
         if binding.binding_id == binding_id:
             return binding
