@@ -96,11 +96,14 @@ from comp.compiler_tool.references import (
 from comp.compiler_tool.receipt_builder import (
     ReceiptBuildBlocked,
     build_commit_receipt,
+    build_public_output_receipt,
 )
 from comp.judgment.receipts import (
     CommitReceiptCitations,
     DependencyFingerprint,
     ProjectionValueCommitment,
+    PublicOutputReceipt,
+    PublicOutputReceiptCitations,
 )
 from comp.compiler_tool.report_status import (
     recompute_report_status,
@@ -189,9 +192,12 @@ __all__ = [
     "CanonicalReference",
     "ReferenceBinding",
     "ReceiptBuildBlocked",
+    "PublicOutputReceipt",
+    "PublicOutputReceiptCitations",
     "CommitReceiptCitations",
     "ProjectionValueCommitment",
     "DependencyFingerprint",
+    "build_public_output_receipt",
     "build_commit_receipt",
     "ReferenceLookupError",
     "ReferenceRecord",

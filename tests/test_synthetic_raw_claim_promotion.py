@@ -91,7 +91,7 @@ def test_promotes_supported_raw_candidates_without_projection_authority():
         ALLOCATED_ELECTRICITY_CLAIM_ID,
     )
 
-    with pytest.raises(ProjectionBlocked, match="CommitReceipt"):
+    with pytest.raises(ProjectionBlocked, match="public-output receipt"):
         project_public_row(
             _projection_source(report),
             ProjectionSpec(PROJECTION_ID, PROJECTION_FIELDS),

@@ -3,18 +3,18 @@ from __future__ import annotations
 from collections.abc import Iterable
 from dataclasses import dataclass
 
-from comp.compiler_tool.commit_package import CommitPackage, build_commit_package
-from comp.compiler_tool.governance import GovernanceDecision, decide_governance
+from comp.compiler_tool.commit_package import ReviewPackage, build_commit_package
+from comp.compiler_tool.governance import ReviewDecision, decide_governance
 from comp.compiler_tool.models import CompileReport
-from comp.compiler_tool.receipt_builder import build_commit_receipt
-from comp.judgment.receipts import CommitReceipt, DependencyFingerprint
+from comp.compiler_tool.receipt_builder import build_public_output_receipt
+from comp.judgment.receipts import DependencyFingerprint, PublicOutputReceipt
 
 
 @dataclass(frozen=True)
 class CommitPreparation:
-    package: CommitPackage
-    decision: GovernanceDecision
-    receipt: CommitReceipt | None = None
+    package: ReviewPackage
+    decision: ReviewDecision
+    receipt: PublicOutputReceipt | None = None
 
     @property
     def can_project_public_row(self) -> bool:
@@ -44,7 +44,7 @@ def prepare_commit(
     decision = decide_governance(package, decision_id=decision_id)
     receipt = None
     if decision.can_issue_commit_receipt and package.complete:
-        receipt = build_commit_receipt(
+        receipt = build_public_output_receipt(
             package,
             decision,
             public_row_id=public_row_id,

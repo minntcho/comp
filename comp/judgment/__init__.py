@@ -2,6 +2,8 @@
 
 from comp.judgment.commit import (
     DraftSnapshot,
+    PublicOutput,
+    PublicOutputBlocked,
     ProjectionBlocked,
     blocking_hazards_clear,
     committable,
@@ -22,6 +24,7 @@ from comp.judgment.program import (
     BundleSpec,
     CommitSpec,
     CompiledJudgmentProgram,
+    PublicOutputSpec,
     ProjectionSpec,
     TransferEmitter,
     TransferRule,
@@ -31,6 +34,8 @@ from comp.judgment.receipts import (
     CommitReceiptCitations,
     DependencyFingerprint,
     ProjectionValueCommitment,
+    PublicOutputReceipt,
+    PublicOutputReceiptCitations,
     SelectionReceipt,
 )
 
@@ -44,6 +49,7 @@ __all__ = [
     "TransferRule",
     "BundleSpec",
     "CommitSpec",
+    "PublicOutputSpec",
     "ProjectionSpec",
     "CompiledJudgmentProgram",
     "FixpointEngine",
@@ -53,6 +59,8 @@ __all__ = [
     "winner_or_none",
     "needs_review",
     "DraftSnapshot",
+    "PublicOutput",
+    "PublicOutputBlocked",
     "ProjectionBlocked",
     "resolved_required_bundles",
     "blocking_hazards_clear",
@@ -62,6 +70,8 @@ __all__ = [
     "SelectionReceipt",
     "ProjectionValueCommitment",
     "DependencyFingerprint",
+    "PublicOutputReceipt",
+    "PublicOutputReceiptCitations",
     "CommitReceipt",
     "CommitReceiptCitations",
 ]

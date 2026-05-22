@@ -268,6 +268,23 @@ CommitPackage remains a compatibility alias.
 
 ReviewDecision is canonical.
 GovernanceDecision remains a compatibility alias.
+
+PublicOutputReceipt is canonical.
+CommitReceipt remains a compatibility alias.
+
+PublicOutputReceiptCitations is canonical.
+CommitReceiptCitations remains a compatibility alias.
+
+PublicOutputSpec is canonical.
+ProjectionSpec remains a compatibility alias.
+
+PublicOutputBlocked is canonical.
+ProjectionBlocked remains a compatibility alias.
+
+PublicOutput is available as the public-row return type.
+
+build_public_output_receipt is canonical.
+build_commit_receipt remains a compatibility alias.
 ```
 
 The underlying evidence fingerprint payload still uses
@@ -278,9 +295,9 @@ This step does not rename report fields such as `evidence_witnesses`,
 `reference_candidates`, `reference_bindings`, `derived_claims`, or
 `obligations`; those are compatibility surfaces for later, more careful PRs.
 
-This step also does not rename receipt, citation, projection, or projection
-error types. `CommitReceipt` remains the active public-output authority name
-until the receipt-gate slice can update that boundary independently.
+This step now renames the receipt, citation, output specification, and output
+blocking error types. The old names remain compatibility aliases, but docs,
+examples, and downstream product surfaces should prefer the public-output names.
 
 ## 8. Non-Goals
 

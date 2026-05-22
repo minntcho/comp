@@ -4,7 +4,7 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from typing import Any
 
-from comp.judgment import CommitReceipt, ProjectionSpec
+from comp.judgment import PublicOutputReceipt, PublicOutputSpec
 from comp.judgment.receipts import DependencyFingerprint
 from comp.persistence.ledger import (
     ArtifactIntegrityError,
@@ -38,9 +38,9 @@ class ProjectionReplayReport:
 
 def replay_public_projection(
     row: Mapping[str, Any],
-    projection: ProjectionSpec,
+    projection: PublicOutputSpec,
     *,
-    receipt: CommitReceipt,
+    receipt: PublicOutputReceipt,
     artifacts: ArtifactStore,
 ) -> ProjectionReplayReport:
     public_row = verify_materialized_public_projection(
@@ -64,7 +64,7 @@ def replay_public_projection(
     )
 
 
-def receipt_artifact_refs(receipt: CommitReceipt) -> tuple[ArtifactRef, ...]:
+def receipt_artifact_refs(receipt: PublicOutputReceipt) -> tuple[ArtifactRef, ...]:
     citations = receipt.citations
     if citations is None:
         return ()
@@ -135,7 +135,7 @@ def _verified_artifact_digests(
 
 
 def _verify_projection_value_sources(
-    receipt: CommitReceipt,
+    receipt: PublicOutputReceipt,
     artifacts: ArtifactStore,
 ) -> None:
     if receipt.citations is None:
@@ -172,7 +172,7 @@ def _verify_projection_value_sources(
 
 
 def _verify_dependency_fingerprint_sources(
-    receipt: CommitReceipt,
+    receipt: PublicOutputReceipt,
     artifacts: ArtifactStore,
 ) -> None:
     if receipt.citations is None:
@@ -240,7 +240,7 @@ def _verify_profile_lock_body(
 
 
 def _verify_source_evidence_span_fingerprints(
-    receipt: CommitReceipt,
+    receipt: PublicOutputReceipt,
     artifacts: ArtifactStore,
 ) -> None:
     if receipt.citations is None:
@@ -275,7 +275,7 @@ def _evidence_witness_fingerprint_from_body(
 
 
 def _verify_reference_catalog_snapshot_coverage(
-    receipt: CommitReceipt,
+    receipt: PublicOutputReceipt,
     artifacts: ArtifactStore,
 ) -> None:
     if receipt.citations is None:
@@ -335,7 +335,7 @@ def _unique_refs(refs: list[ArtifactRef]) -> tuple[ArtifactRef, ...]:
 
 
 def _dependency_fingerprints(
-    receipt: CommitReceipt,
+    receipt: PublicOutputReceipt,
 ) -> tuple[DependencyFingerprint, ...]:
     if receipt.citations is None:
         return ()

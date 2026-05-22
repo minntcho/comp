@@ -9,6 +9,11 @@ from comp import (
     Fact,
     FixpointEngine,
     JudgmentState,
+    PublicOutput,
+    PublicOutputBlocked,
+    PublicOutputReceipt,
+    PublicOutputReceiptCitations,
+    PublicOutputSpec,
     SelectionReceipt,
     SubjectRef,
 )
@@ -62,6 +67,13 @@ def test_top_level_package_exposes_active_judgment_surface():
     assert SubjectRef is not None
     assert FixpointEngine is not None
     assert SelectionReceipt is not None
+    assert PublicOutputReceipt is not None
+    assert PublicOutputReceiptCitations is not None
+    assert PublicOutputSpec is not None
+    assert PublicOutputBlocked is not None
+    assert PublicOutput is not None
+    assert CommitReceipt is PublicOutputReceipt
+    assert CommitReceiptCitations is PublicOutputReceiptCitations
     assert CommitReceipt is not None
     assert CommitReceiptCitations is not None
     assert DependencyFingerprint is not None
@@ -113,8 +125,11 @@ def test_readme_compiler_tool_import_surface_is_exported():
         ValidationRequirement,
         ValidationReport,
         build_commit_receipt,
+        build_public_output_receipt,
         compile_report_to_facts,
         prepare_commit,
+        PublicOutputReceipt,
+        PublicOutputReceiptCitations,
         resolver_tasks_from_report,
     )
 
@@ -126,7 +141,10 @@ def test_readme_compiler_tool_import_surface_is_exported():
     assert EvidenceRef is not None
     assert resolver_tasks_from_report is not None
     assert prepare_commit is not None
+    assert build_public_output_receipt is build_commit_receipt
     assert build_commit_receipt is not None
+    assert PublicOutputReceipt is not None
+    assert PublicOutputReceiptCitations is not None
     assert compile_report_to_facts is not None
     assert ReferenceQuery is not None
     assert ReferenceIndexEntry is not None
@@ -448,7 +466,12 @@ def test_friendly_authority_vocabulary_names_rename_path_without_moving_authorit
     assert "ValidationReport is canonical." in vocabulary
     assert "ReviewPackage is canonical." in vocabulary
     assert "ReviewDecision is canonical." in vocabulary
+    assert "PublicOutputReceipt is canonical." in vocabulary
+    assert "PublicOutputSpec is canonical." in vocabulary
+    assert "PublicOutputBlocked is canonical." in vocabulary
+    assert "PublicOutput is available as the public-row return type." in vocabulary
     assert "ProofObligation remains a compatibility alias." in vocabulary
+    assert "CommitReceipt remains a compatibility alias." in vocabulary
     assert "Only a clean public-output receipt can authorize public output." in vocabulary
 
 
