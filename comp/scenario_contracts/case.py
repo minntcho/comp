@@ -7,8 +7,8 @@ from pathlib import Path
 from typing import Any
 
 from comp.judgment import PublicOutputReceipt, PublicOutputSpec
+from comp.persistence.codec import commit_receipt_from_body, commit_receipt_to_body
 from comp.persistence.ledger import ReceiptLedgerKey
-from comp.persistence.mysql import commit_receipt_from_body, commit_receipt_to_body
 from comp.scenario_contracts.manifest import ScenarioManifestError
 
 

@@ -1,8 +1,8 @@
 import json
+from pathlib import Path
 
 from comp.explanation import export_receipt_proof_graph
-from comp.persistence.mysql import commit_receipt_to_body
-from comp.persistence.codec import encode_persistence_json
+from comp.persistence.codec import commit_receipt_to_body, encode_persistence_json
 from comp.persistence.replay import ProjectionReplayReport
 from comp.explanation.receipt_graph_cli import main
 from tests.support.persistence_cases import (
@@ -10,6 +10,31 @@ from tests.support.persistence_cases import (
     receipt_projection_case,
 )
 from comp.persistence import replay_public_projection
+
+
+def test_receipt_body_codec_is_backend_neutral():
+    from comp.persistence.codec import (
+        commit_receipt_from_body,
+        commit_receipt_to_body,
+    )
+
+    case = receipt_projection_case(amount=100)
+    body = commit_receipt_to_body(case.receipt)
+    roundtripped = commit_receipt_from_body(body)
+
+    assert roundtripped == case.receipt
+
+
+def test_receipt_graph_cli_does_not_import_mysql_backend():
+    source = Path("comp/explanation/receipt_graph_cli.py").read_text(encoding="utf-8")
+
+    assert "comp.persistence.mysql" not in source
+
+
+def test_scenario_contract_runtime_case_does_not_import_mysql_backend():
+    source = Path("comp/scenario_contracts/case.py").read_text(encoding="utf-8")
+
+    assert "comp.persistence.mysql" not in source
 
 
 def test_receipt_graph_cli_exports_graph_json_from_replay_inputs(tmp_path, capsys):

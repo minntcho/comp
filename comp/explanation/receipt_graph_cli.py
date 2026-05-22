@@ -16,8 +16,7 @@ from comp.persistence import (
     ProjectionReplayReport,
     ReceiptLedgerKey,
 )
-from comp.persistence.codec import decode_persistence_json
-from comp.persistence.mysql import commit_receipt_from_body
+from comp.persistence.codec import commit_receipt_from_body, decode_persistence_json
 from comp.views.receipt_graph import render_graphviz_dot, render_mermaid
 
 
