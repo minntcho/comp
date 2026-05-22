@@ -5,14 +5,18 @@ from comp.compiler_tool import (
 )
 from minchoagnt import (
     CompCompilerAdapter,
+    DeterministicRevisionWorker,
     LoopTrace,
     ObligationReflection,
+    RevisionAbstention,
     RevisedHypothesis,
     RevisionIteration,
     RevisionWorkItem,
+    RevisionWorkerSubmission,
     WitnessFixtureRule,
     WitnessRequest,
     deterministic_revision_loop,
+    fixture_rules_from_revision_worker_results,
     obligation_reflection,
     revision_work_items_from_reflection,
     revised_hypothesis_fixture,
@@ -77,6 +81,74 @@ def test_missing_source_witness_reflection_becomes_revision_work_item():
         ),
     )
     assert work_items[0].can_authorize_public_projection is False
+
+
+def test_revision_worker_submission_becomes_fixture_rule_for_loop_rerun():
+    hypothesis = _missing_unit_witness_hypothesis()
+    reflection = obligation_reflection(_adapter().compile(hypothesis).report)
+    work_item = revision_work_items_from_reflection(reflection)[0]
+    rule = WitnessFixtureRule(
+        field="unit",
+        witness_id="w-unit",
+        source="invoice.csv",
+    )
+    worker = DeterministicRevisionWorker(
+        submissions=(
+            RevisionWorkerSubmission(
+                work_item_id=work_item.work_item_id,
+                action="attach_grounded_witness",
+                artifact=rule,
+            ),
+        ),
+    )
+
+    worker_results = tuple(
+        worker.run(item) for item in revision_work_items_from_reflection(reflection)
+    )
+    fixture_rules = fixture_rules_from_revision_worker_results(worker_results)
+    trace = deterministic_revision_loop(
+        _adapter(),
+        hypothesis,
+        fixture_rules=fixture_rules,
+        max_revisions=1,
+    )
+
+    assert worker_results[0].can_authorize_public_projection is False
+    assert fixture_rules == (rule,)
+    assert trace.final.report.status == "accepted"
+    assert trace.final.receipt is None
+
+
+def test_revision_worker_rejects_forbidden_authority_action():
+    reflection = obligation_reflection(
+        _adapter().compile(_missing_unit_witness_hypothesis()).report
+    )
+    work_item = revision_work_items_from_reflection(reflection)[0]
+    worker = DeterministicRevisionWorker(
+        submissions=(
+            RevisionWorkerSubmission(
+                work_item_id=work_item.work_item_id,
+                action="create_commit_receipt",
+                artifact={"receipt": "fake"},
+            ),
+        ),
+    )
+
+    result = worker.run(work_item)
+
+    assert result.submissions == ()
+    assert result.abstention == RevisionAbstention(
+        abstention_id=f"abstain:{work_item.work_item_id}:forbidden_action",
+        work_item_id=work_item.work_item_id,
+        reason=(
+            "Action create_commit_receipt is not allowed for this revision "
+            "work item."
+        ),
+        category="forbidden_action",
+    )
+    assert result.can_authorize_public_projection is False
+    assert result.abstention.can_authorize_public_projection is False
+    assert fixture_rules_from_revision_worker_results((result,)) == ()
 
 
 def test_revised_hypothesis_fixture_adds_grounded_witness_without_mutating_source():
