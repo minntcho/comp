@@ -104,36 +104,17 @@ label is `감사 산출물 기록`.
 Product surfaces should not derive Korean labels from class names. They should
 read from an explicit registry.
 
-Example shape:
+The first implementation lives in `comp.schema_labels`. It is intentionally a
+display registry, not an authority module:
 
 ```python
-SCHEMA_LABELS = {
-    "ClaimCandidate": {
-        "ko": "검증 전 입력값",
-        "description_ko": "공급사, 파서, 또는 사용자가 제출했지만 아직 검증되지 않은 값입니다.",
-        "authority_ko": "공개 불가",
-    },
-    "EvidenceRef": {
-        "ko": "근거자료 위치",
-        "description_ko": "값이 확인된 문서, 엑셀, 인증서 등의 위치입니다.",
-        "authority_ko": "값 검증 근거로만 사용 가능",
-    },
-    "CanonicalReference": {
-        "ko": "확정 기준",
-        "description_ko": "계산에 사용할 수 있도록 결정적으로 선택된 기준입니다.",
-        "authority_ko": "계산 가능, 공개 승인 불가",
-    },
-    "CalculatedClaim": {
-        "ko": "계산값",
-        "description_ko": "확정 기준과 입력값을 사용해 계산된 결과입니다.",
-        "authority_ko": "공개 승인 증표 없이는 공개 불가",
-    },
-    "PublicOutputReceipt": {
-        "ko": "공개 승인 증표",
-        "description_ko": "특정 공개 결과를 내보낼 수 있음을 증명하는 승인 기록입니다.",
-        "authority_ko": "지정된 공개 결과만 승인 가능",
-    },
-}
+from comp.schema_labels import SCHEMA_LABELS, schema_label_ko
+
+schema_label_ko("ClaimCandidate")
+# "검증 전 입력값"
+
+SCHEMA_LABELS["ArtifactEnvelope"].ko
+# "감사 산출물 기록"
 ```
 
 The registry should live outside the authority decision path. It may help docs,
@@ -285,6 +266,10 @@ PublicOutput is available as the public-row return type.
 
 build_public_output_receipt is canonical.
 build_commit_receipt remains a compatibility alias.
+
+comp.schema_labels provides frozen display metadata for the friendly public
+surface. It is display-only and is not imported by the receipt gate, receipt
+builder, or persistence replay boundary.
 ```
 
 The underlying evidence fingerprint payload still uses
