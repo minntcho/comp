@@ -26,7 +26,14 @@ from comp.scenario_contracts.manifest import (
 )
 from comp.scenario_contracts.report import write_report
 from comp.scenario_contracts.result import InvariantResult, ScenarioResult
-from comp.scenario_contracts.runner import run_scenario
+
+
+def __getattr__(name: str):
+    if name == "run_scenario":
+        from comp.scenario_contracts.runner import run_scenario
+
+        return run_scenario
+    raise AttributeError(name)
 
 __all__ = [
     "InvariantResult",
