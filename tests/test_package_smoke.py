@@ -87,6 +87,8 @@ def test_readme_compiler_tool_import_surface_is_exported():
         ReferenceQuery,
         ReferenceResolver,
         ReferenceCatalogSnapshot,
+        ReviewDecision,
+        ReviewPackage,
         RetrievalQueryPolicy,
         RetrievalQueryRule,
         active_retrieval_query_policies,
@@ -130,6 +132,8 @@ def test_readme_compiler_tool_import_surface_is_exported():
     assert ReferenceIndexEntry is not None
     assert ReferenceResolver is not None
     assert ReferenceCatalogSnapshot is not None
+    assert ReviewDecision is not None
+    assert ReviewPackage is not None
     assert EmbeddingResolverStub is not None
     assert RetrievalQueryPolicy is not None
     assert RetrievalQueryRule is not None
@@ -442,6 +446,8 @@ def test_friendly_authority_vocabulary_names_rename_path_without_moving_authorit
     assert "ClaimCandidate is canonical." in vocabulary
     assert "CanonicalReference is canonical." in vocabulary
     assert "ValidationReport is canonical." in vocabulary
+    assert "ReviewPackage is canonical." in vocabulary
+    assert "ReviewDecision is canonical." in vocabulary
     assert "ProofObligation remains a compatibility alias." in vocabulary
     assert "Only a clean public-output receipt can authorize public output." in vocabulary
 

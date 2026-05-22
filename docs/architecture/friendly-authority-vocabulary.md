@@ -262,6 +262,12 @@ DerivedClaim remains a compatibility alias.
 
 ValidationReport is canonical.
 CompileReport remains a compatibility alias.
+
+ReviewPackage is canonical.
+CommitPackage remains a compatibility alias.
+
+ReviewDecision is canonical.
+GovernanceDecision remains a compatibility alias.
 ```
 
 The underlying evidence fingerprint payload still uses
@@ -271,6 +277,10 @@ digests stay stable during the rename window.
 This step does not rename report fields such as `evidence_witnesses`,
 `reference_candidates`, `reference_bindings`, `derived_claims`, or
 `obligations`; those are compatibility surfaces for later, more careful PRs.
+
+This step also does not rename receipt, citation, projection, or projection
+error types. `CommitReceipt` remains the active public-output authority name
+until the receipt-gate slice can update that boundary independently.
 
 ## 8. Non-Goals
 
