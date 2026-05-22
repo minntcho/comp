@@ -90,7 +90,7 @@ def test_synthetic_resolution_oracle_expectations_live_outside_run_builders_modu
     assert build_synthetic_pcf_resolution_run.__globals__[
         "expected_reference_search_obligation"
     ] is expected_reference_search_obligation
-    assert run.oracle.expected_resolved_obligations[1:] == (
+    assert run.oracle.expected_resolved_validation_requirements[1:] == (
         expected_reference_search_obligation(config),
         expected_calculation_obligation(config),
     )
