@@ -101,9 +101,9 @@ def test_authority_modules_do_not_import_presentation_or_explanation_layers():
 
 
 def test_trust_kernel_contract_documents_machine_checked_import_boundaries():
-    contract = Path("docs/architecture/trust-kernel-extension-rings.md").read_text(
-        encoding="utf-8"
-    )
+    contract = Path(
+        "docs/architecture/contracts/trust-kernel-extension-rings.md"
+    ).read_text(encoding="utf-8")
 
     expected_lines = (
         "Authority modules cannot import presentation, display, or explanation modules",

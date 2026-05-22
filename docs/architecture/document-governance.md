@@ -148,7 +148,9 @@ lifecycle location
 index listing
 ```
 
-The scanner checks governed architecture docs in `docs/architecture/` and
+The scanner checks the root governance entry point, governed architecture docs
+in `docs/architecture/contracts/`, `docs/architecture/maps/`,
+`docs/architecture/north-stars/`, and historical notes in
 `docs/archive/architecture/`. It is intentionally narrow: it prevents authority
 metadata drift and plan-log leakage without trying to judge whether a document's
 argument is correct.

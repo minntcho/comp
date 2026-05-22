@@ -128,10 +128,10 @@ artifact를 제출할 수 있지만, commit receipt를 만들 권한은 없다.
 
 ```text
 docs/index.md
-docs/architecture/retrieval-fabric-north-star.md
-docs/architecture/obligation-kernel-working-theory.md
+docs/architecture/north-stars/retrieval-fabric-north-star.md
+docs/architecture/maps/obligation-kernel-working-theory.md
 docs/archive/architecture/llm-orchestrated-compiler-tool-loop.md
-docs/architecture/memory-assisted-compiler-loop.md
+docs/architecture/contracts/memory-assisted-compiler-loop.md
 ```
 
 역할은 대략 이렇다.
