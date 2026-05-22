@@ -72,7 +72,8 @@ from comp import build_public_output
 
 Those names are owned by the judgment/public-output gate, not by
 `comp.compiler_tool`. They appear in the quickstart because the first user path
-is only complete when it reaches receipt-gated projection.
+is only complete when it reaches receipt-gated projection. See
+`api/public-output-gate.md` for the top-level gate API.
 
 Stable compiler-tool names:
 
