@@ -55,6 +55,35 @@ def test_compiler_tool_contract_model_set_is_exported():
     assert Hazard is not None
 
 
+def test_friendly_intake_validation_names_are_canonical_with_legacy_aliases():
+    from comp.compiler_tool import (
+        ClaimCandidate,
+        EvidenceRef,
+        ValidationRequirement,
+        evidence_ref_fingerprint,
+    )
+
+    claim = ClaimHypothesis(field="amount", value=1200, witness_id="w-amount")
+    witness = EvidenceWitness(
+        witness_id="w-amount",
+        field="amount",
+        source="invoice.csv",
+    )
+    requirement = ProofObligation(
+        kind="find_source_witness",
+        field="amount",
+        reason="missing_source_witness",
+    )
+
+    assert ClaimHypothesis is ClaimCandidate
+    assert EvidenceWitness is EvidenceRef
+    assert ProofObligation is ValidationRequirement
+    assert type(claim).__name__ == "ClaimCandidate"
+    assert type(witness).__name__ == "EvidenceRef"
+    assert type(requirement).__name__ == "ValidationRequirement"
+    assert evidence_ref_fingerprint(witness).dependency_kind == "evidence_witness"
+
+
 def test_compiler_tool_has_no_domain_known_fields_by_default():
     report = CompilerTool().compile_interpretation(
         _hypothesis(

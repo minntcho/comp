@@ -17,15 +17,18 @@ CompileStatus = Literal[
 
 
 @dataclass(frozen=True)
-class ClaimHypothesis:
+class ClaimCandidate:
     field: str
     value: Any
     witness_id: str | None = None
     origin: str = "llm_inferred"
 
 
+ClaimHypothesis = ClaimCandidate
+
+
 @dataclass(frozen=True)
-class EvidenceWitness:
+class EvidenceRef:
     witness_id: str
     field: str
     source: str | None = None
@@ -37,7 +40,10 @@ class EvidenceWitness:
         return self.source is not None or self.span is not None
 
 
-def evidence_witness_fingerprint(witness: EvidenceWitness) -> DependencyFingerprint:
+EvidenceWitness = EvidenceRef
+
+
+def evidence_ref_fingerprint(witness: EvidenceRef) -> DependencyFingerprint:
     return DependencyFingerprint.from_payload(
         dependency_kind="evidence_witness",
         dependency_id=witness.witness_id,
@@ -51,12 +57,15 @@ def evidence_witness_fingerprint(witness: EvidenceWitness) -> DependencyFingerpr
     )
 
 
+evidence_witness_fingerprint = evidence_ref_fingerprint
+
+
 @dataclass(frozen=True)
 class InterpretationHypothesis:
     hypothesis_id: str
     subject_id: str
-    claims: tuple[ClaimHypothesis, ...] = field(default_factory=tuple)
-    witnesses: tuple[EvidenceWitness, ...] = field(default_factory=tuple)
+    claims: tuple[ClaimCandidate, ...] = field(default_factory=tuple)
+    witnesses: tuple[EvidenceRef, ...] = field(default_factory=tuple)
 
 
 @dataclass(frozen=True)
@@ -100,7 +109,7 @@ class SemanticJudgmentRequirement:
 
 
 @dataclass(frozen=True)
-class ProofObligation:
+class ValidationRequirement:
     kind: str
     field: str
     reason: str
@@ -109,6 +118,9 @@ class ProofObligation:
     blocking: bool = True
     semantic_requirement: SemanticJudgmentRequirement | None = None
     calculation_requirement: CalculationRequirement | None = None
+
+
+ProofObligation = ValidationRequirement
 
 
 @dataclass(frozen=True)
@@ -133,13 +145,13 @@ class Hazard:
 @dataclass(frozen=True)
 class CompileReport:
     status: CompileStatus
-    evidence_witnesses: tuple[EvidenceWitness, ...] = field(default_factory=tuple)
+    evidence_witnesses: tuple[EvidenceRef, ...] = field(default_factory=tuple)
     checked_claims: tuple[CheckedClaim, ...] = field(default_factory=tuple)
     failed_claims: tuple[FailedClaim, ...] = field(default_factory=tuple)
     unknowns: tuple[UnknownClaim, ...] = field(default_factory=tuple)
     unchecked_areas: tuple[UncheckedArea, ...] = field(default_factory=tuple)
-    obligations: tuple[ProofObligation, ...] = field(default_factory=tuple)
-    resolved_obligations: tuple[ProofObligation, ...] = field(default_factory=tuple)
+    obligations: tuple[ValidationRequirement, ...] = field(default_factory=tuple)
+    resolved_obligations: tuple[ValidationRequirement, ...] = field(default_factory=tuple)
     hazards: tuple[Hazard, ...] = field(default_factory=tuple)
     reference_candidates: tuple[ReferenceCandidate, ...] = field(default_factory=tuple)
     reference_bindings: tuple[ReferenceBinding, ...] = field(default_factory=tuple)
