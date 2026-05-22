@@ -1,6 +1,7 @@
 import json
 import re
 from pathlib import Path
+from types import SimpleNamespace
 
 import pytest
 
@@ -83,7 +84,7 @@ def test_domain_scenario_cli_runs_human_summary(capsys):
     assert "Title: Tiny PCF location-based electricity" in captured.out
     assert "Status: accepted" in captured.out
     assert "Commit: commit" in captured.out
-    assert "Projection: present" in captured.out
+    assert "Public output: present" in captured.out
     assert "Validation summary:" in captured.out
     assert "- 검증 결과: 검증됨" in captured.out
     assert "- 공개 결과:" in captured.out
@@ -103,6 +104,59 @@ def test_domain_scenario_cli_runs_human_summary(capsys):
     assert "Replay trace:" in captured.out
     assert "- status: replayed" in captured.out
     assert "- artifacts:" in captured.out
+
+
+def test_domain_scenario_cli_summarizes_blocked_requirements_as_actions():
+    from comp.compiler_tool import ValidationReport, ValidationRequirement
+    from tests.domain_scenarios.cli import render_scenario_summary
+
+    class BlockedResult(SimpleNamespace):
+        def to_dict(self):
+            return {"replay_trace": None}
+
+    result = BlockedResult(
+        report=ValidationReport(
+            status="blocked",
+            obligations=(
+                ValidationRequirement(
+                    kind="find_source_witness",
+                    field="co2e_kg",
+                    reason="missing_source_witness",
+                    obligation_id="obl-1",
+                ),
+            ),
+        ),
+        preparation=SimpleNamespace(
+            decision=SimpleNamespace(status="hold"),
+            receipt=None,
+        ),
+        projection=None,
+        resolver_steps=(),
+    )
+
+    output = render_scenario_summary(
+        SimpleNamespace(
+            scenario_id="friendly.blocked.v1",
+            title="Friendly blocked validation summary",
+        ),
+        result,
+    )
+
+    assert "- 검증 결과: 차단됨" in output
+    assert "- 보완 필요 항목: 1" in output
+    assert (
+        "  - co2e_kg: 근거자료가 연결되지 않아 이 값을 검증할 수 없습니다."
+        in output
+    )
+    assert "    조치: 값이 나온 문서, 엑셀, 인증서 등의 위치를 연결해 주세요." in output
+    blocked_terms = (
+        "ClaimHypothesis",
+        "EvidenceWitness",
+        "CommitReceipt",
+        "Projection",
+        "ProofObligation",
+    )
+    assert not any(term in output for term in blocked_terms)
 
 
 def test_domain_scenario_cli_runs_json_view(capsys):
