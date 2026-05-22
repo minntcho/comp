@@ -13,6 +13,7 @@ def scenario_result_view(result) -> dict[str, Any]:
             result.preparation.receipt,
         ),
         "replay_trace": replay_trace_view(result),
+        "proof_graph": proof_graph_view(result),
         "facts": {
             "report_count": len(result.report_facts),
             "commit_count": len(result.commit_facts),
@@ -172,6 +173,36 @@ def replay_trace_view(result) -> dict[str, Any] | None:
     }
 
 
+def proof_graph_view(result) -> dict[str, Any] | None:
+    receipt = result.preparation.receipt
+    if receipt is None or result.projection is None:
+        return None
+
+    from comp import ProjectionSpec
+    from comp.explanation import export_receipt_proof_graph
+    from comp.persistence import ProjectionReplayBlocked
+    from tests.domain_scenarios.persistence import (
+        replay_scenario_projection,
+        scenario_replay_bundle,
+    )
+
+    bundle = scenario_replay_bundle(result)
+    try:
+        replay = replay_scenario_projection(
+            result,
+            ProjectionSpec(receipt.projection_id, tuple(result.projection.keys())),
+            bundle=bundle,
+        )
+    except ProjectionReplayBlocked:
+        return None
+
+    return export_receipt_proof_graph(
+        receipt=receipt,
+        replay=replay,
+        artifacts=bundle.artifacts,
+    ).to_payload()
+
+
 def _dependency_manifests_view(fingerprints, artifacts) -> dict[str, list[dict[str, Any]]]:
     profile_locks = []
     catalog_snapshots = []
@@ -234,6 +265,7 @@ def _obligation_view(obligation) -> dict[str, str | None]:
 
 __all__ = [
     "commit_view",
+    "proof_graph_view",
     "receipt_trace_view",
     "replay_trace_view",
     "report_view",
