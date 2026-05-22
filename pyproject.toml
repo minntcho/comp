@@ -22,6 +22,7 @@ packages = [
   "comp.persistence",
   "comp.scenarios",
   "comp.scenarios.synthetic",
+  "comp.views",
   "minchoagnt",
 ]
 
