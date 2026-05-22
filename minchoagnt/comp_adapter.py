@@ -16,11 +16,11 @@ from comp.compiler_tool import (
     SemanticJudgment,
     apply_semantic_judgments,
     compile_report_to_facts,
-    reference_query_for_obligation_from_policy,
-    reference_query_for_obligation_from_resolver_tasks,
-    resolve_reference_search_obligations,
-    resolve_reference_retrieval_obligations,
-    resolver_task_from_obligation,
+    reference_query_for_requirement_from_policy,
+    reference_query_for_requirement_from_resolver_tasks,
+    resolve_reference_search_requirements,
+    resolve_reference_retrieval_requirements,
+    resolver_task_from_requirement,
     resolver_tasks_from_report,
 )
 from comp.judgment import Fact, JudgmentState, SubjectRef
@@ -41,7 +41,7 @@ class CompResolutionResult:
     result: CompCompileResult
     tasks: tuple[ResolverTask, ...] = field(default_factory=tuple)
     semantic_judgment_ids: tuple[str, ...] = field(default_factory=tuple)
-    reference_query_obligation_ids: tuple[str, ...] = field(default_factory=tuple)
+    reference_query_requirement_ids: tuple[str, ...] = field(default_factory=tuple)
 
 
 class CompCompilerAdapter:
@@ -127,29 +127,29 @@ class DeterministicCompResolver:
             )
 
         if self.reference_resolver is not None:
-            query_for_obligation = self._retrieval_query_for_obligation(tasks)
-            reference_query_obligation_ids = (
-                self._retrieval_query_obligation_ids(
+            query_for_requirement = self._retrieval_query_for_requirement(tasks)
+            reference_query_requirement_ids = (
+                self._retrieval_query_requirement_ids(
                     report,
-                    query_for_obligation,
+                    query_for_requirement,
                 )
             )
-            report = resolve_reference_retrieval_obligations(
+            report = resolve_reference_retrieval_requirements(
                 report,
                 self.reference_resolver,
-                query_for_obligation=query_for_obligation,
+                query_for_requirement=query_for_requirement,
                 limit=self.reference_limit,
             )
         else:
-            reference_query_obligation_ids = self._reference_query_obligation_ids(tasks)
+            reference_query_requirement_ids = self._reference_query_requirement_ids(tasks)
 
         if self.reference_resolver is None and (
-            self.reference_catalog is not None and reference_query_obligation_ids
+            self.reference_catalog is not None and reference_query_requirement_ids
         ):
-            report = resolve_reference_search_obligations(
+            report = resolve_reference_search_requirements(
                 report,
                 self.reference_catalog,
-                query_for_obligation=self._query_for_obligation,
+                query_for_requirement=self._query_for_requirement,
                 reference_type=self.reference_type,
                 limit=self.reference_limit,
                 retrieval_method=self.retrieval_method,
@@ -163,60 +163,60 @@ class DeterministicCompResolver:
             semantic_judgment_ids=tuple(
                 judgment.judgment_id for judgment in semantic_judgments
             ),
-            reference_query_obligation_ids=reference_query_obligation_ids,
+            reference_query_requirement_ids=reference_query_requirement_ids,
         )
 
     def _semantic_judgments_for(
         self, tasks: tuple[ResolverTask, ...]
     ) -> tuple[SemanticJudgment, ...]:
-        semantic_obligation_ids = {
-            task.obligation_id
+        semantic_requirement_ids = {
+            task.requirement_id
             for task in tasks
             if task.task_type == "semantic_judgment"
         }
         return tuple(
             judgment
             for judgment in self.semantic_judgments
-            if judgment.obligation_id in semantic_obligation_ids
+            if judgment.requirement_id in semantic_requirement_ids
         )
 
-    def _reference_query_obligation_ids(
+    def _reference_query_requirement_ids(
         self, tasks: tuple[ResolverTask, ...]
     ) -> tuple[str, ...]:
         return tuple(
-            task.obligation_id
+            task.requirement_id
             for task in tasks
             if task.task_type == "reference_search"
-            and task.obligation_id in self.reference_queries
+            and task.requirement_id in self.reference_queries
         )
 
-    def _query_for_obligation(self, obligation: ValidationRequirement) -> str | None:
-        task = resolver_task_from_obligation(obligation)
-        return self.reference_queries.get(task.obligation_id)
+    def _query_for_requirement(self, obligation: ValidationRequirement) -> str | None:
+        task = resolver_task_from_requirement(obligation)
+        return self.reference_queries.get(task.requirement_id)
 
-    def _retrieval_query_for_obligation(self, tasks: tuple[ResolverTask, ...]):
+    def _retrieval_query_for_requirement(self, tasks: tuple[ResolverTask, ...]):
         if self.reference_query_policy is not None:
-            return reference_query_for_obligation_from_policy(
+            return reference_query_for_requirement_from_policy(
                 tasks,
                 policy=self.reference_query_policy,
                 context=self.reference_query_context,
             )
-        return reference_query_for_obligation_from_resolver_tasks(
+        return reference_query_for_requirement_from_resolver_tasks(
             tasks,
             query_texts=self.reference_queries,
             lens=self.reference_lens,
             reference_type=self.reference_type,
         )
 
-    def _retrieval_query_obligation_ids(
+    def _retrieval_query_requirement_ids(
         self,
         report: ValidationReport,
-        query_for_obligation,
+        query_for_requirement,
     ) -> tuple[str, ...]:
         return tuple(
-            resolver_task_from_obligation(obligation).obligation_id
+            resolver_task_from_requirement(obligation).requirement_id
             for obligation in report.validation_requirements
-            if query_for_obligation(obligation) is not None
+            if query_for_requirement(obligation) is not None
         )
 
 

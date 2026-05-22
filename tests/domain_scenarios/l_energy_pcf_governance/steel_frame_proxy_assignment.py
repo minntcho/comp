@@ -203,13 +203,13 @@ def _resolved_validation_requirements() -> tuple[ValidationRequirement, ...]:
             kind="find_source_witness",
             field="steel_frame_supplier_submission",
             reason="supplier_submission_absent",
-            obligation_id=SUPPLIER_ABSENCE_OBLIGATION_ID,
+            requirement_id=SUPPLIER_ABSENCE_OBLIGATION_ID,
         ),
         ValidationRequirement(
             kind="proxy_factor_required",
             field="steel_frame_proxy_factor",
             reason="missing_supplier_evidence_requires_proxy",
-            obligation_id=PROXY_FACTOR_OBLIGATION_ID,
+            requirement_id=PROXY_FACTOR_OBLIGATION_ID,
         ),
     )
 
@@ -288,7 +288,7 @@ STEEL_FRAME_PROXY_SCENARIO = ScenarioDefinition(
     contract=ScenarioContract(
         must_commit=True,
         required_projection=EXPECTED_PROJECTION,
-        required_resolved_obligation_kinds=(
+        required_resolved_requirement_kinds=(
             "find_source_witness",
             "proxy_factor_required",
         ),

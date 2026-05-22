@@ -117,7 +117,7 @@ def test_reference_grounded_calculation_flow_searches_binds_and_retries():
     resolved = resolve_reference_grounded_calculation(
         _blocked_report(),
         _catalog(),
-        query_for_obligation=lambda obligation: "korea electricity grid factor",
+        query_for_requirement=lambda obligation: "korea electricity grid factor",
         criteria=_criteria(),
         input_claim=_input(),
         formula=_formula(),
@@ -145,7 +145,7 @@ def test_reference_grounded_calculation_flow_stops_when_search_has_no_candidates
     resolved = resolve_reference_grounded_calculation(
         _blocked_report(),
         _catalog(),
-        query_for_obligation=lambda obligation: "diesel combustion",
+        query_for_requirement=lambda obligation: "diesel combustion",
         criteria=_criteria(),
         input_claim=_input(),
         formula=_formula(),
@@ -166,7 +166,7 @@ def test_reference_grounded_calculation_flow_exposes_ambiguous_selection():
     resolved = resolve_reference_grounded_calculation(
         _blocked_report(),
         _catalog(ambiguous=True),
-        query_for_obligation=lambda obligation: "korea electricity grid factor",
+        query_for_requirement=lambda obligation: "korea electricity grid factor",
         criteria=_criteria(),
         input_claim=_input(),
         formula=_formula(),

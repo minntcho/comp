@@ -1,3 +1,5 @@
+import pytest
+
 from comp.compiler_tool import (
     ClaimCandidate,
     CheckedClaim,
@@ -7,6 +9,7 @@ from comp.compiler_tool import (
     FailedClaim,
     Hazard,
     InterpretationHypothesis,
+    SemanticJudgment,
     ValidationRequirement,
     UnknownClaim,
     UncheckedArea,
@@ -88,6 +91,36 @@ def test_friendly_intake_validation_names_are_canonical():
     assert report.validation_requirements == (requirement,)
     assert report.resolved_validation_requirements == ()
     assert evidence_ref_fingerprint(witness).dependency_kind == "evidence_witness"
+
+
+def test_validation_requirement_id_names_are_canonical():
+    requirement = ValidationRequirement(
+        kind="semantic_judgment_required",
+        field="scope2_method",
+        reason="support_required",
+        requirement_id="req-scope2",
+    )
+    judgment = SemanticJudgment(
+        judgment_id="judgment-1",
+        requirement_id="req-scope2",
+        verdict="supports",
+        rubric_id="scope2-method",
+        judge="human/reviewer",
+        cited_span_ids=("span-1",),
+        rationale="The source supports the claim.",
+    )
+
+    assert requirement.requirement_id == "req-scope2"
+    assert judgment.requirement_id == "req-scope2"
+    assert not hasattr(requirement, "obligation_id")
+    assert not hasattr(judgment, "obligation_id")
+    with pytest.raises(TypeError):
+        ValidationRequirement(
+            kind="semantic_judgment_required",
+            field="scope2_method",
+            reason="support_required",
+            obligation_id="req-scope2",
+        )
 
 
 def test_friendly_reference_calculation_report_names_are_canonical():

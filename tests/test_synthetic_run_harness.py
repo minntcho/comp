@@ -113,7 +113,7 @@ def test_synthetic_run_harness_materializes_resolution_commit_flow(tmp_path) -> 
     assert harness.report.validation_requirements == ()
     assert harness.report.hazards == ()
     assert tuple(
-        obligation.obligation_id for obligation in harness.report.resolved_validation_requirements
+        obligation.requirement_id for obligation in harness.report.resolved_validation_requirements
     ) == (
         "synthetic-obligation:missing_unit",
         "resolve:pcf.electricity_factor_multiplication.v1:"

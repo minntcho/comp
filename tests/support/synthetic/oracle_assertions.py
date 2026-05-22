@@ -267,9 +267,9 @@ def _expected_resolved_requirement_rows(
 def _obligation_rows(report: ValidationReport) -> tuple[tuple[Any, ...], ...]:
     return tuple(
         (
-            obligation.obligation_id
+            obligation.requirement_id
             or _stable_id(
-                "proof_obligation",
+                "validation_requirement",
                 obligation.kind,
                 obligation.field,
                 obligation.reason,
@@ -285,9 +285,9 @@ def _obligation_rows(report: ValidationReport) -> tuple[tuple[Any, ...], ...]:
 def _resolved_obligation_rows(report: ValidationReport) -> tuple[tuple[Any, ...], ...]:
     return tuple(
         (
-            obligation.obligation_id
+            obligation.requirement_id
             or _stable_id(
-                "proof_obligation",
+                "validation_requirement",
                 obligation.kind,
                 obligation.field,
                 obligation.reason,

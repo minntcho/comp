@@ -205,7 +205,7 @@ def _resolved_validation_requirements() -> tuple[ValidationRequirement, ...]:
             kind="certificate_boundary_supported",
             field="certificate_boundary",
             reason="supports_cradle_to_gate",
-            obligation_id=CERTIFICATE_BOUNDARY_OBLIGATION_ID,
+            requirement_id=CERTIFICATE_BOUNDARY_OBLIGATION_ID,
         ),
     )
 
@@ -283,7 +283,7 @@ CARBON_TECH_CERTIFICATE_SCENARIO = ScenarioDefinition(
     contract=ScenarioContract(
         must_commit=True,
         required_projection=EXPECTED_PROJECTION,
-        required_resolved_obligation_kinds=("certificate_boundary_supported",),
+        required_resolved_requirement_kinds=("certificate_boundary_supported",),
         required_reference_binding_ids=(CERTIFICATE_FACTOR_BINDING_ID,),
         required_derived_claim_ids=(FINAL_EMISSION_CLAIM_ID,),
         required_receipt_reference_binding_ids=(CERTIFICATE_FACTOR_BINDING_ID,),

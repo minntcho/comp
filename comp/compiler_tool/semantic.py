@@ -19,9 +19,9 @@ def apply_semantic_judgments(
 ) -> ValidationReport:
     """Discharge semantic obligations when submitted judgments satisfy protocol."""
 
-    judgments_by_obligation: dict[str, list[SemanticJudgment]] = {}
+    judgments_by_requirement: dict[str, list[SemanticJudgment]] = {}
     for judgment in judgments:
-        judgments_by_obligation.setdefault(judgment.obligation_id, []).append(judgment)
+        judgments_by_requirement.setdefault(judgment.requirement_id, []).append(judgment)
 
     available_spans = (
         frozenset(available_span_ids) if available_span_ids is not None else None
@@ -35,7 +35,7 @@ def apply_semantic_judgments(
             open_obligations.append(obligation)
             continue
 
-        matching = judgments_by_obligation.get(_obligation_id(obligation), [])
+        matching = judgments_by_requirement.get(_requirement_id(obligation), [])
         valid = [
             judgment
             for judgment in matching
@@ -119,10 +119,10 @@ def _judgment_satisfies_protocol(
     return True
 
 
-def _obligation_id(obligation: ValidationRequirement) -> str:
-    if obligation.obligation_id:
-        return obligation.obligation_id
-    return f"{obligation.kind}:{obligation.field}:{obligation.reason}"
+def _requirement_id(requirement: ValidationRequirement) -> str:
+    if requirement.requirement_id:
+        return requirement.requirement_id
+    return f"validation_requirement:{requirement.kind}:{requirement.field}:{requirement.reason}"
 
 
 def _add_hazard(hazards: list[Hazard], hazard: Hazard) -> None:

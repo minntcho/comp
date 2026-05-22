@@ -48,7 +48,7 @@ SCENARIO = ScenarioDefinition(
     contract=ScenarioContract(
         must_commit=True,
         required_projection=EXPECTED_PROJECTION,
-        required_resolved_obligation_kinds=EXPECTED_RESOLVED_OBLIGATION_KINDS,
+        required_resolved_requirement_kinds=EXPECTED_RESOLVED_OBLIGATION_KINDS,
         required_reference_candidate_ids=EXPECTED_REFERENCE_CANDIDATE_IDS,
         required_reference_binding_ids=("bind-synthetic-resolution-electricity-factor",),
         required_derived_claim_ids=(
@@ -74,7 +74,7 @@ def run_synthetic_pcf_resolution_scenario() -> DomainScenarioResult:
     report = resolve_reference_grounded_calculation(
         adapter.resolution_seed_report(),
         adapter.reference_catalog(),
-        query_for_obligation=adapter.query_for_obligation,
+        query_for_requirement=adapter.query_for_requirement,
         criteria=adapter.reference_selection_criteria(),
         input_claim=adapter.resolved_input_claim(),
         formula=adapter.formula(),

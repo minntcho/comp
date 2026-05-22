@@ -244,13 +244,13 @@ def _resolved_validation_requirements() -> tuple[ValidationRequirement, ...]:
             kind="child_claims_accepted_or_proxy_authorized",
             field="final_rollup_children",
             reason="tier0_c_pack_carbon_tech_l_materials_paths_available",
-            obligation_id=CHILD_AUTHORIZATION_OBLIGATION_ID,
+            requirement_id=CHILD_AUTHORIZATION_OBLIGATION_ID,
         ),
         ValidationRequirement(
             kind="rollup_snapshot_created",
             field="final_bottom_up_rollup",
             reason="child_claim_values_frozen_for_final_projection",
-            obligation_id=ROLLUP_SNAPSHOT_OBLIGATION_ID,
+            requirement_id=ROLLUP_SNAPSHOT_OBLIGATION_ID,
         ),
     )
 
@@ -459,7 +459,7 @@ FINAL_BOTTOM_UP_ROLLUP_SCENARIO = ScenarioDefinition(
     contract=ScenarioContract(
         must_commit=True,
         required_projection=EXPECTED_PROJECTION,
-        required_resolved_obligation_kinds=(
+        required_resolved_requirement_kinds=(
             "child_claims_accepted_or_proxy_authorized",
             "rollup_snapshot_created",
         ),

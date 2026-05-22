@@ -122,7 +122,7 @@ def test_calculation_requirement_metadata_is_visible_to_judgment_facts():
     assert Fact(
         tag="hazard_open",
         subject=SubjectRef("claim", "hyp-1"),
-        key="proof_obligation:co2e_emission",
+        key="validation_requirement:co2e_emission",
         value=(
             "calculation:ghg.electricity_factor_multiplication.v1:"
             "hyp-1:co2e_emission:unit_mismatch"
@@ -137,7 +137,7 @@ def test_calculation_requirement_metadata_is_visible_to_judgment_facts():
             ("output_claim_id", "hyp-1:co2e_emission"),
             ("reference_binding_id", "bind-amount-factor"),
             ("reference_id", "factor.kr_grid.2024.location_based"),
-            ("report_section", "proof_obligation"),
+            ("report_section", "validation_requirement"),
             ("report_status", "blocked"),
         ),
     ) in facts

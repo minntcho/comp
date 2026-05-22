@@ -16,7 +16,7 @@ def test_semantic_obligation_becomes_resolver_task_with_rubric_payload():
                 kind="semantic_judgment_required",
                 field="scope2_method",
                 reason="support_required",
-                obligation_id="obl-scope2",
+                requirement_id="obl-scope2",
                 claim_id="claim-scope2",
                 semantic_requirement=SemanticJudgmentRequirement(
                     question="Does this span support market-based Scope 2?",
@@ -36,10 +36,10 @@ def test_semantic_obligation_becomes_resolver_task_with_rubric_payload():
     assert tasks == (
         ResolverTask(
             task_id="resolver-task:obl-scope2",
-            obligation_id="obl-scope2",
+            requirement_id="obl-scope2",
             task_type="semantic_judgment",
             required_artifact="semantic_judgment",
-            obligation_kind="semantic_judgment_required",
+            requirement_kind="semantic_judgment_required",
             field="scope2_method",
             reason="support_required",
             claim_id="claim-scope2",
@@ -72,7 +72,7 @@ def test_calculation_reference_search_obligation_preserves_requirement_payload()
                 kind="reference_search_required",
                 field="co2e_emission",
                 reason="unknown_reference",
-                obligation_id="resolve:ghg.electricity_factor_multiplication.v1:"
+                requirement_id="resolve:ghg.electricity_factor_multiplication.v1:"
                 "hyp-1:co2e_emission:reference_search_required",
                 claim_id="hyp-1:co2e_emission",
                 calculation_requirement=requirement,
@@ -84,7 +84,7 @@ def test_calculation_reference_search_obligation_preserves_requirement_payload()
 
     assert task.task_type == "reference_search"
     assert task.required_artifact == "reference_options"
-    assert task.obligation_id == (
+    assert task.requirement_id == (
         "resolve:ghg.electricity_factor_multiplication.v1:"
         "hyp-1:co2e_emission:reference_search_required"
     )
@@ -122,12 +122,12 @@ def test_resolver_tasks_use_fallback_obligation_ids_and_ignore_resolved_items():
 
     assert tasks == (
         ResolverTask(
-            task_id="resolver-task:proof_obligation:find_source_witness:unit:"
+            task_id="resolver-task:validation_requirement:find_source_witness:unit:"
             "missing_unit",
-            obligation_id="proof_obligation:find_source_witness:unit:missing_unit",
+            requirement_id="validation_requirement:find_source_witness:unit:missing_unit",
             task_type="evidence_search",
             required_artifact="evidence_witness",
-            obligation_kind="find_source_witness",
+            requirement_kind="find_source_witness",
             field="unit",
             reason="missing_unit",
             claim_id=None,

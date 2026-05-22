@@ -211,7 +211,7 @@ def _resolved_validation_requirements(
                 f"{profile.site_alias.raw_site_id}_alias_bound_to_"
                 f"{profile.site_alias.canonical_site_id}"
             ),
-            obligation_id=profile.site_alias.obligation_id,
+            requirement_id=profile.site_alias.obligation_id,
         ),
         ValidationRequirement(
             kind="unit_conversion_policy_applied",
@@ -221,19 +221,19 @@ def _resolved_validation_requirements(
                 f"{profile.unit_conversion.target_unit}_conversion_factor_"
                 f"{_number(_decimal(profile.unit_conversion.factor))}"
             ),
-            obligation_id=profile.unit_conversion.obligation_id,
+            requirement_id=profile.unit_conversion.obligation_id,
         ),
         ValidationRequirement(
             kind="period_validated",
             field="period",
             reason="period_inside_active_reporting_window",
-            obligation_id=profile.reporting_period.obligation_id,
+            requirement_id=profile.reporting_period.obligation_id,
         ),
         ValidationRequirement(
             kind="physical_allocation_support_validated",
             field="allocation_share",
             reason="line_a_mass_over_total_line_mass",
-            obligation_id=profile.allocation_support.obligation_id,
+            requirement_id=profile.allocation_support.obligation_id,
         ),
     )
 

@@ -84,7 +84,7 @@ def test_unknown_reference_opens_reference_search_obligation():
         kind="reference_search_required",
         field="co2e_emission",
         reason="unknown_reference",
-        obligation_id=(
+        requirement_id=(
             "resolve:ghg.electricity_factor_multiplication.v1:"
             "hyp-1:co2e_emission:reference_search_required"
         ),

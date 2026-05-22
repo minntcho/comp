@@ -43,7 +43,7 @@ SCENARIO = ScenarioDefinition(
     contract=ScenarioContract(
         must_commit=True,
         required_projection=EXPECTED_PROJECTION,
-        required_resolved_obligation_kinds=EXPECTED_RESOLVED_OBLIGATION_KINDS,
+        required_resolved_requirement_kinds=EXPECTED_RESOLVED_OBLIGATION_KINDS,
         required_reference_candidate_ids=EXPECTED_REFERENCE_CANDIDATE_IDS,
         required_reference_binding_ids=("bind-electricity-factor",),
         required_derived_claim_ids=("tiny-pcf:co2e_kg",),
@@ -60,7 +60,7 @@ def run_tiny_pcf_scenario() -> DomainScenarioResult:
     resolved_report = resolve_reference_grounded_calculation(
         blocked_report(),
         catalog(),
-        query_for_obligation=lambda obligation: (
+        query_for_requirement=lambda obligation: (
             "Korea grid electricity factor 2024"
             if obligation.kind == "reference_search_required"
             else None

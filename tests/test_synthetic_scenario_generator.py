@@ -543,7 +543,7 @@ def test_synthetic_input_loader_roundtrips_disk_sources_without_oracle(
     report = resolve_reference_grounded_calculation(
         adapter.blocked_report(),
         adapter.reference_catalog(),
-        query_for_obligation=adapter.query_for_obligation,
+        query_for_requirement=adapter.query_for_requirement,
         criteria=adapter.reference_selection_criteria(),
         input_claim=adapter.input_claim(),
         formula=adapter.formula(),

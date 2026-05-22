@@ -155,9 +155,9 @@ def apply_llm_worker_results(
 
 def _semantic_work_order(task: ResolverTask) -> LLMWorkOrder:
     return LLMWorkOrder(
-        work_order_id=f"llm-work-order:{task.obligation_id}",
-        target_id=task.obligation_id,
-        target_kind="proof_obligation",
+        work_order_id=f"llm-work-order:{task.requirement_id}",
+        target_id=task.requirement_id,
+        target_kind="validation_requirement",
         task_kind="semantic_judgment",
         context_bundle=task.payload,
         allowed_tools=(

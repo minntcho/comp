@@ -13,7 +13,7 @@ from comp.compiler_tool import (
     apply_reference_selection,
     calculate_derived_claim,
     plan_calculation_resolution,
-    resolve_reference_retrieval_obligations,
+    resolve_reference_retrieval_requirements,
     retry_blocked_calculation,
 )
 
@@ -117,23 +117,23 @@ def _planned_unknown_reference_report():
     return plan_calculation_resolution(blocked)
 
 
-def _query_for_obligation(obligation):
+def _query_for_requirement(requirement):
     return ReferenceQuery(
-        query_id=f"query:{obligation.obligation_id}",
+        query_id=f"query:{requirement.requirement_id}",
         text="Korea grid electricity factor",
         lens="factor",
         reference_type="emission_factor",
-        source_artifact_ids=(obligation.obligation_id or "reference_search_required",),
+        source_artifact_ids=(requirement.requirement_id or "reference_search_required",),
     )
 
 
 def test_retrieval_resolution_adds_candidate_only_candidates_and_resolves_search_obligation():
     planned = _planned_unknown_reference_report()
 
-    resolved = resolve_reference_retrieval_obligations(
+    resolved = resolve_reference_retrieval_requirements(
         planned,
         _resolver(),
-        query_for_obligation=_query_for_obligation,
+        query_for_requirement=_query_for_requirement,
     )
 
     assert resolved.status == "blocked"
@@ -159,10 +159,10 @@ def test_retrieval_resolution_adds_candidate_only_candidates_and_resolves_search
 def test_retrieval_resolution_leaves_followup_open_without_query():
     planned = _planned_unknown_reference_report()
 
-    resolved = resolve_reference_retrieval_obligations(
+    resolved = resolve_reference_retrieval_requirements(
         planned,
         _resolver(),
-        query_for_obligation=lambda obligation: None,
+        query_for_requirement=lambda obligation: None,
     )
 
     assert resolved == planned
@@ -171,10 +171,10 @@ def test_retrieval_resolution_leaves_followup_open_without_query():
 def test_retrieval_resolution_leaves_followup_open_without_candidates():
     planned = _planned_unknown_reference_report()
 
-    resolved = resolve_reference_retrieval_obligations(
+    resolved = resolve_reference_retrieval_requirements(
         planned,
         _resolver(),
-        query_for_obligation=lambda obligation: ReferenceQuery(
+        query_for_requirement=lambda obligation: ReferenceQuery(
             query_id="q-diesel",
             text="diesel combustion",
             lens="factor",
@@ -186,10 +186,10 @@ def test_retrieval_resolution_leaves_followup_open_without_candidates():
 
 
 def test_retrieval_resolution_candidates_can_continue_through_selection_and_retry():
-    resolved = resolve_reference_retrieval_obligations(
+    resolved = resolve_reference_retrieval_requirements(
         _planned_unknown_reference_report(),
         _resolver(),
-        query_for_obligation=_query_for_obligation,
+        query_for_requirement=_query_for_requirement,
     )
 
     selected = apply_reference_selection(

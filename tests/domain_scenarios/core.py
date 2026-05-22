@@ -32,7 +32,7 @@ class SourceRef:
 class ScenarioContract:
     must_commit: bool = False
     required_projection: Mapping[str, Any] | None = None
-    required_resolved_obligation_kinds: tuple[str, ...] = ()
+    required_resolved_requirement_kinds: tuple[str, ...] = ()
     required_reference_candidate_ids: tuple[str, ...] = ()
     required_reference_binding_ids: tuple[str, ...] = ()
     required_derived_claim_ids: tuple[str, ...] = ()
@@ -125,7 +125,7 @@ def assert_scenario_contract(
 
     assert _contains_in_order(
         tuple(item.kind for item in result.report.resolved_validation_requirements),
-        contract.required_resolved_obligation_kinds,
+        contract.required_resolved_requirement_kinds,
     )
     assert _contains_in_order(
         tuple(

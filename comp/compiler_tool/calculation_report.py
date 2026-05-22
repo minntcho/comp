@@ -37,7 +37,7 @@ def apply_calculation_result(
         kind="calculation_blocked",
         field=formula.output_field,
         reason=reason,
-        obligation_id=(
+        requirement_id=(
             f"calculation:{formula.formula_id}:{output_claim_id}:{reason}"
         ),
         claim_id=output_claim_id,

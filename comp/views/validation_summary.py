@@ -73,7 +73,7 @@ def _requirement_view(requirement: ValidationRequirement) -> dict[str, Any]:
     message = _message_for_requirement(requirement)
     return {
         "label_ko": schema_label_ko("ValidationRequirement"),
-        "requirement_id": requirement.obligation_id,
+        "requirement_id": requirement.requirement_id,
         "field": requirement.field,
         "blocking": requirement.blocking,
         "message_ko": message.ko,

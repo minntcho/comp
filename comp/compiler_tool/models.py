@@ -107,7 +107,7 @@ class ValidationRequirement:
     kind: str
     field: str
     reason: str
-    obligation_id: str | None = None
+    requirement_id: str | None = None
     claim_id: str | None = None
     blocking: bool = True
     semantic_requirement: SemanticJudgmentRequirement | None = None
@@ -118,7 +118,7 @@ class ValidationRequirement:
 @dataclass(frozen=True)
 class SemanticJudgment:
     judgment_id: str
-    obligation_id: str
+    requirement_id: str
     verdict: str
     rubric_id: str
     judge: str

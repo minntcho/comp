@@ -237,13 +237,13 @@ def _resolved_validation_requirements() -> tuple[ValidationRequirement, ...]:
             kind="child_claims_available",
             field="c_pack_lower_tier_children",
             reason="accepted_alpha_and_proxy_steel_claims",
-            obligation_id=CHILD_CLAIMS_OBLIGATION_ID,
+            requirement_id=CHILD_CLAIMS_OBLIGATION_ID,
         ),
         ValidationRequirement(
             kind="proxy_dependency_preserved",
             field="steel_frame_final_emission_tco2e",
             reason="steel_proxy_dependency_cited",
-            obligation_id=PROXY_DEPENDENCY_OBLIGATION_ID,
+            requirement_id=PROXY_DEPENDENCY_OBLIGATION_ID,
         ),
     )
 
@@ -434,7 +434,7 @@ C_PACK_YIELD_ROLLUP_SCENARIO = ScenarioDefinition(
     contract=ScenarioContract(
         must_commit=True,
         required_projection=EXPECTED_PROJECTION,
-        required_resolved_obligation_kinds=(
+        required_resolved_requirement_kinds=(
             "child_claims_available",
             "proxy_dependency_preserved",
         ),

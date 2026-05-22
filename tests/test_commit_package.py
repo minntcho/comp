@@ -29,7 +29,7 @@ def test_commit_package_collects_report_artifacts_without_receipt_authority():
                 kind="calculation_blocked",
                 field="co2e_emission",
                 reason="unknown_reference",
-                obligation_id="calculation:hyp-1:co2e_emission",
+                requirement_id="calculation:hyp-1:co2e_emission",
             ),
         ),
         canonical_references=(
@@ -107,7 +107,7 @@ def test_commit_package_is_incomplete_with_open_blocking_obligation():
                 kind="reference_selection_required",
                 field="co2e_emission",
                 reason="ambiguous",
-                obligation_id="reference-selection:hyp-1:co2e_emission",
+                requirement_id="reference-selection:hyp-1:co2e_emission",
             ),
         ),
     )
@@ -129,7 +129,7 @@ def test_commit_package_cites_nonblocking_obligations_without_blocking_completio
                 kind="nonblocking_hint",
                 field="co2e_emission",
                 reason="candidate_available",
-                obligation_id="hint:hyp-1:co2e_emission",
+                requirement_id="hint:hyp-1:co2e_emission",
                 blocking=False,
             ),
         ),

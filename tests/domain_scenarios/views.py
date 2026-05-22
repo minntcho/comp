@@ -259,7 +259,7 @@ def _dependency_manifests_view(fingerprints, artifacts) -> dict[str, list[dict[s
 
 def _obligation_view(obligation) -> dict[str, str | None]:
     return {
-        "obligation_id": obligation.obligation_id,
+        "requirement_id": obligation.requirement_id,
         "kind": obligation.kind,
         "field": obligation.field,
         "reason": obligation.reason,

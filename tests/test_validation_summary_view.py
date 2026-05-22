@@ -13,7 +13,7 @@ def test_validation_summary_view_uses_korean_labels_and_messages():
                 kind="find_source_witness",
                 field="co2e_kg",
                 reason="missing_source_witness",
-                obligation_id="obl-1",
+                requirement_id="obl-1",
             ),
         ),
         resolved_validation_requirements=(
@@ -21,7 +21,7 @@ def test_validation_summary_view_uses_korean_labels_and_messages():
                 kind="unit_check",
                 field="electricity_mwh",
                 reason="unsupported_unit",
-                obligation_id="obl-2",
+                requirement_id="obl-2",
                 blocking=False,
             ),
         ),
@@ -84,7 +84,7 @@ def test_validation_summary_view_falls_back_without_leaking_kernel_terms():
                 kind="reference_search_required",
                 field="co2e_kg",
                 reason="unknown_reference",
-                obligation_id="obl-reference",
+                requirement_id="obl-reference",
             ),
         ),
     )

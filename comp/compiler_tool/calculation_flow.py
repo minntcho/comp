@@ -7,7 +7,7 @@ from comp.compiler_tool.models import ValidationReport
 from comp.compiler_tool.reference_db import ReferenceCatalog
 from comp.compiler_tool.reference_resolution import (
     ReferenceSearchQuery,
-    resolve_reference_search_obligations,
+    resolve_reference_search_requirements,
 )
 from comp.compiler_tool.reference_selection_report import apply_reference_selection
 from comp.compiler_tool.reference_selector import ReferenceSelectionCriteria
@@ -18,7 +18,7 @@ def resolve_reference_grounded_calculation(
     report: ValidationReport,
     catalog: ReferenceCatalog,
     *,
-    query_for_obligation: ReferenceSearchQuery,
+    query_for_requirement: ReferenceSearchQuery,
     criteria: ReferenceSelectionCriteria,
     input_claim: CalculationInput,
     formula: CalculationFormula,
@@ -30,10 +30,10 @@ def resolve_reference_grounded_calculation(
     if not _has_reference_search_obligation(planned):
         return planned
 
-    searched = resolve_reference_search_obligations(
+    searched = resolve_reference_search_requirements(
         planned,
         catalog,
-        query_for_obligation=query_for_obligation,
+        query_for_requirement=query_for_requirement,
         reference_type=criteria.reference_type,
         limit=limit,
         retrieval_method=retrieval_method,

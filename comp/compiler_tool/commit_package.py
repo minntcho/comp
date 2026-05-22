@@ -50,7 +50,7 @@ def build_commit_package(
 ) -> ReviewPackage:
     report_status = recompute_report_status(report)
     open_obligation_ids = tuple(
-        _obligation_id(obligation) for obligation in report.validation_requirements
+        _requirement_id(requirement) for requirement in report.validation_requirements
     )
     has_open_blocking_obligation = any(
         obligation.blocking for obligation in report.validation_requirements
@@ -79,8 +79,8 @@ def build_commit_package(
         dependency_fingerprints=tuple(dependency_fingerprints),
         open_obligation_ids=open_obligation_ids,
         resolved_obligation_ids=tuple(
-            _obligation_id(obligation)
-            for obligation in report.resolved_validation_requirements
+            _requirement_id(requirement)
+            for requirement in report.resolved_validation_requirements
         ),
         hazard_ids=hazard_ids,
         profile_id=profile_id,
@@ -90,14 +90,14 @@ def build_commit_package(
     )
 
 
-def _obligation_id(obligation: ValidationRequirement) -> str:
-    if obligation.obligation_id is not None:
-        return obligation.obligation_id
+def _requirement_id(requirement: ValidationRequirement) -> str:
+    if requirement.requirement_id is not None:
+        return requirement.requirement_id
     return _stable_id(
-        "proof_obligation",
-        obligation.kind,
-        obligation.field,
-        obligation.reason,
+        "validation_requirement",
+        requirement.kind,
+        requirement.field,
+        requirement.reason,
     )
 
 

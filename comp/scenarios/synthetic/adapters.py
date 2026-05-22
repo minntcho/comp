@@ -114,7 +114,7 @@ class SyntheticPcfAdapter:
             ),
         )
 
-    def query_for_obligation(self, obligation: ValidationRequirement) -> str | None:
+    def query_for_requirement(self, obligation: ValidationRequirement) -> str | None:
         if obligation.kind != "reference_search_required":
             return None
         return f"{self.config.geography} grid electricity factor {self.config.reporting_period}"
@@ -191,7 +191,7 @@ class SyntheticPcfAdapter:
                         kind="investigate_activity_amount",
                         field="electricity_kwh",
                         reason="negative_amount",
-                        obligation_id="synthetic-obligation:negative_amount",
+                        requirement_id="synthetic-obligation:negative_amount",
                     )
                 )
                 hazards.append(
@@ -217,7 +217,7 @@ class SyntheticPcfAdapter:
                         kind="find_source_witness",
                         field="unit",
                         reason="missing_unit",
-                        obligation_id="synthetic-obligation:missing_unit",
+                        requirement_id="synthetic-obligation:missing_unit",
                     )
                 )
                 hazards.append(Hazard(kind="missing_unit", field="unit", severity="review"))
@@ -246,7 +246,7 @@ class SyntheticPcfAdapter:
                         kind="find_source_witness",
                         field="unit",
                         reason="unsupported_unit",
-                        obligation_id="synthetic-obligation:wrong_unit",
+                        requirement_id="synthetic-obligation:wrong_unit",
                     )
                 )
 
@@ -256,7 +256,7 @@ class SyntheticPcfAdapter:
                         kind="find_context",
                         field="period",
                         reason="period_mismatch",
-                        obligation_id="synthetic-obligation:period_mismatch",
+                        requirement_id="synthetic-obligation:period_mismatch",
                     )
                 )
                 hazards.append(
@@ -269,7 +269,7 @@ class SyntheticPcfAdapter:
                         kind="resolve_site_identity",
                         field="site_id",
                         reason="site_alias",
-                        obligation_id="synthetic-obligation:site_alias",
+                        requirement_id="synthetic-obligation:site_alias",
                     )
                 )
                 hazards.append(Hazard(kind="site_alias", field="site_id", severity="review"))
@@ -382,7 +382,7 @@ class SyntheticPcfAdapter:
                 kind="find_source_witness",
                 field=artifact.field,
                 reason="missing_unit",
-                obligation_id=artifact.obligation_id,
+                requirement_id=artifact.obligation_id,
             )
             for artifact in self.input_bundle.resolution_artifacts.unit_witnesses
             if artifact.field == "unit"

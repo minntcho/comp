@@ -22,7 +22,7 @@ def _semantic_obligation() -> ValidationRequirement:
         kind="semantic_judgment_required",
         field="scope2_method",
         reason="support_required",
-        obligation_id="obl-scope2",
+        requirement_id="obl-scope2",
         claim_id="claim-scope2",
         semantic_requirement=SemanticJudgmentRequirement(
             question="Does this span support market-based Scope 2?",
@@ -50,7 +50,7 @@ def _compile_result() -> CompCompileResult:
 def _judgment() -> SemanticJudgment:
     return SemanticJudgment(
         judgment_id="judgment-scope2",
-        obligation_id="obl-scope2",
+        requirement_id="obl-scope2",
         verdict="supports",
         rubric_id="ghg-protocol-scope2-method-v1",
         judge="llm/scope2-worker",
@@ -68,7 +68,7 @@ def test_semantic_resolver_task_becomes_llm_work_order_with_limited_tools():
         LLMWorkOrder(
             work_order_id="llm-work-order:obl-scope2",
             target_id="obl-scope2",
-            target_kind="proof_obligation",
+            target_kind="validation_requirement",
             task_kind="semantic_judgment",
             context_bundle=(
                 ("question", "Does this span support market-based Scope 2?"),

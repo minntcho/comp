@@ -13,11 +13,11 @@ from comp.compiler_tool import (
     RetrievalQueryPolicy,
     RetrievalQueryRule,
     resolver_tasks_from_report,
-    reference_query_for_obligation_from_resolver_tasks,
-    reference_query_for_obligation_from_profile_policy,
-    reference_query_for_obligation_from_policy,
+    reference_query_for_requirement_from_resolver_tasks,
+    reference_query_for_requirement_from_profile_policy,
+    reference_query_for_requirement_from_policy,
     reference_query_from_resolver_task,
-    resolve_reference_retrieval_obligations,
+    resolve_reference_retrieval_requirements,
 )
 
 
@@ -26,7 +26,7 @@ def _reference_search_obligation() -> ValidationRequirement:
         kind="reference_search_required",
         field="co2e_emission",
         reason="unknown_reference",
-        obligation_id="resolve:formula-v1:claim-co2e:reference_search_required",
+        requirement_id="resolve:formula-v1:claim-co2e:reference_search_required",
         claim_id="claim-co2e",
         calculation_requirement=CalculationRequirement(
             reason="unknown_reference",
@@ -112,10 +112,10 @@ def test_reference_query_builder_from_tasks_feeds_retrieval_bridge():
     )
     tasks = resolver_tasks_from_report(report)
 
-    resolved = resolve_reference_retrieval_obligations(
+    resolved = resolve_reference_retrieval_requirements(
         report,
         _resolver(),
-        query_for_obligation=reference_query_for_obligation_from_resolver_tasks(
+        query_for_requirement=reference_query_for_requirement_from_resolver_tasks(
             tasks,
             query_texts={
                 "resolve:formula-v1:claim-co2e:reference_search_required": (
@@ -143,10 +143,10 @@ def test_reference_retrieval_resolution_recomputes_status_after_resolving_only_b
         validation_requirements=(_reference_search_obligation(),),
     )
 
-    resolved = resolve_reference_retrieval_obligations(
+    resolved = resolve_reference_retrieval_requirements(
         report,
         _resolver(),
-        query_for_obligation=reference_query_for_obligation_from_resolver_tasks(
+        query_for_requirement=reference_query_for_requirement_from_resolver_tasks(
             resolver_tasks_from_report(report),
             query_texts={
                 "resolve:formula-v1:claim-co2e:reference_search_required": (
@@ -168,10 +168,10 @@ def test_reference_query_builder_from_tasks_leaves_missing_query_open():
         validation_requirements=(_reference_search_obligation(),),
     )
 
-    resolved = resolve_reference_retrieval_obligations(
+    resolved = resolve_reference_retrieval_requirements(
         report,
         _resolver(),
-        query_for_obligation=reference_query_for_obligation_from_resolver_tasks(
+        query_for_requirement=reference_query_for_requirement_from_resolver_tasks(
             resolver_tasks_from_report(report),
             query_texts={},
             lens="factor",
@@ -199,7 +199,7 @@ def test_retrieval_query_policy_renders_reference_query_from_task_payload_and_co
         ),
     )
 
-    query = reference_query_for_obligation_from_policy(
+    query = reference_query_for_requirement_from_policy(
         (task,),
         policy=policy,
         context={"geography": "Korea", "reporting_year": 2024},
@@ -239,10 +239,10 @@ def test_retrieval_query_policy_leaves_obligation_open_without_matching_rule():
         ),
     )
 
-    resolved = resolve_reference_retrieval_obligations(
+    resolved = resolve_reference_retrieval_requirements(
         report,
         _resolver(),
-        query_for_obligation=reference_query_for_obligation_from_policy(
+        query_for_requirement=reference_query_for_requirement_from_policy(
             resolver_tasks_from_report(report),
             policy=policy,
             context={"geography": "Korea", "reporting_year": 2024},
@@ -270,10 +270,10 @@ def test_retrieval_query_policy_leaves_obligation_open_without_required_context(
         ),
     )
 
-    resolved = resolve_reference_retrieval_obligations(
+    resolved = resolve_reference_retrieval_requirements(
         report,
         _resolver(),
-        query_for_obligation=reference_query_for_obligation_from_policy(
+        query_for_requirement=reference_query_for_requirement_from_policy(
             resolver_tasks_from_report(report),
             policy=policy,
             context={"geography": "Korea"},
@@ -320,10 +320,10 @@ def test_profile_pinned_retrieval_policy_feeds_query_builder():
         active_retrieval_policy_ids=("fixture.active-retrieval-policy.v1",),
     )
 
-    resolved = resolve_reference_retrieval_obligations(
+    resolved = resolve_reference_retrieval_requirements(
         report,
         _resolver(),
-        query_for_obligation=reference_query_for_obligation_from_profile_policy(
+        query_for_requirement=reference_query_for_requirement_from_profile_policy(
             resolver_tasks_from_report(report),
             profile=profile,
             context={"geography": "Korea", "reporting_year": 2024},
@@ -358,7 +358,7 @@ def test_profile_retrieval_query_builder_rejects_inactive_policy_id():
     )
 
     with pytest.raises(ProfileValidationError, match="inactive retrieval policy"):
-        reference_query_for_obligation_from_profile_policy(
+        reference_query_for_requirement_from_profile_policy(
             resolver_tasks_from_report(report),
             profile=profile,
             policy_id="fixture.inactive-retrieval-policy.v1",

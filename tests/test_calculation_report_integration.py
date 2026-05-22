@@ -112,7 +112,7 @@ def test_blocked_calculation_opens_blocking_obligation_on_report():
             kind="calculation_blocked",
             field="co2e_emission",
             reason="unit_mismatch",
-            obligation_id=(
+            requirement_id=(
                 "calculation:ghg.electricity_factor_multiplication.v1:"
                 "hyp-1:co2e_emission:unit_mismatch"
             ),
@@ -154,7 +154,7 @@ def test_calculation_obligation_maps_to_judgment_fact():
     assert Fact(
         tag="hazard_open",
         subject=subject,
-        key="proof_obligation:co2e_emission",
+        key="validation_requirement:co2e_emission",
         value=(
             "calculation:ghg.electricity_factor_multiplication.v1:"
             "hyp-1:co2e_emission:unit_mismatch"
@@ -169,7 +169,7 @@ def test_calculation_obligation_maps_to_judgment_fact():
             ("output_claim_id", "hyp-1:co2e_emission"),
             ("reference_binding_id", "bind-amount-factor"),
             ("reference_id", "factor.kr_grid.2024.location_based"),
-            ("report_section", "proof_obligation"),
+            ("report_section", "validation_requirement"),
             ("report_status", "blocked"),
         ),
     ) in facts
