@@ -138,22 +138,22 @@ def test_retrieval_resolution_adds_candidate_only_candidates_and_resolves_search
 
     assert resolved.status == "blocked"
     assert resolved.can_build_public_output is False
-    assert [candidate.reference_id for candidate in resolved.reference_candidates] == [
+    assert [candidate.reference_id for candidate in resolved.reference_options] == [
         "factor.kr_grid.2024.location_based"
     ]
-    assert resolved.reference_candidates[0].retrieval_method == "embedding_stub:factor"
-    assert resolved.reference_candidates[0].authority == "candidate_only"
-    assert resolved.reference_candidates[0].can_authorize_calculation is False
-    assert resolved.reference_candidates[0].source == "factor-catalog"
-    assert resolved.reference_candidates[0].witness_ids == ("factor-row-2024",)
-    assert [obligation.kind for obligation in resolved.obligations] == [
+    assert resolved.reference_options[0].retrieval_method == "embedding_stub:factor"
+    assert resolved.reference_options[0].authority == "candidate_only"
+    assert resolved.reference_options[0].can_authorize_calculation is False
+    assert resolved.reference_options[0].source == "factor-catalog"
+    assert resolved.reference_options[0].witness_ids == ("factor-row-2024",)
+    assert [obligation.kind for obligation in resolved.validation_requirements] == [
         "calculation_blocked"
     ]
-    assert [obligation.kind for obligation in resolved.resolved_obligations] == [
+    assert [obligation.kind for obligation in resolved.resolved_validation_requirements] == [
         "reference_search_required"
     ]
-    assert resolved.reference_bindings == ()
-    assert resolved.derived_claims == ()
+    assert resolved.canonical_references == ()
+    assert resolved.calculated_claims == ()
 
 
 def test_retrieval_resolution_leaves_followup_open_without_query():
@@ -202,16 +202,16 @@ def test_retrieval_resolution_candidates_can_continue_through_selection_and_retr
         selected,
         _catalog(),
         input_claim=_input(),
-        reference_binding=selected.reference_bindings[0],
+        reference_binding=selected.canonical_references[0],
         formula=_formula(),
         output_claim_id="hyp-1:co2e_emission",
     )
 
-    assert [binding.reference_id for binding in selected.reference_bindings] == [
+    assert [binding.reference_id for binding in selected.canonical_references] == [
         "factor.kr_grid.2024.location_based"
     ]
-    assert selected.derived_claims == ()
+    assert selected.calculated_claims == ()
     assert retried.status == "accepted"
-    assert retried.obligations == ()
-    assert retried.derived_claims[0].value == 0.48
+    assert retried.validation_requirements == ()
+    assert retried.calculated_claims[0].value == 0.48
     assert retried.can_build_public_output is False

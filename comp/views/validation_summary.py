@@ -38,17 +38,17 @@ def validation_summary_view(report: ValidationReport) -> dict[str, Any]:
         "can_make_public_output": report.can_build_public_output,
         "public_output": _public_output_view(report),
         "sections": [
-            _count_section("EvidenceRef", len(report.evidence_witnesses)),
-            _count_section("CanonicalReference", len(report.reference_bindings)),
-            _count_section("CalculatedClaim", len(report.derived_claims)),
+            _count_section("EvidenceRef", len(report.evidence_refs)),
+            _count_section("CanonicalReference", len(report.canonical_references)),
+            _count_section("CalculatedClaim", len(report.calculated_claims)),
         ],
         "open_requirements": [
             _requirement_view(requirement)
-            for requirement in report.obligations
+            for requirement in report.validation_requirements
         ],
         "resolved_requirements": [
             _requirement_view(requirement)
-            for requirement in report.resolved_obligations
+            for requirement in report.resolved_validation_requirements
         ],
         "review_items": [_review_item_view(hazard) for hazard in report.hazards],
     }

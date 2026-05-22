@@ -27,7 +27,7 @@ def test_steel_frame_proxy_calculates_missing_mass_and_emission():
     }
     assert tuple(
         (claim.field, claim.value, claim.unit)
-        for claim in result.report.derived_claims
+        for claim in result.report.calculated_claims
     ) == (
         ("missing_mass_ton", 1900, "ton"),
         ("steel_frame_final_emission_tco2e", 4750, "tCO2e"),
@@ -39,7 +39,7 @@ def test_steel_frame_proxy_binds_proxy_factor_and_low_quality_metadata():
 
     assert tuple(
         (binding.binding_id, binding.reference_id, binding.reference_type)
-        for binding in result.report.reference_bindings
+        for binding in result.report.canonical_references
     ) == (
         (PROXY_BINDING_ID, "platform.factor.steel_proxy_per_ton", "proxy_factor"),
     )
@@ -56,11 +56,11 @@ def test_steel_frame_missing_supplier_context_is_explicit_but_not_blocking():
     result = run_steel_frame_proxy_assignment_scenario()
 
     assert result.report.status == "accepted"
-    assert result.report.obligations == ()
+    assert result.report.validation_requirements == ()
     assert result.report.hazards == ()
     assert tuple(
         (obligation.kind, obligation.field, obligation.reason)
-        for obligation in result.report.resolved_obligations
+        for obligation in result.report.resolved_validation_requirements
     ) == (
         (
             "find_source_witness",
@@ -111,7 +111,7 @@ def test_steel_frame_proxy_scenario_is_registered_with_contract():
 
 
 def _trace_for(result, claim_id):
-    for claim in result.report.derived_claims:
+    for claim in result.report.calculated_claims:
         if claim.claim_id == claim_id:
             return claim.trace
     raise AssertionError(f"missing derived claim: {claim_id}")

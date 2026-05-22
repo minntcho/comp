@@ -40,7 +40,7 @@ def test_compile_report_to_facts_maps_each_report_category():
                 reason="missing_rule_coverage",
             ),
         ),
-        obligations=(
+        validation_requirements=(
             ValidationRequirement(
                 kind="find_source_witness",
                 field="unit",
@@ -130,14 +130,14 @@ def test_compile_report_to_facts_maps_each_report_category():
     )
 
 
-def test_resolved_obligations_discharge_matching_hazard_ids():
+def test_resolved_validation_requirements_discharge_matching_hazard_ids():
     subject = SubjectRef("claim", "hyp-1")
     obligation = ValidationRequirement(
         kind="find_source_witness",
         field="unit",
         reason="unsupported_unit",
     )
-    report = ValidationReport(status="accepted", resolved_obligations=(obligation,))
+    report = ValidationReport(status="accepted", resolved_validation_requirements=(obligation,))
 
     facts = compile_report_to_facts(report, subject)
 
@@ -178,7 +178,7 @@ def test_obligation_facts_preserve_explicit_obligation_ids():
     subject = SubjectRef("claim", "hyp-1")
     report = ValidationReport(
         status="review_required",
-        obligations=(
+        validation_requirements=(
             ValidationRequirement(
                 kind="semantic_judgment_required",
                 field="scope2_method",
@@ -186,7 +186,7 @@ def test_obligation_facts_preserve_explicit_obligation_ids():
                 obligation_id="obl-custom-open",
             ),
         ),
-        resolved_obligations=(
+        resolved_validation_requirements=(
             ValidationRequirement(
                 kind="find_source_witness",
                 field="unit",

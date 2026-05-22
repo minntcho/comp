@@ -42,7 +42,7 @@ def _compile_result() -> CompCompileResult:
         subject=SubjectRef("claim", "hyp-sem"),
         report=ValidationReport(
             status="review_required",
-            obligations=(_semantic_obligation(),),
+            validation_requirements=(_semantic_obligation(),),
         ),
     )
 
@@ -117,8 +117,8 @@ def test_deterministic_llm_worker_submits_semantic_judgment_artifact_only():
     )
 
     assert resolved.report.status == "accepted"
-    assert resolved.report.obligations == ()
-    assert resolved.report.resolved_obligations == (_semantic_obligation(),)
+    assert resolved.report.validation_requirements == ()
+    assert resolved.report.resolved_validation_requirements == (_semantic_obligation(),)
     assert resolved.receipt is None
 
 
@@ -145,8 +145,8 @@ def test_llm_worker_abstention_leaves_semantic_obligation_open():
     )
 
     assert unresolved.report.status == "review_required"
-    assert unresolved.report.obligations == (_semantic_obligation(),)
-    assert unresolved.report.resolved_obligations == ()
+    assert unresolved.report.validation_requirements == (_semantic_obligation(),)
+    assert unresolved.report.resolved_validation_requirements == ()
     assert unresolved.receipt is None
 
 

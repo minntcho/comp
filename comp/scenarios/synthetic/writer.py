@@ -84,14 +84,17 @@ def write_synthetic_run(run: SyntheticRun, run_dir: Path) -> Path:
         (claim.to_row() for claim in run.oracle.expected_claims),
     )
     _write_csv(
-        run_dir / "oracle" / "expected_derived_claims.csv",
+        run_dir / "oracle" / "expected_calculated_claims.csv",
         ["claim_id", "field", "value", "unit", "formula_id"],
-        (claim.to_row() for claim in run.oracle.expected_derived_claims),
+        (claim.to_row() for claim in run.oracle.expected_calculated_claims),
     )
     _write_csv(
-        run_dir / "oracle" / "expected_obligations.csv",
+        run_dir / "oracle" / "expected_validation_requirements.csv",
         ["obligation_id", "kind", "field", "reason"],
-        (obligation.to_row() for obligation in run.oracle.expected_obligations),
+        (
+            requirement.to_row()
+            for requirement in run.oracle.expected_validation_requirements
+        ),
     )
     _write_csv(
         run_dir / "oracle" / "expected_hazards.csv",
@@ -119,13 +122,13 @@ def write_synthetic_run(run: SyntheticRun, run_dir: Path) -> Path:
         ],
         (item.to_row() for item in run.oracle.source_to_expected_claim_map),
     )
-    if run.oracle.expected_resolved_obligations is not None:
+    if run.oracle.expected_resolved_validation_requirements is not None:
         _write_csv(
-            run_dir / "oracle" / "expected_resolved_obligations.csv",
+            run_dir / "oracle" / "expected_resolved_validation_requirements.csv",
             ["obligation_id", "kind", "field", "reason"],
             (
                 obligation.to_row()
-                for obligation in run.oracle.expected_resolved_obligations
+                for obligation in run.oracle.expected_resolved_validation_requirements
             ),
         )
     if run.oracle.expected_resolution_artifacts is not None:

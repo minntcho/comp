@@ -17,7 +17,7 @@ def test_raw_claim_conflict_resolution_preserves_conflicting_sources():
 
     assert {
         (claim.claim_id, claim.field, claim.value, claim.unit)
-        for claim in result.report.derived_claims
+        for claim in result.report.calculated_claims
     } >= {
         (EMAIL_ELECTRICITY_CLAIM_ID, "email_electricity_mwh", 6400, "MWh"),
         (EMS_ELECTRICITY_CLAIM_ID, "ems_electricity_mwh", 6100, "MWh"),
@@ -41,19 +41,19 @@ def test_raw_claim_conflict_resolution_cites_resolution_binding_for_winner():
 
     canonical = next(
         claim
-        for claim in result.report.derived_claims
+        for claim in result.report.calculated_claims
         if claim.claim_id == CANONICAL_ELECTRICITY_CLAIM_ID
     )
 
     assert RESOLUTION_BINDING_ID in canonical.trace.reference_binding_ids
     assert tuple(
         binding.binding_id
-        for binding in result.report.reference_bindings
+        for binding in result.report.canonical_references
         if binding.reference_type == "source_conflict_resolution"
     ) == (RESOLUTION_BINDING_ID,)
     assert tuple(
         obligation.kind
-        for obligation in result.report.resolved_obligations
+        for obligation in result.report.resolved_validation_requirements
         if obligation.field == "electricity_mwh"
     ) == (
         "unit_conversion_policy_applied",
@@ -77,7 +77,7 @@ def test_raw_claim_conflict_resolution_commits_and_projects_selected_value():
 def test_raw_claim_conflict_resolution_fingerprints_resolution_witness():
     result = run_raw_claim_conflict_resolution_scenario()
 
-    assert tuple(witness.witness_id for witness in result.report.evidence_witnesses) == (
+    assert tuple(witness.witness_id for witness in result.report.evidence_refs) == (
         "w-email-electricity-march",
         "w-ems-electricity-march",
         "w-site-alias-policy",
@@ -87,7 +87,7 @@ def test_raw_claim_conflict_resolution_fingerprints_resolution_witness():
     )
     assert result.preparation.package.dependency_fingerprints == tuple(
         evidence_ref_fingerprint(witness)
-        for witness in result.report.evidence_witnesses
+        for witness in result.report.evidence_refs
     )
 
 

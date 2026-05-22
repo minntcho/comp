@@ -149,7 +149,7 @@ def _artifact_body_for_ref(
         }
     if ref.artifact_kind == "reference_binding":
         binding = _by_id(
-            result.report.reference_bindings,
+            result.report.canonical_references,
             ref.artifact_id,
             "binding_id",
         )
@@ -173,7 +173,7 @@ def _artifact_body_for_ref(
             "authority": binding.authority,
         }
     if ref.artifact_kind == "derived_claim":
-        claim = _by_id(result.report.derived_claims, ref.artifact_id, "claim_id")
+        claim = _by_id(result.report.calculated_claims, ref.artifact_id, "claim_id")
         return {
             "claim_id": claim.claim_id,
             "field": claim.field,
@@ -221,14 +221,14 @@ def _checked_claim_by_source_id(result: DomainScenarioResult, source_id: str):
 
 
 def _evidence_witness_by_id(result: DomainScenarioResult, witness_id: str):
-    for witness in result.report.evidence_witnesses:
+    for witness in result.report.evidence_refs:
         if witness.witness_id == witness_id:
             return witness
     return None
 
 
 def _trace_by_id(result: DomainScenarioResult, trace_id: str):
-    for claim in result.report.derived_claims:
+    for claim in result.report.calculated_claims:
         if claim.trace.trace_id == trace_id:
             return claim.trace
     raise AssertionError(f"Scenario calculation trace not found: {trace_id}.")

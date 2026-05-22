@@ -126,17 +126,17 @@ def steel_frame_proxy_assignment_report() -> ValidationReport:
     return with_recomputed_status(
         ValidationReport(
             status="accepted",
-            evidence_witnesses=_evidence_witnesses(),
+            evidence_refs=_evidence_refs(),
             checked_claims=_checked_claims(),
-            resolved_obligations=_resolved_obligations(),
-            reference_bindings=_reference_bindings(),
-            derived_claims=_derived_claims(),
+            resolved_validation_requirements=_resolved_validation_requirements(),
+            canonical_references=_canonical_references(),
+            calculated_claims=_calculated_claims(),
             can_build_public_output=True,
         )
     )
 
 
-def _evidence_witnesses() -> tuple[EvidenceRef, ...]:
+def _evidence_refs() -> tuple[EvidenceRef, ...]:
     return (
         EvidenceRef(
             witness_id="source:c-pack-lower-tier-requirement",
@@ -197,7 +197,7 @@ def _checked_claims() -> tuple[CheckedClaim, ...]:
     )
 
 
-def _resolved_obligations() -> tuple[ValidationRequirement, ...]:
+def _resolved_validation_requirements() -> tuple[ValidationRequirement, ...]:
     return (
         ValidationRequirement(
             kind="find_source_witness",
@@ -214,7 +214,7 @@ def _resolved_obligations() -> tuple[ValidationRequirement, ...]:
     )
 
 
-def _reference_bindings() -> tuple[CanonicalReference, ...]:
+def _canonical_references() -> tuple[CanonicalReference, ...]:
     return (
         CanonicalReference(
             binding_id=PROXY_BINDING_ID,
@@ -227,7 +227,7 @@ def _reference_bindings() -> tuple[CanonicalReference, ...]:
     )
 
 
-def _derived_claims() -> tuple[CalculatedClaim, ...]:
+def _calculated_claims() -> tuple[CalculatedClaim, ...]:
     missing_mass = REQUIRED_LOWER_TIER_INPUT_TON - VERIFIED_ALPHA_INPUT_TON
     proxy_emission = int(Decimal(missing_mass) * PROXY_FACTOR_TCO2E_PER_TON)
     missing_mass_step = CalculationStep(
@@ -276,7 +276,7 @@ def _derived_claims() -> tuple[CalculatedClaim, ...]:
 
 def _projection_source(report: ValidationReport) -> dict[str, object]:
     values = {claim.field: claim.value for claim in report.checked_claims}
-    values.update({claim.field: claim.value for claim in report.derived_claims})
+    values.update({claim.field: claim.value for claim in report.calculated_claims})
     return values
 
 

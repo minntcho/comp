@@ -78,8 +78,8 @@ def test_unknown_reference_opens_reference_search_obligation():
     planned = plan_calculation_resolution(report)
 
     assert planned.status == "blocked"
-    assert planned.obligations[0].kind == "calculation_blocked"
-    follow_up = planned.obligations[1]
+    assert planned.validation_requirements[0].kind == "calculation_blocked"
+    follow_up = planned.validation_requirements[1]
     assert follow_up == ValidationRequirement(
         kind="reference_search_required",
         field="co2e_emission",
@@ -90,7 +90,7 @@ def test_unknown_reference_opens_reference_search_obligation():
         ),
         claim_id="hyp-1:co2e_emission",
         blocking=True,
-        calculation_requirement=report.obligations[0].calculation_requirement,
+        calculation_requirement=report.validation_requirements[0].calculation_requirement,
     )
 
 
@@ -99,7 +99,7 @@ def test_missing_factor_value_opens_reference_context_obligation():
 
     planned = plan_calculation_resolution(report)
 
-    follow_up = planned.obligations[1]
+    follow_up = planned.validation_requirements[1]
     assert follow_up.kind == "reference_context_required"
     assert follow_up.reason == "missing_factor_value"
     assert follow_up.calculation_requirement is not None
@@ -111,10 +111,10 @@ def test_unit_mismatch_opens_find_context_obligation():
 
     planned = plan_calculation_resolution(report)
 
-    follow_up = planned.obligations[1]
+    follow_up = planned.validation_requirements[1]
     assert follow_up.kind == "find_context"
     assert follow_up.reason == "unit_mismatch"
-    assert follow_up.calculation_requirement is report.obligations[0].calculation_requirement
+    assert follow_up.calculation_requirement is report.validation_requirements[0].calculation_requirement
     assert follow_up.calculation_requirement.expected_unit == "kWh"
     assert follow_up.calculation_requirement.actual_unit == "MWh"
 
@@ -125,13 +125,13 @@ def test_calculation_resolution_planning_is_idempotent():
     once = plan_calculation_resolution(report)
     twice = plan_calculation_resolution(once)
 
-    assert once.obligations == twice.obligations
+    assert once.validation_requirements == twice.validation_requirements
 
 
 def test_report_without_calculation_requirement_is_unchanged():
     report = ValidationReport(
         status="blocked",
-        obligations=(
+        validation_requirements=(
             ValidationRequirement(
                 kind="calculation_blocked",
                 field="co2e_emission",

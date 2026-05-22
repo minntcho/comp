@@ -28,7 +28,7 @@ class ResolverTask:
 def resolver_tasks_from_report(report: ValidationReport) -> tuple[ResolverTask, ...]:
     return tuple(
         resolver_task_from_obligation(obligation)
-        for obligation in report.obligations
+        for obligation in report.validation_requirements
     )
 
 
@@ -63,7 +63,7 @@ def _task_type(obligation_kind: str) -> str:
 def _required_artifact(obligation_kind: str) -> str:
     return {
         "semantic_judgment_required": "semantic_judgment",
-        "reference_search_required": "reference_candidates",
+        "reference_search_required": "reference_options",
         "reference_selection_required": "reference_binding",
         "reference_context_required": "context_attachment",
         "find_context": "context_attachment",

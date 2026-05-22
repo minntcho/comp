@@ -49,9 +49,9 @@ def test_derived_claim_is_calculated_claim_not_public_authority():
     assert claim.formula_id == "ghg.electricity_factor_multiplication.v1"
     assert claim.can_authorize_public_projection is False
 
-    report = ValidationReport(status="accepted", derived_claims=(claim,))
+    report = ValidationReport(status="accepted", calculated_claims=(claim,))
 
-    assert report.derived_claims == (claim,)
+    assert report.calculated_claims == (claim,)
     assert report.can_build_public_output is False
 
 
@@ -64,7 +64,7 @@ def test_calculation_trace_requires_formula_id():
         )
 
 
-def test_semantic_judgment_application_preserves_derived_claims():
+def test_semantic_judgment_application_preserves_calculated_claims():
     claim = _derived_claim()
     obligation = ValidationRequirement(
         kind="semantic_judgment_required",
@@ -81,8 +81,8 @@ def test_semantic_judgment_application_preserves_derived_claims():
     )
     report = ValidationReport(
         status="review_required",
-        obligations=(obligation,),
-        derived_claims=(claim,),
+        validation_requirements=(obligation,),
+        calculated_claims=(claim,),
     )
 
     updated = apply_semantic_judgments(
@@ -101,13 +101,13 @@ def test_semantic_judgment_application_preserves_derived_claims():
         available_span_ids=("span-17",),
     )
 
-    assert updated.derived_claims == (claim,)
+    assert updated.calculated_claims == (claim,)
 
 
 def test_compile_report_to_facts_maps_derived_claim_with_trace_metadata():
     subject = SubjectRef("claim", "hyp-1")
     claim = _derived_claim()
-    report = ValidationReport(status="accepted", derived_claims=(claim,))
+    report = ValidationReport(status="accepted", calculated_claims=(claim,))
 
     facts = compile_report_to_facts(report, subject)
 

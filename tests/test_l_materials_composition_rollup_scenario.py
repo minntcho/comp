@@ -29,7 +29,7 @@ def test_l_materials_composition_rollup_calculates_ncm_emission():
     }
     assert tuple(
         (claim.field, claim.value, claim.unit)
-        for claim in result.report.derived_claims
+        for claim in result.report.calculated_claims
     ) == (
         ("composition_total", 1.0, None),
         ("l_materials_final_emission_tco2e", 174375, "tCO2e"),
@@ -41,7 +41,7 @@ def test_l_materials_composition_binds_ncm_factor_and_shares():
 
     assert tuple(
         (binding.binding_id, binding.reference_id, binding.reference_type)
-        for binding in result.report.reference_bindings
+        for binding in result.report.canonical_references
     ) == (
         (
             COMPOSITION_FACTOR_BINDING_ID,
@@ -71,11 +71,11 @@ def test_l_materials_composition_total_is_resolved_context():
     result = run_l_materials_composition_rollup_scenario()
 
     assert result.report.status == "accepted"
-    assert result.report.obligations == ()
+    assert result.report.validation_requirements == ()
     assert result.report.hazards == ()
     assert tuple(
         (obligation.kind, obligation.field, obligation.reason)
-        for obligation in result.report.resolved_obligations
+        for obligation in result.report.resolved_validation_requirements
     ) == (
         (
             "composition_total_validated",
@@ -106,8 +106,8 @@ def test_l_materials_invalid_composition_blocks_mapping_and_projection():
         (hazard.kind, hazard.field, hazard.severity)
         for hazard in report.hazards
     ) == (("composition_mapping_error", "ncm_composition", "block"),)
-    assert report.reference_bindings == ()
-    assert report.derived_claims == ()
+    assert report.canonical_references == ()
+    assert report.calculated_claims == ()
     assert preparation.receipt is None
     with pytest.raises(PublicOutputBlocked, match="public-output receipt"):
         build_public_output(
@@ -129,7 +129,7 @@ def test_l_materials_composition_scenario_is_registered_with_contract():
 
 
 def _trace_for(result, claim_id):
-    for claim in result.report.derived_claims:
+    for claim in result.report.calculated_claims:
         if claim.claim_id == claim_id:
             return claim.trace
     raise AssertionError(f"missing derived claim: {claim_id}")

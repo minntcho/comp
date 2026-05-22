@@ -182,8 +182,8 @@ def test_tiny_domain_profile_opens_scope2_semantic_obligation():
     report = compile_with_profile(_hypothesis(), _profile())
 
     assert report.status == "review_required"
-    assert len(report.obligations) == 1
-    obligation = report.obligations[0]
+    assert len(report.validation_requirements) == 1
+    obligation = report.validation_requirements[0]
     assert obligation.kind == "semantic_judgment_required"
     assert obligation.field == "scope2_method"
     assert obligation.semantic_requirement is not None
@@ -199,7 +199,7 @@ def test_profile_rule_runner_surface_matches_compat_compile_with_profile():
     report = run_profile_rules(_hypothesis(), _profile())
     compat_report = compile_with_profile(_hypothesis(), _profile())
 
-    assert report.obligations == compat_report.obligations
+    assert report.validation_requirements == compat_report.validation_requirements
     assert report.status == "review_required"
 
 
@@ -220,7 +220,7 @@ def test_compile_with_profile_merges_profile_baseline_and_rule_obligations():
     assert any(
         obligation.kind == "semantic_judgment_required"
         and obligation.field == "scope2_method"
-        for obligation in report.obligations
+        for obligation in report.validation_requirements
     )
 
 
@@ -233,13 +233,13 @@ def test_profile_runner_blocks_claim_without_source_witness():
     assert any(
         obligation.kind == "find_source_witness"
         and obligation.field == "scope2_method"
-        for obligation in report.obligations
+        for obligation in report.validation_requirements
     )
 
 
 def test_tiny_domain_semantic_judgment_discharges_obligation():
     report = compile_with_profile(_hypothesis(), _profile())
-    obligation = report.obligations[0]
+    obligation = report.validation_requirements[0]
 
     resolved = apply_semantic_judgments(
         report,
@@ -248,8 +248,8 @@ def test_tiny_domain_semantic_judgment_discharges_obligation():
     )
 
     assert resolved.status == "accepted"
-    assert resolved.obligations == ()
-    assert resolved.resolved_obligations == (obligation,)
+    assert resolved.validation_requirements == ()
+    assert resolved.resolved_validation_requirements == (obligation,)
 
 
 def test_inactive_tiny_domain_rule_does_not_open_obligation():
@@ -259,4 +259,4 @@ def test_inactive_tiny_domain_rule_does_not_open_obligation():
 
     assert active_rule_families(profile) == ()
     assert report.status == "accepted"
-    assert report.obligations == ()
+    assert report.validation_requirements == ()

@@ -20,7 +20,7 @@ def apply_reference_selection(
     field: str,
 ) -> ValidationReport:
     result = select_reference_binding(
-        candidates=report.reference_candidates,
+        candidates=report.reference_options,
         catalog=catalog,
         criteria=criteria,
     )
@@ -29,24 +29,24 @@ def apply_reference_selection(
     if result.status == "bound" and result.binding is not None:
         open_obligations = tuple(
             obligation
-            for obligation in report.obligations
+            for obligation in report.validation_requirements
             if not _matches_selection_obligation(obligation, obligation_id)
         )
         resolved = tuple(
             obligation
-            for obligation in report.obligations
+            for obligation in report.validation_requirements
             if _matches_selection_obligation(obligation, obligation_id)
         )
         return with_recomputed_status(
             replace(
                 report,
-                obligations=open_obligations,
-                resolved_obligations=_append_unique_obligations(
-                    report.resolved_obligations,
+                validation_requirements=open_obligations,
+                resolved_validation_requirements=_append_unique_obligations(
+                    report.resolved_validation_requirements,
                     resolved,
                 ),
-                reference_bindings=_append_unique_bindings(
-                    report.reference_bindings,
+                canonical_references=_append_unique_bindings(
+                    report.canonical_references,
                     (result.binding,),
                 ),
                 can_build_public_output=False,
@@ -64,7 +64,7 @@ def apply_reference_selection(
     return with_recomputed_status(
         replace(
             report,
-            obligations=_append_unique_obligation_by_id(report.obligations, obligation),
+            validation_requirements=_append_unique_obligation_by_id(report.validation_requirements, obligation),
             can_build_public_output=False,
         )
     )

@@ -33,15 +33,15 @@ def retry_blocked_calculation(
     )
     if result.status == "calculated" and result.derived_claim is not None:
         open_obligations, resolved = _split_matching_calculation_obligations(
-            report.obligations,
+            report.validation_requirements,
             formula=formula,
             output_claim_id=output_claim_id,
         )
         base_report = replace(
             report,
-            obligations=open_obligations,
-            resolved_obligations=_append_unique_obligations(
-                report.resolved_obligations,
+            validation_requirements=open_obligations,
+            resolved_validation_requirements=_append_unique_obligations(
+                report.resolved_validation_requirements,
                 resolved,
             ),
             can_build_public_output=False,
@@ -49,8 +49,8 @@ def retry_blocked_calculation(
         return with_recomputed_status(
             replace(
                 base_report,
-                derived_claims=_append_unique_derived_claim(
-                    base_report.derived_claims,
+                calculated_claims=_append_unique_derived_claim(
+                    base_report.calculated_claims,
                     result.derived_claim,
                 ),
                 can_build_public_output=False,

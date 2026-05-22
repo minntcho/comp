@@ -35,7 +35,7 @@ def load_synthetic_oracle(oracle_dir: Path) -> SyntheticOracle:
             )
             for row in _read_csv(oracle_dir / "expected_claims.csv")
         ),
-        expected_derived_claims=tuple(
+        expected_calculated_claims=tuple(
             ExpectedCalculatedClaim(
                 claim_id=row["claim_id"],
                 field=row["field"],
@@ -43,16 +43,18 @@ def load_synthetic_oracle(oracle_dir: Path) -> SyntheticOracle:
                 unit=row["unit"],
                 formula_id=row["formula_id"],
             )
-            for row in _read_csv(oracle_dir / "expected_derived_claims.csv")
+            for row in _read_csv(oracle_dir / "expected_calculated_claims.csv")
         ),
-        expected_obligations=tuple(
+        expected_validation_requirements=tuple(
             ExpectedObligation(
                 obligation_id=row["obligation_id"],
                 kind=row["kind"],
                 field=row["field"],
                 reason=row["reason"],
             )
-            for row in _read_csv(oracle_dir / "expected_obligations.csv")
+            for row in _read_csv(
+                oracle_dir / "expected_validation_requirements.csv"
+            )
         ),
         expected_hazards=tuple(
             ExpectedHazard(
@@ -96,8 +98,8 @@ def load_synthetic_oracle(oracle_dir: Path) -> SyntheticOracle:
         expected_receipt=_read_expected_receipt(
             oracle_dir / "expected_receipt.json"
         ),
-        expected_resolved_obligations=_read_expected_obligations_if_exists(
-            oracle_dir / "expected_resolved_obligations.csv"
+        expected_resolved_validation_requirements=_read_expected_validation_requirements_if_exists(
+            oracle_dir / "expected_resolved_validation_requirements.csv"
         ),
         expected_resolution_artifacts=_read_expected_resolution_artifacts_if_exists(
             oracle_dir / "expected_resolution_artifacts.csv"
@@ -114,22 +116,22 @@ def assert_synthetic_oracle_matches_report(
     ), "expected checked claims did not match report.checked_claims"
     assert _derived_claim_rows(report) == _expected_derived_claim_rows(
         oracle
-    ), "expected derived claims did not match report.derived_claims"
+    ), "expected derived claims did not match report.calculated_claims"
     assert _failed_claim_rows(report) == _expected_failed_claim_rows(
         oracle
     ), "expected failed claims did not match report.failed_claims"
     assert _obligation_rows(report) == _expected_obligation_rows(
         oracle
-    ), "expected obligations did not match report.obligations"
+    ), "expected validation requirements did not match report.validation_requirements"
     assert _hazard_rows(report) == _expected_hazard_rows(
         oracle
     ), "expected hazards did not match report.hazards"
-    if oracle.expected_resolved_obligations is not None:
+    if oracle.expected_resolved_validation_requirements is not None:
         assert _resolved_obligation_rows(
             report
         ) == _expected_resolved_obligation_rows(
             oracle
-        ), "expected resolved obligations did not match report.resolved_obligations"
+        ), "expected resolved obligations did not match report.resolved_validation_requirements"
     _assert_source_map_matches_witnesses(oracle, report)
 
 
@@ -205,14 +207,14 @@ def _expected_derived_claim_rows(
 ) -> tuple[tuple[Any, ...], ...]:
     return tuple(
         (claim.claim_id, claim.field, claim.value, claim.unit, claim.formula_id)
-        for claim in oracle.expected_derived_claims
+        for claim in oracle.expected_calculated_claims
     )
 
 
 def _derived_claim_rows(report: ValidationReport) -> tuple[tuple[Any, ...], ...]:
     return tuple(
         (claim.claim_id, claim.field, claim.value, claim.unit, claim.formula_id)
-        for claim in report.derived_claims
+        for claim in report.calculated_claims
     )
 
 
@@ -242,14 +244,14 @@ def _expected_obligation_rows(
             obligation.field,
             obligation.reason,
         )
-        for obligation in oracle.expected_obligations
+        for obligation in oracle.expected_validation_requirements
     )
 
 
 def _expected_resolved_obligation_rows(
     oracle: SyntheticOracle,
 ) -> tuple[tuple[Any, ...], ...]:
-    if oracle.expected_resolved_obligations is None:
+    if oracle.expected_resolved_validation_requirements is None:
         return ()
     return tuple(
         (
@@ -258,7 +260,7 @@ def _expected_resolved_obligation_rows(
             obligation.field,
             obligation.reason,
         )
-        for obligation in oracle.expected_resolved_obligations
+        for obligation in oracle.expected_resolved_validation_requirements
     )
 
 
@@ -276,7 +278,7 @@ def _obligation_rows(report: ValidationReport) -> tuple[tuple[Any, ...], ...]:
             obligation.field,
             obligation.reason,
         )
-        for obligation in report.obligations
+        for obligation in report.validation_requirements
     )
 
 
@@ -294,7 +296,7 @@ def _resolved_obligation_rows(report: ValidationReport) -> tuple[tuple[Any, ...]
             obligation.field,
             obligation.reason,
         )
-        for obligation in report.resolved_obligations
+        for obligation in report.resolved_validation_requirements
     )
 
 
@@ -323,7 +325,7 @@ def _assert_source_map_matches_witnesses(
 ) -> None:
     actual = {
         (witness.field, witness.witness_id, witness.source, witness.span)
-        for witness in report.evidence_witnesses
+        for witness in report.evidence_refs
     }
     expected = {
         (
@@ -336,7 +338,7 @@ def _assert_source_map_matches_witnesses(
     }
     missing = expected - actual
     assert not missing, (
-        "source_to_expected_claim_map did not match report.evidence_witnesses: "
+        "source_to_expected_claim_map did not match report.evidence_refs: "
         f"{sorted(missing)}"
     )
 
@@ -358,7 +360,7 @@ def _read_expected_receipt(path: Path) -> ExpectedReceipt | None:
     )
 
 
-def _read_expected_obligations_if_exists(
+def _read_expected_validation_requirements_if_exists(
     path: Path,
 ) -> tuple[ExpectedObligation, ...] | None:
     if not path.exists():

@@ -28,11 +28,11 @@ def test_reference_candidate_is_candidate_only_authority():
 
     report = ValidationReport(
         status="review_required",
-        reference_candidates=(candidate,),
+        reference_options=(candidate,),
     )
 
-    assert report.reference_candidates == (candidate,)
-    assert report.reference_bindings == ()
+    assert report.reference_options == (candidate,)
+    assert report.canonical_references == ()
 
 
 def test_reference_candidate_cannot_claim_binding_authority():
@@ -68,10 +68,10 @@ def test_reference_binding_records_selector_and_rejected_candidates():
     assert binding.can_authorize_calculation is True
     assert binding.rejected_candidates == (rejected,)
 
-    report = ValidationReport(status="accepted", reference_bindings=(binding,))
+    report = ValidationReport(status="accepted", canonical_references=(binding,))
 
-    assert report.reference_bindings == (binding,)
-    assert report.reference_candidates == ()
+    assert report.canonical_references == (binding,)
+    assert report.reference_options == ()
 
 
 def test_reference_binding_cannot_be_downgraded_to_candidate_authority():
@@ -115,9 +115,9 @@ def test_semantic_judgment_application_preserves_reference_artifacts():
     )
     report = ValidationReport(
         status="review_required",
-        obligations=(obligation,),
-        reference_candidates=(candidate,),
-        reference_bindings=(binding,),
+        validation_requirements=(obligation,),
+        reference_options=(candidate,),
+        canonical_references=(binding,),
     )
 
     updated = apply_semantic_judgments(
@@ -136,5 +136,5 @@ def test_semantic_judgment_application_preserves_reference_artifacts():
         available_span_ids=("span-17",),
     )
 
-    assert updated.reference_candidates == (candidate,)
-    assert updated.reference_bindings == (binding,)
+    assert updated.reference_options == (candidate,)
+    assert updated.canonical_references == (binding,)

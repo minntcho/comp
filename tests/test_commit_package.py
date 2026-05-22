@@ -24,7 +24,7 @@ def test_commit_package_collects_report_artifacts_without_receipt_authority():
                 origin="source_text",
             ),
         ),
-        resolved_obligations=(
+        resolved_validation_requirements=(
             ValidationRequirement(
                 kind="calculation_blocked",
                 field="co2e_emission",
@@ -32,7 +32,7 @@ def test_commit_package_collects_report_artifacts_without_receipt_authority():
                 obligation_id="calculation:hyp-1:co2e_emission",
             ),
         ),
-        reference_bindings=(
+        canonical_references=(
             CanonicalReference(
                 binding_id="bind-amount-factor",
                 claim_id="hyp-1:amount",
@@ -40,7 +40,7 @@ def test_commit_package_collects_report_artifacts_without_receipt_authority():
                 reference_type="emission_factor",
             ),
         ),
-        derived_claims=(
+        calculated_claims=(
             CalculatedClaim(
                 claim_id="hyp-1:co2e_emission",
                 field="co2e_emission",
@@ -102,7 +102,7 @@ def test_friendly_review_names_are_canonical():
 def test_commit_package_is_incomplete_with_open_blocking_obligation():
     report = ValidationReport(
         status="accepted",
-        obligations=(
+        validation_requirements=(
             ValidationRequirement(
                 kind="reference_selection_required",
                 field="co2e_emission",
@@ -124,7 +124,7 @@ def test_commit_package_is_incomplete_with_open_blocking_obligation():
 def test_commit_package_cites_nonblocking_obligations_without_blocking_completion():
     report = ValidationReport(
         status="review_required",
-        obligations=(
+        validation_requirements=(
             ValidationRequirement(
                 kind="nonblocking_hint",
                 field="co2e_emission",

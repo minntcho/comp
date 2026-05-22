@@ -100,7 +100,7 @@ def promote_raw_claim_hypothesis(
     return with_recomputed_status(
         ValidationReport(
             status="accepted",
-            evidence_witnesses=(
+            evidence_refs=(
                 *hypothesis.witnesses,
                 *_support_witnesses(profile),
             ),
@@ -136,9 +136,9 @@ def promote_raw_claim_hypothesis(
                     origin="physical_allocation_support",
                 ),
             ),
-            resolved_obligations=_resolved_obligations(profile),
-            reference_bindings=_reference_bindings(profile),
-            derived_claims=_derived_claims(
+            resolved_validation_requirements=_resolved_validation_requirements(profile),
+            canonical_references=_canonical_references(profile),
+            calculated_claims=_calculated_claims(
                 profile,
                 electricity_mwh=electricity_mwh,
                 allocation_share=allocation_share,
@@ -200,7 +200,7 @@ def _support_witnesses(
     )
 
 
-def _resolved_obligations(
+def _resolved_validation_requirements(
     profile: SyntheticRawClaimPromotionProfile,
 ) -> tuple[ValidationRequirement, ...]:
     return (
@@ -238,7 +238,7 @@ def _resolved_obligations(
     )
 
 
-def _reference_bindings(
+def _canonical_references(
     profile: SyntheticRawClaimPromotionProfile,
 ) -> tuple[CanonicalReference, ...]:
     return (
@@ -275,7 +275,7 @@ def _reference_bindings(
     )
 
 
-def _derived_claims(
+def _calculated_claims(
     profile: SyntheticRawClaimPromotionProfile,
     *,
     electricity_mwh: Decimal,

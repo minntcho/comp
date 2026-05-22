@@ -92,7 +92,7 @@ def raw_claim_hypothesis() -> InterpretationHypothesis:
                 origin="llm_extractor_candidate",
             ),
         ),
-        witnesses=_evidence_witnesses(),
+        witnesses=_evidence_refs(),
     )
 
 
@@ -105,7 +105,7 @@ def run_raw_claim_hypothesis_gate_scenario() -> DomainScenarioResult:
         projection_id=PROJECTION_ID,
         profile_id=PROFILE_ID,
         dependency_fingerprints=(
-            evidence_ref_fingerprint(report.evidence_witnesses[0]),
+            evidence_ref_fingerprint(report.evidence_refs[0]),
         ),
     )
     return build_domain_scenario_result(
@@ -123,16 +123,16 @@ def raw_claim_hypothesis_gate_report() -> ValidationReport:
     return with_recomputed_status(
         ValidationReport(
             status="accepted",
-            evidence_witnesses=hypothesis.witnesses,
+            evidence_refs=hypothesis.witnesses,
             failed_claims=_failed_claims(),
-            obligations=_open_obligations(),
+            validation_requirements=_open_obligations(),
             hazards=_hazards(),
             can_build_public_output=False,
         )
     )
 
 
-def _evidence_witnesses() -> tuple[EvidenceRef, ...]:
+def _evidence_refs() -> tuple[EvidenceRef, ...]:
     return (
         EvidenceRef(
             witness_id=WITNESS_ID,

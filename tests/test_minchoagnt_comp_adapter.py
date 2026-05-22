@@ -141,7 +141,7 @@ def test_deterministic_comp_resolver_applies_semantic_judgment_without_receipt()
     compile_result = CompCompileResult(
         hypothesis=InterpretationHypothesis("hyp-sem", "facility-1"),
         subject=SubjectRef("claim", "hyp-sem"),
-        report=ValidationReport(status="review_required", obligations=(obligation,)),
+        report=ValidationReport(status="review_required", validation_requirements=(obligation,)),
     )
     resolver = DeterministicCompResolver(
         semantic_judgments=(
@@ -163,8 +163,8 @@ def test_deterministic_comp_resolver_applies_semantic_judgment_without_receipt()
     assert [task.obligation_id for task in resolution.tasks] == ["obl-scope2"]
     assert resolution.semantic_judgment_ids == ("judgment-scope2",)
     assert resolution.result.report.status == "accepted"
-    assert resolution.result.report.obligations == ()
-    assert resolution.result.report.resolved_obligations == (obligation,)
+    assert resolution.result.report.validation_requirements == ()
+    assert resolution.result.report.resolved_validation_requirements == (obligation,)
     assert resolution.result.receipt is None
 
 
@@ -192,7 +192,7 @@ def test_deterministic_comp_resolver_runs_reference_search_from_task_query():
     compile_result = CompCompileResult(
         hypothesis=InterpretationHypothesis("hyp-ref", "facility-1"),
         subject=SubjectRef("claim", "hyp-ref"),
-        report=ValidationReport(status="blocked", obligations=(obligation,)),
+        report=ValidationReport(status="blocked", validation_requirements=(obligation,)),
     )
     catalog = ReferenceCatalog(
         records=(
@@ -214,11 +214,11 @@ def test_deterministic_comp_resolver_runs_reference_search_from_task_query():
     assert resolution.reference_query_obligation_ids == (obligation_id,)
     reference_ids = [
         candidate.reference_id
-        for candidate in resolution.result.report.reference_candidates
+        for candidate in resolution.result.report.reference_options
     ]
     assert reference_ids == ["factor.kr_grid.2024.location_based"]
-    assert resolution.result.report.obligations == ()
-    assert resolution.result.report.resolved_obligations == (obligation,)
+    assert resolution.result.report.validation_requirements == ()
+    assert resolution.result.report.resolved_validation_requirements == (obligation,)
     assert resolution.result.receipt is None
 
 
@@ -246,7 +246,7 @@ def test_deterministic_comp_resolver_runs_reference_retrieval_from_task_query():
     compile_result = CompCompileResult(
         hypothesis=InterpretationHypothesis("hyp-ref", "facility-1"),
         subject=SubjectRef("claim", "hyp-ref"),
-        report=ValidationReport(status="blocked", obligations=(obligation,)),
+        report=ValidationReport(status="blocked", validation_requirements=(obligation,)),
     )
     resolver = DeterministicCompResolver(
         reference_resolver=EmbeddingResolverStub(
@@ -272,16 +272,16 @@ def test_deterministic_comp_resolver_runs_reference_retrieval_from_task_query():
     assert resolution.reference_query_obligation_ids == (obligation_id,)
     assert [
         candidate.retrieval_method
-        for candidate in resolution.result.report.reference_candidates
+        for candidate in resolution.result.report.reference_options
     ] == ["embedding_stub:factor"]
     assert [
         candidate.reference_id
-        for candidate in resolution.result.report.reference_candidates
+        for candidate in resolution.result.report.reference_options
     ] == ["factor.kr_grid.2024.location_based"]
-    assert resolution.result.report.obligations == ()
-    assert resolution.result.report.resolved_obligations == (obligation,)
-    assert resolution.result.report.reference_bindings == ()
-    assert resolution.result.report.derived_claims == ()
+    assert resolution.result.report.validation_requirements == ()
+    assert resolution.result.report.resolved_validation_requirements == (obligation,)
+    assert resolution.result.report.canonical_references == ()
+    assert resolution.result.report.calculated_claims == ()
     assert resolution.result.receipt is None
 
 
@@ -309,7 +309,7 @@ def test_deterministic_comp_resolver_runs_reference_retrieval_from_query_policy(
     compile_result = CompCompileResult(
         hypothesis=InterpretationHypothesis("hyp-ref", "facility-1"),
         subject=SubjectRef("claim", "hyp-ref"),
-        report=ValidationReport(status="blocked", obligations=(obligation,)),
+        report=ValidationReport(status="blocked", validation_requirements=(obligation,)),
     )
     resolver = DeterministicCompResolver(
         reference_resolver=EmbeddingResolverStub(
@@ -347,11 +347,11 @@ def test_deterministic_comp_resolver_runs_reference_retrieval_from_query_policy(
     assert resolution.reference_query_obligation_ids == (obligation_id,)
     assert [
         candidate.reference_id
-        for candidate in resolution.result.report.reference_candidates
+        for candidate in resolution.result.report.reference_options
     ] == ["factor.kr_grid.2024.location_based"]
-    assert resolution.result.report.resolved_obligations == (obligation,)
-    assert resolution.result.report.reference_bindings == ()
-    assert resolution.result.report.derived_claims == ()
+    assert resolution.result.report.resolved_validation_requirements == (obligation,)
+    assert resolution.result.report.canonical_references == ()
+    assert resolution.result.report.calculated_claims == ()
     assert resolution.result.receipt is None
 
 
@@ -375,7 +375,7 @@ def test_deterministic_comp_resolver_leaves_reference_policy_task_open_without_c
     compile_result = CompCompileResult(
         hypothesis=InterpretationHypothesis("hyp-ref", "facility-1"),
         subject=SubjectRef("claim", "hyp-ref"),
-        report=ValidationReport(status="blocked", obligations=(obligation,)),
+        report=ValidationReport(status="blocked", validation_requirements=(obligation,)),
     )
     resolver = DeterministicCompResolver(
         reference_resolver=EmbeddingResolverStub(entries=()),

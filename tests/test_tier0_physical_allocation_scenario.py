@@ -32,7 +32,7 @@ def test_tier0_physical_allocation_calculates_line_mass_share_and_own_emission()
     }
     assert tuple(
         (claim.field, claim.value, claim.unit)
-        for claim in result.report.derived_claims
+        for claim in result.report.calculated_claims
     ) == (
         ("target_allocation_share", 0.5, None),
         ("allocated_electricity_mwh", 3200, "MWh"),
@@ -48,7 +48,7 @@ def test_tier0_physical_allocation_binds_electricity_and_lng_factors():
 
     assert tuple(
         (binding.binding_id, binding.reference_id, binding.reference_type)
-        for binding in result.report.reference_bindings
+        for binding in result.report.canonical_references
     ) == (
         (ELECTRICITY_BINDING_ID, "platform.factor.electricity_mwh", "emission_factor"),
         (LNG_BINDING_ID, "platform.factor.lng_nm3", "emission_factor"),
@@ -64,7 +64,7 @@ def test_tier0_physical_allocation_checks_site_inputs_and_dqr():
     result = run_tier0_physical_allocation_scenario()
 
     assert result.report.status == "accepted"
-    assert result.report.obligations == ()
+    assert result.report.validation_requirements == ()
     assert result.report.hazards == ()
     assert {
         (claim.field, claim.value)
@@ -114,7 +114,7 @@ def test_tier0_physical_allocation_scenario_is_registered_with_contract():
 
 
 def _trace_for(result, claim_id):
-    for claim in result.report.derived_claims:
+    for claim in result.report.calculated_claims:
         if claim.claim_id == claim_id:
             return claim.trace
     raise AssertionError(f"missing derived claim: {claim_id}")

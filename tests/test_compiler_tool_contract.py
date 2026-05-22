@@ -74,10 +74,19 @@ def test_friendly_intake_validation_names_are_canonical():
         field="amount",
         reason="missing_source_witness",
     )
+    report = ValidationReport(
+        status="review_required",
+        evidence_refs=(witness,),
+        validation_requirements=(requirement,),
+        resolved_validation_requirements=(),
+    )
 
     assert type(claim).__name__ == "ClaimCandidate"
     assert type(witness).__name__ == "EvidenceRef"
     assert type(requirement).__name__ == "ValidationRequirement"
+    assert report.evidence_refs == (witness,)
+    assert report.validation_requirements == (requirement,)
+    assert report.resolved_validation_requirements == ()
     assert evidence_ref_fingerprint(witness).dependency_kind == "evidence_witness"
 
 
@@ -111,15 +120,18 @@ def test_friendly_reference_calculation_report_names_are_canonical():
     )
     report = ValidationReport(
         status="accepted",
-        reference_candidates=(option,),
-        reference_bindings=(reference,),
-        derived_claims=(calculated,),
+        reference_options=(option,),
+        canonical_references=(reference,),
+        calculated_claims=(calculated,),
     )
 
     assert type(option).__name__ == "ReferenceOption"
     assert type(reference).__name__ == "CanonicalReference"
     assert type(calculated).__name__ == "CalculatedClaim"
     assert type(report).__name__ == "ValidationReport"
+    assert report.reference_options == (option,)
+    assert report.canonical_references == (reference,)
+    assert report.calculated_claims == (calculated,)
     assert option.can_authorize_calculation is False
     assert reference.can_authorize_calculation is True
     assert calculated.can_authorize_public_projection is False
@@ -166,7 +178,7 @@ def test_unsupported_unit_blocks_and_requests_source_witness():
     assert report.failed_claims[0].reason == "unsupported_unit"
     assert any(
         obligation.kind == "find_source_witness" and obligation.field == "unit"
-        for obligation in report.obligations
+        for obligation in report.validation_requirements
     )
     assert report.can_build_public_output is False
 
@@ -199,7 +211,7 @@ def test_witness_id_must_resolve_to_grounded_matching_witness():
         assert report.failed_claims[0].reason == expected_reason
         assert any(
             obligation.kind == "find_source_witness" and obligation.field == "amount"
-            for obligation in report.obligations
+            for obligation in report.validation_requirements
         )
 
 
@@ -256,7 +268,7 @@ def test_missing_unit_is_review_required_hazard_not_public_projection():
     )
     assert any(
         obligation.kind == "find_source_witness" and obligation.field == "unit"
-        for obligation in report.obligations
+        for obligation in report.validation_requirements
     )
     assert report.can_build_public_output is False
 

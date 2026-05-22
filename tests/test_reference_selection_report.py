@@ -81,8 +81,8 @@ def test_reference_selection_adds_binding_and_resolves_matching_obligation():
     obligation = _selection_obligation()
     report = ValidationReport(
         status="blocked",
-        obligations=(obligation,),
-        reference_candidates=(
+        validation_requirements=(obligation,),
+        reference_options=(
             _candidate(
                 "cand-market",
                 "factor.kr_residual_mix.2024.market_based",
@@ -105,10 +105,10 @@ def test_reference_selection_adds_binding_and_resolves_matching_obligation():
 
     assert updated.status == "accepted"
     assert updated.can_build_public_output is False
-    assert updated.obligations == ()
-    assert updated.resolved_obligations == (obligation,)
-    assert len(updated.reference_bindings) == 1
-    binding = updated.reference_bindings[0]
+    assert updated.validation_requirements == ()
+    assert updated.resolved_validation_requirements == (obligation,)
+    assert len(updated.canonical_references) == 1
+    binding = updated.canonical_references[0]
     assert binding.reference_id == "factor.kr_grid.2024.location_based"
     assert binding.selected_candidate_id == "cand-location"
     assert binding.selector_rule_id == "ghg.factor_selector.v1"
@@ -121,7 +121,7 @@ def test_reference_selection_adds_binding_and_resolves_matching_obligation():
 def test_reference_selection_opens_obligation_when_candidates_are_ambiguous():
     report = ValidationReport(
         status="accepted",
-        reference_candidates=(
+        reference_options=(
             _candidate("cand-a", "factor.kr_grid.2024.location_based", 0.99),
             _candidate("cand-b", "factor.kr_grid.2024.location_based", 0.76),
         ),
@@ -135,14 +135,14 @@ def test_reference_selection_opens_obligation_when_candidates_are_ambiguous():
     )
 
     assert updated.status == "review_required"
-    assert updated.reference_bindings == ()
-    assert updated.obligations == (_selection_obligation(reason="ambiguous"),)
+    assert updated.canonical_references == ()
+    assert updated.validation_requirements == (_selection_obligation(reason="ambiguous"),)
 
 
 def test_reference_selection_opens_obligation_when_no_candidate_matches():
     report = ValidationReport(
         status="accepted",
-        reference_candidates=(
+        reference_options=(
             _candidate(
                 "cand-market",
                 "factor.kr_residual_mix.2024.market_based",
@@ -159,14 +159,14 @@ def test_reference_selection_opens_obligation_when_no_candidate_matches():
     )
 
     assert updated.status == "review_required"
-    assert updated.reference_bindings == ()
-    assert updated.obligations == (_selection_obligation(reason="no_match"),)
+    assert updated.canonical_references == ()
+    assert updated.validation_requirements == (_selection_obligation(reason="no_match"),)
 
 
 def test_reference_selection_report_application_is_idempotent():
     report = ValidationReport(
         status="accepted",
-        reference_candidates=(
+        reference_options=(
             _candidate("cand-a", "factor.kr_grid.2024.location_based", 0.99),
             _candidate("cand-b", "factor.kr_grid.2024.location_based", 0.76),
         ),
@@ -185,5 +185,5 @@ def test_reference_selection_report_application_is_idempotent():
         field="co2e_emission",
     )
 
-    assert twice.obligations == once.obligations
-    assert twice.reference_bindings == once.reference_bindings
+    assert twice.validation_requirements == once.validation_requirements
+    assert twice.canonical_references == once.canonical_references

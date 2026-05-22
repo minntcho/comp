@@ -122,11 +122,11 @@ def l_materials_composition_rollup_report() -> ValidationReport:
     return with_recomputed_status(
         ValidationReport(
             status="accepted",
-            evidence_witnesses=_evidence_witnesses(),
+            evidence_refs=_evidence_refs(),
             checked_claims=_checked_claims(),
-            resolved_obligations=_resolved_obligations(),
-            reference_bindings=_reference_bindings(),
-            derived_claims=_derived_claims(),
+            resolved_validation_requirements=_resolved_validation_requirements(),
+            canonical_references=_canonical_references(),
+            calculated_claims=_calculated_claims(),
             can_build_public_output=True,
         )
     )
@@ -137,7 +137,7 @@ def invalid_l_materials_composition_report() -> ValidationReport:
     return with_recomputed_status(
         ValidationReport(
             status="accepted",
-            evidence_witnesses=_evidence_witnesses(),
+            evidence_refs=_evidence_refs(),
             checked_claims=_checked_claims(mn_share=INVALID_MN_SHARE),
             failed_claims=(
                 FailedClaim(
@@ -160,7 +160,7 @@ def invalid_l_materials_composition_report() -> ValidationReport:
     )
 
 
-def _evidence_witnesses() -> tuple[EvidenceRef, ...]:
+def _evidence_refs() -> tuple[EvidenceRef, ...]:
     return (
         EvidenceRef(
             witness_id="source:l-materials-composition",
@@ -180,7 +180,7 @@ def _evidence_witnesses() -> tuple[EvidenceRef, ...]:
             witness_id="source:l-materials-ncm-factor",
             field="mapped_ncm_factor_tco2e_per_ton",
             source="tests/e2e/expected/001-l-energy-pcf-governance.receipt.json",
-            span="derived_claims.l_materials.factor",
+            span="calculated_claims.l_materials.factor",
             text="15.5 tCO2e/ton",
         ),
     )
@@ -236,7 +236,7 @@ def _checked_claims(
     )
 
 
-def _resolved_obligations() -> tuple[ValidationRequirement, ...]:
+def _resolved_validation_requirements() -> tuple[ValidationRequirement, ...]:
     return (
         ValidationRequirement(
             kind="composition_total_validated",
@@ -247,7 +247,7 @@ def _resolved_obligations() -> tuple[ValidationRequirement, ...]:
     )
 
 
-def _reference_bindings() -> tuple[CanonicalReference, ...]:
+def _canonical_references() -> tuple[CanonicalReference, ...]:
     return (
         CanonicalReference(
             binding_id=COMPOSITION_FACTOR_BINDING_ID,
@@ -260,7 +260,7 @@ def _reference_bindings() -> tuple[CanonicalReference, ...]:
     )
 
 
-def _derived_claims() -> tuple[CalculatedClaim, ...]:
+def _calculated_claims() -> tuple[CalculatedClaim, ...]:
     composition_total = NI_SHARE + CO_SHARE + MN_SHARE
     emission = Decimal(PRODUCTION_TON) * MAPPED_NCM_FACTOR_TCO2E_PER_TON
     composition_step = CalculationStep(
@@ -308,7 +308,7 @@ def _derived_claims() -> tuple[CalculatedClaim, ...]:
 
 def _projection_source(report: ValidationReport) -> dict[str, object]:
     values = {claim.field: claim.value for claim in report.checked_claims}
-    values.update({claim.field: claim.value for claim in report.derived_claims})
+    values.update({claim.field: claim.value for claim in report.calculated_claims})
     return values
 
 

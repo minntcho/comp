@@ -115,7 +115,7 @@ def run_canonical_working_loop_scenario() -> DomainScenarioResult:
         field=formula().output_field,
     )
     binding = _binding_for(
-        selected_report.reference_bindings,
+        selected_report.canonical_references,
         "bind-canonical-electricity-factor",
     )
     resolved_report = selected_report
@@ -180,7 +180,7 @@ def _dependency_fingerprints(
         calculation_formula_declaration_fingerprint(formula()),
         *tuple(
             evidence_ref_fingerprint(witness)
-            for witness in report.evidence_witnesses
+            for witness in report.evidence_refs
             if witness.witness_id in _checked_claim_witness_ids(report)
         ),
     ]

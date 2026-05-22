@@ -37,7 +37,7 @@ def _entries():
     )
 
 
-def test_embedding_resolver_stub_returns_candidate_only_reference_candidates():
+def test_embedding_resolver_stub_returns_candidate_only_reference_options():
     resolver = EmbeddingResolverStub(entries=_entries())
 
     candidates = resolver.search(

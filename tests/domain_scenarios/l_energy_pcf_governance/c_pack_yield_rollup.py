@@ -136,17 +136,17 @@ def c_pack_yield_rollup_report() -> ValidationReport:
     return with_recomputed_status(
         ValidationReport(
             status="accepted",
-            evidence_witnesses=_evidence_witnesses(),
+            evidence_refs=_evidence_refs(),
             checked_claims=_checked_claims(),
-            resolved_obligations=_resolved_obligations(),
-            reference_bindings=_reference_bindings(),
-            derived_claims=_derived_claims(),
+            resolved_validation_requirements=_resolved_validation_requirements(),
+            canonical_references=_canonical_references(),
+            calculated_claims=_calculated_claims(),
             can_build_public_output=True,
         )
     )
 
 
-def _evidence_witnesses() -> tuple[EvidenceRef, ...]:
+def _evidence_refs() -> tuple[EvidenceRef, ...]:
     return (
         EvidenceRef(
             witness_id="source:c-pack-yield-fixture",
@@ -166,7 +166,7 @@ def _evidence_witnesses() -> tuple[EvidenceRef, ...]:
             witness_id="source:c-pack-child-claims",
             field="lower_tier_child_claims",
             source="tests/e2e/expected/001-l-energy-pcf-governance.receipt.json",
-            span="derived_claims.c_pack.children",
+            span="calculated_claims.c_pack.children",
             text="Alpha Metal 5,306; Steel Frame proxy 4,750",
         ),
     )
@@ -231,7 +231,7 @@ def _checked_claims() -> tuple[CheckedClaim, ...]:
     )
 
 
-def _resolved_obligations() -> tuple[ValidationRequirement, ...]:
+def _resolved_validation_requirements() -> tuple[ValidationRequirement, ...]:
     return (
         ValidationRequirement(
             kind="child_claims_available",
@@ -248,7 +248,7 @@ def _resolved_obligations() -> tuple[ValidationRequirement, ...]:
     )
 
 
-def _reference_bindings() -> tuple[CanonicalReference, ...]:
+def _canonical_references() -> tuple[CanonicalReference, ...]:
     return (
         CanonicalReference(
             binding_id=ELECTRICITY_BINDING_ID,
@@ -261,7 +261,7 @@ def _reference_bindings() -> tuple[CanonicalReference, ...]:
     )
 
 
-def _derived_claims() -> tuple[CalculatedClaim, ...]:
+def _calculated_claims() -> tuple[CalculatedClaim, ...]:
     values = _calculated_values()
     return (
         _derived_claim(
@@ -412,7 +412,7 @@ def _calculated_values() -> dict[str, object]:
 
 def _projection_source(report: ValidationReport) -> dict[str, object]:
     values = {claim.field: claim.value for claim in report.checked_claims}
-    values.update({claim.field: claim.value for claim in report.derived_claims})
+    values.update({claim.field: claim.value for claim in report.calculated_claims})
     return values
 
 

@@ -280,7 +280,7 @@ def projection_source(report: ValidationReport) -> dict[str, object]:
     values: dict[str, object] = {
         claim.field: claim.value for claim in report.checked_claims
     }
-    values.update({claim.field: claim.value for claim in report.derived_claims})
+    values.update({claim.field: claim.value for claim in report.calculated_claims})
     return values
 
 

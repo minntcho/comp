@@ -147,38 +147,21 @@ PublicOutput is a receipt-verifiable view, not authority.
 
 ## 6. Residual Field Vocabulary Audit
 
-The canonical class and export names are complete. Some active fields, fixture
-keys, and serialized receipt/replay payload keys still contain older vocabulary.
-They must be handled by category, not by a global text replacement.
+The canonical class, export, and active `ValidationReport` field names are
+complete. Active Python-facing report fields use friendly names only:
 
-### Safe active field rename candidates
+| Active field | Boundary |
+| --- | --- |
+| `ValidationReport.evidence_refs` | Grounding references for validation. |
+| `ValidationReport.reference_options` | Candidate-only retrieved references. |
+| `ValidationReport.canonical_references` | Deterministically selected references that may authorize calculation input. |
+| `ValidationReport.calculated_claims` | Calculated values that still cannot authorize public output. |
+| `ValidationReport.validation_requirements` | Open work required before the report can become clean. |
+| `ValidationReport.resolved_validation_requirements` | Completed validation requirements retained for audit and review context. |
 
-These are active Python-facing names that still expose older terms. They should
-be renamed in a breaking follow-up PR when the call sites can move together:
-
-| Current active field | Preferred field | Why it can move |
-| --- | --- | --- |
-| `ValidationReport.evidence_witnesses` | `ValidationReport.evidence_refs` | The value type is already `EvidenceRef`; this is an active object field, not receipt authority. |
-| `ValidationReport.reference_candidates` | `ValidationReport.reference_options` | The value type is already `ReferenceOption`; this is compiler report state. |
-| `ValidationReport.reference_bindings` | `ValidationReport.canonical_references` | The value type is already `CanonicalReference`; this is calculation input authority, not a free-form selection. |
-| `ValidationReport.derived_claims` | `ValidationReport.calculated_claims` | The value type is already `CalculatedClaim`; this is report state and public-output precondition input. |
-| `ValidationReport.obligations` | `ValidationReport.validation_requirements` | The value type is already `ValidationRequirement`; this field is user-visible enough to deserve the friendly name. |
-| `ValidationReport.resolved_obligations` | `ValidationReport.resolved_validation_requirements` | Keeps the open/resolved pair aligned after `obligations` moves. |
-
-Required shorthand for the next active-field PR:
-
-```text
-`ValidationReport.evidence_witnesses` -> `ValidationReport.evidence_refs`
-`ValidationReport.reference_candidates` -> `ValidationReport.reference_options`
-`ValidationReport.reference_bindings` -> `ValidationReport.canonical_references`
-`ValidationReport.derived_claims` -> `ValidationReport.calculated_claims`
-`ValidationReport.obligations` -> `ValidationReport.validation_requirements`
-`ValidationReport.resolved_obligations` -> `ValidationReport.resolved_validation_requirements`
-```
-
-Do not add aliases for these fields unless a migration PR explicitly proves the
-temporary duplicate surface cannot leak into docs, examples, or downstream
-imports. The default migration shape is still a breaking rename.
+The report-field rename is intentionally breaking. Do not add compatibility
+aliases for the previous field names. `tests/test_complete_friendly_rename.py`
+blocks those names from returning to active Python surfaces.
 
 ### Codec-bound receipt and replay vocabulary
 

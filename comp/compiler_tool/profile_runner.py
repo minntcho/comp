@@ -65,9 +65,9 @@ def run_profile_rules(
     return with_recomputed_status(
         ValidationReport(
             status="accepted",
-            evidence_witnesses=hypothesis.witnesses,
+            evidence_refs=hypothesis.witnesses,
             failed_claims=tuple(failed_claims),
-            obligations=tuple(obligations),
+            validation_requirements=tuple(obligations),
             can_build_public_output=False,
         )
     )
@@ -150,9 +150,9 @@ def _merge_compile_reports(
     return with_recomputed_status(
         replace(
             baseline_report,
-            evidence_witnesses=_merge_unique(
-                baseline_report.evidence_witnesses,
-                profile_rule_report.evidence_witnesses,
+            evidence_refs=_merge_unique(
+                baseline_report.evidence_refs,
+                profile_rule_report.evidence_refs,
             ),
             checked_claims=_merge_unique(
                 baseline_report.checked_claims,
@@ -170,29 +170,29 @@ def _merge_compile_reports(
                 baseline_report.unchecked_areas,
                 profile_rule_report.unchecked_areas,
             ),
-            obligations=_merge_unique(
-                baseline_report.obligations,
-                profile_rule_report.obligations,
+            validation_requirements=_merge_unique(
+                baseline_report.validation_requirements,
+                profile_rule_report.validation_requirements,
             ),
-            resolved_obligations=_merge_unique(
-                baseline_report.resolved_obligations,
-                profile_rule_report.resolved_obligations,
+            resolved_validation_requirements=_merge_unique(
+                baseline_report.resolved_validation_requirements,
+                profile_rule_report.resolved_validation_requirements,
             ),
             hazards=_merge_unique(
                 baseline_report.hazards,
                 profile_rule_report.hazards,
             ),
-            reference_candidates=_merge_unique(
-                baseline_report.reference_candidates,
-                profile_rule_report.reference_candidates,
+            reference_options=_merge_unique(
+                baseline_report.reference_options,
+                profile_rule_report.reference_options,
             ),
-            reference_bindings=_merge_unique(
-                baseline_report.reference_bindings,
-                profile_rule_report.reference_bindings,
+            canonical_references=_merge_unique(
+                baseline_report.canonical_references,
+                profile_rule_report.canonical_references,
             ),
-            derived_claims=_merge_unique(
-                baseline_report.derived_claims,
-                profile_rule_report.derived_claims,
+            calculated_claims=_merge_unique(
+                baseline_report.calculated_claims,
+                profile_rule_report.calculated_claims,
             ),
             can_build_public_output=(
                 baseline_report.can_build_public_output

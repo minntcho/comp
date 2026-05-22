@@ -11,7 +11,7 @@ from comp.compiler_tool import (
 def test_semantic_obligation_becomes_resolver_task_with_rubric_payload():
     report = ValidationReport(
         status="review_required",
-        obligations=(
+        validation_requirements=(
             ValidationRequirement(
                 kind="semantic_judgment_required",
                 field="scope2_method",
@@ -67,7 +67,7 @@ def test_calculation_reference_search_obligation_preserves_requirement_payload()
     )
     report = ValidationReport(
         status="blocked",
-        obligations=(
+        validation_requirements=(
             ValidationRequirement(
                 kind="reference_search_required",
                 field="co2e_emission",
@@ -83,7 +83,7 @@ def test_calculation_reference_search_obligation_preserves_requirement_payload()
     task = resolver_tasks_from_report(report)[0]
 
     assert task.task_type == "reference_search"
-    assert task.required_artifact == "reference_candidates"
+    assert task.required_artifact == "reference_options"
     assert task.obligation_id == (
         "resolve:ghg.electricity_factor_multiplication.v1:"
         "hyp-1:co2e_emission:reference_search_required"
@@ -101,7 +101,7 @@ def test_calculation_reference_search_obligation_preserves_requirement_payload()
 def test_resolver_tasks_use_fallback_obligation_ids_and_ignore_resolved_items():
     report = ValidationReport(
         status="review_required",
-        obligations=(
+        validation_requirements=(
             ValidationRequirement(
                 kind="find_source_witness",
                 field="unit",
@@ -109,7 +109,7 @@ def test_resolver_tasks_use_fallback_obligation_ids_and_ignore_resolved_items():
                 blocking=True,
             ),
         ),
-        resolved_obligations=(
+        resolved_validation_requirements=(
             ValidationRequirement(
                 kind="find_source_witness",
                 field="amount",

@@ -123,7 +123,7 @@ def test_domain_scenario_cli_summarizes_blocked_requirements_as_actions():
     result = BlockedResult(
         report=ValidationReport(
             status="blocked",
-            obligations=(
+            validation_requirements=(
                 ValidationRequirement(
                     kind="find_source_witness",
                     field="co2e_kg",
@@ -362,7 +362,7 @@ def test_synthetic_pcf_smoke_scenario_runs_generated_raw_to_receipt_flow():
         "electricity_kwh": 1200,
         "co2e_kg": 504.0,
     }
-    assert result.report.evidence_witnesses[0].source == (
+    assert result.report.evidence_refs[0].source == (
         "raw_sources/erp_electricity.csv"
     )
     assert tuple(
@@ -479,14 +479,14 @@ def test_tiny_pcf_scenario_rejects_tampered_projection_value():
 def test_tiny_pcf_scenario_preserves_traceable_domain_artifacts():
     result = run_tiny_pcf_scenario()
 
-    assert tuple(item.kind for item in result.report.resolved_obligations) == (
+    assert tuple(item.kind for item in result.report.resolved_validation_requirements) == (
         EXPECTED_RESOLVED_OBLIGATION_KINDS
     )
     assert tuple(
-        candidate.reference_id for candidate in result.report.reference_candidates
+        candidate.reference_id for candidate in result.report.reference_options
     ) == EXPECTED_REFERENCE_CANDIDATE_IDS
 
-    binding = result.report.reference_bindings[0]
+    binding = result.report.canonical_references[0]
     assert binding.reference_id == "pcf.factor.kr_grid_2024.location_based"
     assert binding.selected_candidate_id == (
         "keyword:pcf.factor.kr_grid_2024.location_based"
@@ -495,7 +495,7 @@ def test_tiny_pcf_scenario_preserves_traceable_domain_artifacts():
         (item.reference_id, item.reason) for item in binding.rejected_candidates
     ) == EXPECTED_REJECTED_CANDIDATES
 
-    derived = result.report.derived_claims[0]
+    derived = result.report.calculated_claims[0]
     assert derived.claim_id == "tiny-pcf:co2e_kg"
     assert derived.value == 504.0
     assert derived.trace.reference_binding_ids == ("bind-electricity-factor",)
@@ -565,15 +565,15 @@ def test_scenario_result_view_exposes_friendly_validation_summary():
     assert friendly["sections"] == [
         {
             "label_ko": "근거자료 위치",
-            "count": len(result.report.evidence_witnesses),
+            "count": len(result.report.evidence_refs),
         },
         {
             "label_ko": "확정 기준",
-            "count": len(result.report.reference_bindings),
+            "count": len(result.report.canonical_references),
         },
         {
             "label_ko": "계산값",
-            "count": len(result.report.derived_claims),
+            "count": len(result.report.calculated_claims),
         },
     ]
 
@@ -675,7 +675,7 @@ def test_tiny_pcf_scenario_exports_json_ready_viewer_payload():
 
     assert exported["scenario_id"] == "tiny_pcf.location_based_electricity.v1"
     assert exported["report"]["status"] == "accepted"
-    assert exported["report"]["reference_bindings"] == [
+    assert exported["report"]["canonical_references"] == [
         {
             "binding_id": "bind-electricity-factor",
             "reference_id": "pcf.factor.kr_grid_2024.location_based",

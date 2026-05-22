@@ -8,7 +8,7 @@ def test_validation_summary_view_uses_korean_labels_and_messages():
 
     report = ValidationReport(
         status="blocked",
-        obligations=(
+        validation_requirements=(
             ValidationRequirement(
                 kind="find_source_witness",
                 field="co2e_kg",
@@ -16,7 +16,7 @@ def test_validation_summary_view_uses_korean_labels_and_messages():
                 obligation_id="obl-1",
             ),
         ),
-        resolved_obligations=(
+        resolved_validation_requirements=(
             ValidationRequirement(
                 kind="unit_check",
                 field="electricity_mwh",
@@ -79,7 +79,7 @@ def test_validation_summary_view_falls_back_without_leaking_kernel_terms():
 
     report = ValidationReport(
         status="review_required",
-        obligations=(
+        validation_requirements=(
             ValidationRequirement(
                 kind="reference_search_required",
                 field="co2e_kg",

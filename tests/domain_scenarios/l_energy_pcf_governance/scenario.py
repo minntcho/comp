@@ -195,7 +195,7 @@ def run_l_energy_pcf_governance_scenario(
 
 def _projection_source(report) -> dict[str, object]:
     values = {claim.field: claim.value for claim in report.checked_claims}
-    values.update({claim.field: claim.value for claim in report.derived_claims})
+    values.update({claim.field: claim.value for claim in report.calculated_claims})
     return values
 
 
@@ -223,7 +223,7 @@ def _compile_retrieval_backed_report(
         criteria=criteria(),
         field=formula().output_field,
     )
-    binding = _binding_for(selected_report.reference_bindings, ELECTRICITY_BINDING_ID)
+    binding = _binding_for(selected_report.canonical_references, ELECTRICITY_BINDING_ID)
     resolved_report = selected_report
     if binding is not None:
         resolved_report = retry_blocked_calculation(
@@ -245,7 +245,7 @@ def _dependency_fingerprints(
     return _dependency_fingerprints_for_reference_ids(
         scenario_profile,
         pack,
-        tuple(candidate.reference_id for candidate in report.reference_candidates),
+        tuple(candidate.reference_id for candidate in report.reference_options),
     )
 
 

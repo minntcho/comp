@@ -61,7 +61,7 @@ def test_promotes_supported_raw_candidates_without_projection_authority():
     }
     assert tuple(
         (binding.binding_id, binding.reference_id, binding.reference_type)
-        for binding in report.reference_bindings
+        for binding in report.canonical_references
     ) == (
         (
             ALIAS_BINDING_ID,
@@ -79,13 +79,13 @@ def test_promotes_supported_raw_candidates_without_projection_authority():
             "physical_allocation_support",
         ),
     )
-    assert tuple(item.kind for item in report.resolved_obligations) == (
+    assert tuple(item.kind for item in report.resolved_validation_requirements) == (
         "site_alias_resolved",
         "unit_conversion_policy_applied",
         "period_validated",
         "physical_allocation_support_validated",
     )
-    assert tuple(claim.claim_id for claim in report.derived_claims) == (
+    assert tuple(claim.claim_id for claim in report.calculated_claims) == (
         ELECTRICITY_MWH_CLAIM_ID,
         ALLOCATION_SHARE_CLAIM_ID,
         ALLOCATED_ELECTRICITY_CLAIM_ID,
@@ -111,7 +111,7 @@ def test_promoted_report_can_commit_only_through_prepare_commit():
         profile_id=PROFILE_ID,
         dependency_fingerprints=tuple(
             evidence_ref_fingerprint(witness)
-            for witness in report.evidence_witnesses
+            for witness in report.evidence_refs
         ),
     )
 
@@ -200,5 +200,5 @@ def _acceptance_profile() -> SyntheticRawClaimPromotionProfile:
 
 def _projection_source(report):
     values = {claim.field: claim.value for claim in report.checked_claims}
-    values.update({claim.field: claim.value for claim in report.derived_claims})
+    values.update({claim.field: claim.value for claim in report.calculated_claims})
     return values

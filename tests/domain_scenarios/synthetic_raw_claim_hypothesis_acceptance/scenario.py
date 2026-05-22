@@ -89,7 +89,7 @@ def run_raw_claim_hypothesis_acceptance_scenario() -> DomainScenarioResult:
         profile_id=PROFILE_ID,
         dependency_fingerprints=tuple(
             evidence_ref_fingerprint(witness)
-            for witness in report.evidence_witnesses
+            for witness in report.evidence_refs
         ),
     )
     projection = None
@@ -172,7 +172,7 @@ def _acceptance_profile() -> SyntheticRawClaimPromotionProfile:
 
 def _projection_source(report) -> dict[str, object]:
     values = {claim.field: claim.value for claim in report.checked_claims}
-    values.update({claim.field: claim.value for claim in report.derived_claims})
+    values.update({claim.field: claim.value for claim in report.calculated_claims})
     return values
 
 

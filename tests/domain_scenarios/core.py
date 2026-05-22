@@ -124,22 +124,22 @@ def assert_scenario_contract(
             assert result.projection[key] == expected
 
     assert _contains_in_order(
-        tuple(item.kind for item in result.report.resolved_obligations),
+        tuple(item.kind for item in result.report.resolved_validation_requirements),
         contract.required_resolved_obligation_kinds,
     )
     assert _contains_in_order(
         tuple(
             candidate.reference_id
-            for candidate in result.report.reference_candidates
+            for candidate in result.report.reference_options
         ),
         contract.required_reference_candidate_ids,
     )
     assert _contains_in_order(
-        tuple(binding.binding_id for binding in result.report.reference_bindings),
+        tuple(binding.binding_id for binding in result.report.canonical_references),
         contract.required_reference_binding_ids,
     )
     assert _contains_in_order(
-        tuple(claim.claim_id for claim in result.report.derived_claims),
+        tuple(claim.claim_id for claim in result.report.calculated_claims),
         contract.required_derived_claim_ids,
     )
 

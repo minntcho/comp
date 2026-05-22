@@ -50,10 +50,10 @@ def build_commit_package(
 ) -> ReviewPackage:
     report_status = recompute_report_status(report)
     open_obligation_ids = tuple(
-        _obligation_id(obligation) for obligation in report.obligations
+        _obligation_id(obligation) for obligation in report.validation_requirements
     )
     has_open_blocking_obligation = any(
-        obligation.blocking for obligation in report.obligations
+        obligation.blocking for obligation in report.validation_requirements
     )
     hazard_ids = tuple(_hazard_id(hazard) for hazard in report.hazards)
 
@@ -67,20 +67,20 @@ def build_commit_package(
         ),
         semantic_judgment_ids=tuple(semantic_judgment_ids),
         reference_binding_ids=tuple(
-            binding.binding_id for binding in report.reference_bindings
+            binding.binding_id for binding in report.canonical_references
         ),
-        derived_claim_fields=tuple(claim.field for claim in report.derived_claims),
-        derived_claim_ids=tuple(claim.claim_id for claim in report.derived_claims),
+        derived_claim_fields=tuple(claim.field for claim in report.calculated_claims),
+        derived_claim_ids=tuple(claim.claim_id for claim in report.calculated_claims),
         calculation_trace_ids=tuple(
-            claim.trace.trace_id for claim in report.derived_claims
+            claim.trace.trace_id for claim in report.calculated_claims
         ),
-        formula_ids=_unique(claim.formula_id for claim in report.derived_claims),
+        formula_ids=_unique(claim.formula_id for claim in report.calculated_claims),
         projection_value_commitments=_projection_value_commitments(report),
         dependency_fingerprints=tuple(dependency_fingerprints),
         open_obligation_ids=open_obligation_ids,
         resolved_obligation_ids=tuple(
             _obligation_id(obligation)
-            for obligation in report.resolved_obligations
+            for obligation in report.resolved_validation_requirements
         ),
         hazard_ids=hazard_ids,
         profile_id=profile_id,
@@ -124,7 +124,7 @@ def _projection_value_commitments(
             source_id=claim.claim_id,
             value=claim.value,
         )
-        for claim in report.derived_claims
+        for claim in report.calculated_claims
     )
     return checked + derived
 

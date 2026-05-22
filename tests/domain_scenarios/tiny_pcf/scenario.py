@@ -97,7 +97,7 @@ def run_tiny_pcf_scenario() -> DomainScenarioResult:
 
 def _projection_source(report) -> dict[str, object]:
     values = {claim.field: claim.value for claim in report.checked_claims}
-    values.update({claim.field: claim.value for claim in report.derived_claims})
+    values.update({claim.field: claim.value for claim in report.calculated_claims})
     return values
 
 

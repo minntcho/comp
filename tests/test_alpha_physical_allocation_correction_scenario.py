@@ -37,7 +37,7 @@ def test_alpha_physical_allocation_binds_electricity_and_lng_factors():
 
     assert tuple(
         (binding.binding_id, binding.reference_id, binding.reference_type)
-        for binding in result.report.reference_bindings
+        for binding in result.report.canonical_references
     ) == (
         (ELECTRICITY_BINDING_ID, "platform.factor.electricity_mwh", "emission_factor"),
         (LNG_BINDING_ID, "platform.factor.lng_nm3", "emission_factor"),
@@ -54,10 +54,10 @@ def test_alpha_physical_allocation_commits_without_erasing_invalid_context():
 
     assert result.report.status == "accepted"
     assert result.report.failed_claims == ()
-    assert result.report.obligations == ()
+    assert result.report.validation_requirements == ()
     assert result.report.hazards == ()
     assert "source:alpha-metal-original-invalid-allocation" in tuple(
-        witness.witness_id for witness in result.report.evidence_witnesses
+        witness.witness_id for witness in result.report.evidence_refs
     )
     assert "revenue_share" not in tuple(
         claim.value for claim in result.report.checked_claims
@@ -99,7 +99,7 @@ def test_alpha_physical_allocation_scenario_is_registered_with_contract():
 
 
 def _trace_for(result, claim_id):
-    for claim in result.report.derived_claims:
+    for claim in result.report.calculated_claims:
         if claim.claim_id == claim_id:
             return claim.trace
     raise AssertionError(f"missing derived claim: {claim_id}")

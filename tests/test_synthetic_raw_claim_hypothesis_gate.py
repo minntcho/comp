@@ -28,16 +28,16 @@ def test_raw_claim_hypotheses_are_candidates_not_authority():
         ("allocation_share", 0.5, "llm_extractor_candidate"),
     )
     assert result.report.checked_claims == ()
-    assert result.report.reference_bindings == ()
-    assert result.report.derived_claims == ()
+    assert result.report.canonical_references == ()
+    assert result.report.calculated_claims == ()
 
 
-def test_raw_evidence_witnesses_are_preserved_and_fingerprinted():
+def test_raw_evidence_refs_are_preserved_and_fingerprinted():
     result = run_raw_claim_hypothesis_gate_scenario()
 
     assert tuple(
         (witness.witness_id, witness.source, witness.span, witness.text)
-        for witness in result.report.evidence_witnesses
+        for witness in result.report.evidence_refs
     ) == (
         (
             "w-email-electricity-march",
@@ -48,7 +48,7 @@ def test_raw_evidence_witnesses_are_preserved_and_fingerprinted():
     )
     assert result.preparation.package.dependency_fingerprints == tuple(
         evidence_ref_fingerprint(witness)
-        for witness in result.report.evidence_witnesses
+        for witness in result.report.evidence_refs
     )
 
 

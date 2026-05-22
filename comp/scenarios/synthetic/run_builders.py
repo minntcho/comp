@@ -45,10 +45,10 @@ def build_synthetic_pcf_smoke_run(config: SyntheticScenarioConfig) -> SyntheticR
         raw_sources=SyntheticRawSources(electricity_rows=(raw_row,)),
         oracle=SyntheticOracle(
             expected_claims=(expected_claim,),
-            expected_derived_claims=(
+            expected_calculated_claims=(
                 co2e_expected_calculated_claim(config, derived_value),
             ),
-            expected_obligations=(),
+            expected_validation_requirements=(),
             expected_hazards=(),
             expected_failed_claims=(),
             injected_anomalies=(),
@@ -93,17 +93,17 @@ def build_synthetic_pcf_resolution_run(
                     unit=resolution.resolved_value,
                 ),
             ),
-            expected_derived_claims=(
+            expected_calculated_claims=(
                 co2e_expected_calculated_claim(config, derived_value),
             ),
-            expected_obligations=(),
+            expected_validation_requirements=(),
             expected_hazards=(),
             expected_failed_claims=(),
             injected_anomalies=(missing_unit["anomaly"],),
             source_to_expected_claim_map=(
                 electricity_source_map(config.input_claim_id, raw_row),
             ),
-            expected_resolved_obligations=(
+            expected_resolved_validation_requirements=(
                 resolved_obligation,
                 ExpectedObligation(
                     obligation_id=reference_search_obligation_id(config),
@@ -173,8 +173,8 @@ def build_synthetic_pcf_anomaly_run(
         raw_sources=SyntheticRawSources(electricity_rows=rows),
         oracle=SyntheticOracle(
             expected_claims=expected_claims,
-            expected_derived_claims=(),
-            expected_obligations=tuple(spec["obligation"] for spec in specs),
+            expected_calculated_claims=(),
+            expected_validation_requirements=tuple(spec["obligation"] for spec in specs),
             expected_hazards=tuple(
                 spec["hazard"] for spec in specs if spec["hazard"] is not None
             ),
