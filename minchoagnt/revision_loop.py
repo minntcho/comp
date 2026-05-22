@@ -155,6 +155,19 @@ class RevisionIteration:
     reflection: ObligationReflection
     revision: RevisedHypothesis
     result: CompCompileResult
+    work_items: tuple[RevisionWorkItem, ...] = field(default_factory=tuple)
+    worker_results: tuple[RevisionWorkerResult, ...] = field(default_factory=tuple)
+
+
+@dataclass(frozen=True)
+class RevisionAttempt:
+    revision_index: int
+    source: CompCompileResult
+    reflection: ObligationReflection
+    work_items: tuple[RevisionWorkItem, ...] = field(default_factory=tuple)
+    worker_results: tuple[RevisionWorkerResult, ...] = field(default_factory=tuple)
+    revision: RevisedHypothesis | None = None
+    result: CompCompileResult | None = None
 
 
 @dataclass(frozen=True)
@@ -163,6 +176,7 @@ class LoopTrace:
     iterations: tuple[RevisionIteration, ...] = field(default_factory=tuple)
     stop_reason: RevisionStopReason = "accepted"
     receipt: None = None
+    attempts: tuple[RevisionAttempt, ...] = field(default_factory=tuple)
 
     @property
     def final(self) -> CompCompileResult:
@@ -304,6 +318,7 @@ def deterministic_revision_loop(
     hypothesis: InterpretationHypothesis,
     *,
     fixture_rules: tuple[WitnessFixtureRule, ...] = (),
+    revision_worker: DeterministicRevisionWorker | None = None,
     max_revisions: int = 1,
 ) -> LoopTrace:
     if max_revisions < 0:
@@ -312,6 +327,7 @@ def deterministic_revision_loop(
     initial = adapter.compile(hypothesis)
     current = initial
     iterations: list[RevisionIteration] = []
+    attempts: list[RevisionAttempt] = []
     stop_reason: RevisionStopReason = "accepted"
 
     for revision_index in range(1, max_revisions + 1):
@@ -320,12 +336,32 @@ def deterministic_revision_loop(
             break
 
         reflection = obligation_reflection(current.report)
+        work_items = revision_work_items_from_reflection(reflection)
+        worker_results: tuple[RevisionWorkerResult, ...] = ()
+        revision_fixture_rules = fixture_rules
+        if revision_worker is not None:
+            worker_results = tuple(revision_worker.run(item) for item in work_items)
+            revision_fixture_rules = (
+                fixture_rules
+                + fixture_rules_from_revision_worker_results(worker_results)
+            )
         revision = revised_hypothesis_fixture(
             current.hypothesis,
             reflection,
-            fixture_rules=fixture_rules,
+            fixture_rules=revision_fixture_rules,
         )
         if not revision.applied_requirement_ids:
+            attempts.append(
+                RevisionAttempt(
+                    revision_index=revision_index,
+                    source=current,
+                    reflection=reflection,
+                    work_items=work_items,
+                    worker_results=worker_results,
+                    revision=revision,
+                    result=None,
+                )
+            )
             stop_reason = "no_revision"
             break
 
@@ -336,6 +372,19 @@ def deterministic_revision_loop(
             reflection=reflection,
             revision=revision,
             result=revised,
+            work_items=work_items,
+            worker_results=worker_results,
+        )
+        attempts.append(
+            RevisionAttempt(
+                revision_index=revision_index,
+                source=current,
+                reflection=reflection,
+                work_items=work_items,
+                worker_results=worker_results,
+                revision=revision,
+                result=revised,
+            )
         )
         iterations.append(iteration)
         current = revised
@@ -350,6 +399,7 @@ def deterministic_revision_loop(
     return LoopTrace(
         initial=initial,
         iterations=tuple(iterations),
+        attempts=tuple(attempts),
         stop_reason=stop_reason,
         receipt=None,
     )
@@ -369,6 +419,7 @@ __all__ = [
     "DeterministicRevisionWorker",
     "LoopTrace",
     "ObligationReflection",
+    "RevisionAttempt",
     "RevisionAbstention",
     "RevisedHypothesis",
     "RevisionStopReason",
