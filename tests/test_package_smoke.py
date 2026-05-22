@@ -915,7 +915,8 @@ def test_artifact_envelope_builder_contract_separates_coverage_from_materializat
         "It must not accept `ValidationReport`, `CommitPreparation`, or `EvidenceRef` as direct inputs.",
         "A compiler-run materializer may read compiler objects and produce artifact material.",
         "The materializer is outside `comp.persistence` and must not mint receipts, discharge requirements, or decide projection authority.",
-        "Production code should generalize the materializer contract without making scenario fixtures authoritative.",
+        "Domain Scenario Lab replay uses the production compiler-run materializer boundary.",
+        "Scenario fixture material must remain external material, not builder policy.",
         "## Current Implementation Status",
         "`comp.persistence.envelope_builder`",
         "`build_receipt_envelope_set(...)`",
@@ -936,6 +937,8 @@ def test_artifact_envelope_builder_contract_separates_coverage_from_materializat
         "This document defines the contract for turning a completed compiler run into",
         "The production builder should accept the smallest set that can explain a",
         "compiler-aware materializer remains a later adapter slice",
+        "The current Domain Scenario Lab already has a fixture-shaped version",
+        "Production code should generalize the materializer contract",
     ):
         assert stale_line not in builder_doc
 
