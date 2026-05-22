@@ -120,7 +120,7 @@ def render_scenario_summary(
         f"Title: {scenario.title}",
         f"Status: {result.report.status}",
         f"Commit: {result.preparation.decision.status}",
-        f"Projection: {'present' if result.projection is not None else 'absent'}",
+        f"Public output: {'present' if result.projection is not None else 'absent'}",
         "",
     ]
     lines.extend(_render_validation_summary_lines(validation_summary))
@@ -184,6 +184,9 @@ def _render_validation_summary_lines(summary: dict[str, Any]) -> list[str]:
     lines.append(f"- 보완 필요 항목: {len(open_requirements)}")
     for requirement in open_requirements:
         lines.append(f"  - {requirement['field']}: {requirement['message_ko']}")
+        action = requirement.get("action_ko")
+        if action:
+            lines.append(f"    조치: {action}")
     lines.append("")
     return lines
 
