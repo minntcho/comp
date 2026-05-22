@@ -99,6 +99,22 @@ def test_synthetic_resolution_oracle_expectations_live_outside_run_builders_modu
     )
 
 
+def test_synthetic_anomaly_oracle_lives_outside_run_builders_module() -> None:
+    from comp.scenarios.synthetic.anomaly_specs import anomaly_specs
+    from comp.scenarios.synthetic.oracle import expected_anomaly_oracle
+    from comp.scenarios.synthetic.run_builders import build_synthetic_pcf_anomaly_run
+
+    config = SyntheticScenarioConfig.pcf_anomaly(seed=11)
+    specs = anomaly_specs(config)
+    run = build_synthetic_pcf_anomaly_run(config)
+
+    assert expected_anomaly_oracle.__module__ == "comp.scenarios.synthetic.oracle"
+    assert build_synthetic_pcf_anomaly_run.__globals__["expected_anomaly_oracle"] is (
+        expected_anomaly_oracle
+    )
+    assert run.oracle == expected_anomaly_oracle(specs)
+
+
 def test_synthetic_anomaly_specs_live_outside_generator_module() -> None:
     from comp.scenarios.synthetic.anomaly_specs import (
         anomaly_specs,

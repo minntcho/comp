@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from typing import Any
+
 from comp.scenarios.synthetic.config import SyntheticScenarioConfig
 from comp.scenarios.synthetic.models import (
     ExpectedArtifactRef,
@@ -7,7 +9,12 @@ from comp.scenarios.synthetic.models import (
     ExpectedObligation,
     ExpectedReceipt,
     ExpectedResolutionArtifact,
+    SyntheticOracle,
     SyntheticResolutionArtifact,
+)
+from comp.scenarios.synthetic.pcf_fixtures import (
+    electricity_expected_claim,
+    electricity_source_map,
 )
 from comp.scenarios.synthetic.sources import synthetic_source_dependency_refs
 
@@ -82,6 +89,39 @@ def synthetic_manifest_dependency_id(config: SyntheticScenarioConfig) -> str:
     return f"synthetic_manifest:{config.scenario_id}:seed-{config.seed}"
 
 
+def expected_anomaly_oracle(specs: tuple[dict[str, Any], ...]) -> SyntheticOracle:
+    rows = tuple(spec["row"] for spec in specs)
+    expected_claims = tuple(
+        electricity_expected_claim(
+            f"synthetic-pcf-anomaly:{row.source_row_id}:electricity_kwh",
+            row,
+        )
+        for row in rows
+        if float(row.amount) >= 0
+    )
+    expected_maps = tuple(
+        electricity_source_map(
+            f"synthetic-pcf-anomaly:{row.source_row_id}:electricity_kwh",
+            row,
+        )
+        for row in rows
+        if float(row.amount) >= 0
+    )
+    return SyntheticOracle(
+        expected_claims=expected_claims,
+        expected_calculated_claims=(),
+        expected_validation_requirements=tuple(spec["obligation"] for spec in specs),
+        expected_hazards=tuple(
+            spec["hazard"] for spec in specs if spec["hazard"] is not None
+        ),
+        expected_failed_claims=tuple(
+            spec["failed_claim"] for spec in specs if spec["failed_claim"] is not None
+        ),
+        injected_anomalies=tuple(spec["anomaly"] for spec in specs),
+        source_to_expected_claim_map=expected_maps,
+    )
+
+
 def expected_reference_search_obligation(
     config: SyntheticScenarioConfig,
 ) -> ExpectedObligation:
@@ -134,6 +174,7 @@ def calculation_obligation_id(config: SyntheticScenarioConfig) -> str:
 
 __all__ = [
     "calculation_obligation_id",
+    "expected_anomaly_oracle",
     "expected_calculation_obligation",
     "expected_reference_search_obligation",
     "expected_resolution_artifact",
