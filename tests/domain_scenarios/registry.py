@@ -112,6 +112,24 @@ _SYNTHETIC_PCF_DOWNSTREAM_IDS = frozenset(
 _DOWNSTREAM_CANDIDATE_IDS = (
     _LARGE_DOMAIN_DOWNSTREAM_IDS | _SYNTHETIC_PCF_DOWNSTREAM_IDS
 )
+_ROLLUP_EXTERNAL_PACK_IDS = {
+    STEEL_FRAME_PROXY_SCENARIO.scenario_id: (
+        "l_energy_steel_frame_proxy_assignment"
+    ),
+    CARBON_TECH_CERTIFICATE_SCENARIO.scenario_id: (
+        "l_energy_carbon_tech_certificate_submission"
+    ),
+    L_MATERIALS_COMPOSITION_SCENARIO.scenario_id: (
+        "l_energy_l_materials_composition_rollup"
+    ),
+    C_PACK_YIELD_ROLLUP_SCENARIO.scenario_id: "l_energy_c_pack_yield_rollup",
+    TIER0_PHYSICAL_ALLOCATION_SCENARIO.scenario_id: (
+        "l_energy_tier0_physical_allocation"
+    ),
+    FINAL_BOTTOM_UP_ROLLUP_SCENARIO.scenario_id: (
+        "l_energy_final_bottom_up_pcf_rollup"
+    ),
+}
 
 
 def _scenario_residency_for(scenario_id: str) -> ScenarioResidency:
@@ -139,6 +157,19 @@ def _scenario_residency_for(scenario_id: str) -> ScenarioResidency:
                 "accepted large domain workflow fixture has a seeded downstream "
                 "canonical bundle but remains internal until parallel validation "
                 "covers the same trust meaning"
+            ),
+        )
+    if scenario_id in _ROLLUP_EXTERNAL_PACK_IDS:
+        return ScenarioResidency(
+            tier="downstream-candidate",
+            target_pack="comp-scenario-packs",
+            external_pack_id=_ROLLUP_EXTERNAL_PACK_IDS[scenario_id],
+            external_contract_id="canonical_projection_smoke",
+            cutover_state="parallel-validation",
+            reason=(
+                "accepted large domain workflow rollup-chain fixture has a seeded "
+                "downstream canonical bundle but remains internal until "
+                "parallel validation covers the same trust meaning"
             ),
         )
     if scenario_id == L_ENERGY_PCF_GOVERNANCE_SCENARIO.scenario_id:

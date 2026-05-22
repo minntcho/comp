@@ -8,6 +8,25 @@ from tests.domain_scenarios.registry import (
     scenario_residency,
 )
 
+ROLLUP_EXTERNAL_PACKS = {
+    "l_energy.steel_frame_proxy_assignment.v1": (
+        "l_energy_steel_frame_proxy_assignment"
+    ),
+    "l_energy.carbon_tech_certificate_submission.v1": (
+        "l_energy_carbon_tech_certificate_submission"
+    ),
+    "l_energy.l_materials_composition_rollup.v1": (
+        "l_energy_l_materials_composition_rollup"
+    ),
+    "l_energy.c_pack_yield_rollup.v1": "l_energy_c_pack_yield_rollup",
+    "l_energy.tier0_physical_allocation.v1": (
+        "l_energy_tier0_physical_allocation"
+    ),
+    "l_energy.final_bottom_up_pcf_rollup.v1": (
+        "l_energy_final_bottom_up_pcf_rollup"
+    ),
+}
+
 
 def test_domain_scenario_registry_marks_core_and_downstream_candidate_sets():
     registered_ids = {scenario.scenario_id for scenario in registered_scenarios()}
@@ -70,7 +89,10 @@ def test_downstream_candidate_cutover_metadata_tracks_external_coverage():
     accepted_allocation = scenario_residency(
         "l_energy.alpha_physical_allocation_correction.v1"
     )
-    l_energy_rollup = scenario_residency("l_energy.final_bottom_up_pcf_rollup.v1")
+    rollup_residencies = {
+        scenario_id: scenario_residency(scenario_id)
+        for scenario_id in ROLLUP_EXTERNAL_PACKS
+    }
     synthetic = scenario_residency("synthetic_pcf.smoke.v1")
     raw_claim = scenario_residency(
         "synthetic.raw_claim_conflict_resolution.v1"
@@ -100,9 +122,13 @@ def test_downstream_candidate_cutover_metadata_tracks_external_coverage():
     assert accepted_allocation.external_contract_id == "canonical_projection_smoke"
     assert accepted_allocation.cutover_state == "parallel-validation"
 
-    assert l_energy_rollup.tier == "downstream-candidate"
-    assert l_energy_rollup.external_pack_id is None
-    assert l_energy_rollup.cutover_state == "pending-external-coverage"
+    for scenario_id, external_pack_id in ROLLUP_EXTERNAL_PACKS.items():
+        residency = rollup_residencies[scenario_id]
+        assert residency.tier == "downstream-candidate"
+        assert residency.target_pack == "comp-scenario-packs"
+        assert residency.external_pack_id == external_pack_id
+        assert residency.external_contract_id == "canonical_projection_smoke"
+        assert residency.cutover_state == "parallel-validation"
 
     assert synthetic.tier == "downstream-candidate"
     assert synthetic.external_pack_id is None
@@ -131,6 +157,8 @@ def test_domain_scenario_docs_explain_residency_tiers():
     assert "public_projection_smoke" in extension_doc
     assert "l_energy_alpha_invalid_allocation_rfi" in extension_doc
     assert "l_energy_alpha_physical_allocation_correction" in extension_doc
+    for external_pack_id in ROLLUP_EXTERNAL_PACKS.values():
+        assert external_pack_id in extension_doc
     assert "registry exposes residency metadata" in extension_doc
     assert "Scenario replay uses the production materializer boundary" in readme
     assert "materialize_compiler_run_artifacts(...)" in readme
@@ -202,10 +230,64 @@ def test_downstream_registry_records_active_pack_cutover_state():
             ],
         },
         {
+            "id": "l_energy_c_pack_yield_rollup",
+            "status": "seed",
+            "scope": "large-domain-and-product-e2e",
+            "cutover_state": "parallel-validation",
+            "covers_comp_scenario_ids": [
+                "l_energy.c_pack_yield_rollup.v1"
+            ],
+        },
+        {
+            "id": "l_energy_carbon_tech_certificate_submission",
+            "status": "seed",
+            "scope": "large-domain-and-product-e2e",
+            "cutover_state": "parallel-validation",
+            "covers_comp_scenario_ids": [
+                "l_energy.carbon_tech_certificate_submission.v1"
+            ],
+        },
+        {
+            "id": "l_energy_final_bottom_up_pcf_rollup",
+            "status": "seed",
+            "scope": "large-domain-and-product-e2e",
+            "cutover_state": "parallel-validation",
+            "covers_comp_scenario_ids": [
+                "l_energy.final_bottom_up_pcf_rollup.v1"
+            ],
+        },
+        {
+            "id": "l_energy_l_materials_composition_rollup",
+            "status": "seed",
+            "scope": "large-domain-and-product-e2e",
+            "cutover_state": "parallel-validation",
+            "covers_comp_scenario_ids": [
+                "l_energy.l_materials_composition_rollup.v1"
+            ],
+        },
+        {
             "id": "l_energy_pcf_governance",
             "status": "seed",
             "scope": "large-domain-and-product-e2e",
             "cutover_state": "parallel-validation",
             "covers_comp_scenario_ids": ["l_energy_pcf_governance.v1"],
+        },
+        {
+            "id": "l_energy_steel_frame_proxy_assignment",
+            "status": "seed",
+            "scope": "large-domain-and-product-e2e",
+            "cutover_state": "parallel-validation",
+            "covers_comp_scenario_ids": [
+                "l_energy.steel_frame_proxy_assignment.v1"
+            ],
+        },
+        {
+            "id": "l_energy_tier0_physical_allocation",
+            "status": "seed",
+            "scope": "large-domain-and-product-e2e",
+            "cutover_state": "parallel-validation",
+            "covers_comp_scenario_ids": [
+                "l_energy.tier0_physical_allocation.v1"
+            ],
         },
     ]
