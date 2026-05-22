@@ -44,6 +44,22 @@ class ObligationReflection:
 
 
 @dataclass(frozen=True)
+class RevisionWorkItem:
+    work_item_id: str
+    requirement_id: str
+    task_kind: str
+    field: str
+    reason: str
+    allowed_actions: tuple[str, ...] = field(default_factory=tuple)
+    forbidden_outputs: tuple[str, ...] = field(default_factory=tuple)
+    expected_artifacts: tuple[str, ...] = field(default_factory=tuple)
+
+    @property
+    def can_authorize_public_projection(self) -> bool:
+        return False
+
+
+@dataclass(frozen=True)
 class RevisedHypothesis:
     source_hypothesis_id: str
     hypothesis: InterpretationHypothesis
@@ -98,6 +114,31 @@ def obligation_reflection(report: ValidationReport) -> ObligationReflection:
         status=report.status,
         witness_requests=tuple(witness_requests),
         unhandled_requirement_ids=tuple(unhandled_requirement_ids),
+    )
+
+
+def revision_work_items_from_reflection(
+    reflection: ObligationReflection,
+) -> tuple[RevisionWorkItem, ...]:
+    return tuple(
+        RevisionWorkItem(
+            work_item_id=f"revision-work-item:{request.requirement_id}",
+            requirement_id=request.requirement_id,
+            task_kind="attach_source_witness",
+            field=request.field,
+            reason=request.reason,
+            allowed_actions=(
+                "attach_grounded_witness",
+                "abstain_with_reason",
+            ),
+            forbidden_outputs=(
+                "create_reference_binding",
+                "create_commit_receipt",
+                "build_public_output",
+            ),
+            expected_artifacts=("evidence_witness", "abstention"),
+        )
+        for request in reflection.witness_requests
     )
 
 
@@ -236,9 +277,11 @@ __all__ = [
     "RevisedHypothesis",
     "RevisionStopReason",
     "RevisionIteration",
+    "RevisionWorkItem",
     "WitnessFixtureRule",
     "WitnessRequest",
     "deterministic_revision_loop",
     "obligation_reflection",
+    "revision_work_items_from_reflection",
     "revised_hypothesis_fixture",
 ]

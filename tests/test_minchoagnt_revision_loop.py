@@ -9,10 +9,12 @@ from minchoagnt import (
     ObligationReflection,
     RevisedHypothesis,
     RevisionIteration,
+    RevisionWorkItem,
     WitnessFixtureRule,
     WitnessRequest,
     deterministic_revision_loop,
     obligation_reflection,
+    revision_work_items_from_reflection,
     revised_hypothesis_fixture,
 )
 
@@ -40,6 +42,41 @@ def test_obligation_reflection_extracts_missing_source_witness_request():
         ),
         unhandled_requirement_ids=(),
     )
+
+
+def test_missing_source_witness_reflection_becomes_revision_work_item():
+    result = _adapter().compile(_missing_unit_witness_hypothesis())
+    reflection = obligation_reflection(result.report)
+
+    work_items = revision_work_items_from_reflection(reflection)
+
+    assert work_items == (
+        RevisionWorkItem(
+            work_item_id=(
+                "revision-work-item:"
+                "validation_requirement:find_source_witness:"
+                "unit:missing_source_witness"
+            ),
+            requirement_id=(
+                "validation_requirement:find_source_witness:"
+                "unit:missing_source_witness"
+            ),
+            task_kind="attach_source_witness",
+            field="unit",
+            reason="missing_source_witness",
+            allowed_actions=(
+                "attach_grounded_witness",
+                "abstain_with_reason",
+            ),
+            forbidden_outputs=(
+                "create_reference_binding",
+                "create_commit_receipt",
+                "build_public_output",
+            ),
+            expected_artifacts=("evidence_witness", "abstention"),
+        ),
+    )
+    assert work_items[0].can_authorize_public_projection is False
 
 
 def test_revised_hypothesis_fixture_adds_grounded_witness_without_mutating_source():
@@ -157,6 +194,7 @@ def test_unsupported_unit_reflection_stays_unhandled():
     assert reflection.unhandled_requirement_ids == (
         "validation_requirement:find_source_witness:unit:unsupported_unit",
     )
+    assert revision_work_items_from_reflection(reflection) == ()
     assert revision.hypothesis == hypothesis
     assert revision.applied_requirement_ids == ()
 
