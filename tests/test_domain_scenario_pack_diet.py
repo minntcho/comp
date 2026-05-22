@@ -134,7 +134,8 @@ def test_domain_scenario_docs_explain_residency_tiers():
     assert "registry exposes residency metadata" in extension_doc
     assert "Scenario replay uses the production materializer boundary" in readme
     assert "materialize_compiler_run_artifacts(...)" in readme
-    assert "should not construct `ArtifactEnvelope` objects directly" in readme
+    assert "ExternalArtifactMaterialSource" in readme
+    assert "not construct\n`ArtifactEnvelope` objects directly" in readme
 
 
 def test_domain_scenario_replay_uses_production_materializer_boundary():
@@ -144,7 +145,8 @@ def test_domain_scenario_replay_uses_production_materializer_boundary():
 
     assert "materialize_compiler_run_artifacts" in source
     assert "build_receipt_envelope_set" in source
-    assert "external_artifact_bodies=_scenario_external_artifact_bodies(result)" in source
+    assert "ExternalArtifactMaterialSource.from_bodies" in source
+    assert "external_material_source=" in source
 
     for stale_policy in (
         "ArtifactEnvelope.from_body(",
@@ -152,6 +154,7 @@ def test_domain_scenario_replay_uses_production_materializer_boundary():
         "evidence_ref_fingerprint",
         "_artifact_envelope_for_ref",
         "_artifact_body_for_ref",
+        "external_artifact_bodies=",
     ):
         assert stale_policy not in source
 

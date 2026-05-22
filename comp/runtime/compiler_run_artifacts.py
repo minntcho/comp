@@ -1,6 +1,7 @@
 from __future__ import annotations
 
-from collections.abc import Mapping
+from collections.abc import Iterable, Mapping
+from dataclasses import dataclass, field
 from typing import Any
 
 from comp.compiler_tool import (
@@ -15,11 +16,58 @@ class CompilerRunArtifactMaterializationError(RuntimeError):
     """Raised when a compiler run cannot be serialized into artifact material."""
 
 
+@dataclass(frozen=True)
+class ExternalArtifactMaterial:
+    artifact_kind: str
+    artifact_id: str
+    body: Mapping[str, Any]
+
+    @property
+    def key(self) -> tuple[str, str]:
+        return (self.artifact_kind, self.artifact_id)
+
+
+@dataclass(frozen=True)
+class ExternalArtifactMaterialSource:
+    materials: tuple[ExternalArtifactMaterial, ...] = field(default_factory=tuple)
+
+    def __init__(
+        self,
+        materials: Iterable[ExternalArtifactMaterial] = (),
+    ) -> None:
+        material_tuple = tuple(materials)
+        object.__setattr__(self, "materials", material_tuple)
+        object.__setattr__(self, "_bodies", _external_bodies_by_key(material_tuple))
+
+    @classmethod
+    def from_bodies(
+        cls,
+        bodies: Mapping[tuple[str, str], Mapping[str, Any]],
+    ) -> "ExternalArtifactMaterialSource":
+        return cls(
+            ExternalArtifactMaterial(
+                artifact_kind=artifact_kind,
+                artifact_id=artifact_id,
+                body=body,
+            )
+            for (artifact_kind, artifact_id), body in bodies.items()
+        )
+
+    def body_for(self, ref: ArtifactRef) -> Mapping[str, Any]:
+        try:
+            return dict(self._bodies[(ref.artifact_kind, ref.artifact_id)])
+        except KeyError as exc:
+            raise CompilerRunArtifactMaterializationError(
+                "Compiler run artifact materialization missing external artifact body: "
+                f"{ref.artifact_kind}:{ref.artifact_id}."
+            ) from exc
+
+
 def materialize_compiler_run_artifacts(
     report: ValidationReport,
     preparation: CommitPreparation,
     *,
-    external_artifact_bodies: Mapping[tuple[str, str], Mapping[str, Any]] | None = None,
+    external_material_source: ExternalArtifactMaterialSource | None = None,
     schema_version: str = "compiler-run-v1",
 ) -> tuple[ArtifactMaterial, ...]:
     receipt = preparation.receipt
@@ -28,13 +76,17 @@ def materialize_compiler_run_artifacts(
             "Compiler run artifact materialization requires a receipt."
         )
 
-    external_bodies = external_artifact_bodies or {}
+    material_source = (
+        external_material_source
+        if external_material_source is not None
+        else ExternalArtifactMaterialSource()
+    )
     return tuple(
         ArtifactMaterial(
             artifact_id=ref.artifact_id,
             artifact_kind=ref.artifact_kind,
             schema_version=schema_version,
-            body=_artifact_body_for_ref(report, preparation, external_bodies, ref),
+            body=_artifact_body_for_ref(report, preparation, material_source, ref),
         )
         for ref in receipt_artifact_refs(receipt)
     )
@@ -43,7 +95,7 @@ def materialize_compiler_run_artifacts(
 def _artifact_body_for_ref(
     report: ValidationReport,
     preparation: CommitPreparation,
-    external_artifact_bodies: Mapping[tuple[str, str], Mapping[str, Any]],
+    external_material_source: ExternalArtifactMaterialSource,
     ref: ArtifactRef,
 ) -> Mapping[str, Any]:
     if ref.artifact_kind == "commit_package":
@@ -96,7 +148,7 @@ def _artifact_body_for_ref(
     if ref.artifact_kind == "evidence_witness":
         witness = _evidence_witness_by_id(report, ref.artifact_id)
         if witness is None:
-            return _external_body(ref, external_artifact_bodies)
+            return external_material_source.body_for(ref)
         fingerprint = evidence_ref_fingerprint(witness)
         return {
             "dependency_kind": fingerprint.dependency_kind,
@@ -171,20 +223,24 @@ def _artifact_body_for_ref(
                 if claim.formula_id == ref.artifact_id
             ),
         }
-    return _external_body(ref, external_artifact_bodies)
+    return external_material_source.body_for(ref)
 
 
-def _external_body(
-    ref: ArtifactRef,
-    external_artifact_bodies: Mapping[tuple[str, str], Mapping[str, Any]],
-) -> Mapping[str, Any]:
-    try:
-        return dict(external_artifact_bodies[(ref.artifact_kind, ref.artifact_id)])
-    except KeyError as exc:
-        raise CompilerRunArtifactMaterializationError(
-            "Compiler run artifact materialization missing external artifact body: "
-            f"{ref.artifact_kind}:{ref.artifact_id}."
-        ) from exc
+def _external_bodies_by_key(
+    materials: tuple[ExternalArtifactMaterial, ...],
+) -> dict[tuple[str, str], Mapping[str, Any]]:
+    bodies: dict[tuple[str, str], Mapping[str, Any]] = {}
+    for material in materials:
+        existing = bodies.get(material.key)
+        if existing is None:
+            bodies[material.key] = dict(material.body)
+            continue
+        if existing != dict(material.body):
+            raise CompilerRunArtifactMaterializationError(
+                "Compiler run artifact materialization has conflicting external "
+                f"material: {material.artifact_kind}:{material.artifact_id}."
+            )
+    return bodies
 
 
 def _projection_value_commitment_body(commitment) -> dict[str, str]:
@@ -242,5 +298,7 @@ def _by_id(items, item_id: str, field: str):
 
 __all__ = [
     "CompilerRunArtifactMaterializationError",
+    "ExternalArtifactMaterial",
+    "ExternalArtifactMaterialSource",
     "materialize_compiler_run_artifacts",
 ]

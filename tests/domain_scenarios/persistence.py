@@ -13,7 +13,10 @@ from comp.persistence import (
     build_receipt_envelope_set,
     replay_public_projection,
 )
-from comp.runtime import materialize_compiler_run_artifacts
+from comp.runtime import (
+    ExternalArtifactMaterialSource,
+    materialize_compiler_run_artifacts,
+)
 from tests.domain_scenarios.core import DomainScenarioResult
 
 
@@ -37,7 +40,9 @@ def scenario_replay_bundle(
     materials = materialize_compiler_run_artifacts(
         result.report,
         result.preparation,
-        external_artifact_bodies=_scenario_external_artifact_bodies(result),
+        external_material_source=ExternalArtifactMaterialSource.from_bodies(
+            _scenario_external_artifact_bodies(result)
+        ),
         schema_version="domain-scenario-v1",
     )
     for envelope in build_receipt_envelope_set(receipt, materials):

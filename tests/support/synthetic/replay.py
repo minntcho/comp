@@ -16,7 +16,10 @@ from comp.persistence import (
     build_receipt_envelope_set,
     replay_public_projection,
 )
-from comp.runtime import materialize_compiler_run_artifacts
+from comp.runtime import (
+    ExternalArtifactMaterialSource,
+    materialize_compiler_run_artifacts,
+)
 
 
 @dataclass(frozen=True)
@@ -38,7 +41,9 @@ def synthetic_replay_bundle(
     materials = materialize_compiler_run_artifacts(
         report,
         preparation,
-        external_artifact_bodies=dependency_artifact_bodies,
+        external_material_source=ExternalArtifactMaterialSource.from_bodies(
+            dependency_artifact_bodies
+        ),
         schema_version="synthetic-scenario-v1",
     )
     build_receipt_envelope_set(receipt, materials, record_to=artifacts)

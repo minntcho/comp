@@ -921,8 +921,11 @@ def test_artifact_envelope_builder_contract_separates_coverage_from_materializat
         "`build_receipt_envelope_set(...)`",
         "`comp.runtime.compiler_run_artifacts`",
         "`materialize_compiler_run_artifacts(...)`",
+        "`ExternalArtifactMaterialSource`",
+        "not an authority source",
         "It must not mint receipts, call `build_public_output(...)`, record",
         "Domain Scenario Lab replay must exercise the same path:",
+        "must pass them through `ExternalArtifactMaterialSource`",
         "must not recreate `ArtifactEnvelope` construction or receipt-ref coverage",
         "`tests/test_artifact_envelope_builder.py`",
         "`tests/test_compiler_run_artifact_materializer.py`",
@@ -997,6 +1000,8 @@ def test_pyproject_packages_comp_core_scenarios_and_agent_layer():
     )
     from comp.runtime import (
         CompilerRunArtifactMaterializationError,
+        ExternalArtifactMaterial,
+        ExternalArtifactMaterialSource,
         TrustRuntime,
         materialize_compiler_run_artifacts,
     )
@@ -1058,6 +1063,8 @@ def test_pyproject_packages_comp_core_scenarios_and_agent_layer():
     assert replay_public_projection is not None
     assert verify_materialized_public_projection is not None
     assert CompilerRunArtifactMaterializationError is not None
+    assert ExternalArtifactMaterial is not None
+    assert ExternalArtifactMaterialSource is not None
     assert TrustRuntime is not None
     assert materialize_compiler_run_artifacts is not None
 

@@ -501,13 +501,19 @@ It exposes:
 
 ```text
 CompilerRunArtifactMaterializationError
+ExternalArtifactMaterial
+ExternalArtifactMaterialSource
 materialize_compiler_run_artifacts(...)
 ```
 
 `materialize_compiler_run_artifacts(...)` consumes `ValidationReport`,
-`CommitPreparation`, and externally supplied dependency artifact bodies. It
-requires an already-issued receipt on the preparation, derives the receipt refs,
-and returns `ArtifactMaterial` for `build_receipt_envelope_set(...)`.
+`CommitPreparation`, and an `ExternalArtifactMaterialSource`. It requires an
+already-issued receipt on the preparation, derives the receipt refs, and returns
+`ArtifactMaterial` for `build_receipt_envelope_set(...)`.
+
+`ExternalArtifactMaterialSource` is a named external material boundary, not an authority source.
+It supplies replay bodies for receipt-cited dependencies that are not owned by
+the compiler run object graph.
 
 The materializer may inspect compiler objects to serialize compiler-run
 material. It must not mint receipts, call `build_public_output(...)`, record
@@ -549,7 +555,7 @@ DomainScenarioResult
 ```
 
 Scenario helpers may prepare external artifact bodies for fixtures, but they
-must not recreate `ArtifactEnvelope` construction or receipt-ref coverage
+must pass them through `ExternalArtifactMaterialSource`. They must not recreate `ArtifactEnvelope` construction or receipt-ref coverage
 policy.
 
 ## Review Checklist
