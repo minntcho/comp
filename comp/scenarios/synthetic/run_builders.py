@@ -10,16 +10,10 @@ from comp.scenarios.synthetic.anomaly_specs import (
 from comp.scenarios.synthetic.config import SyntheticScenarioConfig
 from comp.scenarios.synthetic.manifest import build_manifest
 from comp.scenarios.synthetic.models import (
-    ExpectedCalculatedClaim,
-    ExpectedClaim,
     ExpectedObligation,
     ExpectedResolutionArtifact,
-    ExpectedSourceMap,
-    MasterReferenceRecord,
     OUTPUT_CONTRACT,
     RESOLUTION_OUTPUT_CONTRACT,
-    RawElectricityRow,
-    SyntheticMaster,
     SyntheticOracle,
     SyntheticRawSources,
     SyntheticResolutionArtifacts,
@@ -30,86 +24,37 @@ from comp.scenarios.synthetic.oracle import (
     expected_smoke_receipt,
     reference_search_obligation_id,
 )
+from comp.scenarios.synthetic.pcf_fixtures import (
+    co2e_expected_calculated_claim,
+    electricity_expected_claim,
+    electricity_source_map,
+    electricity_witness_id,
+    pcf_master,
+    raw_electricity_row,
+)
 
 
 def build_synthetic_pcf_smoke_run(config: SyntheticScenarioConfig) -> SyntheticRun:
-    source_witness_id = f"witness:{config.source_row_id}:electricity_kwh"
-    derived_value = _multiply(config.electricity_kwh, config.factor_value)
-    reference = MasterReferenceRecord(
-        reference_id=config.factor_reference_id,
-        reference_type="emission_factor",
-        label=f"{config.geography} grid electricity factor {config.reporting_period}",
-        geography=config.geography,
-        valid_period=config.reporting_period,
-        method="location_based",
-        factor_value=config.factor_value,
-        input_unit=config.factor_input_unit,
-        output_unit=config.factor_output_unit,
-        source="synthetic_reference_catalog",
-        witness_id=f"reference-witness:{config.factor_reference_id}",
-    )
-    raw_row = RawElectricityRow(
-        source_row_id=config.source_row_id,
-        source_ref=config.source_ref,
-        period=config.reporting_period,
-        site_id=config.site_id,
-        site_name=config.site_name,
-        product_id=config.product_id,
-        activity_type="electricity",
-        amount=config.electricity_kwh,
-        unit=config.electricity_unit,
-    )
-    expected_claim = ExpectedClaim(
-        claim_id=config.input_claim_id,
-        field="electricity_kwh",
-        value=config.electricity_kwh,
-        unit=config.electricity_unit,
-        witness_id=source_witness_id,
-        source_row_id=config.source_row_id,
-    )
+    raw_row = raw_electricity_row(config)
+    source_witness_id = electricity_witness_id(raw_row.source_row_id)
+    derived_value = _multiply(raw_row.amount, config.factor_value)
+    expected_claim = electricity_expected_claim(config.input_claim_id, raw_row)
     return SyntheticRun(
         config=config,
         manifest=build_manifest(config, output_contract=OUTPUT_CONTRACT),
-        master=SyntheticMaster(
-            reference_catalog=(reference,),
-            sites=(
-                {
-                    "site_id": config.site_id,
-                    "site_name": config.site_name,
-                    "geography": config.geography,
-                },
-            ),
-            products=(
-                {
-                    "product_id": config.product_id,
-                    "site_id": config.site_id,
-                },
-            ),
-        ),
+        master=pcf_master(config),
         raw_sources=SyntheticRawSources(electricity_rows=(raw_row,)),
         oracle=SyntheticOracle(
             expected_claims=(expected_claim,),
             expected_derived_claims=(
-                ExpectedCalculatedClaim(
-                    claim_id=config.output_claim_id,
-                    field="co2e_kg",
-                    value=derived_value,
-                    unit=config.factor_output_unit,
-                    formula_id=config.formula_id,
-                ),
+                co2e_expected_calculated_claim(config, derived_value),
             ),
             expected_obligations=(),
             expected_hazards=(),
             expected_failed_claims=(),
             injected_anomalies=(),
             source_to_expected_claim_map=(
-                ExpectedSourceMap(
-                    source_ref=config.source_ref,
-                    source_row_id=config.source_row_id,
-                    expected_claim_id=config.input_claim_id,
-                    expected_field="electricity_kwh",
-                    witness_id=source_witness_id,
-                ),
+                electricity_source_map(config.input_claim_id, raw_row),
             ),
             expected_receipt=expected_smoke_receipt(
                 config,
@@ -123,22 +68,9 @@ def build_synthetic_pcf_smoke_run(config: SyntheticScenarioConfig) -> SyntheticR
 def build_synthetic_pcf_resolution_run(
     config: SyntheticScenarioConfig,
 ) -> SyntheticRun:
-    reference = MasterReferenceRecord(
-        reference_id=config.factor_reference_id,
-        reference_type="emission_factor",
-        label=f"{config.geography} grid electricity factor {config.reporting_period}",
-        geography=config.geography,
-        valid_period=config.reporting_period,
-        method="location_based",
-        factor_value=config.factor_value,
-        input_unit=config.factor_input_unit,
-        output_unit=config.factor_output_unit,
-        source="synthetic_reference_catalog",
-        witness_id=f"reference-witness:{config.factor_reference_id}",
-    )
     missing_unit = missing_unit_spec(config)
     raw_row = missing_unit["row"]
-    source_witness_id = f"witness:{raw_row.source_row_id}:electricity_kwh"
+    source_witness_id = electricity_witness_id(raw_row.source_row_id)
     derived_value = _multiply(raw_row.amount, config.factor_value)
     resolution = missing_unit_resolution_artifact(raw_row)
     resolved_obligation = missing_unit["obligation"]
@@ -149,58 +81,28 @@ def build_synthetic_pcf_resolution_run(
             config,
             output_contract=RESOLUTION_OUTPUT_CONTRACT,
         ),
-        master=SyntheticMaster(
-            reference_catalog=(reference,),
-            sites=(
-                {
-                    "site_id": config.site_id,
-                    "site_name": config.site_name,
-                    "geography": config.geography,
-                },
-            ),
-            products=(
-                {
-                    "product_id": config.product_id,
-                    "site_id": config.site_id,
-                },
-            ),
-        ),
+        master=pcf_master(config),
         raw_sources=SyntheticRawSources(electricity_rows=(raw_row,)),
         resolution_artifacts=SyntheticResolutionArtifacts(
             unit_witnesses=(resolution,),
         ),
         oracle=SyntheticOracle(
             expected_claims=(
-                ExpectedClaim(
-                    claim_id=config.input_claim_id,
-                    field="electricity_kwh",
-                    value=raw_row.amount,
+                electricity_expected_claim(
+                    config.input_claim_id,
+                    raw_row,
                     unit=resolution.resolved_value,
-                    witness_id=source_witness_id,
-                    source_row_id=raw_row.source_row_id,
                 ),
             ),
             expected_derived_claims=(
-                ExpectedCalculatedClaim(
-                    claim_id=config.output_claim_id,
-                    field="co2e_kg",
-                    value=derived_value,
-                    unit=config.factor_output_unit,
-                    formula_id=config.formula_id,
-                ),
+                co2e_expected_calculated_claim(config, derived_value),
             ),
             expected_obligations=(),
             expected_hazards=(),
             expected_failed_claims=(),
             injected_anomalies=(missing_unit["anomaly"],),
             source_to_expected_claim_map=(
-                ExpectedSourceMap(
-                    source_ref=raw_row.source_ref,
-                    source_row_id=raw_row.source_row_id,
-                    expected_claim_id=config.input_claim_id,
-                    expected_field="electricity_kwh",
-                    witness_id=source_witness_id,
-                ),
+                electricity_source_map(config.input_claim_id, raw_row),
             ),
             expected_resolved_obligations=(
                 resolved_obligation,
@@ -246,40 +148,20 @@ def build_synthetic_pcf_resolution_run(
 def build_synthetic_pcf_anomaly_run(
     config: SyntheticScenarioConfig,
 ) -> SyntheticRun:
-    reference = MasterReferenceRecord(
-        reference_id=config.factor_reference_id,
-        reference_type="emission_factor",
-        label=f"{config.geography} grid electricity factor {config.reporting_period}",
-        geography=config.geography,
-        valid_period=config.reporting_period,
-        method="location_based",
-        factor_value=config.factor_value,
-        input_unit=config.factor_input_unit,
-        output_unit=config.factor_output_unit,
-        source="synthetic_reference_catalog",
-        witness_id=f"reference-witness:{config.factor_reference_id}",
-    )
     specs = anomaly_specs(config)
     rows = tuple(spec["row"] for spec in specs)
     expected_claims = tuple(
-        ExpectedClaim(
-            claim_id=f"synthetic-pcf-anomaly:{row.source_row_id}:electricity_kwh",
-            field="electricity_kwh",
-            value=row.amount,
-            unit=row.unit or None,
-            witness_id=f"witness:{row.source_row_id}:electricity_kwh",
-            source_row_id=row.source_row_id,
+        electricity_expected_claim(
+            f"synthetic-pcf-anomaly:{row.source_row_id}:electricity_kwh",
+            row,
         )
         for row in rows
         if float(row.amount) >= 0
     )
     expected_maps = tuple(
-        ExpectedSourceMap(
-            source_ref=row.source_ref,
-            source_row_id=row.source_row_id,
-            expected_claim_id=f"synthetic-pcf-anomaly:{row.source_row_id}:electricity_kwh",
-            expected_field="electricity_kwh",
-            witness_id=f"witness:{row.source_row_id}:electricity_kwh",
+        electricity_source_map(
+            f"synthetic-pcf-anomaly:{row.source_row_id}:electricity_kwh",
+            row,
         )
         for row in rows
         if float(row.amount) >= 0
@@ -288,22 +170,7 @@ def build_synthetic_pcf_anomaly_run(
     return SyntheticRun(
         config=config,
         manifest=build_manifest(config, output_contract=OUTPUT_CONTRACT),
-        master=SyntheticMaster(
-            reference_catalog=(reference,),
-            sites=(
-                {
-                    "site_id": config.site_id,
-                    "site_name": config.site_name,
-                    "geography": config.geography,
-                },
-            ),
-            products=(
-                {
-                    "product_id": config.product_id,
-                    "site_id": config.site_id,
-                },
-            ),
-        ),
+        master=pcf_master(config),
         raw_sources=SyntheticRawSources(electricity_rows=rows),
         oracle=SyntheticOracle(
             expected_claims=expected_claims,

@@ -130,6 +130,31 @@ def test_synthetic_run_builders_live_outside_generator_module() -> None:
     )
 
 
+def test_synthetic_pcf_fixtures_live_outside_run_builders_module() -> None:
+    from comp.scenarios.synthetic.pcf_fixtures import (
+        electricity_expected_claim,
+        electricity_source_map,
+        pcf_master,
+        pcf_reference_record,
+    )
+    from comp.scenarios.synthetic.run_builders import build_synthetic_pcf_smoke_run
+
+    config = SyntheticScenarioConfig.pcf_smoke(seed=7)
+    run = build_synthetic_pcf_smoke_run(config)
+    raw_row = run.raw_sources.electricity_rows[0]
+
+    assert pcf_master.__module__ == "comp.scenarios.synthetic.pcf_fixtures"
+    assert build_synthetic_pcf_smoke_run.__globals__["pcf_master"] is pcf_master
+    assert run.master == pcf_master(config)
+    assert run.master.reference_catalog == (pcf_reference_record(config),)
+    assert run.oracle.expected_claims == (
+        electricity_expected_claim(config.input_claim_id, raw_row),
+    )
+    assert run.oracle.source_to_expected_claim_map == (
+        electricity_source_map(config.input_claim_id, raw_row),
+    )
+
+
 def test_synthetic_pcf_generator_writes_oracle_not_truth(tmp_path: Path) -> None:
     config = SyntheticScenarioConfig.pcf_smoke(seed=7)
 
