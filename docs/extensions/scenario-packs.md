@@ -28,6 +28,24 @@ l_energy_alpha_invalid_allocation_rfi
 
 l_energy_alpha_physical_allocation_correction
   seeded accepted/projection pack in parallel validation for l_energy.alpha_physical_allocation_correction.v1
+
+l_energy_c_pack_yield_rollup
+  seeded accepted/projection pack in parallel validation for l_energy.c_pack_yield_rollup.v1
+
+l_energy_carbon_tech_certificate_submission
+  seeded accepted/projection pack in parallel validation for l_energy.carbon_tech_certificate_submission.v1
+
+l_energy_final_bottom_up_pcf_rollup
+  seeded accepted/projection pack in parallel validation for l_energy.final_bottom_up_pcf_rollup.v1
+
+l_energy_l_materials_composition_rollup
+  seeded accepted/projection pack in parallel validation for l_energy.l_materials_composition_rollup.v1
+
+l_energy_steel_frame_proxy_assignment
+  seeded accepted/projection pack in parallel validation for l_energy.steel_frame_proxy_assignment.v1
+
+l_energy_tier0_physical_allocation
+  seeded accepted/projection pack in parallel validation for l_energy.tier0_physical_allocation.v1
 ```
 
 ## Boundary
