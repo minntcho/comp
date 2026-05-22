@@ -4,16 +4,16 @@ from dataclasses import dataclass
 from typing import Any
 
 from comp.judgment import PublicOutputSpec
-from comp.compiler_tool import evidence_ref_fingerprint
 from comp.persistence import (
     ArtifactEnvelope,
     ArtifactRef,
     InMemoryArtifactStore,
     InMemoryReceiptLedger,
     ProjectionReplayReport,
-    receipt_artifact_refs,
+    build_receipt_envelope_set,
     replay_public_projection,
 )
+from comp.runtime import materialize_compiler_run_artifacts
 from tests.domain_scenarios.core import DomainScenarioResult
 
 
@@ -34,13 +34,20 @@ def scenario_replay_bundle(
         raise AssertionError("Scenario replay requires a commit receipt.")
 
     artifacts = InMemoryArtifactStore()
-    for ref in receipt_artifact_refs(receipt):
+    materials = materialize_compiler_run_artifacts(
+        result.report,
+        result.preparation,
+        external_artifact_bodies=_scenario_external_artifact_bodies(result),
+        schema_version="domain-scenario-v1",
+    )
+    for envelope in build_receipt_envelope_set(receipt, materials):
+        ref = ArtifactRef(envelope.artifact_id, envelope.artifact_kind)
         if ref == skip:
             continue
         if override is not None and override.artifact_id == ref.artifact_id:
             artifacts.record(override)
             continue
-        artifacts.record(_artifact_envelope_for_ref(result, ref))
+        artifacts.record(envelope)
 
     receipt_ledger = InMemoryReceiptLedger()
     receipt_ledger.record(receipt)
@@ -76,224 +83,72 @@ def replay_scenario_projection(
     )
 
 
-def _artifact_envelope_for_ref(
+def _scenario_external_artifact_bodies(
     result: DomainScenarioResult,
-    ref: ArtifactRef,
-) -> ArtifactEnvelope:
-    return ArtifactEnvelope.from_body(
-        artifact_id=ref.artifact_id,
-        artifact_kind=ref.artifact_kind,
-        schema_version="domain-scenario-v1",
-        body=_artifact_body_for_ref(result, ref),
-    )
-
-
-def _artifact_body_for_ref(
-    result: DomainScenarioResult,
-    ref: ArtifactRef,
-) -> dict[str, Any]:
-    dependency_body = result.dependency_artifact_bodies.get(
-        (ref.artifact_kind, ref.artifact_id)
-    )
-    if dependency_body is not None:
-        return dict(dependency_body)
-
-    if ref.artifact_kind == "commit_package":
-        package = result.preparation.package
-        return {
-            "package_id": package.package_id,
-            "subject_id": package.subject_id,
-            "report_status": package.report_status,
-            "complete": package.complete,
-            "reference_binding_ids": package.reference_binding_ids,
-            "derived_claim_ids": package.derived_claim_ids,
-            "calculation_trace_ids": package.calculation_trace_ids,
-            "formula_ids": package.formula_ids,
-            "open_obligation_ids": package.open_obligation_ids,
-            "hazard_ids": package.hazard_ids,
-        }
-    if ref.artifact_kind == "governance_decision":
-        decision = result.preparation.decision
-        return {
-            "decision_id": decision.decision_id,
-            "package_id": decision.package_id,
-            "subject_id": decision.subject_id,
-            "status": decision.status,
-            "reasons": decision.reasons,
-            "profile_id": decision.profile_id,
-        }
-    if ref.artifact_kind == "checked_claim":
-        claim = _checked_claim_by_source_id(result, ref.artifact_id)
-        return {
-            "claim_id": ref.artifact_id,
-            "field": claim.field,
-            "value": claim.value,
-            "witness_id": claim.witness_id,
-            "origin": claim.origin,
-        }
-    if ref.artifact_kind == "evidence_witness":
-        witness = _evidence_witness_by_id(result, ref.artifact_id)
-        if witness is None:
-            return {"witness_id": ref.artifact_id, "source": "domain_scenario"}
-        fingerprint = evidence_ref_fingerprint(witness)
-        return {
-            "dependency_kind": fingerprint.dependency_kind,
-            "dependency_id": fingerprint.dependency_id,
-            "witness_id": witness.witness_id,
-            "field": witness.field,
-            "source": witness.source,
-            "span": witness.span,
-            "text": witness.text,
-            "fingerprint": fingerprint.fingerprint,
-            "digest_alg": fingerprint.digest_alg,
-        }
-    if ref.artifact_kind == "reference_binding":
-        binding = _by_id(
-            result.report.canonical_references,
-            ref.artifact_id,
-            "binding_id",
-        )
-        return {
-            "binding_id": binding.binding_id,
-            "claim_id": binding.claim_id,
-            "reference_id": binding.reference_id,
-            "reference_type": binding.reference_type,
-            "selected_candidate_id": binding.selected_candidate_id,
-            "selector_rule_id": binding.selector_rule_id,
-            "source_witness_ids": binding.source_witness_ids,
-            "rejected_candidates": tuple(
-                {
-                    "candidate_id": candidate.candidate_id,
-                    "reference_id": candidate.reference_id,
-                    "reason": candidate.reason,
-                    "selector_rule_id": candidate.selector_rule_id,
-                }
-                for candidate in binding.rejected_candidates
-            ),
-            "authority": binding.authority,
-        }
-    if ref.artifact_kind == "derived_claim":
-        claim = _by_id(result.report.calculated_claims, ref.artifact_id, "claim_id")
-        return {
-            "claim_id": claim.claim_id,
-            "field": claim.field,
-            "value": claim.value,
-            "unit": claim.unit,
-            "formula_id": claim.formula_id,
-            "trace_id": claim.trace.trace_id,
-            "origin": claim.origin,
-        }
-    if ref.artifact_kind == "calculation_trace":
-        trace = _trace_by_id(result, ref.artifact_id)
-        return {
-            "trace_id": trace.trace_id,
-            "formula_id": trace.formula_id,
-            "input_claim_ids": trace.input_claim_ids,
-            "reference_binding_ids": trace.reference_binding_ids,
-            "steps": tuple(
-                {
-                    "step_id": step.step_id,
-                    "operation": step.operation,
-                    "input_ids": step.input_ids,
-                    "output_value": step.output_value,
-                    "output_unit": step.output_unit,
-                }
-                for step in trace.steps
-            ),
-        }
-    if ref.artifact_kind == "formula":
-        return {"formula_id": ref.artifact_id}
-    if ref.artifact_kind == "semantic_judgment":
-        return {"judgment_id": ref.artifact_id}
-    if ref.artifact_kind == "reference_catalog_snapshot":
-        return _reference_catalog_snapshot_body(result, ref)
-    dependency_body = _dependency_fingerprint_body(result, ref)
-    if dependency_body is not None:
-        return dependency_body
-    raise AssertionError(f"Unsupported scenario artifact ref: {ref}.")
-
-
-def _checked_claim_by_source_id(result: DomainScenarioResult, source_id: str):
-    for claim in result.report.checked_claims:
-        if source_id == f"checked_claim:{claim.field}:{claim.witness_id}":
-            return claim
-    raise AssertionError(f"Scenario checked claim not found: {source_id}.")
-
-
-def _evidence_witness_by_id(result: DomainScenarioResult, witness_id: str):
-    for witness in result.report.evidence_refs:
-        if witness.witness_id == witness_id:
-            return witness
-    return None
-
-
-def _trace_by_id(result: DomainScenarioResult, trace_id: str):
-    for claim in result.report.calculated_claims:
-        if claim.trace.trace_id == trace_id:
-            return claim.trace
-    raise AssertionError(f"Scenario calculation trace not found: {trace_id}.")
-
-
-def _by_id(items, item_id: str, field: str):
-    for item in items:
-        if getattr(item, field) == item_id:
-            return item
-    raise AssertionError(f"Scenario artifact not found: {item_id}.")
-
-
-def _dependency_fingerprint_body(
-    result: DomainScenarioResult,
-    ref: ArtifactRef,
-) -> dict[str, str] | None:
+) -> dict[tuple[str, str], dict[str, Any]]:
+    bodies = {
+        key: dict(body) for key, body in result.dependency_artifact_bodies.items()
+    }
     receipt = result.preparation.receipt
     if receipt is None or receipt.citations is None:
-        raise AssertionError("Scenario dependency fingerprint requires a receipt.")
+        return bodies
+
+    for judgment_id in receipt.citations.semantic_judgment_ids:
+        bodies.setdefault(
+            ("semantic_judgment", judgment_id),
+            {"judgment_id": judgment_id},
+        )
+
+    for witness_id in receipt.citations.checked_claim_witness_ids:
+        bodies.setdefault(
+            ("evidence_witness", witness_id),
+            {"witness_id": witness_id, "source": "domain_scenario"},
+        )
+
     for fingerprint in receipt.citations.dependency_fingerprints:
-        if (
-            fingerprint.dependency_kind == ref.artifact_kind
-            and fingerprint.dependency_id == ref.artifact_id
-        ):
-            return {
-                "dependency_kind": fingerprint.dependency_kind,
-                "dependency_id": fingerprint.dependency_id,
-                "fingerprint": fingerprint.fingerprint,
-                "digest_alg": fingerprint.digest_alg,
-            }
-    return None
+        key = (fingerprint.dependency_kind, fingerprint.dependency_id)
+        if key in bodies:
+            continue
+        if fingerprint.dependency_kind == "reference_catalog_snapshot":
+            bodies[key] = _reference_catalog_snapshot_body(
+                fingerprint,
+                receipt.citations.dependency_fingerprints,
+            )
+            continue
+        bodies[key] = _dependency_fingerprint_body(fingerprint)
+    return bodies
 
 
 def _reference_catalog_snapshot_body(
-    result: DomainScenarioResult,
-    ref: ArtifactRef,
+    snapshot_fingerprint,
+    dependency_fingerprints,
 ) -> dict[str, Any]:
-    dependency_body = _dependency_fingerprint_body(result, ref)
-    if dependency_body is None:
-        raise AssertionError(f"Scenario dependency fingerprint not found: {ref}.")
-    catalog_id, catalog_version = _catalog_snapshot_parts(ref.artifact_id)
-    body = dict(dependency_body)
+    catalog_id, catalog_version = _catalog_snapshot_parts(
+        snapshot_fingerprint.dependency_id
+    )
+    body = _dependency_fingerprint_body(snapshot_fingerprint)
     body.update(
         {
-            "snapshot_id": ref.artifact_id,
+            "snapshot_id": snapshot_fingerprint.dependency_id,
             "catalog_id": catalog_id,
             "catalog_version": catalog_version,
             "record_fingerprints": tuple(
-                record_body
-                for record_body in (
-                    _dependency_fingerprint_body(
-                        result,
-                        ArtifactRef(
-                            fingerprint.dependency_id,
-                            fingerprint.dependency_kind,
-                        ),
-                    )
-                    for fingerprint in _dependency_fingerprints(result)
-                    if fingerprint.dependency_kind == "reference_record"
-                )
-                if record_body is not None
+                _dependency_fingerprint_body(fingerprint)
+                for fingerprint in dependency_fingerprints
+                if fingerprint.dependency_kind == "reference_record"
             ),
         }
     )
     return body
+
+
+def _dependency_fingerprint_body(fingerprint) -> dict[str, str]:
+    return {
+        "dependency_kind": fingerprint.dependency_kind,
+        "dependency_id": fingerprint.dependency_id,
+        "fingerprint": fingerprint.fingerprint,
+        "digest_alg": fingerprint.digest_alg,
+    }
 
 
 def _catalog_snapshot_parts(snapshot_id: str) -> tuple[str, str]:
@@ -305,13 +160,6 @@ def _catalog_snapshot_parts(snapshot_id: str) -> tuple[str, str]:
         return rest, ""
     catalog_id, catalog_version = rest.rsplit(":", 1)
     return catalog_id, catalog_version
-
-
-def _dependency_fingerprints(result: DomainScenarioResult):
-    receipt = result.preparation.receipt
-    if receipt is None or receipt.citations is None:
-        return ()
-    return receipt.citations.dependency_fingerprints
 
 
 __all__ = [

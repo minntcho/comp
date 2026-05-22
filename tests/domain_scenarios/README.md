@@ -112,6 +112,19 @@ it bundles the canonical `ReferenceCatalog`, retrieval resolver/index, and their
 fixture version labels so larger domain packs can replace reference data without
 rewiring the scenario runner.
 
+Scenario replay uses the production materializer boundary:
+
+```text
+DomainScenarioResult
+-> materialize_compiler_run_artifacts(...)
+-> build_receipt_envelope_set(...)
+-> replay_public_projection(...)
+```
+
+Scenario helpers may prepare external artifact bodies for fixture-only records,
+but they should not construct `ArtifactEnvelope` objects directly or duplicate
+receipt-ref coverage policy.
+
 ## External Scenario Packs
 
 This directory keeps minimal scenarios that prove `comp` kernel contracts.

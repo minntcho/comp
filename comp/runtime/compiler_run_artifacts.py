@@ -95,6 +95,8 @@ def _artifact_body_for_ref(
         }
     if ref.artifact_kind == "evidence_witness":
         witness = _evidence_witness_by_id(report, ref.artifact_id)
+        if witness is None:
+            return _external_body(ref, external_artifact_bodies)
         fingerprint = evidence_ref_fingerprint(witness)
         return {
             "dependency_kind": fingerprint.dependency_kind,
@@ -217,9 +219,7 @@ def _evidence_witness_by_id(report: ValidationReport, witness_id: str):
     for witness in report.evidence_refs:
         if witness.witness_id == witness_id:
             return witness
-    raise CompilerRunArtifactMaterializationError(
-        f"Compiler run artifact materialization missing evidence witness: {witness_id}."
-    )
+    return None
 
 
 def _trace_by_id(report: ValidationReport, trace_id: str):

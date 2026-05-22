@@ -539,8 +539,18 @@ tampered envelope body fails replay
 builder does not create receipt authority
 ```
 
-Domain Scenario Lab may keep using fixture builders, but scenario tests should
-exercise the same contract so production and fixture replay do not drift apart.
+Domain Scenario Lab replay must exercise the same path:
+
+```text
+DomainScenarioResult
+-> materialize_compiler_run_artifacts(...)
+-> build_receipt_envelope_set(...)
+-> replay_public_projection(...)
+```
+
+Scenario helpers may prepare external artifact bodies for fixtures, but they
+must not recreate `ArtifactEnvelope` construction or receipt-ref coverage
+policy.
 
 ## Review Checklist
 
