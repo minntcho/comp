@@ -486,17 +486,43 @@ compiler-agnostic `ArtifactMaterial` items. It derives required refs from
 through a `record(...)` boundary.
 
 The implementation does not import `comp.compiler_tool`, does not inspect
-compiler reports, and does not produce compiler-run material. The
-compiler-aware materializer remains a later adapter slice.
+compiler reports, and does not produce compiler-run material.
+
+The first production compiler-run materializer lives in:
+
+```text
+comp.runtime.compiler_run_artifacts
+```
+
+`comp.runtime.compiler_run_artifacts` is a runtime adapter, not a persistence
+module and not a receipt gate.
+
+It exposes:
+
+```text
+CompilerRunArtifactMaterializationError
+materialize_compiler_run_artifacts(...)
+```
+
+`materialize_compiler_run_artifacts(...)` consumes `ValidationReport`,
+`CommitPreparation`, and externally supplied dependency artifact bodies. It
+requires an already-issued receipt on the preparation, derives the receipt refs,
+and returns `ArtifactMaterial` for `build_receipt_envelope_set(...)`.
+
+The materializer may inspect compiler objects to serialize compiler-run
+material. It must not mint receipts, call `build_public_output(...)`, record
+envelopes, or decide projection authority.
 
 Coverage lives in:
 
 ```text
 tests/test_artifact_envelope_builder.py
+tests/test_compiler_run_artifact_materializer.py
 ```
 
 `tests/test_artifact_envelope_builder.py` pins the compiler-agnostic coverage
-builder behavior.
+builder behavior. `tests/test_compiler_run_artifact_materializer.py` pins the
+compiler-aware adapter behavior.
 
 ## Testing Expectations
 

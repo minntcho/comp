@@ -919,13 +919,18 @@ def test_artifact_envelope_builder_contract_separates_coverage_from_materializat
         "## Current Implementation Status",
         "`comp.persistence.envelope_builder`",
         "`build_receipt_envelope_set(...)`",
+        "`comp.runtime.compiler_run_artifacts`",
+        "`materialize_compiler_run_artifacts(...)`",
+        "It must not mint receipts, call `build_public_output(...)`, record",
         "`tests/test_artifact_envelope_builder.py`",
+        "`tests/test_compiler_run_artifact_materializer.py`",
     ):
         assert line in builder_doc
 
     for stale_line in (
         "This document defines the contract for turning a completed compiler run into",
         "The production builder should accept the smallest set that can explain a",
+        "compiler-aware materializer remains a later adapter slice",
     ):
         assert stale_line not in builder_doc
 
@@ -988,6 +993,11 @@ def test_pyproject_packages_comp_core_scenarios_and_agent_layer():
         replay_public_projection,
         verify_materialized_public_projection,
     )
+    from comp.runtime import (
+        CompilerRunArtifactMaterializationError,
+        TrustRuntime,
+        materialize_compiler_run_artifacts,
+    )
 
     assert pyproject["project"]["description"] == (
         "Receipt-gated proof package compiler for obligation, reference, "
@@ -1045,6 +1055,9 @@ def test_pyproject_packages_comp_core_scenarios_and_agent_layer():
     assert build_receipt_envelope_set is not None
     assert replay_public_projection is not None
     assert verify_materialized_public_projection is not None
+    assert CompilerRunArtifactMaterializationError is not None
+    assert TrustRuntime is not None
+    assert materialize_compiler_run_artifacts is not None
 
 
 def test_legacy_pipeline_sources_are_not_active_files():
