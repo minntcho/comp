@@ -6,7 +6,7 @@
     {
       "id": "comp-scenario-packs",
       "repo": "minntcho/comp-scenario-packs",
-      "status": "planned",
+      "status": "active",
       "relationship": "downstream",
       "scope": "large-domain-and-product-e2e",
       "required_for_comp_pr_ci": false,
@@ -15,10 +15,29 @@
       "dependency_direction": "downstream_consumes_comp",
       "expected_comp_dependency_before_v1": "comp @ git+https://github.com/minntcho/comp@<ref>",
       "expected_comp_dependency_after_v1": "comp>=1.0,<2.0",
+      "current_packs": [
+        {
+          "id": "public_projection_smoke",
+          "status": "active",
+          "scope": "canonical-runtime-smoke",
+          "cutover_state": "baseline-public-surface",
+          "covers_comp_scenario_ids": []
+        },
+        {
+          "id": "l_energy_pcf_governance",
+          "status": "seed",
+          "scope": "large-domain-and-product-e2e",
+          "cutover_state": "parallel-validation",
+          "covers_comp_scenario_ids": [
+            "l_energy_pcf_governance.v1"
+          ]
+        }
+      ],
       "notes": [
         "comp keeps only minimal kernel e2e scenarios internally.",
         "Large domain, product, platform, importer, UI, and supplier workflow scenarios continue downstream.",
-        "Downstream packs must consume comp through public APIs after v1.0."
+        "Downstream packs must consume comp through public APIs after v1.0.",
+        "Current downstream packs are compatibility signals only; they do not authorize projection."
       ]
     }
   ]

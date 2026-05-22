@@ -8,10 +8,20 @@ Can block PRs: no
 Large domain, product, platform, importer, UI, and supplier workflow scenarios
 belong in downstream scenario-pack repositories.
 
-The first downstream repository is expected to be:
+The first downstream repository is active:
 
 ```text
 https://github.com/minntcho/comp-scenario-packs
+```
+
+Current checked-in packs:
+
+```text
+public_projection_smoke
+  active baseline public-surface smoke
+
+l_energy_pcf_governance
+  seeded large-domain pack in parallel validation for l_energy_pcf_governance.v1
 ```
 
 ## Boundary
