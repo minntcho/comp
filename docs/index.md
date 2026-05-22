@@ -77,6 +77,7 @@ These documents classify public package surfaces. They are not architecture
 authority contracts unless an active contract explicitly references them.
 
 1. `api/compiler-tool.md`
+2. `api/public-output-gate.md`
 
 ## Examples
 

@@ -104,6 +104,16 @@ TOP_LEVEL_QUICKSTART_GATE = {
     "PublicOutputSpec",
     "build_public_output",
 }
+PUBLIC_OUTPUT_GATE_PUBLIC = {
+    "PublicOutput",
+    "PublicOutputBlocked",
+    "PublicOutputSpec",
+    "PublicOutputReceipt",
+    "PublicOutputReceiptCitations",
+    "PublicOutputValueCommitment",
+    "DependencyFingerprint",
+    "build_public_output",
+}
 COMPILER_TOOL_ADVANCED_PUBLIC = {
     "SemanticJudgment",
     "ReferenceOption",
@@ -253,6 +263,24 @@ def test_readme_compiler_tool_quickstart_executes_receipt_gate_path():
     assert namespace["blocked_without_receipt"] is True
     assert namespace["row"] == {"amount": 1200, "unit": "kWh"}
     assert "internal_note" not in namespace["row"]
+
+
+def test_public_output_gate_api_reference_is_documented():
+    api_doc = Path("docs/api/public-output-gate.md").read_text(encoding="utf-8")
+    compiler_tool_doc = Path("docs/api/compiler-tool.md").read_text(
+        encoding="utf-8"
+    )
+    docs_index = Path("docs/index.md").read_text(encoding="utf-8")
+
+    assert "api/public-output-gate.md" in docs_index
+    assert "api/public-output-gate.md" in compiler_tool_doc
+    assert "PublicOutputReceipt is the projection authority" in api_doc
+    assert "ValidationReport is not public-output authority" in api_doc
+    assert "build_public_output(..., receipt=...)" in api_doc
+    assert "materialized view, not authority" in api_doc
+    for name in PUBLIC_OUTPUT_GATE_PUBLIC:
+        assert hasattr(comp, name), name
+        assert name in api_doc, name
 
 
 def test_compiler_tool_advanced_surface_is_documented():
