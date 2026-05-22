@@ -45,9 +45,9 @@ def test_synthetic_data_models_live_outside_generator_module() -> None:
 
 def test_synthetic_expected_receipt_oracle_lives_outside_generator_module() -> None:
     from comp.scenarios.synthetic.oracle import (
-        calculation_obligation_id,
+        calculation_requirement_id,
         expected_smoke_receipt,
-        reference_search_obligation_id,
+        reference_search_requirement_id,
     )
     from comp.scenarios.synthetic.run_builders import build_synthetic_pcf_smoke_run
 
@@ -66,15 +66,45 @@ def test_synthetic_expected_receipt_oracle_lives_outside_generator_module() -> N
     )
     assert run.oracle.expected_receipt is not None
     assert run.oracle.expected_receipt.resolved_obligation_ids == (
-        reference_search_obligation_id(config),
-        calculation_obligation_id(config),
+        reference_search_requirement_id(config),
+        calculation_requirement_id(config),
+    )
+
+
+def test_synthetic_expected_validation_requirement_names_are_canonical() -> None:
+    import comp.scenarios.synthetic.models as models
+    import comp.scenarios.synthetic.oracle as oracle
+    from comp.scenarios.synthetic.models import ExpectedValidationRequirement
+    from comp.scenarios.synthetic.oracle import (
+        expected_calculation_requirement,
+        expected_reference_search_requirement,
+        reference_search_requirement_id,
+    )
+
+    config = SyntheticScenarioConfig.pcf_resolution(seed=17)
+    requirement = expected_reference_search_requirement(config)
+
+    assert not hasattr(models, "ExpectedObligation")
+    assert "ExpectedObligation" not in models.__all__
+    assert not hasattr(oracle, "expected_reference_search_obligation")
+    assert not hasattr(oracle, "expected_calculation_obligation")
+    assert isinstance(requirement, ExpectedValidationRequirement)
+    assert requirement.requirement_id == reference_search_requirement_id(config)
+    assert requirement.to_row() == {
+        "requirement_id": reference_search_requirement_id(config),
+        "kind": "reference_search_required",
+        "field": "co2e_kg",
+        "reason": "unknown_reference",
+    }
+    assert expected_calculation_requirement(config).__class__ is (
+        ExpectedValidationRequirement
     )
 
 
 def test_synthetic_resolution_oracle_expectations_live_outside_run_builders_module() -> None:
     from comp.scenarios.synthetic.oracle import (
-        expected_calculation_obligation,
-        expected_reference_search_obligation,
+        expected_calculation_requirement,
+        expected_reference_search_requirement,
         expected_resolution_artifact,
     )
     from comp.scenarios.synthetic.run_builders import build_synthetic_pcf_resolution_run
@@ -84,15 +114,15 @@ def test_synthetic_resolution_oracle_expectations_live_outside_run_builders_modu
     resolution = run.resolution_artifacts.unit_witnesses[0]
 
     assert (
-        expected_reference_search_obligation.__module__
+        expected_reference_search_requirement.__module__
         == "comp.scenarios.synthetic.oracle"
     )
     assert build_synthetic_pcf_resolution_run.__globals__[
-        "expected_reference_search_obligation"
-    ] is expected_reference_search_obligation
+        "expected_reference_search_requirement"
+    ] is expected_reference_search_requirement
     assert run.oracle.expected_resolved_validation_requirements[1:] == (
-        expected_reference_search_obligation(config),
-        expected_calculation_obligation(config),
+        expected_reference_search_requirement(config),
+        expected_calculation_requirement(config),
     )
     assert run.oracle.expected_resolution_artifacts == (
         expected_resolution_artifact(resolution),
@@ -327,7 +357,7 @@ def test_synthetic_pcf_anomaly_generator_writes_pressure_oracle(
         ("unit", "unsupported_unit"),
         ("electricity_kwh", "negative_amount"),
     ]
-    assert [row["obligation_id"] for row in obligations] == [
+    assert [row["requirement_id"] for row in obligations] == [
         "synthetic-obligation:missing_unit",
         "synthetic-obligation:wrong_unit",
         "synthetic-obligation:period_mismatch",
@@ -394,13 +424,13 @@ def test_synthetic_pcf_resolution_generator_writes_recovery_contract(
     ]
     assert expected_resolved == [
         {
-            "obligation_id": "synthetic-obligation:missing_unit",
+            "requirement_id": "synthetic-obligation:missing_unit",
             "kind": "find_source_witness",
             "field": "unit",
             "reason": "missing_unit",
         },
         {
-            "obligation_id": (
+            "requirement_id": (
                 "resolve:pcf.electricity_factor_multiplication.v1:"
                 "synthetic-pcf-resolution:electricity:co2e_kg:"
                 "reference_search_required"
@@ -410,7 +440,7 @@ def test_synthetic_pcf_resolution_generator_writes_recovery_contract(
             "reason": "unknown_reference",
         },
         {
-            "obligation_id": (
+            "requirement_id": (
                 "calculation:pcf.electricity_factor_multiplication.v1:"
                 "synthetic-pcf-resolution:electricity:co2e_kg:unknown_reference"
             ),

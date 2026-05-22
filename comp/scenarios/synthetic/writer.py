@@ -90,7 +90,7 @@ def write_synthetic_run(run: SyntheticRun, run_dir: Path) -> Path:
     )
     _write_csv(
         run_dir / "oracle" / "expected_validation_requirements.csv",
-        ["obligation_id", "kind", "field", "reason"],
+        ["requirement_id", "kind", "field", "reason"],
         (
             requirement.to_row()
             for requirement in run.oracle.expected_validation_requirements
@@ -125,10 +125,10 @@ def write_synthetic_run(run: SyntheticRun, run_dir: Path) -> Path:
     if run.oracle.expected_resolved_validation_requirements is not None:
         _write_csv(
             run_dir / "oracle" / "expected_resolved_validation_requirements.csv",
-            ["obligation_id", "kind", "field", "reason"],
+            ["requirement_id", "kind", "field", "reason"],
             (
-                obligation.to_row()
-                for obligation in run.oracle.expected_resolved_validation_requirements
+                requirement.to_row()
+                for requirement in run.oracle.expected_resolved_validation_requirements
             ),
         )
     if run.oracle.expected_resolution_artifacts is not None:

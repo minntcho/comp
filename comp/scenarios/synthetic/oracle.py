@@ -6,7 +6,7 @@ from comp.scenarios.synthetic.config import SyntheticScenarioConfig
 from comp.scenarios.synthetic.models import (
     ExpectedArtifactRef,
     ExpectedDependencyRef,
-    ExpectedObligation,
+    ExpectedValidationRequirement,
     ExpectedReceipt,
     ExpectedResolutionArtifact,
     SyntheticOracle,
@@ -30,8 +30,8 @@ def expected_smoke_receipt(
     governance_decision_id = f"governance-decision:{commit_package_id}"
     manifest_dependency_id = synthetic_manifest_dependency_id(config)
     resolved_ids = resolved_obligation_ids or (
-        reference_search_obligation_id(config),
-        calculation_obligation_id(config),
+        reference_search_requirement_id(config),
+        calculation_requirement_id(config),
     )
     source_dependency_refs = synthetic_source_dependency_refs(config)
     return ExpectedReceipt(
@@ -110,7 +110,9 @@ def expected_anomaly_oracle(specs: tuple[dict[str, Any], ...]) -> SyntheticOracl
     return SyntheticOracle(
         expected_claims=expected_claims,
         expected_calculated_claims=(),
-        expected_validation_requirements=tuple(spec["obligation"] for spec in specs),
+        expected_validation_requirements=tuple(
+            spec["validation_requirement"] for spec in specs
+        ),
         expected_hazards=tuple(
             spec["hazard"] for spec in specs if spec["hazard"] is not None
         ),
@@ -122,22 +124,22 @@ def expected_anomaly_oracle(specs: tuple[dict[str, Any], ...]) -> SyntheticOracl
     )
 
 
-def expected_reference_search_obligation(
+def expected_reference_search_requirement(
     config: SyntheticScenarioConfig,
-) -> ExpectedObligation:
-    return ExpectedObligation(
-        obligation_id=reference_search_obligation_id(config),
+) -> ExpectedValidationRequirement:
+    return ExpectedValidationRequirement(
+        requirement_id=reference_search_requirement_id(config),
         kind="reference_search_required",
         field="co2e_kg",
         reason="unknown_reference",
     )
 
 
-def expected_calculation_obligation(
+def expected_calculation_requirement(
     config: SyntheticScenarioConfig,
-) -> ExpectedObligation:
-    return ExpectedObligation(
-        obligation_id=calculation_obligation_id(config),
+) -> ExpectedValidationRequirement:
+    return ExpectedValidationRequirement(
+        requirement_id=calculation_requirement_id(config),
         kind="calculation_blocked",
         field="co2e_kg",
         reason="unknown_reference",
@@ -158,14 +160,14 @@ def expected_resolution_artifact(
     )
 
 
-def reference_search_obligation_id(config: SyntheticScenarioConfig) -> str:
+def reference_search_requirement_id(config: SyntheticScenarioConfig) -> str:
     return (
         f"resolve:{config.formula_id}:{config.output_claim_id}:"
         "reference_search_required"
     )
 
 
-def calculation_obligation_id(config: SyntheticScenarioConfig) -> str:
+def calculation_requirement_id(config: SyntheticScenarioConfig) -> str:
     return (
         f"calculation:{config.formula_id}:{config.output_claim_id}:"
         "unknown_reference"
@@ -173,12 +175,12 @@ def calculation_obligation_id(config: SyntheticScenarioConfig) -> str:
 
 
 __all__ = [
-    "calculation_obligation_id",
+    "calculation_requirement_id",
     "expected_anomaly_oracle",
-    "expected_calculation_obligation",
-    "expected_reference_search_obligation",
+    "expected_calculation_requirement",
+    "expected_reference_search_requirement",
     "expected_resolution_artifact",
     "expected_smoke_receipt",
-    "reference_search_obligation_id",
+    "reference_search_requirement_id",
     "synthetic_manifest_dependency_id",
 ]
