@@ -158,6 +158,19 @@ Downstream-candidate is not a removal instruction. Keep the internal scenario
 until a downstream pack has copied or reconstructed the same trust meaning, run
 it through public `comp` APIs, and passed parallel validation.
 
+Cutover states:
+
+```text
+internal-kernel-regression
+  stays in comp as a small authority-boundary regression scenario
+
+pending-external-coverage
+  downstream target exists, but no runnable external pack covers the same trust meaning yet
+
+parallel-validation
+  downstream pack has a runnable canonical bundle; keep the internal scenario until reports prove equivalence over time
+```
+
 ## Local Runner
 
 The scenario registry can also be inspected without opening the pytest files:

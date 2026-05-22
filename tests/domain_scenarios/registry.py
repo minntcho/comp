@@ -62,6 +62,9 @@ class ScenarioResidency:
     tier: str
     reason: str
     target_pack: str | None = None
+    external_pack_id: str | None = None
+    external_contract_id: str | None = None
+    cutover_state: str = "internal-kernel-regression"
 
 
 _REGISTERED_SCENARIOS = (
@@ -112,10 +115,24 @@ _DOWNSTREAM_CANDIDATE_IDS = (
 
 
 def _scenario_residency_for(scenario_id: str) -> ScenarioResidency:
+    if scenario_id == L_ENERGY_PCF_GOVERNANCE_SCENARIO.scenario_id:
+        return ScenarioResidency(
+            tier="downstream-candidate",
+            target_pack="comp-scenario-packs",
+            external_pack_id="l_energy_pcf_governance",
+            external_contract_id="canonical_projection_smoke",
+            cutover_state="parallel-validation",
+            reason=(
+                "large domain workflow fixture has a seeded downstream canonical "
+                "bundle but remains internal until parallel validation covers the "
+                "same trust meaning"
+            ),
+        )
     if scenario_id in _LARGE_DOMAIN_DOWNSTREAM_IDS:
         return ScenarioResidency(
             tier="downstream-candidate",
             target_pack="comp-scenario-packs",
+            cutover_state="pending-external-coverage",
             reason=(
                 "large domain workflow fixture retained temporarily until the "
                 "downstream scenario pack owns it"
@@ -125,6 +142,7 @@ def _scenario_residency_for(scenario_id: str) -> ScenarioResidency:
         return ScenarioResidency(
             tier="downstream-candidate",
             target_pack="comp-scenario-packs",
+            cutover_state="pending-external-coverage",
             reason=(
                 "synthetic generator fixture retained temporarily until the "
                 "downstream scenario pack owns generated replay checks"
@@ -132,6 +150,7 @@ def _scenario_residency_for(scenario_id: str) -> ScenarioResidency:
         )
     return ScenarioResidency(
         tier="core-kernel",
+        cutover_state="internal-kernel-regression",
         reason="small authority boundary scenario for comp kernel regression",
     )
 
