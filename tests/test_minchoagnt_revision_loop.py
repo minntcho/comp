@@ -8,10 +8,12 @@ from minchoagnt import (
     DeterministicRevisionWorker,
     LoopTrace,
     ObligationReflection,
+    RevisionAttempt,
     RevisionAbstention,
     RevisedHypothesis,
     RevisionIteration,
     RevisionWorkItem,
+    RevisionWorkerResult,
     RevisionWorkerSubmission,
     WitnessFixtureRule,
     WitnessRequest,
@@ -117,6 +119,94 @@ def test_revision_worker_submission_becomes_fixture_rule_for_loop_rerun():
     assert fixture_rules == (rule,)
     assert trace.final.report.status == "accepted"
     assert trace.final.receipt is None
+
+
+def test_revision_loop_records_worker_results_in_trace():
+    hypothesis = _missing_unit_witness_hypothesis()
+    reflection = obligation_reflection(_adapter().compile(hypothesis).report)
+    work_item = revision_work_items_from_reflection(reflection)[0]
+    rule = WitnessFixtureRule(
+        field="unit",
+        witness_id="w-unit",
+        source="invoice.csv",
+    )
+    worker = DeterministicRevisionWorker(
+        submissions=(
+            RevisionWorkerSubmission(
+                work_item_id=work_item.work_item_id,
+                action="attach_grounded_witness",
+                artifact=rule,
+            ),
+        ),
+    )
+
+    trace = deterministic_revision_loop(
+        _adapter(),
+        hypothesis,
+        revision_worker=worker,
+        max_revisions=1,
+    )
+
+    assert len(trace.attempts) == 1
+    assert isinstance(trace.attempts[0], RevisionAttempt)
+    assert trace.attempts[0].work_items == (work_item,)
+    assert trace.attempts[0].worker_results == (
+        RevisionWorkerResult(
+            work_item_id=work_item.work_item_id,
+            submissions=(
+                RevisionWorkerSubmission(
+                    work_item_id=work_item.work_item_id,
+                    action="attach_grounded_witness",
+                    artifact=rule,
+                ),
+            ),
+        ),
+    )
+    assert trace.iterations[0].worker_results == trace.attempts[0].worker_results
+    assert trace.attempts[0].result == trace.final
+    assert trace.final.report.status == "accepted"
+    assert trace.final.receipt is None
+
+
+def test_revision_loop_records_worker_abstention_without_rerun():
+    hypothesis = _missing_unit_witness_hypothesis()
+    reflection = obligation_reflection(_adapter().compile(hypothesis).report)
+    work_item = revision_work_items_from_reflection(reflection)[0]
+    worker = DeterministicRevisionWorker(
+        submissions=(
+            RevisionWorkerSubmission(
+                work_item_id=work_item.work_item_id,
+                action="create_commit_receipt",
+                artifact={"receipt": "fake"},
+            ),
+        ),
+    )
+
+    trace = deterministic_revision_loop(
+        _adapter(),
+        hypothesis,
+        revision_worker=worker,
+        max_revisions=1,
+    )
+
+    assert trace.iterations == ()
+    assert len(trace.attempts) == 1
+    assert trace.attempts[0].worker_results[0].abstention == RevisionAbstention(
+        abstention_id=f"abstain:{work_item.work_item_id}:forbidden_action",
+        work_item_id=work_item.work_item_id,
+        reason=(
+            "Action create_commit_receipt is not allowed for this revision "
+            "work item."
+        ),
+        category="forbidden_action",
+    )
+    assert trace.attempts[0].revision.unapplied_requirement_ids == (
+        "validation_requirement:find_source_witness:unit:missing_source_witness",
+    )
+    assert trace.attempts[0].result is None
+    assert trace.stop_reason == "no_revision"
+    assert trace.final.report.status == "blocked"
+    assert trace.receipt is None
 
 
 def test_revision_worker_rejects_forbidden_authority_action():
