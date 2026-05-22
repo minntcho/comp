@@ -101,6 +101,21 @@ def test_synthetic_expected_validation_requirement_names_are_canonical() -> None
     )
 
 
+def test_synthetic_smoke_oracle_lives_outside_run_builders_module() -> None:
+    from comp.scenarios.synthetic.oracle import expected_smoke_oracle
+    from comp.scenarios.synthetic.run_builders import build_synthetic_pcf_smoke_run
+
+    config = SyntheticScenarioConfig.pcf_smoke(seed=7)
+    run = build_synthetic_pcf_smoke_run(config)
+    raw_row = run.raw_sources.electricity_rows[0]
+
+    assert expected_smoke_oracle.__module__ == "comp.scenarios.synthetic.oracle"
+    assert build_synthetic_pcf_smoke_run.__globals__["expected_smoke_oracle"] is (
+        expected_smoke_oracle
+    )
+    assert run.oracle == expected_smoke_oracle(config, raw_row)
+
+
 def test_synthetic_resolution_oracle_expectations_live_outside_run_builders_module() -> None:
     from comp.scenarios.synthetic.oracle import (
         expected_calculation_requirement,

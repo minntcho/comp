@@ -9,12 +9,16 @@ from comp.scenarios.synthetic.models import (
     ExpectedValidationRequirement,
     ExpectedReceipt,
     ExpectedResolutionArtifact,
+    RawElectricityRow,
     SyntheticOracle,
     SyntheticResolutionArtifact,
 )
 from comp.scenarios.synthetic.pcf_fixtures import (
+    calculate_co2e_value,
+    co2e_expected_calculated_claim,
     electricity_expected_claim,
     electricity_source_map,
+    electricity_witness_id,
 )
 from comp.scenarios.synthetic.sources import synthetic_source_dependency_refs
 
@@ -87,6 +91,33 @@ def expected_smoke_receipt(
 
 def synthetic_manifest_dependency_id(config: SyntheticScenarioConfig) -> str:
     return f"synthetic_manifest:{config.scenario_id}:seed-{config.seed}"
+
+
+def expected_smoke_oracle(
+    config: SyntheticScenarioConfig,
+    raw_row: RawElectricityRow,
+) -> SyntheticOracle:
+    source_witness_id = electricity_witness_id(raw_row.source_row_id)
+    derived_value = calculate_co2e_value(raw_row.amount, config.factor_value)
+    expected_claim = electricity_expected_claim(config.input_claim_id, raw_row)
+    return SyntheticOracle(
+        expected_claims=(expected_claim,),
+        expected_calculated_claims=(
+            co2e_expected_calculated_claim(config, derived_value),
+        ),
+        expected_validation_requirements=(),
+        expected_hazards=(),
+        expected_failed_claims=(),
+        injected_anomalies=(),
+        source_to_expected_claim_map=(
+            electricity_source_map(config.input_claim_id, raw_row),
+        ),
+        expected_receipt=expected_smoke_receipt(
+            config,
+            source_witness_id=source_witness_id,
+            derived_value=derived_value,
+        ),
+    )
 
 
 def expected_anomaly_oracle(specs: tuple[dict[str, Any], ...]) -> SyntheticOracle:
@@ -180,6 +211,7 @@ __all__ = [
     "expected_calculation_requirement",
     "expected_reference_search_requirement",
     "expected_resolution_artifact",
+    "expected_smoke_oracle",
     "expected_smoke_receipt",
     "reference_search_requirement_id",
     "synthetic_manifest_dependency_id",
