@@ -20,10 +20,12 @@ from minchoagnt.revision_loop import (
     ObligationReflection,
     RevisedHypothesis,
     RevisionIteration,
+    RevisionWorkItem,
     WitnessFixtureRule,
     WitnessRequest,
     deterministic_revision_loop,
     obligation_reflection,
+    revision_work_items_from_reflection,
     revised_hypothesis_fixture,
 )
 from minchoagnt.skills import SkillStore
@@ -58,6 +60,7 @@ __all__ = [
     "ObligationReflection",
     "RevisedHypothesis",
     "RevisionIteration",
+    "RevisionWorkItem",
     "ReviewWorkbench",
     "SkillStore",
     "WitnessFixtureRule",
@@ -70,6 +73,7 @@ __all__ = [
     "DeterministicLLMWorker",
     "deterministic_revision_loop",
     "obligation_reflection",
+    "revision_work_items_from_reflection",
     "revised_hypothesis_fixture",
     "semantic_work_orders_from_result",
     "semantic_work_orders_from_tasks",
