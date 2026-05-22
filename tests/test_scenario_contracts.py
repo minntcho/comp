@@ -126,11 +126,13 @@ def test_public_contract_exports_bundle_loaders_and_writers():
         runtime_case_from_mapping,
         runtime_case_to_mapping,
         runtime_projection_to_mapping,
+        ScenarioBundleExistsError,
         write_artifact_envelopes,
         write_public_projection_smoke_bundle,
         write_runtime_case,
     )
 
+    assert ScenarioBundleExistsError is not None
     assert artifact_envelope_from_mapping is not None
     assert artifact_envelope_to_mapping is not None
     assert load_artifact_envelopes is not None
@@ -152,6 +154,8 @@ def test_scenario_contract_examples_document_public_bundle_writer():
     assert "write_runtime_case" in examples
     assert "write_artifact_envelopes" in examples
     assert "comp scenario init" in examples
+    assert "comp scenario init --force" in examples
+    assert "refuses to overwrite" in examples
     assert "comp scenario run" in examples
     assert "pre-trust" in examples
 
@@ -220,6 +224,42 @@ def test_comp_scenario_cli_initializes_runnable_smoke_bundle(tmp_path, capsys):
     assert "passed" in run_output
     assert report["scenario_id"] == "public_projection_smoke"
     assert report["status"] == "passed"
+
+
+def test_comp_scenario_cli_init_refuses_to_overwrite_existing_bundle(
+    tmp_path,
+    capsys,
+):
+    from comp.cli.scenario import main
+
+    target = tmp_path / "public_projection_smoke"
+    assert main(["scenario", "init", str(target)]) == 0
+    capsys.readouterr()
+    marker = target / "prepared" / "runtime_case.json"
+    marker.write_text("external pack data", encoding="utf-8")
+
+    assert main(["scenario", "init", str(target)]) == 2
+    output = capsys.readouterr()
+
+    assert "already exists" in output.err
+    assert marker.read_text(encoding="utf-8") == "external pack data"
+
+
+def test_comp_scenario_cli_init_force_regenerates_existing_bundle(tmp_path, capsys):
+    from comp.cli.scenario import main
+
+    target = tmp_path / "public_projection_smoke"
+    assert main(["scenario", "init", str(target)]) == 0
+    capsys.readouterr()
+    marker = target / "prepared" / "runtime_case.json"
+    marker.write_text("external pack data", encoding="utf-8")
+
+    assert main(["scenario", "init", "--force", str(target)]) == 0
+    output = capsys.readouterr()
+    payload = json.loads(marker.read_text(encoding="utf-8"))
+
+    assert "created" in output.out
+    assert payload["case_id"] == "public_projection_smoke"
 
 
 def test_comp_scenario_cli_validates_and_runs_prepared_bundle(tmp_path, capsys):

@@ -28,6 +28,10 @@ comp scenario init packs/public_projection_smoke
 comp scenario run packs/public_projection_smoke/scenario.json
 ```
 
+`comp scenario init` refuses to overwrite an existing pack target. Use
+`comp scenario init --force packs/public_projection_smoke` only when you intend
+to regenerate the neutral smoke bundle.
+
 After that, replace the prepared files with pack-produced trust inputs. Keep the
 same public contract:
 

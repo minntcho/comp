@@ -17,8 +17,17 @@ from comp.scenario_contracts.case import (
 )
 
 
-def write_public_projection_smoke_bundle(path: str | Path) -> Path:
+class ScenarioBundleExistsError(FileExistsError):
+    """Raised when scenario init would overwrite an existing bundle."""
+
+
+def write_public_projection_smoke_bundle(
+    path: str | Path,
+    *,
+    force: bool = False,
+) -> Path:
     target = Path(path)
+    _ensure_can_write_bundle(target, force=force)
     prepared = target / "prepared"
     prepared.mkdir(parents=True, exist_ok=True)
 
@@ -132,6 +141,15 @@ def write_public_projection_smoke_bundle(path: str | Path) -> Path:
     return manifest_path
 
 
+def _ensure_can_write_bundle(target: Path, *, force: bool) -> None:
+    if force or not target.exists():
+        return
+    if any(target.iterdir()):
+        raise ScenarioBundleExistsError(
+            f"Scenario bundle target already exists: {target}."
+        )
+
+
 def _manifest() -> dict[str, object]:
     return {
         "id": "public_projection_smoke",
@@ -154,4 +172,4 @@ def _manifest() -> dict[str, object]:
     }
 
 
-__all__ = ["write_public_projection_smoke_bundle"]
+__all__ = ["ScenarioBundleExistsError", "write_public_projection_smoke_bundle"]

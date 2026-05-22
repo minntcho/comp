@@ -15,7 +15,10 @@ from comp.scenario_contracts.artifacts import (
     load_artifact_envelopes,
     write_artifact_envelopes,
 )
-from comp.scenario_contracts.examples import write_public_projection_smoke_bundle
+from comp.scenario_contracts.examples import (
+    ScenarioBundleExistsError,
+    write_public_projection_smoke_bundle,
+)
 from comp.scenario_contracts.manifest import (
     ScenarioManifest,
     ScenarioManifestError,
@@ -29,6 +32,7 @@ __all__ = [
     "InvariantResult",
     "RuntimeCase",
     "RuntimeProjection",
+    "ScenarioBundleExistsError",
     "ScenarioManifest",
     "ScenarioManifestError",
     "ScenarioResult",

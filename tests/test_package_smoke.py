@@ -614,6 +614,7 @@ def test_downstream_scenario_pack_skeleton_documents_ci_contract():
 
     assert "comp-scenario-packs" in readme
     assert "comp scenario init packs/public_projection_smoke" in readme
+    assert "comp scenario init --force packs/public_projection_smoke" in readme
     assert "comp scenario run packs/public_projection_smoke/scenario.json" in readme
     assert "Do not import `tests.*`" in readme
     assert "comp @ git+https://github.com/minntcho/comp@main" in pyproject
