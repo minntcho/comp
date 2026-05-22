@@ -344,11 +344,21 @@ Scenario viewer payloads may expose the graph alongside existing traces:
 ```text
 receipt_trace      receipt citation summary
 replay_trace       replay verification summary
-dependency_graph   explanation DAG
+proof_graph        receipt-scoped proof DAG
 ```
 
+Use `proof_graph`, not a generic dependency-graph name, because the payload
+explains receipt-gated proof paths rather than arbitrary dependency edges.
+
 CLI, Mermaid, Graphviz, and UI rendering should consume the graph payload rather
-than reconstructing graph semantics independently.
+than reconstructing graph semantics independently. Renderer code belongs in
+`comp.views.receipt_graph` or downstream viewer packages; it must not call the
+compiler, resolver, calculator, governance gate, projection gate, or replay
+function.
+
+MySQLArtifactStore is an ArtifactStore implementation. It stores and
+retrieves replay artifacts; it does not become a graph backend or a policy
+authority.
 
 ## 12. Deferred Graphs
 
@@ -399,7 +409,7 @@ dependency fingerprints appear as typed nodes
 public projection and public fields connect back to the receipt
 graph payload hides raw values by default
 graph explicitly cannot authorize public projection
-scenario JSON includes dependency_graph
+scenario JSON includes proof_graph
 ```
 
 Non-goals:

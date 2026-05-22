@@ -1,1 +1,1 @@
-"""Future projection/view package."""
+"""Projection and explanation view helpers."""

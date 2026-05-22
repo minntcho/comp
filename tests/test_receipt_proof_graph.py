@@ -1,6 +1,8 @@
 from dataclasses import replace
+from typing import get_type_hints
 
 from comp import ProjectionSpec
+import comp.explanation.receipt_graph as receipt_graph
 from comp.explanation import (
     ProofGraphExportError,
     ReceiptProofGraph,
@@ -219,6 +221,15 @@ def test_graph_export_does_not_import_authority_or_compiler_functions():
     assert "replay_public_projection" not in receipt_graph.__dict__
     assert "project_public_row" not in receipt_graph.__dict__
     assert "CompilerTool" not in receipt_graph.__dict__
+
+
+def test_graph_export_depends_on_artifact_store_protocol():
+    from comp.persistence import ArtifactStore
+
+    hints = get_type_hints(receipt_graph.export_receipt_proof_graph)
+
+    assert hints["artifacts"] is ArtifactStore
+    assert getattr(ArtifactStore, "_is_protocol", False) is True
 
 
 def _has_edge(

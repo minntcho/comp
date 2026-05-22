@@ -432,9 +432,30 @@ def test_production_database_north_star_tracks_v1_mysql_spine():
     assert "MySQL trust spine" in persistence_doc
 
 
+def test_receipt_proof_graph_contract_names_prework_boundaries():
+    graph_doc = Path("docs/architecture/receipt-proof-graph.md").read_text(
+        encoding="utf-8"
+    )
+
+    assert "proof_graph" in graph_doc
+    assert "dependency_graph" not in graph_doc
+    assert "comp.views.receipt_graph" in graph_doc
+    assert "MySQLArtifactStore is an ArtifactStore implementation" in graph_doc
+
+
+def test_receipt_graph_renderers_have_non_authority_module_boundary():
+    from comp.views import receipt_graph
+
+    assert "render-only" in (receipt_graph.__doc__ or "").lower()
+    assert "export_receipt_proof_graph" not in receipt_graph.__dict__
+    assert "replay_public_projection" not in receipt_graph.__dict__
+    assert "project_public_row" not in receipt_graph.__dict__
+
+
 def test_pyproject_packages_comp_core_scenarios_and_agent_layer():
     pyproject = tomllib.loads(Path("pyproject.toml").read_text())
     from comp.persistence import (
+        ArtifactStore,
         ArtifactEnvelope,
         ArtifactRef,
         InMemoryArtifactStore,
@@ -459,6 +480,7 @@ def test_pyproject_packages_comp_core_scenarios_and_agent_layer():
         "comp.persistence",
         "comp.scenarios",
         "comp.scenarios.synthetic",
+        "comp.views",
         "minchoagnt",
     ]
     assert pyproject["tool"]["setuptools"]["package-data"] == {
@@ -476,6 +498,7 @@ def test_pyproject_packages_comp_core_scenarios_and_agent_layer():
 
     assert ReceiptProofGraph is not None
     assert export_receipt_proof_graph is not None
+    assert ArtifactStore is not None
     assert ArtifactEnvelope is not None
     assert ArtifactRef is not None
     assert InMemoryArtifactStore is not None

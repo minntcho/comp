@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from dataclasses import dataclass, field
-from typing import Any
+from typing import Any, Protocol
 
 from comp.judgment import (
     CommitReceipt,
@@ -32,6 +32,13 @@ class ReceiptConflict(PersistenceError):
 
 class ProjectionReplayBlocked(PersistenceError):
     """Raised when a materialized projection cannot be replayed from a receipt."""
+
+
+class ArtifactStore(Protocol):
+    """Read boundary for replayable artifact envelopes."""
+
+    def get(self, artifact_id: str) -> ArtifactEnvelope:
+        ...
 
 
 @dataclass(frozen=True, slots=True)
@@ -158,6 +165,7 @@ __all__ = [
     "PersistenceError",
     "ArtifactIntegrityError",
     "ArtifactConflict",
+    "ArtifactStore",
     "ReceiptConflict",
     "ProjectionReplayBlocked",
     "ReceiptLedgerKey",

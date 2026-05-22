@@ -7,7 +7,7 @@ from typing import Any
 from comp.judgment import CommitReceipt
 from comp.persistence import (
     ArtifactRef,
-    InMemoryArtifactStore,
+    ArtifactStore,
     ProjectionReplayReport,
     ReceiptLedgerKey,
 )
@@ -130,7 +130,7 @@ def export_receipt_proof_graph(
     *,
     receipt: CommitReceipt,
     replay: ProjectionReplayReport,
-    artifacts: InMemoryArtifactStore,
+    artifacts: ArtifactStore,
 ) -> ReceiptProofGraph:
     """Export an explanation-only graph from an already successful replay.
 
@@ -180,7 +180,7 @@ class _ReceiptProofGraphBuilder:
         *,
         receipt: CommitReceipt,
         replay: ProjectionReplayReport,
-        artifacts: InMemoryArtifactStore,
+        artifacts: ArtifactStore,
     ) -> None:
         self._receipt = receipt
         self._replay = replay

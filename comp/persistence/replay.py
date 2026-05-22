@@ -8,7 +8,7 @@ from comp.judgment import CommitReceipt, ProjectionSpec
 from comp.judgment.receipts import DependencyFingerprint
 from comp.persistence.ledger import (
     ArtifactIntegrityError,
-    InMemoryArtifactStore,
+    ArtifactStore,
     ProjectionReplayBlocked,
     ReceiptLedgerKey,
     verify_artifact_envelope,
@@ -41,7 +41,7 @@ def replay_public_projection(
     projection: ProjectionSpec,
     *,
     receipt: CommitReceipt,
-    artifacts: InMemoryArtifactStore,
+    artifacts: ArtifactStore,
 ) -> ProjectionReplayReport:
     public_row = verify_materialized_public_projection(
         row,
@@ -110,7 +110,7 @@ def receipt_artifact_refs(receipt: CommitReceipt) -> tuple[ArtifactRef, ...]:
 
 def _verified_artifact_digests(
     refs: tuple[ArtifactRef, ...],
-    artifacts: InMemoryArtifactStore,
+    artifacts: ArtifactStore,
 ) -> tuple[tuple[str, str], ...]:
     digests: list[tuple[str, str]] = []
     for ref in refs:
@@ -136,7 +136,7 @@ def _verified_artifact_digests(
 
 def _verify_projection_value_sources(
     receipt: CommitReceipt,
-    artifacts: InMemoryArtifactStore,
+    artifacts: ArtifactStore,
 ) -> None:
     if receipt.citations is None:
         return
@@ -173,7 +173,7 @@ def _verify_projection_value_sources(
 
 def _verify_dependency_fingerprint_sources(
     receipt: CommitReceipt,
-    artifacts: InMemoryArtifactStore,
+    artifacts: ArtifactStore,
 ) -> None:
     if receipt.citations is None:
         return
@@ -241,7 +241,7 @@ def _verify_profile_lock_body(
 
 def _verify_source_evidence_span_fingerprints(
     receipt: CommitReceipt,
-    artifacts: InMemoryArtifactStore,
+    artifacts: ArtifactStore,
 ) -> None:
     if receipt.citations is None:
         return
@@ -276,7 +276,7 @@ def _evidence_witness_fingerprint_from_body(
 
 def _verify_reference_catalog_snapshot_coverage(
     receipt: CommitReceipt,
-    artifacts: InMemoryArtifactStore,
+    artifacts: ArtifactStore,
 ) -> None:
     if receipt.citations is None:
         return

@@ -5,6 +5,7 @@ from comp.persistence.envelope import ArtifactEnvelope
 from comp.persistence.ledger import (
     ArtifactConflict,
     ArtifactIntegrityError,
+    ArtifactStore,
     InMemoryArtifactStore,
     InMemoryReceiptLedger,
     PersistenceError,
@@ -31,6 +32,7 @@ __all__ = [
     "ArtifactEnvelope",
     "ArtifactRef",
     "ArtifactIntegrityError",
+    "ArtifactStore",
     "InMemoryArtifactStore",
     "InMemoryReceiptLedger",
     "MySQLArtifactStore",
