@@ -481,6 +481,43 @@ def test_scenario_result_view_exposes_receipt_trace_without_raw_values():
     assert all("value" not in commitment for commitment in commitments)
 
 
+def test_scenario_result_view_exposes_friendly_validation_summary():
+    result = run_tiny_pcf_scenario()
+
+    view = scenario_result_view(result)
+
+    friendly = view["report"]["friendly_summary"]
+    assert friendly["label_ko"] == "검증 결과"
+    assert friendly["status_ko"] == "검증됨"
+    assert friendly["open_requirements"] == []
+    assert friendly["public_output"]["label_ko"] == "공개 결과"
+    assert friendly["sections"] == [
+        {
+            "label_ko": "근거자료 위치",
+            "count": len(result.report.evidence_witnesses),
+        },
+        {
+            "label_ko": "확정 기준",
+            "count": len(result.report.reference_bindings),
+        },
+        {
+            "label_ko": "계산값",
+            "count": len(result.report.derived_claims),
+        },
+    ]
+
+    blocked_terms = (
+        "ClaimHypothesis",
+        "EvidenceWitness",
+        "ReferenceCandidate",
+        "ReferenceBinding",
+        "CommitReceipt",
+        "Projection",
+        "ProofObligation",
+    )
+    assert not any(term in str(friendly) for term in blocked_terms)
+
+
 def test_scenario_result_view_exposes_replay_trace_manifest_summary():
     result = run_canonical_working_loop_scenario()
 
