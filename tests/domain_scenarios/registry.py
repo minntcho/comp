@@ -130,6 +130,20 @@ _ROLLUP_EXTERNAL_PACK_IDS = {
         "l_energy_final_bottom_up_pcf_rollup"
     ),
 }
+_SYNTHETIC_PCF_EXTERNAL_PACKS = {
+    SYNTHETIC_PCF_SMOKE_SCENARIO.scenario_id: (
+        "synthetic_pcf_smoke",
+        "canonical_projection_smoke",
+    ),
+    SYNTHETIC_PCF_ANOMALY_SCENARIO.scenario_id: (
+        "synthetic_pcf_anomaly",
+        "canonical_blocked_projection_smoke",
+    ),
+    SYNTHETIC_PCF_RESOLUTION_SCENARIO.scenario_id: (
+        "synthetic_pcf_resolution",
+        "canonical_projection_smoke",
+    ),
+}
 
 
 def _scenario_residency_for(scenario_id: str) -> ScenarioResidency:
@@ -193,6 +207,22 @@ def _scenario_residency_for(scenario_id: str) -> ScenarioResidency:
             reason=(
                 "large domain workflow fixture retained temporarily until the "
                 "downstream scenario pack owns it"
+            ),
+        )
+    if scenario_id in _SYNTHETIC_PCF_EXTERNAL_PACKS:
+        external_pack_id, external_contract_id = _SYNTHETIC_PCF_EXTERNAL_PACKS[
+            scenario_id
+        ]
+        return ScenarioResidency(
+            tier="downstream-candidate",
+            target_pack="comp-scenario-packs",
+            external_pack_id=external_pack_id,
+            external_contract_id=external_contract_id,
+            cutover_state="parallel-validation",
+            reason=(
+                "synthetic generator fixture has a seeded downstream canonical "
+                "bundle but remains internal until parallel validation covers "
+                "the same trust meaning"
             ),
         )
     if scenario_id in _SYNTHETIC_PCF_DOWNSTREAM_IDS:

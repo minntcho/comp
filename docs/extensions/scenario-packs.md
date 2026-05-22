@@ -46,6 +46,15 @@ l_energy_steel_frame_proxy_assignment
 
 l_energy_tier0_physical_allocation
   seeded accepted/projection pack in parallel validation for l_energy.tier0_physical_allocation.v1
+
+synthetic_pcf_anomaly
+  seeded blocked/no-projection pack in parallel validation for synthetic_pcf.anomaly.v1
+
+synthetic_pcf_resolution
+  seeded accepted/projection pack in parallel validation for synthetic_pcf.resolution.v1
+
+synthetic_pcf_smoke
+  seeded accepted/projection pack in parallel validation for synthetic_pcf.smoke.v1
 ```
 
 ## Boundary

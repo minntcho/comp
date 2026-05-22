@@ -27,6 +27,21 @@ ROLLUP_EXTERNAL_PACKS = {
     ),
 }
 
+SYNTHETIC_PCF_EXTERNAL_PACKS = {
+    "synthetic_pcf.smoke.v1": (
+        "synthetic_pcf_smoke",
+        "canonical_projection_smoke",
+    ),
+    "synthetic_pcf.anomaly.v1": (
+        "synthetic_pcf_anomaly",
+        "canonical_blocked_projection_smoke",
+    ),
+    "synthetic_pcf.resolution.v1": (
+        "synthetic_pcf_resolution",
+        "canonical_projection_smoke",
+    ),
+}
+
 
 def test_domain_scenario_registry_marks_core_and_downstream_candidate_sets():
     registered_ids = {scenario.scenario_id for scenario in registered_scenarios()}
@@ -93,7 +108,10 @@ def test_downstream_candidate_cutover_metadata_tracks_external_coverage():
         scenario_id: scenario_residency(scenario_id)
         for scenario_id in ROLLUP_EXTERNAL_PACKS
     }
-    synthetic = scenario_residency("synthetic_pcf.smoke.v1")
+    synthetic_residencies = {
+        scenario_id: scenario_residency(scenario_id)
+        for scenario_id in SYNTHETIC_PCF_EXTERNAL_PACKS
+    }
     raw_claim = scenario_residency(
         "synthetic.raw_claim_conflict_resolution.v1"
     )
@@ -130,9 +148,16 @@ def test_downstream_candidate_cutover_metadata_tracks_external_coverage():
         assert residency.external_contract_id == "canonical_projection_smoke"
         assert residency.cutover_state == "parallel-validation"
 
-    assert synthetic.tier == "downstream-candidate"
-    assert synthetic.external_pack_id is None
-    assert synthetic.cutover_state == "pending-external-coverage"
+    for scenario_id, (
+        external_pack_id,
+        external_contract_id,
+    ) in SYNTHETIC_PCF_EXTERNAL_PACKS.items():
+        residency = synthetic_residencies[scenario_id]
+        assert residency.tier == "downstream-candidate"
+        assert residency.target_pack == "comp-scenario-packs"
+        assert residency.external_pack_id == external_pack_id
+        assert residency.external_contract_id == external_contract_id
+        assert residency.cutover_state == "parallel-validation"
 
     assert raw_claim.tier == "core-kernel"
     assert raw_claim.cutover_state == "internal-kernel-regression"
@@ -158,6 +183,8 @@ def test_domain_scenario_docs_explain_residency_tiers():
     assert "l_energy_alpha_invalid_allocation_rfi" in extension_doc
     assert "l_energy_alpha_physical_allocation_correction" in extension_doc
     for external_pack_id in ROLLUP_EXTERNAL_PACKS.values():
+        assert external_pack_id in extension_doc
+    for external_pack_id, _contract_id in SYNTHETIC_PCF_EXTERNAL_PACKS.values():
         assert external_pack_id in extension_doc
     assert "registry exposes residency metadata" in extension_doc
     assert "Scenario replay uses the production materializer boundary" in readme
@@ -289,5 +316,26 @@ def test_downstream_registry_records_active_pack_cutover_state():
             "covers_comp_scenario_ids": [
                 "l_energy.tier0_physical_allocation.v1"
             ],
+        },
+        {
+            "id": "synthetic_pcf_anomaly",
+            "status": "seed",
+            "scope": "synthetic-generator-e2e",
+            "cutover_state": "parallel-validation",
+            "covers_comp_scenario_ids": ["synthetic_pcf.anomaly.v1"],
+        },
+        {
+            "id": "synthetic_pcf_resolution",
+            "status": "seed",
+            "scope": "synthetic-generator-e2e",
+            "cutover_state": "parallel-validation",
+            "covers_comp_scenario_ids": ["synthetic_pcf.resolution.v1"],
+        },
+        {
+            "id": "synthetic_pcf_smoke",
+            "status": "seed",
+            "scope": "synthetic-generator-e2e",
+            "cutover_state": "parallel-validation",
+            "covers_comp_scenario_ids": ["synthetic_pcf.smoke.v1"],
         },
     ]

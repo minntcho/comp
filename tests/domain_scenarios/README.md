@@ -166,9 +166,9 @@ downstream-candidate
 Current core-kernel scenarios include `canonical_working_loop`, `tiny_pcf`,
 and the raw-claim boundary scenarios. Current downstream-candidate scenarios
 are the `l_energy.*` family, `l_energy_pcf_governance.v1`, and synthetic PCF smoke/anomaly/resolution.
-The blocked/accepted allocation pair and accepted L-Energy rollup-chain
-scenarios have seeded downstream packs in parallel validation; synthetic PCF
-scenarios remain pending external coverage.
+The blocked/accepted allocation pair, accepted L-Energy rollup-chain scenarios,
+and synthetic PCF smoke/anomaly/resolution scenarios have seeded downstream
+packs in parallel validation.
 
 Downstream-candidate is not a removal instruction. Keep the internal scenario
 until a downstream pack has copied or reconstructed the same trust meaning, run
