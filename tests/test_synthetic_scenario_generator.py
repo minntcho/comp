@@ -49,13 +49,14 @@ def test_synthetic_expected_receipt_oracle_lives_outside_generator_module() -> N
         expected_smoke_receipt,
         reference_search_obligation_id,
     )
+    from comp.scenarios.synthetic.run_builders import build_synthetic_pcf_smoke_run
 
     config = SyntheticScenarioConfig.pcf_smoke(seed=7)
     run = generate_synthetic_pcf_run(config)
     derived_value = run.oracle.expected_derived_claims[0].value
 
     assert expected_smoke_receipt.__module__ == "comp.scenarios.synthetic.oracle"
-    assert generate_synthetic_pcf_run.__globals__["expected_smoke_receipt"] is (
+    assert build_synthetic_pcf_smoke_run.__globals__["expected_smoke_receipt"] is (
         expected_smoke_receipt
     )
     assert run.oracle.expected_receipt == expected_smoke_receipt(
@@ -75,13 +76,17 @@ def test_synthetic_anomaly_specs_live_outside_generator_module() -> None:
         anomaly_specs,
         missing_unit_resolution_artifact,
     )
+    from comp.scenarios.synthetic.run_builders import (
+        build_synthetic_pcf_anomaly_run,
+        build_synthetic_pcf_resolution_run,
+    )
 
     config = SyntheticScenarioConfig.pcf_anomaly(seed=11)
     run = generate_synthetic_pcf_run(config)
     specs = anomaly_specs(config)
 
     assert anomaly_specs.__module__ == "comp.scenarios.synthetic.anomaly_specs"
-    assert generate_synthetic_pcf_run.__globals__["anomaly_specs"] is anomaly_specs
+    assert build_synthetic_pcf_anomaly_run.__globals__["anomaly_specs"] is anomaly_specs
     assert tuple(spec["row"] for spec in specs) == run.raw_sources.electricity_rows
     assert tuple(spec["anomaly"] for spec in specs) == run.oracle.injected_anomalies
 
@@ -90,6 +95,38 @@ def test_synthetic_anomaly_specs_live_outside_generator_module() -> None:
     )
     assert resolution_run.resolution_artifacts.unit_witnesses == (
         missing_unit_resolution_artifact(resolution_run.raw_sources.electricity_rows[0]),
+    )
+    assert build_synthetic_pcf_resolution_run.__globals__[
+        "missing_unit_resolution_artifact"
+    ] is missing_unit_resolution_artifact
+
+
+def test_synthetic_run_builders_live_outside_generator_module() -> None:
+    from comp.scenarios.synthetic.run_builders import (
+        build_synthetic_pcf_anomaly_run,
+        build_synthetic_pcf_resolution_run,
+        build_synthetic_pcf_smoke_run,
+    )
+
+    smoke_config = SyntheticScenarioConfig.pcf_smoke(seed=7)
+    resolution_config = SyntheticScenarioConfig.pcf_resolution(seed=17)
+    anomaly_config = SyntheticScenarioConfig.pcf_anomaly(seed=11)
+
+    assert (
+        build_synthetic_pcf_smoke_run.__module__
+        == "comp.scenarios.synthetic.run_builders"
+    )
+    assert generate_synthetic_pcf_run.__globals__["build_synthetic_pcf_smoke_run"] is (
+        build_synthetic_pcf_smoke_run
+    )
+    assert generate_synthetic_pcf_run(smoke_config) == build_synthetic_pcf_smoke_run(
+        smoke_config
+    )
+    assert generate_synthetic_pcf_run(
+        resolution_config
+    ) == build_synthetic_pcf_resolution_run(resolution_config)
+    assert generate_synthetic_pcf_run(anomaly_config) == build_synthetic_pcf_anomaly_run(
+        anomaly_config
     )
 
 
