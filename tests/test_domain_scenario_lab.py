@@ -84,6 +84,17 @@ def test_domain_scenario_cli_runs_human_summary(capsys):
     assert "Status: accepted" in captured.out
     assert "Commit: commit" in captured.out
     assert "Projection: present" in captured.out
+    assert "Validation summary:" in captured.out
+    assert "- 검증 결과: 검증됨" in captured.out
+    assert "- 공개 결과:" in captured.out
+    assert "- 근거자료 위치:" in captured.out
+    assert "- 확정 기준: 1" in captured.out
+    assert "- 계산값: 1" in captured.out
+    assert "- 보완 필요 항목: 0" in captured.out
+    assert captured.out.index("Validation summary:") < captured.out.index(
+        "Resolver steps:"
+    )
+    assert "\nResolver steps:\n- plan_calculation_resolution" in captured.out
     assert "Resolver steps:" in captured.out
     assert "- deterministic_reference_selection" in captured.out
     assert "Receipt trace:" in captured.out
