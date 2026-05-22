@@ -31,6 +31,7 @@ from comp.scenarios.synthetic.sources import (
     synthetic_source_input_dependency_id,
 )
 from comp.scenarios.synthetic.references import reference_catalog_from_input_bundle
+from comp.runtime import ExternalArtifactMaterial, ExternalArtifactMaterialSource
 
 
 class SyntheticPcfAdapter:
@@ -297,30 +298,37 @@ class SyntheticPcfAdapter:
             *self.synthetic_source_fingerprints(),
         )
 
-    def dependency_artifact_bodies(self):
+    def external_material_source(self) -> ExternalArtifactMaterialSource:
         manifest_fingerprint = self.synthetic_manifest_fingerprint()
-        bodies = {
-            (
-                manifest_fingerprint.dependency_kind,
-                manifest_fingerprint.dependency_id,
-            ): {
-                "dependency_kind": manifest_fingerprint.dependency_kind,
-                "dependency_id": manifest_fingerprint.dependency_id,
-                "fingerprint": manifest_fingerprint.fingerprint,
-                "digest_alg": manifest_fingerprint.digest_alg,
-                "manifest": self.input_bundle.manifest,
-            }
-        }
+        materials = [
+            ExternalArtifactMaterial(
+                artifact_kind=manifest_fingerprint.dependency_kind,
+                artifact_id=manifest_fingerprint.dependency_id,
+                body={
+                    "dependency_kind": manifest_fingerprint.dependency_kind,
+                    "dependency_id": manifest_fingerprint.dependency_id,
+                    "fingerprint": manifest_fingerprint.fingerprint,
+                    "digest_alg": manifest_fingerprint.digest_alg,
+                    "manifest": self.input_bundle.manifest,
+                },
+            )
+        ]
         for source in self.input_bundle.loaded_sources:
             fingerprint = self.synthetic_source_fingerprint(source)
-            bodies[(fingerprint.dependency_kind, fingerprint.dependency_id)] = {
-                "dependency_kind": fingerprint.dependency_kind,
-                "dependency_id": fingerprint.dependency_id,
-                "fingerprint": fingerprint.fingerprint,
-                "digest_alg": fingerprint.digest_alg,
-                "source": source.to_payload(),
-            }
-        return bodies
+            materials.append(
+                ExternalArtifactMaterial(
+                    artifact_kind=fingerprint.dependency_kind,
+                    artifact_id=fingerprint.dependency_id,
+                    body={
+                        "dependency_kind": fingerprint.dependency_kind,
+                        "dependency_id": fingerprint.dependency_id,
+                        "fingerprint": fingerprint.fingerprint,
+                        "digest_alg": fingerprint.digest_alg,
+                        "source": source.to_payload(),
+                    },
+                )
+            )
+        return ExternalArtifactMaterialSource(materials)
 
     def synthetic_manifest_fingerprint(self) -> DependencyFingerprint:
         return DependencyFingerprint.from_payload(

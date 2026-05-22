@@ -148,7 +148,7 @@ def _replay_if_authorized(
     bundle = synthetic_replay_bundle(
         report,
         preparation,
-        adapter.dependency_artifact_bodies(),
+        adapter.external_material_source(),
     )
     return replay_synthetic_projection(
         projection,

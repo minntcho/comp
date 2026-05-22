@@ -99,7 +99,7 @@ def run_synthetic_pcf_smoke_scenario() -> DomainScenarioResult:
         projection=projection,
         subject=SubjectRef("claim", adapter.subject_id),
         resolver_steps=RESOLVER_STEPS,
-        dependency_artifact_bodies=adapter.dependency_artifact_bodies(),
+        external_material_source=adapter.external_material_source(),
     )
 
 
