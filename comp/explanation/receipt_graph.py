@@ -130,6 +130,33 @@ class ReceiptProofGraph:
         return json.dumps(self.to_payload(), indent=2, sort_keys=True)
 
 
+@dataclass(frozen=True, slots=True)
+class PublicFieldExplanation:
+    field: str
+    field_node_id: str
+    path_node_ids: tuple[str, ...]
+    authorized_by: str
+    authority: str = "explanation_only"
+    can_authorize_public_projection: bool = False
+
+    def __post_init__(self) -> None:
+        _require_non_empty("field", self.field)
+        _require_non_empty("field_node_id", self.field_node_id)
+        _require_non_empty("authorized_by", self.authorized_by)
+        if not self.path_node_ids:
+            raise ValueError("path_node_ids is required.")
+
+    def to_payload(self) -> dict[str, Any]:
+        return {
+            "field": self.field,
+            "field_node_id": self.field_node_id,
+            "authorized_by": self.authorized_by,
+            "path_node_ids": self.path_node_ids,
+            "authority": self.authority,
+            "can_authorize_public_projection": self.can_authorize_public_projection,
+        }
+
+
 def export_receipt_proof_graph(
     *,
     receipt: PublicOutputReceipt,
@@ -150,6 +177,49 @@ def export_receipt_proof_graph(
         artifacts=artifacts,
     )
     return builder.export()
+
+
+def explain_public_field(
+    graph: ReceiptProofGraph,
+    *,
+    field: str,
+) -> PublicFieldExplanation:
+    """Explain an already replayed public field from graph data only."""
+
+    field_node = graph.field_node(field)
+    if field_node is None:
+        raise ProofGraphExportError(f"Proof graph public field not found: {field}.")
+
+    path_by_field = dict(graph.field_paths)
+    path_node_ids = path_by_field.get(field)
+    if path_node_ids is None:
+        raise ProofGraphExportError(f"Proof graph public field path not found: {field}.")
+    missing_node_ids = tuple(
+        node_id for node_id in path_node_ids if graph.node(node_id) is None
+    )
+    if missing_node_ids:
+        raise ProofGraphExportError(
+            "Proof graph public field path references missing nodes: "
+            + ", ".join(missing_node_ids)
+            + "."
+        )
+    if field_node.node_id not in path_node_ids:
+        raise ProofGraphExportError(
+            f"Proof graph public field path omits field node: {field}."
+        )
+    if graph.receipt_node_id not in path_node_ids:
+        raise ProofGraphExportError(
+            f"Proof graph public field path omits receipt node: {field}."
+        )
+
+    return PublicFieldExplanation(
+        field=field,
+        field_node_id=field_node.node_id,
+        path_node_ids=path_node_ids,
+        authorized_by=graph.receipt_node_id,
+        authority=graph.authority,
+        can_authorize_public_projection=graph.can_authorize_public_projection,
+    )
 
 
 def receipt_node_id(receipt: PublicOutputReceipt) -> str:
@@ -751,9 +821,11 @@ __all__ = [
     "ProofEdge",
     "ProofGraphExportError",
     "ProofNode",
+    "PublicFieldExplanation",
     "ReceiptProofGraph",
     "artifact_node_id",
     "dependency_fingerprint_node_id",
+    "explain_public_field",
     "export_receipt_proof_graph",
     "public_field_node_id",
     "public_projection_node_id",
