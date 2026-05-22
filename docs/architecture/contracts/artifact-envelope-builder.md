@@ -77,9 +77,11 @@ ArtifactMaterial items keyed by artifact_kind and artifact_id
 optional ArtifactStore target
 ```
 
-The current Domain Scenario Lab already has a fixture-shaped version of this
-materializer boundary in `tests/domain_scenarios/persistence.py`.
-Production code should generalize the materializer contract without making scenario fixtures authoritative.
+Domain Scenario Lab replay uses the production compiler-run materializer boundary.
+Scenario fixture material must remain external material, not builder policy.
+`tests/domain_scenarios/persistence.py` may enrich fixture-owned material as
+`ExternalArtifactMaterialSource`, but it must not own receipt coverage,
+`ArtifactEnvelope` construction, or projection authority.
 
 A compiler-run materializer may accept the smallest compiler-aware set needed
 to produce those materials:
