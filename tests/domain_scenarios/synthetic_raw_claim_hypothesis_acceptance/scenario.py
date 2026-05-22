@@ -2,8 +2,8 @@ from __future__ import annotations
 
 from decimal import Decimal
 
-from comp import ProjectionSpec, SubjectRef, project_public_row
-from comp.compiler_tool import evidence_witness_fingerprint, prepare_commit
+from comp import PublicOutputSpec, SubjectRef, build_public_output
+from comp.compiler_tool import evidence_ref_fingerprint, prepare_commit
 from comp.scenarios.synthetic.raw_claim_promotion import (
     AllocationSupport,
     PromotionClaimIds,
@@ -66,7 +66,7 @@ TOTAL_LINE_MASS_TON = 100000
 
 RESOLVER_STEPS = (
     "llm_extractor_candidate_fixture",
-    "evidence_witness_fingerprint",
+    "evidence_ref_fingerprint",
     "bind_site_alias_reference",
     "bind_unit_conversion_reference",
     "validate_reporting_period",
@@ -88,15 +88,15 @@ def run_raw_claim_hypothesis_acceptance_scenario() -> DomainScenarioResult:
         projection_id=PROJECTION_ID,
         profile_id=PROFILE_ID,
         dependency_fingerprints=tuple(
-            evidence_witness_fingerprint(witness)
+            evidence_ref_fingerprint(witness)
             for witness in report.evidence_witnesses
         ),
     )
     projection = None
     if preparation.receipt is not None:
-        projection = project_public_row(
+        projection = build_public_output(
             _projection_source(report),
-            ProjectionSpec(PROJECTION_ID, PROJECTION_FIELDS),
+            PublicOutputSpec(PROJECTION_ID, PROJECTION_FIELDS),
             receipt=preparation.receipt,
         )
     return build_domain_scenario_result(
@@ -178,7 +178,7 @@ def _projection_source(report) -> dict[str, object]:
 
 RAW_CLAIM_HYPOTHESIS_ACCEPTANCE_SCENARIO = ScenarioDefinition(
     scenario_id=SCENARIO_ID,
-    title="Synthetic raw ClaimHypothesis acceptance",
+    title="Synthetic raw ClaimCandidate acceptance",
     run=run_raw_claim_hypothesis_acceptance_scenario,
     source_refs=(
         SourceRef(

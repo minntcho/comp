@@ -1,13 +1,13 @@
 from __future__ import annotations
 
-from comp import ProjectionSpec, SubjectRef, project_public_row
+from comp import PublicOutputSpec, SubjectRef, build_public_output
 from comp.compiler_tool import (
     ReferenceCatalogSnapshot,
-    ReferenceBinding,
+    CanonicalReference,
     apply_reference_selection,
     calculation_formula_declaration_fingerprint,
     domain_pack_declaration_fingerprint,
-    evidence_witness_fingerprint,
+    evidence_ref_fingerprint,
     plan_calculation_resolution,
     prepare_commit,
     profile_declaration_fingerprint,
@@ -142,9 +142,9 @@ def run_canonical_working_loop_scenario() -> DomainScenarioResult:
     )
     projection = None
     if preparation.receipt is not None:
-        projection = project_public_row(
+        projection = build_public_output(
             projection_source(resolved_report),
-            ProjectionSpec(
+            PublicOutputSpec(
                 "canonical-pcf-public-row",
                 ("electricity_kwh", "reporting_year", "co2e_kg"),
             ),
@@ -169,7 +169,7 @@ def run_canonical_working_loop_scenario() -> DomainScenarioResult:
 def _dependency_fingerprints(
     scenario_profile,
     report,
-    binding: ReferenceBinding | None,
+    binding: CanonicalReference | None,
 ):
     fingerprints = [
         profile_declaration_fingerprint(scenario_profile),
@@ -179,7 +179,7 @@ def _dependency_fingerprints(
         ),
         calculation_formula_declaration_fingerprint(formula()),
         *tuple(
-            evidence_witness_fingerprint(witness)
+            evidence_ref_fingerprint(witness)
             for witness in report.evidence_witnesses
             if witness.witness_id in _checked_claim_witness_ids(report)
         ),
@@ -207,9 +207,9 @@ def _checked_claim_witness_ids(report) -> set[str]:
 
 
 def _binding_for(
-    bindings: tuple[ReferenceBinding, ...],
+    bindings: tuple[CanonicalReference, ...],
     binding_id: str,
-) -> ReferenceBinding | None:
+) -> CanonicalReference | None:
     for binding in reversed(bindings):
         if binding.binding_id == binding_id:
             return binding

@@ -1,8 +1,8 @@
 from comp.compiler_tool import (
     CalculationFormula,
     CalculationInput,
-    CompileReport,
-    ReferenceBinding,
+    ValidationReport,
+    CanonicalReference,
     ReferenceCatalog,
     ReferenceRecord,
     apply_calculation_result,
@@ -29,7 +29,7 @@ def _input():
 
 
 def _binding(reference_id):
-    return ReferenceBinding(
+    return CanonicalReference(
         binding_id="bind-amount-factor",
         claim_id="hyp-1:amount",
         reference_id=reference_id,
@@ -69,7 +69,7 @@ def _blocked_unknown_reference_report():
         formula=_formula(),
     )
     return apply_calculation_result(
-        CompileReport(status="accepted"),
+        ValidationReport(status="accepted"),
         result,
         output_claim_id="hyp-1:co2e_emission",
         formula=_formula(),
@@ -98,7 +98,7 @@ def test_retry_blocked_calculation_resolves_old_obligation_and_adds_derived_clai
     assert derived.value == 0.48
     assert derived.unit == "tCO2e"
     assert derived.trace.reference_binding_ids == ("bind-amount-factor",)
-    assert updated.can_project_public_row is False
+    assert updated.can_build_public_output is False
 
 
 def test_retry_blocked_calculation_is_idempotent_after_success():

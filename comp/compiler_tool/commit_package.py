@@ -3,9 +3,9 @@ from __future__ import annotations
 from collections.abc import Iterable
 from dataclasses import dataclass, field
 
-from comp.compiler_tool.models import CompileReport, Hazard, ProofObligation
+from comp.compiler_tool.models import ValidationReport, Hazard, ValidationRequirement
 from comp.compiler_tool.report_status import recompute_report_status
-from comp.judgment.receipts import DependencyFingerprint, ProjectionValueCommitment
+from comp.judgment.receipts import DependencyFingerprint, PublicOutputValueCommitment
 
 
 @dataclass(frozen=True)
@@ -21,7 +21,7 @@ class ReviewPackage:
     derived_claim_ids: tuple[str, ...] = field(default_factory=tuple)
     calculation_trace_ids: tuple[str, ...] = field(default_factory=tuple)
     formula_ids: tuple[str, ...] = field(default_factory=tuple)
-    projection_value_commitments: tuple[ProjectionValueCommitment, ...] = field(
+    projection_value_commitments: tuple[PublicOutputValueCommitment, ...] = field(
         default_factory=tuple
     )
     dependency_fingerprints: tuple[DependencyFingerprint, ...] = field(
@@ -38,11 +38,9 @@ class ReviewPackage:
         return False
 
 
-CommitPackage = ReviewPackage
-
 
 def build_commit_package(
-    report: CompileReport,
+    report: ValidationReport,
     *,
     subject_id: str,
     package_id: str | None = None,
@@ -92,7 +90,7 @@ def build_commit_package(
     )
 
 
-def _obligation_id(obligation: ProofObligation) -> str:
+def _obligation_id(obligation: ValidationRequirement) -> str:
     if obligation.obligation_id is not None:
         return obligation.obligation_id
     return _stable_id(
@@ -108,10 +106,10 @@ def _hazard_id(hazard: Hazard) -> str:
 
 
 def _projection_value_commitments(
-    report: CompileReport,
-) -> tuple[ProjectionValueCommitment, ...]:
+    report: ValidationReport,
+) -> tuple[PublicOutputValueCommitment, ...]:
     checked = tuple(
-        ProjectionValueCommitment.from_value(
+        PublicOutputValueCommitment.from_value(
             field=claim.field,
             source_kind="checked_claim",
             source_id=_checked_claim_source_id(claim.field, claim.witness_id),
@@ -120,7 +118,7 @@ def _projection_value_commitments(
         for claim in report.checked_claims
     )
     derived = tuple(
-        ProjectionValueCommitment.from_value(
+        PublicOutputValueCommitment.from_value(
             field=claim.field,
             source_kind="derived_claim",
             source_id=claim.claim_id,
@@ -150,4 +148,4 @@ def _unique(values: Iterable[str]) -> tuple[str, ...]:
     return tuple(unique_values)
 
 
-__all__ = ["ReviewPackage", "CommitPackage", "build_commit_package"]
+__all__ = ["ReviewPackage", "build_commit_package"]

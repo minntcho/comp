@@ -2,23 +2,23 @@ from __future__ import annotations
 
 from dataclasses import replace
 
-from comp.compiler_tool.models import CompileReport, ProofObligation
+from comp.compiler_tool.models import ValidationReport, ValidationRequirement
 from comp.compiler_tool.reference_db import ReferenceCatalog
 from comp.compiler_tool.reference_selector import (
     ReferenceSelectionCriteria,
     select_reference_binding,
 )
-from comp.compiler_tool.references import ReferenceBinding
+from comp.compiler_tool.references import CanonicalReference
 from comp.compiler_tool.report_status import with_recomputed_status
 
 
 def apply_reference_selection(
-    report: CompileReport,
+    report: ValidationReport,
     catalog: ReferenceCatalog,
     *,
     criteria: ReferenceSelectionCriteria,
     field: str,
-) -> CompileReport:
+) -> ValidationReport:
     result = select_reference_binding(
         candidates=report.reference_candidates,
         catalog=catalog,
@@ -49,11 +49,11 @@ def apply_reference_selection(
                     report.reference_bindings,
                     (result.binding,),
                 ),
-                can_project_public_row=False,
+                can_build_public_output=False,
             )
         )
 
-    obligation = ProofObligation(
+    obligation = ValidationRequirement(
         kind="reference_selection_required",
         field=field,
         reason=result.status,
@@ -65,7 +65,7 @@ def apply_reference_selection(
         replace(
             report,
             obligations=_append_unique_obligation_by_id(report.obligations, obligation),
-            can_project_public_row=False,
+            can_build_public_output=False,
         )
     )
 
@@ -75,7 +75,7 @@ def _selection_obligation_id(criteria: ReferenceSelectionCriteria) -> str:
 
 
 def _matches_selection_obligation(
-    obligation: ProofObligation,
+    obligation: ValidationRequirement,
     obligation_id: str,
 ) -> bool:
     return (
@@ -85,9 +85,9 @@ def _matches_selection_obligation(
 
 
 def _append_unique_bindings(
-    existing: tuple[ReferenceBinding, ...],
-    additions: tuple[ReferenceBinding, ...],
-) -> tuple[ReferenceBinding, ...]:
+    existing: tuple[CanonicalReference, ...],
+    additions: tuple[CanonicalReference, ...],
+) -> tuple[CanonicalReference, ...]:
     result = existing
     for binding in additions:
         if binding not in result:
@@ -96,9 +96,9 @@ def _append_unique_bindings(
 
 
 def _append_unique_obligations(
-    existing: tuple[ProofObligation, ...],
-    additions: tuple[ProofObligation, ...],
-) -> tuple[ProofObligation, ...]:
+    existing: tuple[ValidationRequirement, ...],
+    additions: tuple[ValidationRequirement, ...],
+) -> tuple[ValidationRequirement, ...]:
     result = existing
     for obligation in additions:
         if obligation not in result:
@@ -107,9 +107,9 @@ def _append_unique_obligations(
 
 
 def _append_unique_obligation_by_id(
-    existing: tuple[ProofObligation, ...],
-    addition: ProofObligation,
-) -> tuple[ProofObligation, ...]:
+    existing: tuple[ValidationRequirement, ...],
+    addition: ValidationRequirement,
+) -> tuple[ValidationRequirement, ...]:
     if addition.obligation_id is not None and any(
         obligation.obligation_id == addition.obligation_id
         for obligation in existing

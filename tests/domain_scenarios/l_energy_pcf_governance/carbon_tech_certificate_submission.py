@@ -2,16 +2,16 @@ from __future__ import annotations
 
 from decimal import Decimal, ROUND_HALF_UP
 
-from comp import ProjectionSpec, SubjectRef, project_public_row
+from comp import PublicOutputSpec, SubjectRef, build_public_output
 from comp.compiler_tool import (
     CalculationStep,
     CalculationTrace,
     CheckedClaim,
-    CompileReport,
-    DerivedClaim,
-    EvidenceWitness,
-    ProofObligation,
-    ReferenceBinding,
+    ValidationReport,
+    CalculatedClaim,
+    EvidenceRef,
+    ValidationRequirement,
+    CanonicalReference,
     prepare_commit,
     with_recomputed_status,
 )
@@ -103,9 +103,9 @@ def run_carbon_tech_certificate_submission_scenario():
     )
     projection = None
     if preparation.receipt is not None:
-        projection = project_public_row(
+        projection = build_public_output(
             _projection_source(report),
-            ProjectionSpec(PROJECTION_ID, PROJECTION_FIELDS),
+            PublicOutputSpec(PROJECTION_ID, PROJECTION_FIELDS),
             receipt=preparation.receipt,
         )
     return build_domain_scenario_result(
@@ -118,37 +118,37 @@ def run_carbon_tech_certificate_submission_scenario():
     )
 
 
-def carbon_tech_certificate_submission_report() -> CompileReport:
+def carbon_tech_certificate_submission_report() -> ValidationReport:
     return with_recomputed_status(
-        CompileReport(
+        ValidationReport(
             status="accepted",
             evidence_witnesses=_evidence_witnesses(),
             checked_claims=_checked_claims(),
             resolved_obligations=_resolved_obligations(),
             reference_bindings=_reference_bindings(),
             derived_claims=_derived_claims(),
-            can_project_public_row=True,
+            can_build_public_output=True,
         )
     )
 
 
-def _evidence_witnesses() -> tuple[EvidenceWitness, ...]:
+def _evidence_witnesses() -> tuple[EvidenceRef, ...]:
     return (
-        EvidenceWitness(
+        EvidenceRef(
             witness_id="source:carbon-tech-certificate-metadata",
             field="certificate_boundary",
             source="tests/e2e/cases/001-l-energy-pcf-governance.yaml",
             span="data_setup.carbon_tech.certificate.boundary",
             text="Cradle-to-Gate",
         ),
-        EvidenceWitness(
+        EvidenceRef(
             witness_id="source:carbon-tech-certificate-factor",
             field="certificate_factor_tco2e_per_ton",
             source="tests/e2e/cases/001-l-energy-pcf-governance.yaml",
             span="data_setup.carbon_tech.certificate.factor",
             text="1.623 tCO2e/ton",
         ),
-        EvidenceWitness(
+        EvidenceRef(
             witness_id="source:carbon-tech-production",
             field="production_ton",
             source="tests/e2e/cases/001-l-energy-pcf-governance.yaml",
@@ -199,9 +199,9 @@ def _checked_claims() -> tuple[CheckedClaim, ...]:
     )
 
 
-def _resolved_obligations() -> tuple[ProofObligation, ...]:
+def _resolved_obligations() -> tuple[ValidationRequirement, ...]:
     return (
-        ProofObligation(
+        ValidationRequirement(
             kind="certificate_boundary_supported",
             field="certificate_boundary",
             reason="supports_cradle_to_gate",
@@ -210,9 +210,9 @@ def _resolved_obligations() -> tuple[ProofObligation, ...]:
     )
 
 
-def _reference_bindings() -> tuple[ReferenceBinding, ...]:
+def _reference_bindings() -> tuple[CanonicalReference, ...]:
     return (
-        ReferenceBinding(
+        CanonicalReference(
             binding_id=CERTIFICATE_FACTOR_BINDING_ID,
             claim_id=SCENARIO_ID,
             reference_id="platform.factor.carbon_tech_certificate_per_ton",
@@ -223,11 +223,11 @@ def _reference_bindings() -> tuple[ReferenceBinding, ...]:
     )
 
 
-def _derived_claims() -> tuple[DerivedClaim, ...]:
+def _derived_claims() -> tuple[CalculatedClaim, ...]:
     raw_emission = Decimal(PRODUCTION_TON) * CERTIFICATE_FACTOR_TCO2E_PER_TON
     final_emission = _round_half_up(raw_emission)
     return (
-        DerivedClaim(
+        CalculatedClaim(
             claim_id=FINAL_EMISSION_CLAIM_ID,
             field="carbon_tech_final_emission_tco2e",
             value=final_emission,
@@ -259,7 +259,7 @@ def _derived_claims() -> tuple[DerivedClaim, ...]:
     )
 
 
-def _projection_source(report: CompileReport) -> dict[str, object]:
+def _projection_source(report: ValidationReport) -> dict[str, object]:
     values = {claim.field: claim.value for claim in report.checked_claims}
     values.update({claim.field: claim.value for claim in report.derived_claims})
     return values

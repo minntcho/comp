@@ -1,7 +1,7 @@
 from comp.compiler_tool import (
     CalculationRequirement,
-    CompileReport,
-    ProofObligation,
+    ValidationReport,
+    ValidationRequirement,
     ResolverTask,
     SemanticJudgmentRequirement,
     resolver_tasks_from_report,
@@ -9,10 +9,10 @@ from comp.compiler_tool import (
 
 
 def test_semantic_obligation_becomes_resolver_task_with_rubric_payload():
-    report = CompileReport(
+    report = ValidationReport(
         status="review_required",
         obligations=(
-            ProofObligation(
+            ValidationRequirement(
                 kind="semantic_judgment_required",
                 field="scope2_method",
                 reason="support_required",
@@ -65,10 +65,10 @@ def test_calculation_reference_search_obligation_preserves_requirement_payload()
         reference_binding_id="bind-amount-factor",
         reference_id="factor.kr_grid.2024.location_based",
     )
-    report = CompileReport(
+    report = ValidationReport(
         status="blocked",
         obligations=(
-            ProofObligation(
+            ValidationRequirement(
                 kind="reference_search_required",
                 field="co2e_emission",
                 reason="unknown_reference",
@@ -99,10 +99,10 @@ def test_calculation_reference_search_obligation_preserves_requirement_payload()
 
 
 def test_resolver_tasks_use_fallback_obligation_ids_and_ignore_resolved_items():
-    report = CompileReport(
+    report = ValidationReport(
         status="review_required",
         obligations=(
-            ProofObligation(
+            ValidationRequirement(
                 kind="find_source_witness",
                 field="unit",
                 reason="missing_unit",
@@ -110,7 +110,7 @@ def test_resolver_tasks_use_fallback_obligation_ids_and_ignore_resolved_items():
             ),
         ),
         resolved_obligations=(
-            ProofObligation(
+            ValidationRequirement(
                 kind="find_source_witness",
                 field="amount",
                 reason="missing_amount",

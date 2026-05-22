@@ -117,7 +117,7 @@ class ExpectedClaim:
 
 
 @dataclass(frozen=True)
-class ExpectedDerivedClaim:
+class ExpectedCalculatedClaim:
     claim_id: str
     field: str
     value: int | float
@@ -401,7 +401,7 @@ class SyntheticInputBundle:
 @dataclass(frozen=True)
 class SyntheticOracle:
     expected_claims: tuple[ExpectedClaim, ...]
-    expected_derived_claims: tuple[ExpectedDerivedClaim, ...]
+    expected_derived_claims: tuple[ExpectedCalculatedClaim, ...]
     expected_obligations: tuple[ExpectedObligation, ...]
     expected_hazards: tuple[ExpectedHazard, ...]
     expected_failed_claims: tuple[ExpectedFailedClaim, ...]
@@ -446,7 +446,7 @@ __all__ = [
     "ExpectedArtifactRef",
     "ExpectedClaim",
     "ExpectedDependencyRef",
-    "ExpectedDerivedClaim",
+    "ExpectedCalculatedClaim",
     "ExpectedFailedClaim",
     "ExpectedHazard",
     "ExpectedObligation",

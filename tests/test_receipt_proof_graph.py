@@ -2,7 +2,7 @@ import json
 from dataclasses import replace
 from typing import get_type_hints
 
-from comp import ProjectionSpec
+from comp import PublicOutputSpec
 import comp.explanation.receipt_graph as receipt_graph
 from comp.explanation import (
     ProofGraphExportError,
@@ -210,7 +210,7 @@ def test_graph_export_rejects_replay_for_different_receipt_scope():
 
 def test_canonical_scenario_replay_exports_claim_reference_calculation_edges():
     result = run_canonical_working_loop_scenario()
-    projection = ProjectionSpec(
+    projection = PublicOutputSpec(
         "canonical-pcf-public-row",
         ("electricity_kwh", "reporting_year", "co2e_kg"),
     )
@@ -248,7 +248,7 @@ def test_graph_export_does_not_import_authority_or_compiler_functions():
     import comp.explanation.receipt_graph as receipt_graph
 
     assert "replay_public_projection" not in receipt_graph.__dict__
-    assert "project_public_row" not in receipt_graph.__dict__
+    assert "build_public_output" not in receipt_graph.__dict__
     assert "CompilerTool" not in receipt_graph.__dict__
 
 

@@ -146,15 +146,15 @@ ScenarioContract(
 Strong contract examples:
 
 ```text
-CommitReceipt exists for the positive path.
+PublicOutputReceipt exists for the positive path.
 open_obligation_ids == ()
 hazard_ids == ()
 receipt cites expected formula ids.
 receipt cites expected derived claim ids.
 receipt cites expected calculation trace ids.
-ReferenceCandidate.authority == "candidate_only".
-DerivedClaim.can_authorize_public_projection is False.
-Projection without receipt raises ProjectionBlocked.
+ReferenceOption.authority == "candidate_only".
+CalculatedClaim.can_authorize_public_projection is False.
+Projection without receipt raises PublicOutputBlocked.
 ```
 
 Weak contract examples:
@@ -207,7 +207,7 @@ build the compiler input bundle.
 
 ## Raw Claim Promotion Boundary
 
-Synthetic raw `ClaimHypothesis` examples may include LLM-like extractor
+Synthetic raw `ClaimCandidate` examples may include LLM-like extractor
 candidates, source snippets, aliases, unit hints, and allocation hints. These
 raw candidates are not compiler authority.
 
@@ -216,16 +216,16 @@ scenario/domain layer. The synthetic promotion helper may create:
 
 ```text
 CheckedClaim
-ReferenceBinding
-DerivedClaim
-resolved ProofObligation
+CanonicalReference
+CalculatedClaim
+resolved ValidationRequirement
 CalculationTrace
 ```
 
 It must not create:
 
 ```text
-CommitReceipt
+PublicOutputReceipt
 public projection
 receipt ledger entries
 ```

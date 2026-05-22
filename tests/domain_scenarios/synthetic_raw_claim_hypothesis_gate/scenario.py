@@ -2,14 +2,14 @@ from __future__ import annotations
 
 from comp import SubjectRef
 from comp.compiler_tool import (
-    ClaimHypothesis,
-    CompileReport,
-    EvidenceWitness,
+    ClaimCandidate,
+    ValidationReport,
+    EvidenceRef,
     FailedClaim,
     Hazard,
     InterpretationHypothesis,
-    ProofObligation,
-    evidence_witness_fingerprint,
+    ValidationRequirement,
+    evidence_ref_fingerprint,
     prepare_commit,
     with_recomputed_status,
 )
@@ -50,7 +50,7 @@ EXPECTED_HAZARD_IDS = (
 
 RESOLVER_STEPS = (
     "llm_extractor_candidate_fixture",
-    "evidence_witness_fingerprint",
+    "evidence_ref_fingerprint",
     "candidate_authority_gate",
     "site_alias_unresolved",
     "unit_conversion_policy_absent",
@@ -67,25 +67,25 @@ def raw_claim_hypothesis() -> InterpretationHypothesis:
         hypothesis_id=SUBJECT_ID,
         subject_id=SUBJECT_ID,
         claims=(
-            ClaimHypothesis(
+            ClaimCandidate(
                 field="site_id",
                 value="OCH-01",
                 witness_id=WITNESS_ID,
                 origin="llm_extractor_candidate",
             ),
-            ClaimHypothesis(
+            ClaimCandidate(
                 field="period",
                 value="2025-03",
                 witness_id=WITNESS_ID,
                 origin="llm_extractor_candidate",
             ),
-            ClaimHypothesis(
+            ClaimCandidate(
                 field="electricity",
                 value={"amount": 6.4, "unit": "GWh"},
                 witness_id=WITNESS_ID,
                 origin="llm_extractor_candidate",
             ),
-            ClaimHypothesis(
+            ClaimCandidate(
                 field="allocation_share",
                 value=0.5,
                 witness_id=WITNESS_ID,
@@ -105,7 +105,7 @@ def run_raw_claim_hypothesis_gate_scenario() -> DomainScenarioResult:
         projection_id=PROJECTION_ID,
         profile_id=PROFILE_ID,
         dependency_fingerprints=(
-            evidence_witness_fingerprint(report.evidence_witnesses[0]),
+            evidence_ref_fingerprint(report.evidence_witnesses[0]),
         ),
     )
     return build_domain_scenario_result(
@@ -118,23 +118,23 @@ def run_raw_claim_hypothesis_gate_scenario() -> DomainScenarioResult:
     )
 
 
-def raw_claim_hypothesis_gate_report() -> CompileReport:
+def raw_claim_hypothesis_gate_report() -> ValidationReport:
     hypothesis = raw_claim_hypothesis()
     return with_recomputed_status(
-        CompileReport(
+        ValidationReport(
             status="accepted",
             evidence_witnesses=hypothesis.witnesses,
             failed_claims=_failed_claims(),
             obligations=_open_obligations(),
             hazards=_hazards(),
-            can_project_public_row=False,
+            can_build_public_output=False,
         )
     )
 
 
-def _evidence_witnesses() -> tuple[EvidenceWitness, ...]:
+def _evidence_witnesses() -> tuple[EvidenceRef, ...]:
     return (
-        EvidenceWitness(
+        EvidenceRef(
             witness_id=WITNESS_ID,
             field="raw_email",
             source=EMAIL_SOURCE,
@@ -177,27 +177,27 @@ def _failed_claims() -> tuple[FailedClaim, ...]:
     )
 
 
-def _open_obligations() -> tuple[ProofObligation, ...]:
+def _open_obligations() -> tuple[ValidationRequirement, ...]:
     return (
-        ProofObligation(
+        ValidationRequirement(
             kind="resolve_site_identity",
             field="site_id",
             reason="site_alias_unresolved",
             obligation_id=EXPECTED_OPEN_OBLIGATION_IDS[0],
         ),
-        ProofObligation(
+        ValidationRequirement(
             kind="unit_conversion_policy_required",
             field="electricity_mwh",
             reason="gwh_to_mwh_conversion_policy_missing",
             obligation_id=EXPECTED_OPEN_OBLIGATION_IDS[1],
         ),
-        ProofObligation(
+        ValidationRequirement(
             kind="find_context",
             field="period",
             reason="period_mismatch",
             obligation_id=EXPECTED_OPEN_OBLIGATION_IDS[2],
         ),
-        ProofObligation(
+        ValidationRequirement(
             kind="physical_allocation_support_required",
             field="allocation_share",
             reason="line_mass_or_residence_time_support_missing",
@@ -225,7 +225,7 @@ def _hazards() -> tuple[Hazard, ...]:
 
 RAW_CLAIM_HYPOTHESIS_GATE_SCENARIO = ScenarioDefinition(
     scenario_id=SCENARIO_ID,
-    title="Synthetic raw ClaimHypothesis gate",
+    title="Synthetic raw ClaimCandidate gate",
     run=run_raw_claim_hypothesis_gate_scenario,
     source_refs=(
         SourceRef(

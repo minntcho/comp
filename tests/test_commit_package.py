@@ -1,11 +1,11 @@
 from comp.compiler_tool import (
     CalculationTrace,
     CheckedClaim,
-    CompileReport,
-    DerivedClaim,
+    ValidationReport,
+    CalculatedClaim,
     Hazard,
-    ProofObligation,
-    ReferenceBinding,
+    ValidationRequirement,
+    CanonicalReference,
     ReviewDecision,
     ReviewPackage,
     build_commit_package,
@@ -14,7 +14,7 @@ from comp.compiler_tool import (
 
 
 def test_commit_package_collects_report_artifacts_without_receipt_authority():
-    report = CompileReport(
+    report = ValidationReport(
         status="accepted",
         checked_claims=(
             CheckedClaim(
@@ -25,7 +25,7 @@ def test_commit_package_collects_report_artifacts_without_receipt_authority():
             ),
         ),
         resolved_obligations=(
-            ProofObligation(
+            ValidationRequirement(
                 kind="calculation_blocked",
                 field="co2e_emission",
                 reason="unknown_reference",
@@ -33,7 +33,7 @@ def test_commit_package_collects_report_artifacts_without_receipt_authority():
             ),
         ),
         reference_bindings=(
-            ReferenceBinding(
+            CanonicalReference(
                 binding_id="bind-amount-factor",
                 claim_id="hyp-1:amount",
                 reference_id="factor.kr_grid.2024.location_based",
@@ -41,7 +41,7 @@ def test_commit_package_collects_report_artifacts_without_receipt_authority():
             ),
         ),
         derived_claims=(
-            DerivedClaim(
+            CalculatedClaim(
                 claim_id="hyp-1:co2e_emission",
                 field="co2e_emission",
                 value=0.48,
@@ -81,10 +81,10 @@ def test_commit_package_collects_report_artifacts_without_receipt_authority():
     assert package.can_authorize_public_projection is False
 
 
-def test_friendly_review_names_are_canonical_with_legacy_aliases():
-    from comp.compiler_tool import CommitPackage, GovernanceDecision
+def test_friendly_review_names_are_canonical():
+    from comp.compiler_tool import ReviewPackage, ReviewDecision
 
-    package = CommitPackage(
+    package = ReviewPackage(
         package_id="package-1",
         subject_id="facility-1",
         report_status="accepted",
@@ -92,8 +92,6 @@ def test_friendly_review_names_are_canonical_with_legacy_aliases():
     )
     decision = decide_governance(package)
 
-    assert CommitPackage is ReviewPackage
-    assert GovernanceDecision is ReviewDecision
     assert type(package).__name__ == "ReviewPackage"
     assert type(decision).__name__ == "ReviewDecision"
     assert package.can_authorize_public_projection is False
@@ -102,10 +100,10 @@ def test_friendly_review_names_are_canonical_with_legacy_aliases():
 
 
 def test_commit_package_is_incomplete_with_open_blocking_obligation():
-    report = CompileReport(
+    report = ValidationReport(
         status="accepted",
         obligations=(
-            ProofObligation(
+            ValidationRequirement(
                 kind="reference_selection_required",
                 field="co2e_emission",
                 reason="ambiguous",
@@ -124,10 +122,10 @@ def test_commit_package_is_incomplete_with_open_blocking_obligation():
 
 
 def test_commit_package_cites_nonblocking_obligations_without_blocking_completion():
-    report = CompileReport(
+    report = ValidationReport(
         status="review_required",
         obligations=(
-            ProofObligation(
+            ValidationRequirement(
                 kind="nonblocking_hint",
                 field="co2e_emission",
                 reason="candidate_available",
@@ -145,7 +143,7 @@ def test_commit_package_cites_nonblocking_obligations_without_blocking_completio
 
 
 def test_commit_package_is_incomplete_with_hazards():
-    report = CompileReport(
+    report = ValidationReport(
         status="accepted",
         hazards=(Hazard(kind="conflict", field="scope2_method", severity="review"),),
     )

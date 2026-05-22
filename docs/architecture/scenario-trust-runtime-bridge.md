@@ -120,7 +120,7 @@ Allowed responsibilities:
 ```text
 validate RuntimeCase
 record ArtifactEnvelope objects
-record CommitReceipt roots
+record PublicOutputReceipt roots
 materialize receipt-authorized projection rows
 verify materialized projection rows
 replay projection rows from receipt-cited artifacts

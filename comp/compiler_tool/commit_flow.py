@@ -5,7 +5,7 @@ from dataclasses import dataclass
 
 from comp.compiler_tool.commit_package import ReviewPackage, build_commit_package
 from comp.compiler_tool.governance import ReviewDecision, decide_governance
-from comp.compiler_tool.models import CompileReport
+from comp.compiler_tool.models import ValidationReport
 from comp.compiler_tool.receipt_builder import build_public_output_receipt
 from comp.judgment.receipts import DependencyFingerprint, PublicOutputReceipt
 
@@ -17,12 +17,12 @@ class CommitPreparation:
     receipt: PublicOutputReceipt | None = None
 
     @property
-    def can_project_public_row(self) -> bool:
+    def can_build_public_output(self) -> bool:
         return self.receipt is not None
 
 
 def prepare_commit(
-    report: CompileReport,
+    report: ValidationReport,
     *,
     subject_id: str,
     public_row_id: str,

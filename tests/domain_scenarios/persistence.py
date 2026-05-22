@@ -3,8 +3,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any
 
-from comp.judgment import ProjectionSpec
-from comp.compiler_tool import evidence_witness_fingerprint
+from comp.judgment import PublicOutputSpec
+from comp.compiler_tool import evidence_ref_fingerprint
 from comp.persistence import (
     ArtifactEnvelope,
     ArtifactRef,
@@ -52,7 +52,7 @@ def scenario_replay_bundle(
 
 def replay_scenario_projection(
     result: DomainScenarioResult,
-    projection: ProjectionSpec,
+    projection: PublicOutputSpec,
     *,
     bundle: DomainScenarioReplayBundle | None = None,
 ) -> ProjectionReplayReport:
@@ -135,7 +135,7 @@ def _artifact_body_for_ref(
         witness = _evidence_witness_by_id(result, ref.artifact_id)
         if witness is None:
             return {"witness_id": ref.artifact_id, "source": "domain_scenario"}
-        fingerprint = evidence_witness_fingerprint(witness)
+        fingerprint = evidence_ref_fingerprint(witness)
         return {
             "dependency_kind": fingerprint.dependency_kind,
             "dependency_id": fingerprint.dependency_id,

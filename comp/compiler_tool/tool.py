@@ -2,13 +2,13 @@ from __future__ import annotations
 
 from comp.compiler_tool.models import (
     CheckedClaim,
-    ClaimHypothesis,
-    CompileReport,
-    EvidenceWitness,
+    ClaimCandidate,
+    ValidationReport,
+    EvidenceRef,
     FailedClaim,
     Hazard,
     InterpretationHypothesis,
-    ProofObligation,
+    ValidationRequirement,
     UncheckedArea,
     UnknownClaim,
 )
@@ -30,13 +30,13 @@ class CompilerTool:
     def compile_interpretation(
         self,
         hypothesis: InterpretationHypothesis,
-    ) -> CompileReport:
+    ) -> ValidationReport:
         witnesses = {witness.witness_id: witness for witness in hypothesis.witnesses}
         checked: list[CheckedClaim] = []
         failed: list[FailedClaim] = []
         unknowns: list[UnknownClaim] = []
         unchecked: list[UncheckedArea] = []
-        obligations: list[ProofObligation] = []
+        obligations: list[ValidationRequirement] = []
         hazards: list[Hazard] = []
 
         claim_fields = {claim.field for claim in hypothesis.claims}
@@ -51,7 +51,7 @@ class CompilerTool:
                 )
                 self._add_obligation(
                     obligations,
-                    ProofObligation(
+                    ValidationRequirement(
                         kind="define_rule_coverage",
                         field=claim.field,
                         reason="missing_rule_coverage",
@@ -65,7 +65,7 @@ class CompilerTool:
                 )
                 self._add_obligation(
                     obligations,
-                    ProofObligation(
+                    ValidationRequirement(
                         kind="find_context",
                         field=claim.field,
                         reason="context_required",
@@ -106,7 +106,7 @@ class CompilerTool:
             self._add_find_source_witness(obligations, "unit", "missing_unit")
 
         return with_recomputed_status(
-            CompileReport(
+            ValidationReport(
                 status="accepted",
                 evidence_witnesses=tuple(hypothesis.witnesses),
                 checked_claims=tuple(checked),
@@ -115,14 +115,14 @@ class CompilerTool:
                 unchecked_areas=tuple(unchecked),
                 obligations=tuple(obligations),
                 hazards=tuple(hazards),
-                can_project_public_row=False,
+                can_build_public_output=False,
             )
         )
 
     @staticmethod
     def _validate_witness(
-        claim: ClaimHypothesis,
-        witnesses: dict[str, EvidenceWitness],
+        claim: ClaimCandidate,
+        witnesses: dict[str, EvidenceRef],
     ) -> FailedClaim | None:
         if claim.witness_id is None:
             return FailedClaim(
@@ -165,19 +165,19 @@ class CompilerTool:
 
     @staticmethod
     def _add_find_source_witness(
-        obligations: list[ProofObligation],
+        obligations: list[ValidationRequirement],
         field: str,
         reason: str,
     ) -> None:
         CompilerTool._add_obligation(
             obligations,
-            ProofObligation(kind="find_source_witness", field=field, reason=reason),
+            ValidationRequirement(kind="find_source_witness", field=field, reason=reason),
         )
 
     @staticmethod
     def _add_obligation(
-        obligations: list[ProofObligation],
-        obligation: ProofObligation,
+        obligations: list[ValidationRequirement],
+        obligation: ValidationRequirement,
     ) -> None:
         if obligation not in obligations:
             obligations.append(obligation)

@@ -3,9 +3,9 @@ import pytest
 from comp.compiler_tool import (
     CalculationStep,
     CalculationTrace,
-    CompileReport,
-    DerivedClaim,
-    ProofObligation,
+    ValidationReport,
+    CalculatedClaim,
+    ValidationRequirement,
     SemanticJudgment,
     SemanticJudgmentRequirement,
     apply_semantic_judgments,
@@ -33,7 +33,7 @@ def _trace():
 
 
 def _derived_claim():
-    return DerivedClaim(
+    return CalculatedClaim(
         claim_id="hyp-1:co2e_emission",
         field="co2e_emission",
         value=0.48,
@@ -49,10 +49,10 @@ def test_derived_claim_is_calculated_claim_not_public_authority():
     assert claim.formula_id == "ghg.electricity_factor_multiplication.v1"
     assert claim.can_authorize_public_projection is False
 
-    report = CompileReport(status="accepted", derived_claims=(claim,))
+    report = ValidationReport(status="accepted", derived_claims=(claim,))
 
     assert report.derived_claims == (claim,)
-    assert report.can_project_public_row is False
+    assert report.can_build_public_output is False
 
 
 def test_calculation_trace_requires_formula_id():
@@ -66,7 +66,7 @@ def test_calculation_trace_requires_formula_id():
 
 def test_semantic_judgment_application_preserves_derived_claims():
     claim = _derived_claim()
-    obligation = ProofObligation(
+    obligation = ValidationRequirement(
         kind="semantic_judgment_required",
         field="scope2_method",
         reason="semantic_support_required",
@@ -79,7 +79,7 @@ def test_semantic_judgment_application_preserves_derived_claims():
             acceptable_verdicts=("supports", "refutes", "ambiguous"),
         ),
     )
-    report = CompileReport(
+    report = ValidationReport(
         status="review_required",
         obligations=(obligation,),
         derived_claims=(claim,),
@@ -107,7 +107,7 @@ def test_semantic_judgment_application_preserves_derived_claims():
 def test_compile_report_to_facts_maps_derived_claim_with_trace_metadata():
     subject = SubjectRef("claim", "hyp-1")
     claim = _derived_claim()
-    report = CompileReport(status="accepted", derived_claims=(claim,))
+    report = ValidationReport(status="accepted", derived_claims=(claim,))
 
     facts = compile_report_to_facts(report, subject)
 

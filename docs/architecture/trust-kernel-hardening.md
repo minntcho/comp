@@ -41,28 +41,28 @@ candidate / resolver artifact
 These invariants must remain true after every change:
 
 ```text
-ReferenceCandidate != ReferenceBinding
+ReferenceOption != CanonicalReference
 Retrieval score != truth score
 Embedding top-1 != selected reference
 LLM worker output != public authority
-DerivedClaim != public output
-CompileReport != public authority
-GovernanceDecision != public authority
-CommitReceipt == public projection authority
+CalculatedClaim != public output
+ValidationReport != public authority
+ReviewDecision != public authority
+PublicOutputReceipt == public projection authority
 ```
 
 Accepted reports, commit packages, and governance decisions may explain why a
 projection is close to publishable. They must not authorize projection without a
-clean `CommitReceipt`.
+clean `PublicOutputReceipt`.
 
 ## Core / Domain Boundary
 
 Core code must own protocol, not ESG meaning.
 
 Raw claim promotion is a domain-layer operation. A promotion helper may turn
-supported extractor candidates into `CheckedClaim`, `ReferenceBinding`,
-`DerivedClaim`, and `CalculationTrace` artifacts, but the promoted
-`CompileReport` still cannot authorize projection. `CommitReceipt` remains the
+supported extractor candidates into `CheckedClaim`, `CanonicalReference`,
+`CalculatedClaim`, and `CalculationTrace` artifacts, but the promoted
+`ValidationReport` still cannot authorize projection. `PublicOutputReceipt` remains the
 only public projection authority.
 
 Core may know about:
@@ -146,10 +146,10 @@ Current policy:
 CalculationStep.exact_output_value preserves the Decimal value after the
 formula rounding policy is applied.
 
-DerivedClaim.value is the public-row-compatible rounded value (`int` or
-finite `float`) that becomes the source for ProjectionValueCommitment.
+CalculatedClaim.value is the public-row-compatible rounded value (`int` or
+finite `float`) that becomes the source for PublicOutputValueCommitment.
 
-ProjectionValueCommitment hashes the committed public value with typed canonical
+PublicOutputValueCommitment hashes the committed public value with typed canonical
 encoding. Replay checks the materialized public row against that commitment.
 ```
 
@@ -188,14 +188,14 @@ project. It should show this full loop:
 ```text
 raw evidence
 -> deterministic extractor fixture
--> CompileReport obligations
+-> ValidationReport obligations
 -> retrieval candidates
--> deterministic ReferenceBinding
--> CalculationTrace / DerivedClaim
--> CommitPackage
--> GovernanceDecision
--> CommitReceipt
--> project_public_row
+-> deterministic CanonicalReference
+-> CalculationTrace / CalculatedClaim
+-> ReviewPackage
+-> ReviewDecision
+-> PublicOutputReceipt
+-> build_public_output
 -> persistence replay
 -> readable dependency manifests
 ```

@@ -2,16 +2,16 @@ from __future__ import annotations
 
 from decimal import Decimal, ROUND_DOWN
 
-from comp import ProjectionSpec, SubjectRef, project_public_row
+from comp import PublicOutputSpec, SubjectRef, build_public_output
 from comp.compiler_tool import (
     CalculationStep,
     CalculationTrace,
     CheckedClaim,
-    CompileReport,
-    DerivedClaim,
-    EvidenceWitness,
-    ProofObligation,
-    ReferenceBinding,
+    ValidationReport,
+    CalculatedClaim,
+    EvidenceRef,
+    ValidationRequirement,
+    CanonicalReference,
     prepare_commit,
     with_recomputed_status,
 )
@@ -121,9 +121,9 @@ def run_final_bottom_up_rollup_scenario():
     )
     projection = None
     if preparation.receipt is not None:
-        projection = project_public_row(
+        projection = build_public_output(
             _projection_source(report),
-            ProjectionSpec(PROJECTION_ID, PROJECTION_FIELDS),
+            PublicOutputSpec(PROJECTION_ID, PROJECTION_FIELDS),
             receipt=preparation.receipt,
         )
     return build_domain_scenario_result(
@@ -136,30 +136,30 @@ def run_final_bottom_up_rollup_scenario():
     )
 
 
-def final_bottom_up_rollup_report() -> CompileReport:
+def final_bottom_up_rollup_report() -> ValidationReport:
     return with_recomputed_status(
-        CompileReport(
+        ValidationReport(
             status="accepted",
             evidence_witnesses=_evidence_witnesses(),
             checked_claims=_checked_claims(),
             resolved_obligations=_resolved_obligations(),
             reference_bindings=_reference_bindings(),
             derived_claims=_derived_claims(),
-            can_project_public_row=True,
+            can_build_public_output=True,
         )
     )
 
 
-def _evidence_witnesses() -> tuple[EvidenceWitness, ...]:
+def _evidence_witnesses() -> tuple[EvidenceRef, ...]:
     return (
-        EvidenceWitness(
+        EvidenceRef(
             witness_id="source:final-rollup-production",
             field="production_volume",
             source="tests/e2e/cases/001-l-energy-pcf-governance.yaml",
             span="data_setup.l_energy.final_product",
             text="100,000 packs; 7.5 GWh",
         ),
-        EvidenceWitness(
+        EvidenceRef(
             witness_id="source:final-rollup-child-receipts",
             field="child_receipts",
             source="tests/e2e/expected/001-l-energy-pcf-governance.receipt.json",
@@ -169,7 +169,7 @@ def _evidence_witnesses() -> tuple[EvidenceWitness, ...]:
                 "L-Materials 174,375"
             ),
         ),
-        EvidenceWitness(
+        EvidenceRef(
             witness_id="source:final-rollup-snapshot",
             field="rollup_snapshot",
             source="tests/e2e/expected/001-l-energy-pcf-governance.receipt.json",
@@ -238,15 +238,15 @@ def _checked_claims() -> tuple[CheckedClaim, ...]:
     )
 
 
-def _resolved_obligations() -> tuple[ProofObligation, ...]:
+def _resolved_obligations() -> tuple[ValidationRequirement, ...]:
     return (
-        ProofObligation(
+        ValidationRequirement(
             kind="child_claims_accepted_or_proxy_authorized",
             field="final_rollup_children",
             reason="tier0_c_pack_carbon_tech_l_materials_paths_available",
             obligation_id=CHILD_AUTHORIZATION_OBLIGATION_ID,
         ),
-        ProofObligation(
+        ValidationRequirement(
             kind="rollup_snapshot_created",
             field="final_bottom_up_rollup",
             reason="child_claim_values_frozen_for_final_projection",
@@ -255,7 +255,7 @@ def _resolved_obligations() -> tuple[ProofObligation, ...]:
     )
 
 
-def _reference_bindings() -> tuple[ReferenceBinding, ...]:
+def _reference_bindings() -> tuple[CanonicalReference, ...]:
     return (
         _child_receipt_binding(
             binding_id=TIER0_CHILD_BINDING_ID,
@@ -276,8 +276,8 @@ def _reference_bindings() -> tuple[ReferenceBinding, ...]:
     )
 
 
-def _child_receipt_binding(*, binding_id: str, reference_id: str) -> ReferenceBinding:
-    return ReferenceBinding(
+def _child_receipt_binding(*, binding_id: str, reference_id: str) -> CanonicalReference:
+    return CanonicalReference(
         binding_id=binding_id,
         claim_id=SCENARIO_ID,
         reference_id=reference_id,
@@ -287,7 +287,7 @@ def _child_receipt_binding(*, binding_id: str, reference_id: str) -> ReferenceBi
     )
 
 
-def _derived_claims() -> tuple[DerivedClaim, ...]:
+def _derived_claims() -> tuple[CalculatedClaim, ...]:
     values = _calculated_values()
     return (
         _derived_claim(
@@ -338,14 +338,14 @@ def _derived_claim(
     unit: str,
     input_claim_ids: tuple[str, ...],
     steps: tuple[CalculationStep, ...],
-) -> DerivedClaim:
+) -> CalculatedClaim:
     child_binding_ids = (
         TIER0_CHILD_BINDING_ID,
         C_PACK_CHILD_BINDING_ID,
         CARBON_TECH_CHILD_BINDING_ID,
         L_MATERIALS_CHILD_BINDING_ID,
     )
-    return DerivedClaim(
+    return CalculatedClaim(
         claim_id=claim_id,
         field=field,
         value=value,
@@ -431,7 +431,7 @@ def _calculated_values() -> dict[str, object]:
     }
 
 
-def _projection_source(report: CompileReport) -> dict[str, object]:
+def _projection_source(report: ValidationReport) -> dict[str, object]:
     values = {claim.field: claim.value for claim in report.checked_claims}
     values.update({claim.field: claim.value for claim in report.derived_claims})
     return values

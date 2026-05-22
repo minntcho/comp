@@ -2,16 +2,16 @@ from __future__ import annotations
 
 from decimal import Decimal, ROUND_HALF_UP
 
-from comp import ProjectionSpec, SubjectRef, project_public_row
+from comp import PublicOutputSpec, SubjectRef, build_public_output
 from comp.compiler_tool import (
     CalculationStep,
     CalculationTrace,
     CheckedClaim,
-    CompileReport,
-    DerivedClaim,
-    EvidenceWitness,
-    ProofObligation,
-    ReferenceBinding,
+    ValidationReport,
+    CalculatedClaim,
+    EvidenceRef,
+    ValidationRequirement,
+    CanonicalReference,
     prepare_commit,
     with_recomputed_status,
 )
@@ -117,9 +117,9 @@ def run_c_pack_yield_rollup_scenario():
     )
     projection = None
     if preparation.receipt is not None:
-        projection = project_public_row(
+        projection = build_public_output(
             _projection_source(report),
-            ProjectionSpec(PROJECTION_ID, PROJECTION_FIELDS),
+            PublicOutputSpec(PROJECTION_ID, PROJECTION_FIELDS),
             receipt=preparation.receipt,
         )
     return build_domain_scenario_result(
@@ -132,37 +132,37 @@ def run_c_pack_yield_rollup_scenario():
     )
 
 
-def c_pack_yield_rollup_report() -> CompileReport:
+def c_pack_yield_rollup_report() -> ValidationReport:
     return with_recomputed_status(
-        CompileReport(
+        ValidationReport(
             status="accepted",
             evidence_witnesses=_evidence_witnesses(),
             checked_claims=_checked_claims(),
             resolved_obligations=_resolved_obligations(),
             reference_bindings=_reference_bindings(),
             derived_claims=_derived_claims(),
-            can_project_public_row=True,
+            can_build_public_output=True,
         )
     )
 
 
-def _evidence_witnesses() -> tuple[EvidenceWitness, ...]:
+def _evidence_witnesses() -> tuple[EvidenceRef, ...]:
     return (
-        EvidenceWitness(
+        EvidenceRef(
             witness_id="source:c-pack-yield-fixture",
             field="housing_output_ton",
             source="tests/e2e/cases/001-l-energy-pcf-governance.yaml",
             span="data_setup.c_pack.housing_output_ton",
             text="housing output 6,000 ton; scrap loss 5%",
         ),
-        EvidenceWitness(
+        EvidenceRef(
             witness_id="source:c-pack-assembly-electricity",
             field="assembly_electricity_mwh",
             source="tests/e2e/cases/001-l-energy-pcf-governance.yaml",
             span="data_setup.c_pack.assembly_electricity_mwh",
             text="1,000 MWh",
         ),
-        EvidenceWitness(
+        EvidenceRef(
             witness_id="source:c-pack-child-claims",
             field="lower_tier_child_claims",
             source="tests/e2e/expected/001-l-energy-pcf-governance.receipt.json",
@@ -231,15 +231,15 @@ def _checked_claims() -> tuple[CheckedClaim, ...]:
     )
 
 
-def _resolved_obligations() -> tuple[ProofObligation, ...]:
+def _resolved_obligations() -> tuple[ValidationRequirement, ...]:
     return (
-        ProofObligation(
+        ValidationRequirement(
             kind="child_claims_available",
             field="c_pack_lower_tier_children",
             reason="accepted_alpha_and_proxy_steel_claims",
             obligation_id=CHILD_CLAIMS_OBLIGATION_ID,
         ),
-        ProofObligation(
+        ValidationRequirement(
             kind="proxy_dependency_preserved",
             field="steel_frame_final_emission_tco2e",
             reason="steel_proxy_dependency_cited",
@@ -248,9 +248,9 @@ def _resolved_obligations() -> tuple[ProofObligation, ...]:
     )
 
 
-def _reference_bindings() -> tuple[ReferenceBinding, ...]:
+def _reference_bindings() -> tuple[CanonicalReference, ...]:
     return (
-        ReferenceBinding(
+        CanonicalReference(
             binding_id=ELECTRICITY_BINDING_ID,
             claim_id=SCENARIO_ID,
             reference_id="platform.factor.electricity_mwh",
@@ -261,7 +261,7 @@ def _reference_bindings() -> tuple[ReferenceBinding, ...]:
     )
 
 
-def _derived_claims() -> tuple[DerivedClaim, ...]:
+def _derived_claims() -> tuple[CalculatedClaim, ...]:
     values = _calculated_values()
     return (
         _derived_claim(
@@ -333,8 +333,8 @@ def _derived_claim(
     input_claim_ids: tuple[str, ...] = (),
     reference_binding_ids: tuple[str, ...] = (),
     steps: tuple[CalculationStep, ...],
-) -> DerivedClaim:
-    return DerivedClaim(
+) -> CalculatedClaim:
+    return CalculatedClaim(
         claim_id=claim_id,
         field=field,
         value=value,
@@ -410,7 +410,7 @@ def _calculated_values() -> dict[str, object]:
     }
 
 
-def _projection_source(report: CompileReport) -> dict[str, object]:
+def _projection_source(report: ValidationReport) -> dict[str, object]:
     values = {claim.field: claim.value for claim in report.checked_claims}
     values.update({claim.field: claim.value for claim in report.derived_claims})
     return values

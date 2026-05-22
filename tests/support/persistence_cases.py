@@ -5,11 +5,11 @@ from dataclasses import dataclass
 from typing import Any
 
 from comp import (
-    CommitReceipt,
-    CommitReceiptCitations,
+    PublicOutputReceipt,
+    PublicOutputReceiptCitations,
     DependencyFingerprint,
-    ProjectionSpec,
-    ProjectionValueCommitment,
+    PublicOutputSpec,
+    PublicOutputValueCommitment,
 )
 from comp.compiler_tool import CompilerProfile, DomainPack, profile_lock_envelope_body
 from comp.persistence import ArtifactEnvelope, ArtifactRef, InMemoryArtifactStore
@@ -18,8 +18,8 @@ from comp.persistence import receipt_artifact_refs
 
 @dataclass(frozen=True, slots=True)
 class PersistenceProjectionCase:
-    receipt: CommitReceipt
-    projection: ProjectionSpec
+    receipt: PublicOutputReceipt
+    projection: PublicOutputSpec
     source_values: dict[str, Any]
     public_row: dict[str, Any]
 
@@ -31,13 +31,13 @@ def receipt_projection_case(
     include_profile_lock: bool = False,
 ) -> PersistenceProjectionCase:
     commitments = (
-        ProjectionValueCommitment.from_value(
+        PublicOutputValueCommitment.from_value(
             field="site",
             source_kind="checked_claim",
             source_id="checked_claim:site:span-site",
             value=site,
         ),
-        ProjectionValueCommitment.from_value(
+        PublicOutputValueCommitment.from_value(
             field="amount",
             source_kind="checked_claim",
             source_id="checked_claim:amount:span-amount",
@@ -45,7 +45,7 @@ def receipt_projection_case(
         ),
     )
     profile_dependency = _fixture_profile_fingerprint()
-    citations = CommitReceiptCitations(
+    citations = PublicOutputReceiptCitations(
         governance_decision_id="decision-1",
         governance_status="commit",
         governance_reasons=("ready",),
@@ -82,7 +82,7 @@ def receipt_projection_case(
             ),
         ),
     )
-    receipt = CommitReceipt(
+    receipt = PublicOutputReceipt(
         draft_id="draft-1",
         winner_receipt_ids=("decision-1",),
         barrier_snapshot=citations.to_barrier_snapshot(),
@@ -91,7 +91,7 @@ def receipt_projection_case(
         authorized_fields=("site", "amount"),
         citations=citations,
     )
-    projection = ProjectionSpec("public-row", ("site", "amount"))
+    projection = PublicOutputSpec("public-row", ("site", "amount"))
     public_row = {"site": site, "amount": amount}
     return PersistenceProjectionCase(
         receipt=receipt,
@@ -115,7 +115,7 @@ def claim_envelope(
 
 
 def artifact_store_for_receipt(
-    receipt: CommitReceipt,
+    receipt: PublicOutputReceipt,
     *,
     committed_values: Mapping[str, Any] | None = None,
     skip: ArtifactRef | None = None,

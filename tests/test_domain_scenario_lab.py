@@ -5,7 +5,7 @@ from types import SimpleNamespace
 
 import pytest
 
-from comp import DependencyFingerprint, ProjectionSpec
+from comp import DependencyFingerprint, PublicOutputSpec
 from tests.domain_scenarios.assertions import (
     assert_no_proof_graph,
     assert_proof_graph_contract,
@@ -156,11 +156,11 @@ def test_domain_scenario_cli_summarizes_blocked_requirements_as_actions():
     )
     assert "    조치: 값이 나온 문서, 엑셀, 인증서 등의 위치를 연결해 주세요." in output
     blocked_terms = (
-        "ClaimHypothesis",
-        "EvidenceWitness",
-        "CommitReceipt",
+        "ClaimCandidate",
+        "EvidenceRef",
+        "PublicOutputReceipt",
         "Projection",
-        "ProofObligation",
+        "ValidationRequirement",
     )
     assert not any(term in output for term in blocked_terms)
 
@@ -470,7 +470,7 @@ def test_tiny_pcf_scenario_rejects_tampered_projection_value():
 
     assert_projection_tamper_blocked(
         result,
-        ProjectionSpec("pcf-public-row", ("electricity_kwh", "co2e_kg")),
+        PublicOutputSpec("pcf-public-row", ("electricity_kwh", "co2e_kg")),
         {"co2e_kg": 999999},
         match="value commitment",
     )
@@ -578,13 +578,13 @@ def test_scenario_result_view_exposes_friendly_validation_summary():
     ]
 
     blocked_terms = (
-        "ClaimHypothesis",
-        "EvidenceWitness",
-        "ReferenceCandidate",
-        "ReferenceBinding",
-        "CommitReceipt",
+        "ClaimCandidate",
+        "EvidenceRef",
+        "ReferenceOption",
+        "CanonicalReference",
+        "PublicOutputReceipt",
         "Projection",
-        "ProofObligation",
+        "ValidationRequirement",
     )
     assert not any(term in str(friendly) for term in blocked_terms)
 

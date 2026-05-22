@@ -35,7 +35,7 @@ def validation_summary_view(report: ValidationReport) -> dict[str, Any]:
         "status": report.status,
         "status_ko": _STATUS_KO.get(report.status, "상태 확인 필요"),
         "authority_ko": schema_label("ValidationReport").authority_ko,
-        "can_make_public_output": report.can_project_public_row,
+        "can_make_public_output": report.can_build_public_output,
         "public_output": _public_output_view(report),
         "sections": [
             _count_section("EvidenceRef", len(report.evidence_witnesses)),
@@ -57,7 +57,7 @@ def validation_summary_view(report: ValidationReport) -> dict[str, Any]:
 def _public_output_view(report: ValidationReport) -> dict[str, str]:
     return {
         "label_ko": schema_label_ko("PublicOutput"),
-        "state_ko": "공개 가능" if report.can_project_public_row else "공개 승인 전",
+        "state_ko": "공개 가능" if report.can_build_public_output else "공개 승인 전",
         "authority_ko": schema_label("PublicOutput").authority_ko,
     }
 

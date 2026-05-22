@@ -4,7 +4,7 @@ from comp.compiler_tool import (
     CalculationFormula,
     CalculationInput,
     CalculationResult,
-    ReferenceBinding,
+    CanonicalReference,
     ReferenceCatalog,
     ReferenceRecord,
     calculate_derived_claim,
@@ -31,7 +31,7 @@ def _catalog():
 
 
 def _binding(reference_id="factor.kr_grid.2024.location_based"):
-    return ReferenceBinding(
+    return CanonicalReference(
         binding_id="bind-amount-factor",
         claim_id="hyp-1:amount",
         reference_id=reference_id,

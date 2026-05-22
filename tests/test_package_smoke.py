@@ -3,8 +3,8 @@ import tomllib
 
 import comp
 from comp import (
-    CommitReceipt,
-    CommitReceiptCitations,
+    PublicOutputReceipt,
+    PublicOutputReceiptCitations,
     DependencyFingerprint,
     Fact,
     FixpointEngine,
@@ -113,10 +113,10 @@ def test_top_level_package_exposes_active_judgment_surface():
     assert PublicOutputSpec is not None
     assert PublicOutputBlocked is not None
     assert PublicOutput is not None
-    assert CommitReceipt is PublicOutputReceipt
-    assert CommitReceiptCitations is PublicOutputReceiptCitations
-    assert CommitReceipt is not None
-    assert CommitReceiptCitations is not None
+    assert PublicOutputReceipt is PublicOutputReceipt
+    assert PublicOutputReceiptCitations is PublicOutputReceiptCitations
+    assert PublicOutputReceipt is not None
+    assert PublicOutputReceiptCitations is not None
     assert DependencyFingerprint is not None
 
 
@@ -132,7 +132,7 @@ def test_readme_compiler_tool_import_surface_is_exported():
         CalculatedClaim,
         CanonicalReference,
         ClaimCandidate,
-        CompileReport,
+        ValidationReport,
         CompilerTool,
         EvidenceRef,
         EmbeddingResolverStub,
@@ -148,7 +148,7 @@ def test_readme_compiler_tool_import_surface_is_exported():
         calculation_formula_declaration_fingerprint,
         domain_pack_declaration_fingerprint,
         evidence_ref_fingerprint,
-        evidence_witness_fingerprint,
+        evidence_ref_fingerprint,
         profile_declaration_fingerprint,
         profile_allowed_units,
         profile_known_fields,
@@ -165,7 +165,7 @@ def test_readme_compiler_tool_import_surface_is_exported():
         semantic_rubric_declaration_fingerprint,
         ValidationRequirement,
         ValidationReport,
-        build_commit_receipt,
+        build_public_output_receipt,
         build_public_output_receipt,
         compile_report_to_facts,
         prepare_commit,
@@ -178,12 +178,12 @@ def test_readme_compiler_tool_import_surface_is_exported():
     assert CanonicalReference is not None
     assert ClaimCandidate is not None
     assert CompilerTool is not None
-    assert CompileReport is not None
+    assert ValidationReport is not None
     assert EvidenceRef is not None
     assert resolver_tasks_from_report is not None
     assert prepare_commit is not None
-    assert build_public_output_receipt is build_commit_receipt
-    assert build_commit_receipt is not None
+    assert build_public_output_receipt is build_public_output_receipt
+    assert build_public_output_receipt is not None
     assert PublicOutputReceipt is not None
     assert PublicOutputReceiptCitations is not None
     assert compile_report_to_facts is not None
@@ -199,7 +199,7 @@ def test_readme_compiler_tool_import_surface_is_exported():
     assert calculation_formula_declaration_fingerprint is not None
     assert domain_pack_declaration_fingerprint is not None
     assert evidence_ref_fingerprint is not None
-    assert evidence_witness_fingerprint is not None
+    assert evidence_ref_fingerprint is not None
     assert active_retrieval_query_policies is not None
     assert profile_declaration_fingerprint is not None
     assert profile_allowed_units is not None
@@ -245,7 +245,7 @@ def test_trust_kernel_hardening_documents_projection_numeric_policy():
     )
 
     assert "## Projection Numeric Value Policy" in hardening
-    assert "ProjectionValueCommitment" in hardening
+    assert "PublicOutputValueCommitment" in hardening
     assert "Decimal" in hardening
 
 
@@ -266,8 +266,8 @@ def test_working_theory_status_section_tracks_current_rebuild_state():
 
     assert "## 13. Current Implementation Status" in working_theory
     assert "SemanticJudgment obligation validation" in working_theory
-    assert "ReferenceCandidate / ReferenceBinding" in working_theory
-    assert "CommitPackage / GovernanceDecision / CommitReceipt" in working_theory
+    assert "ReferenceOption / CanonicalReference" in working_theory
+    assert "ReviewPackage / ReviewDecision / PublicOutputReceipt" in working_theory
     assert "Domain Scenario Lab" in working_theory
     assert "Retrieval lens interface" in working_theory
     assert "EmbeddingResolverStub" in working_theory
@@ -446,9 +446,9 @@ def test_architecture_docs_are_classified_by_governance_status():
             "2026-05-20",
         ),
         "friendly-authority-vocabulary.md": (
-            "north-star",
+            "active-contract",
             "trust-kernel",
-            "limited",
+            "yes",
             "2026-05-22",
         ),
         "legacy-archive-cutover-plan.md": (
@@ -643,30 +643,21 @@ def test_friendly_authority_vocabulary_names_rename_path_without_moving_authorit
         "docs/architecture/friendly-authority-vocabulary.md"
     ).read_text(encoding="utf-8")
 
-    assert "Status: north-star" in vocabulary
-    assert "ClaimHypothesis` | `ClaimCandidate" in vocabulary
-    assert "EvidenceWitness` | `EvidenceRef" in vocabulary
-    assert "ProofObligation` | `ValidationRequirement" in vocabulary
-    assert "ReferenceBinding` | `CanonicalReference" in vocabulary
-    assert "CommitReceipt` | `PublicOutputReceipt" in vocabulary
-    assert "공개 승인 증표" in vocabulary
-    assert "감사 산출물 기록" in vocabulary
-    assert "Canonical rename with deprecated aliases" in vocabulary
-    assert "ClaimCandidate is canonical." in vocabulary
-    assert "CanonicalReference is canonical." in vocabulary
-    assert "ValidationReport is canonical." in vocabulary
-    assert "ReviewPackage is canonical." in vocabulary
-    assert "ReviewDecision is canonical." in vocabulary
-    assert "PublicOutputReceipt is canonical." in vocabulary
-    assert "PublicOutputSpec is canonical." in vocabulary
-    assert "PublicOutputBlocked is canonical." in vocabulary
-    assert "PublicOutput is available as the public-row return type." in vocabulary
-    assert "comp.schema_labels provides frozen display metadata" in vocabulary
+    assert "Status: active-contract" in vocabulary
+    assert "repo exposes only the canonical authority names" in vocabulary
+    assert "`ClaimCandidate` | 검증 전 입력값" in vocabulary
+    assert "`EvidenceRef` | 근거자료 위치" in vocabulary
+    assert "`ValidationRequirement` | 보완 필요 항목" in vocabulary
+    assert "`CanonicalReference` | 확정 기준" in vocabulary
+    assert "`PublicOutputReceipt` | 공개 승인 증표" in vocabulary
+    assert "`ArtifactEnvelope` | 감사 산출물 기록" in vocabulary
+    assert "Active package surfaces must use the canonical names above." in vocabulary
+    assert "tests/test_complete_friendly_rename.py" in vocabulary
+    assert "Historical snapshots under" in vocabulary
+    assert "The first implementation lives in `comp.schema_labels`" in vocabulary
     assert "schema_label_ko(\"ClaimCandidate\")" in vocabulary
     assert "The first helper lives in `comp.user_messages`" in vocabulary
     assert "user_message_for_reason(\"unsupported_unit\")" in vocabulary
-    assert "ProofObligation remains a compatibility alias." in vocabulary
-    assert "CommitReceipt remains a compatibility alias." in vocabulary
     assert "Only a clean public-output receipt can authorize public output." in vocabulary
 
 
@@ -717,7 +708,7 @@ def test_receipt_graph_renderers_have_non_authority_module_boundary():
     assert "render-only" in (receipt_graph.__doc__ or "").lower()
     assert "export_receipt_proof_graph" not in receipt_graph.__dict__
     assert "replay_public_projection" not in receipt_graph.__dict__
-    assert "project_public_row" not in receipt_graph.__dict__
+    assert "build_public_output" not in receipt_graph.__dict__
 
 
 def test_pyproject_packages_comp_core_scenarios_and_agent_layer():

@@ -7,23 +7,23 @@ from comp.compiler_tool.calculations import (
     CalculationRequirement,
     CalculationResult,
 )
-from comp.compiler_tool.models import CompileReport, ProofObligation
+from comp.compiler_tool.models import ValidationReport, ValidationRequirement
 from comp.compiler_tool.report_status import with_recomputed_status
 
 
 def apply_calculation_result(
-    report: CompileReport,
+    report: ValidationReport,
     result: CalculationResult,
     *,
     output_claim_id: str,
     formula: CalculationFormula,
-) -> CompileReport:
+) -> ValidationReport:
     if result.status == "calculated" and result.derived_claim is not None:
         return with_recomputed_status(
             replace(
                 report,
                 derived_claims=(*report.derived_claims, result.derived_claim),
-                can_project_public_row=False,
+                can_build_public_output=False,
             )
         )
 
@@ -33,7 +33,7 @@ def apply_calculation_result(
         formula_id=formula.formula_id,
         output_claim_id=output_claim_id,
     )
-    obligation = ProofObligation(
+    obligation = ValidationRequirement(
         kind="calculation_blocked",
         field=formula.output_field,
         reason=reason,
@@ -48,15 +48,15 @@ def apply_calculation_result(
         replace(
             report,
             obligations=_append_unique(report.obligations, obligation),
-            can_project_public_row=False,
+            can_build_public_output=False,
         )
     )
 
 
 def _append_unique(
-    obligations: tuple[ProofObligation, ...],
-    obligation: ProofObligation,
-) -> tuple[ProofObligation, ...]:
+    obligations: tuple[ValidationRequirement, ...],
+    obligation: ValidationRequirement,
+) -> tuple[ValidationRequirement, ...]:
     if obligation in obligations:
         return obligations
     return (*obligations, obligation)

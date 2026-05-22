@@ -5,12 +5,12 @@ import json
 from pathlib import Path
 from typing import Any
 
-from comp.compiler_tool import CompileReport
-from comp.judgment import CommitReceipt
+from comp.compiler_tool import ValidationReport
+from comp.judgment import PublicOutputReceipt
 from comp.persistence import ProjectionReplayReport
 from comp.scenarios.synthetic import (
     ExpectedClaim,
-    ExpectedDerivedClaim,
+    ExpectedCalculatedClaim,
     ExpectedFailedClaim,
     ExpectedHazard,
     ExpectedObligation,
@@ -36,7 +36,7 @@ def load_synthetic_oracle(oracle_dir: Path) -> SyntheticOracle:
             for row in _read_csv(oracle_dir / "expected_claims.csv")
         ),
         expected_derived_claims=tuple(
-            ExpectedDerivedClaim(
+            ExpectedCalculatedClaim(
                 claim_id=row["claim_id"],
                 field=row["field"],
                 value=_parse_scalar(row["value"]),
@@ -107,7 +107,7 @@ def load_synthetic_oracle(oracle_dir: Path) -> SyntheticOracle:
 
 def assert_synthetic_oracle_matches_report(
     oracle: SyntheticOracle,
-    report: CompileReport,
+    report: ValidationReport,
 ) -> None:
     assert _checked_claim_rows(report) == _expected_claim_rows(
         oracle
@@ -135,7 +135,7 @@ def assert_synthetic_oracle_matches_report(
 
 def assert_synthetic_receipt_oracle_matches(
     oracle: SyntheticOracle,
-    receipt: CommitReceipt | None,
+    receipt: PublicOutputReceipt | None,
     replay_report: ProjectionReplayReport | None,
 ) -> None:
     expected = oracle.expected_receipt
@@ -193,7 +193,7 @@ def _expected_claim_rows(oracle: SyntheticOracle) -> tuple[tuple[Any, ...], ...]
     )
 
 
-def _checked_claim_rows(report: CompileReport) -> tuple[tuple[Any, ...], ...]:
+def _checked_claim_rows(report: ValidationReport) -> tuple[tuple[Any, ...], ...]:
     return tuple(
         (claim.field, claim.value, claim.witness_id)
         for claim in report.checked_claims
@@ -209,7 +209,7 @@ def _expected_derived_claim_rows(
     )
 
 
-def _derived_claim_rows(report: CompileReport) -> tuple[tuple[Any, ...], ...]:
+def _derived_claim_rows(report: ValidationReport) -> tuple[tuple[Any, ...], ...]:
     return tuple(
         (claim.claim_id, claim.field, claim.value, claim.unit, claim.formula_id)
         for claim in report.derived_claims
@@ -225,7 +225,7 @@ def _expected_failed_claim_rows(
     )
 
 
-def _failed_claim_rows(report: CompileReport) -> tuple[tuple[Any, ...], ...]:
+def _failed_claim_rows(report: ValidationReport) -> tuple[tuple[Any, ...], ...]:
     return tuple(
         (claim.field, claim.value, claim.reason)
         for claim in report.failed_claims
@@ -262,7 +262,7 @@ def _expected_resolved_obligation_rows(
     )
 
 
-def _obligation_rows(report: CompileReport) -> tuple[tuple[Any, ...], ...]:
+def _obligation_rows(report: ValidationReport) -> tuple[tuple[Any, ...], ...]:
     return tuple(
         (
             obligation.obligation_id
@@ -280,7 +280,7 @@ def _obligation_rows(report: CompileReport) -> tuple[tuple[Any, ...], ...]:
     )
 
 
-def _resolved_obligation_rows(report: CompileReport) -> tuple[tuple[Any, ...], ...]:
+def _resolved_obligation_rows(report: ValidationReport) -> tuple[tuple[Any, ...], ...]:
     return tuple(
         (
             obligation.obligation_id
@@ -305,7 +305,7 @@ def _expected_hazard_rows(oracle: SyntheticOracle) -> tuple[tuple[Any, ...], ...
     )
 
 
-def _hazard_rows(report: CompileReport) -> tuple[tuple[Any, ...], ...]:
+def _hazard_rows(report: ValidationReport) -> tuple[tuple[Any, ...], ...]:
     return tuple(
         (
             _stable_id("hazard", hazard.kind, hazard.field, hazard.severity),
@@ -319,7 +319,7 @@ def _hazard_rows(report: CompileReport) -> tuple[tuple[Any, ...], ...]:
 
 def _assert_source_map_matches_witnesses(
     oracle: SyntheticOracle,
-    report: CompileReport,
+    report: ValidationReport,
 ) -> None:
     actual = {
         (witness.field, witness.witness_id, witness.source, witness.span)

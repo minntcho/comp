@@ -27,7 +27,7 @@ class ReferenceOption:
 
 
 @dataclass(frozen=True)
-class RejectedReferenceCandidate:
+class RejectedReferenceOption:
     candidate_id: str
     reference_id: str
     reason: str
@@ -43,7 +43,7 @@ class CanonicalReference:
     selected_candidate_id: str | None = None
     selector_rule_id: str | None = None
     source_witness_ids: tuple[str, ...] = field(default_factory=tuple)
-    rejected_candidates: tuple[RejectedReferenceCandidate, ...] = field(
+    rejected_candidates: tuple[RejectedReferenceOption, ...] = field(
         default_factory=tuple
     )
     authority: str = "canonical_binding"
@@ -65,14 +65,9 @@ def _require_authority(*, actual: str, expected: str, artifact: str) -> None:
         raise ValueError(f"{artifact} authority must be {expected!r}")
 
 
-ReferenceCandidate = ReferenceOption
-ReferenceBinding = CanonicalReference
-
 
 __all__ = [
     "ReferenceOption",
-    "ReferenceCandidate",
-    "RejectedReferenceCandidate",
+    "RejectedReferenceOption",
     "CanonicalReference",
-    "ReferenceBinding",
 ]

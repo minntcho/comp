@@ -11,9 +11,9 @@ authority를 통해서만 허가하는 것이다.
 
 ```text
 candidate / obligation / judgment / reference / calculation
--> CommitPackage
--> GovernanceDecision
--> CommitReceipt
+-> ReviewPackage
+-> ReviewDecision
+-> PublicOutputReceipt
 -> Judgment Facts
 -> receipt-gated projection
 ```
@@ -21,11 +21,11 @@ candidate / obligation / judgment / reference / calculation
 중요한 권한 경계:
 
 ```text
-ReferenceCandidate != ReferenceBinding
-DerivedClaim != public output
-CommitPackage != public authority
-GovernanceDecision != public authority
-CommitReceipt == projection gate
+ReferenceOption != CanonicalReference
+CalculatedClaim != public output
+ReviewPackage != public authority
+ReviewDecision != public authority
+PublicOutputReceipt == projection gate
 ```
 
 embedding과 LLM도 같은 원칙을 따른다.
@@ -48,17 +48,17 @@ top-level `comp` 패키지는 judgment-core surface를 노출한다.
 
 ```python
 from comp import Fact, JudgmentState, SubjectRef
-from comp import SelectionReceipt, CommitReceipt
-from comp import ProjectionSpec, project_public_row
+from comp import SelectionReceipt, PublicOutputReceipt
+from comp import PublicOutputSpec, build_public_output
 ```
 
 `comp.compiler_tool`은 현재 deterministic publication kernel surface를
 노출한다.
 
 ```python
-from comp.compiler_tool import CompilerTool, CompileReport
+from comp.compiler_tool import CompilerTool, ValidationReport
 from comp.compiler_tool import resolver_tasks_from_report
-from comp.compiler_tool import prepare_commit, build_commit_receipt
+from comp.compiler_tool import prepare_commit, build_public_output_receipt
 from comp.compiler_tool import compile_report_to_facts
 ```
 
@@ -86,27 +86,27 @@ semantic
   submitted SemanticJudgment protocol validation
 
 reference
-  ReferenceCandidate
+  ReferenceOption
   deterministic selection
-  canonical ReferenceBinding
+  canonical CanonicalReference
 
 calculation
   CalculationRequirement
   CalculationTrace
-  DerivedClaim
+  CalculatedClaim
 
 resolver tasks
-  ProofObligation -> ResolverTask
+  ValidationRequirement -> ResolverTask
   resolver-facing task type, required artifact, payload
 
 governance / commit
-  CommitPackage
-  GovernanceDecision
-  CommitReceipt builder
+  ReviewPackage
+  ReviewDecision
+  PublicOutputReceipt builder
   CommitPreparation
 
 judgment facts
-  CompileReport -> Fact
+  ValidationReport -> Fact
   CommitPreparation -> Fact
 ```
 

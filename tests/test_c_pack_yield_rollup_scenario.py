@@ -1,6 +1,6 @@
 import pytest
 
-from comp import ProjectionBlocked, ProjectionSpec, project_public_row
+from comp import PublicOutputBlocked, PublicOutputSpec, build_public_output
 from tests.domain_scenarios.core import assert_scenario_contract, run_scenario
 from tests.domain_scenarios.l_energy_pcf_governance.c_pack_yield_rollup import (
     ALPHA_CHILD_CLAIM_ID,
@@ -91,13 +91,13 @@ def test_c_pack_rollup_creates_receipt_and_projection():
     assert result.preparation.receipt is not None
     assert result.projection == EXPECTED_PROJECTION
 
-    with pytest.raises(ProjectionBlocked, match="value commitment mismatch"):
-        project_public_row(
+    with pytest.raises(PublicOutputBlocked, match="value commitment mismatch"):
+        build_public_output(
             {
                 **EXPECTED_PROJECTION,
                 "c_pack_final_emission_tco2e": 9999,
             },
-            ProjectionSpec(PROJECTION_ID, PROJECTION_FIELDS),
+            PublicOutputSpec(PROJECTION_ID, PROJECTION_FIELDS),
             receipt=result.preparation.receipt,
         )
 

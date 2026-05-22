@@ -5,12 +5,12 @@ from typing import Any
 
 import pytest
 
-from comp import ProjectionBlocked, ProjectionSpec, project_public_row
+from comp import PublicOutputBlocked, PublicOutputSpec, build_public_output
 
 
 def assert_projection_tamper_blocked(
     result,
-    projection: ProjectionSpec,
+    projection: PublicOutputSpec,
     overrides: Mapping[str, Any],
     *,
     match: str = "value commitment",
@@ -23,8 +23,8 @@ def assert_projection_tamper_blocked(
     tampered_values = dict(result.projection)
     tampered_values.update(overrides)
 
-    with pytest.raises(ProjectionBlocked, match=match):
-        project_public_row(
+    with pytest.raises(PublicOutputBlocked, match=match):
+        build_public_output(
             tampered_values,
             projection,
             receipt=result.preparation.receipt,

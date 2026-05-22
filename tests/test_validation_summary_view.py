@@ -95,14 +95,14 @@ def test_validation_summary_view_falls_back_without_leaking_kernel_terms():
         "추가 확인이 필요한 항목입니다."
     )
     blocked_terms = (
-        "ClaimHypothesis",
-        "EvidenceWitness",
-        "ReferenceCandidate",
-        "ReferenceBinding",
-        "CommitReceipt",
+        "ClaimCandidate",
+        "EvidenceRef",
+        "ReferenceOption",
+        "CanonicalReference",
+        "PublicOutputReceipt",
         "Projection",
         "PublicOutputReceipt",
-        "ProofObligation",
+        "ValidationRequirement",
     )
     assert not any(term in str(view) for term in blocked_terms)
 

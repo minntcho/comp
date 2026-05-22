@@ -2,10 +2,10 @@ from __future__ import annotations
 
 from dataclasses import replace
 
-from comp.compiler_tool.models import CompileReport, CompileStatus
+from comp.compiler_tool.models import ValidationReport, CompileStatus
 
 
-def recompute_report_status(report: CompileReport) -> CompileStatus:
+def recompute_report_status(report: ValidationReport) -> CompileStatus:
     if report.failed_claims:
         return "blocked"
     if any(
@@ -29,7 +29,7 @@ def recompute_report_status(report: CompileReport) -> CompileStatus:
     return "accepted"
 
 
-def with_recomputed_status(report: CompileReport) -> CompileReport:
+def with_recomputed_status(report: ValidationReport) -> ValidationReport:
     return replace(report, status=recompute_report_status(report))
 
 

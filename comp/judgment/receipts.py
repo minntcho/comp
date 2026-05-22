@@ -19,7 +19,7 @@ class SelectionReceipt:
 
 
 @dataclass(frozen=True, slots=True)
-class ProjectionValueCommitment:
+class PublicOutputValueCommitment:
     field: str
     source_kind: str
     source_id: str
@@ -34,7 +34,7 @@ class ProjectionValueCommitment:
         source_kind: str,
         source_id: str,
         value: Any,
-    ) -> "ProjectionValueCommitment":
+    ) -> "PublicOutputValueCommitment":
         return cls(
             field=field,
             source_kind=source_kind,
@@ -91,7 +91,7 @@ class PublicOutputReceiptCitations:
     resolved_obligation_ids: tuple[str, ...]
     open_obligation_ids: tuple[str, ...]
     hazard_ids: tuple[str, ...]
-    projection_value_commitments: tuple[ProjectionValueCommitment, ...] = field(
+    projection_value_commitments: tuple[PublicOutputValueCommitment, ...] = field(
         default_factory=tuple
     )
     dependency_fingerprints: tuple[DependencyFingerprint, ...] = field(
@@ -129,8 +129,6 @@ class PublicOutputReceiptCitations:
         )
 
 
-CommitReceiptCitations = PublicOutputReceiptCitations
-
 
 @dataclass(frozen=True, slots=True)
 class PublicOutputReceipt:
@@ -142,8 +140,6 @@ class PublicOutputReceipt:
     authorized_fields: tuple[str, ...]
     citations: PublicOutputReceiptCitations | None = None
 
-
-CommitReceipt = PublicOutputReceipt
 
 
 def _value_digest(value: Any) -> str:
@@ -200,10 +196,8 @@ def _canonical_value(value: Any) -> Any:
 
 __all__ = [
     "SelectionReceipt",
-    "ProjectionValueCommitment",
+    "PublicOutputValueCommitment",
     "DependencyFingerprint",
     "PublicOutputReceipt",
     "PublicOutputReceiptCitations",
-    "CommitReceipt",
-    "CommitReceiptCitations",
 ]

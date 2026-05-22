@@ -1,11 +1,11 @@
 from comp.compiler_tool import (
-    ClaimHypothesis,
+    ClaimCandidate,
     CompilerProfile,
     DomainPack,
-    EvidenceWitness,
+    EvidenceRef,
     InterpretationHypothesis,
     JudgePolicy,
-    ProofObligation,
+    ValidationRequirement,
     RuleFamily,
     SemanticJudgment,
     SemanticRubric,
@@ -27,7 +27,7 @@ def _scope2_method_rule(claim, hypothesis, profile):
     rubric = profile.rubric(SCOPE2_RUBRIC_ID)
     judge_policy = profile.judge_policy()
     return (
-        ProofObligation(
+        ValidationRequirement(
             kind="semantic_judgment_required",
             field=claim.field,
             reason="semantic_support_required",
@@ -97,7 +97,7 @@ def _hypothesis():
         hypothesis_id="hyp-scope2",
         subject_id="claim-scope2",
         claims=(
-            ClaimHypothesis(
+            ClaimCandidate(
                 field="scope2_method",
                 value="market_based",
                 witness_id="span-17",
@@ -105,7 +105,7 @@ def _hypothesis():
             ),
         ),
         witnesses=(
-            EvidenceWitness(
+            EvidenceRef(
                 witness_id="span-17",
                 field="scope2_method",
                 source="report.pdf",
@@ -120,13 +120,13 @@ def _hypothesis_with_unsupported_unit():
         hypothesis_id="hyp-scope2",
         subject_id="claim-scope2",
         claims=(
-            ClaimHypothesis(
+            ClaimCandidate(
                 field="scope2_method",
                 value="market_based",
                 witness_id="span-17",
                 origin="llm_inferred",
             ),
-            ClaimHypothesis(
+            ClaimCandidate(
                 field="unit",
                 value="mwh",
                 witness_id="span-unit",
@@ -134,13 +134,13 @@ def _hypothesis_with_unsupported_unit():
             ),
         ),
         witnesses=(
-            EvidenceWitness(
+            EvidenceRef(
                 witness_id="span-17",
                 field="scope2_method",
                 source="report.pdf",
                 span="p12",
             ),
-            EvidenceWitness(
+            EvidenceRef(
                 witness_id="span-unit",
                 field="unit",
                 source="report.pdf",
@@ -155,7 +155,7 @@ def _hypothesis_without_source_witness():
         hypothesis_id="hyp-scope2",
         subject_id="claim-scope2",
         claims=(
-            ClaimHypothesis(
+            ClaimCandidate(
                 field="scope2_method",
                 value="market_based",
                 witness_id=None,
@@ -192,7 +192,7 @@ def test_tiny_domain_profile_opens_scope2_semantic_obligation():
         "human/reviewer",
         "llm/model@policy-v1",
     )
-    assert report.can_project_public_row is False
+    assert report.can_build_public_output is False
 
 
 def test_profile_rule_runner_surface_matches_compat_compile_with_profile():

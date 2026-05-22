@@ -30,11 +30,11 @@ submitted artifact
   Non-authoritative output delivered to the compiler gate for validation.
 
 canonical artifact
-  Artifact promoted by a deterministic gate, such as ReferenceBinding or
-  DerivedClaim.
+  Artifact promoted by a deterministic gate, such as CanonicalReference or
+  CalculatedClaim.
 
 receipt authority
-  Authority held by CommitReceipt for a specific projection scope.
+  Authority held by PublicOutputReceipt for a specific projection scope.
 
 view artifact
   Rendered or replayed explanation. It helps humans inspect authority, but does
@@ -59,12 +59,12 @@ Forbidden direct outputs from outer-ring ports:
 
 ```text
 CheckedClaim
-ReferenceBinding
-DerivedClaim
-CommitPackage
-GovernanceDecision
-CommitReceipt
-PublicProjection
+CanonicalReference
+CalculatedClaim
+ReviewPackage
+ReviewDecision
+PublicOutputReceipt
+PublicOutput
 ```
 
 If a backend appears to need one of these outputs, add a submitted artifact and a
@@ -83,8 +83,8 @@ class ExtractorPort(Protocol):
 Allowed outputs:
 
 ```text
-EvidenceWitness
-ClaimHypothesis
+EvidenceRef
+ClaimCandidate
 ReadingCandidate
 ParseDerivation
 TableCellCandidate
@@ -136,7 +136,7 @@ include cited spans, source ids, or rationale fields required by the obligation
 make abstention explicit when the worker cannot satisfy the obligation
 ```
 
-Resolver workers do not mutate `CompileReport`. They submit artifacts that the
+Resolver workers do not mutate `ValidationReport`. They submit artifacts that the
 compiler gate may accept, reject, or turn into new obligations.
 
 ## ReferenceResolver
@@ -151,14 +151,14 @@ class ReferenceResolver(Protocol):
         query: ReferenceQuery,
         *,
         limit: int = 10,
-    ) -> tuple[ReferenceCandidate, ...]:
+    ) -> tuple[ReferenceOption, ...]:
         ...
 ```
 
 The only allowed output is:
 
 ```text
-ReferenceCandidate
+ReferenceOption
 ```
 
 Required metadata:
@@ -178,7 +178,7 @@ source witness ids when available
 Non-negotiable invariants:
 
 ```text
-ReferenceCandidate != ReferenceBinding
+ReferenceOption != CanonicalReference
 Retrieval score != truth score
 Embedding top-1 != selected reference
 ```
@@ -242,7 +242,7 @@ preserve artifact kind and schema version
 Forbidden behavior:
 
 ```text
-minting CommitReceipt
+minting PublicOutputReceipt
 changing projection values to match a receipt
 treating storage success as projection authority
 ```
@@ -253,10 +253,10 @@ Receipt ledgers store receipt roots.
 
 ```python
 class ReceiptLedger(Protocol):
-    def record(self, receipt: CommitReceipt) -> CommitReceipt:
+    def record(self, receipt: PublicOutputReceipt) -> PublicOutputReceipt:
         ...
 
-    def get(self, key: ReceiptLedgerKey) -> CommitReceipt:
+    def get(self, key: ReceiptLedgerKey) -> PublicOutputReceipt:
         ...
 ```
 
@@ -281,9 +281,9 @@ class ReplayEngine(Protocol):
     def replay_public_projection(
         self,
         row: Mapping[str, Any],
-        projection: ProjectionSpec,
+        projection: PublicOutputSpec,
         *,
-        receipt: CommitReceipt,
+        receipt: PublicOutputReceipt,
     ) -> ProjectionReplayReport:
         ...
 ```
@@ -316,7 +316,7 @@ Forbidden behavior:
 
 ```text
 deciding commit status from UI state
-directly calling public projection without a CommitReceipt
+directly calling public projection without a PublicOutputReceipt
 treating viewer JSON as authority
 turning LLM text into public fields without compiler validation
 ```

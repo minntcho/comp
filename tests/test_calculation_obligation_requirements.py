@@ -2,8 +2,8 @@ from comp.compiler_tool import (
     CalculationFormula,
     CalculationInput,
     CalculationRequirement,
-    CompileReport,
-    ReferenceBinding,
+    ValidationReport,
+    CanonicalReference,
     ReferenceCatalog,
     ReferenceRecord,
     apply_calculation_result,
@@ -30,7 +30,7 @@ def _catalog():
 
 
 def _binding(reference_id="factor.kr_grid.2024.location_based"):
-    return ReferenceBinding(
+    return CanonicalReference(
         binding_id="bind-amount-factor",
         claim_id="hyp-1:amount",
         reference_id=reference_id,
@@ -88,7 +88,7 @@ def test_blocked_calculation_report_obligation_carries_requirement_payload():
     )
 
     report = apply_calculation_result(
-        CompileReport(status="accepted"),
+        ValidationReport(status="accepted"),
         result,
         output_claim_id="hyp-1:co2e_emission",
         formula=_formula(),
@@ -111,7 +111,7 @@ def test_calculation_requirement_metadata_is_visible_to_judgment_facts():
         formula=_formula(),
     )
     report = apply_calculation_result(
-        CompileReport(status="accepted"),
+        ValidationReport(status="accepted"),
         result,
         output_claim_id="hyp-1:co2e_emission",
         formula=_formula(),

@@ -22,8 +22,6 @@ class PublicOutputBlocked(RuntimeError):
     """Raised when public output lacks receipt authority."""
 
 
-ProjectionBlocked = PublicOutputBlocked
-
 
 def resolved_required_bundles(snapshot: DraftSnapshot, required_bundles: tuple[str, ...]) -> bool:
     return all(bundle in snapshot.resolved_bundles for bundle in required_bundles)
@@ -46,7 +44,7 @@ def committable(snapshot: DraftSnapshot, spec: CommitSpec) -> bool:
     )
 
 
-def project_public_row(
+def build_public_output(
     field_values: Mapping[str, Any],
     projection: PublicOutputSpec,
     *,
@@ -146,10 +144,9 @@ __all__ = [
     "DraftSnapshot",
     "PublicOutput",
     "PublicOutputBlocked",
-    "ProjectionBlocked",
     "resolved_required_bundles",
     "blocking_hazards_clear",
     "prov_enough",
     "committable",
-    "project_public_row",
+    "build_public_output",
 ]

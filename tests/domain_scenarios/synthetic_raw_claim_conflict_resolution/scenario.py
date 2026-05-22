@@ -2,17 +2,17 @@ from __future__ import annotations
 
 from decimal import Decimal
 
-from comp import ProjectionSpec, SubjectRef, project_public_row
+from comp import PublicOutputSpec, SubjectRef, build_public_output
 from comp.compiler_tool import (
     CalculationStep,
     CalculationTrace,
     CheckedClaim,
-    CompileReport,
-    DerivedClaim,
-    EvidenceWitness,
-    ProofObligation,
-    ReferenceBinding,
-    evidence_witness_fingerprint,
+    ValidationReport,
+    CalculatedClaim,
+    EvidenceRef,
+    ValidationRequirement,
+    CanonicalReference,
+    evidence_ref_fingerprint,
     prepare_commit,
     with_recomputed_status,
 )
@@ -68,7 +68,7 @@ GWH_TO_MWH_FACTOR = Decimal("1000")
 
 RESOLVER_STEPS = (
     "llm_and_parser_candidate_fixture",
-    "evidence_witness_fingerprint",
+    "evidence_ref_fingerprint",
     "bind_site_alias_reference",
     "bind_period_policy",
     "bind_unit_conversion_reference",
@@ -90,15 +90,15 @@ def run_raw_claim_conflict_resolution_scenario() -> DomainScenarioResult:
         projection_id=PROJECTION_ID,
         profile_id=PROFILE_ID,
         dependency_fingerprints=tuple(
-            evidence_witness_fingerprint(witness)
+            evidence_ref_fingerprint(witness)
             for witness in report.evidence_witnesses
         ),
     )
     projection = None
     if preparation.receipt is not None:
-        projection = project_public_row(
+        projection = build_public_output(
             _projection_source(report),
-            ProjectionSpec(PROJECTION_ID, PROJECTION_FIELDS),
+            PublicOutputSpec(PROJECTION_ID, PROJECTION_FIELDS),
             receipt=preparation.receipt,
         )
     return build_domain_scenario_result(
@@ -111,58 +111,58 @@ def run_raw_claim_conflict_resolution_scenario() -> DomainScenarioResult:
     )
 
 
-def raw_claim_conflict_resolution_report() -> CompileReport:
+def raw_claim_conflict_resolution_report() -> ValidationReport:
     return with_recomputed_status(
-        CompileReport(
+        ValidationReport(
             status="accepted",
             evidence_witnesses=_evidence_witnesses(),
             checked_claims=_checked_claims(),
             resolved_obligations=_resolved_obligations(),
             reference_bindings=_reference_bindings(),
             derived_claims=_derived_claims(),
-            can_project_public_row=True,
+            can_build_public_output=True,
         )
     )
 
 
-def _evidence_witnesses() -> tuple[EvidenceWitness, ...]:
+def _evidence_witnesses() -> tuple[EvidenceRef, ...]:
     return (
-        EvidenceWitness(
+        EvidenceRef(
             witness_id="w-email-electricity-march",
             field="raw_email",
             source="email:synthetic-pcf-smoke:001",
             span="body[0:82]",
             text="March electricity was 6.4 GWh for OCH-01.",
         ),
-        EvidenceWitness(
+        EvidenceRef(
             witness_id="w-ems-electricity-march",
             field="raw_ems_export",
             source="raw_sources/ems_electricity.csv",
             span="row:OCH-01:2025-03",
             text="OCH-01,2025-03,6.1,GWh",
         ),
-        EvidenceWitness(
+        EvidenceRef(
             witness_id="w-site-alias-policy",
             field="site_alias",
             source="profile:synthetic-raw-claim-conflict-resolution",
             span="site_aliases.OCH-01",
             text="OCH-01 -> ocheong_plant_1",
         ),
-        EvidenceWitness(
+        EvidenceRef(
             witness_id="w-reporting-period-policy",
             field="period",
             source="profile:synthetic-raw-claim-conflict-resolution",
             span="reporting_periods.2025-03",
             text="2025-03 is inside the active reporting window",
         ),
-        EvidenceWitness(
+        EvidenceRef(
             witness_id="w-unit-conversion-policy",
             field="unit_conversion",
             source="profile:synthetic-raw-claim-conflict-resolution",
             span="unit_conversions.GWh_to_MWh",
             text="1 GWh = 1000 MWh",
         ),
-        EvidenceWitness(
+        EvidenceRef(
             witness_id="w-source-conflict-resolution",
             field="source_conflict_resolution",
             source="resolution_artifacts/source_conflicts.csv",
@@ -210,27 +210,27 @@ def _checked_claims() -> tuple[CheckedClaim, ...]:
     )
 
 
-def _resolved_obligations() -> tuple[ProofObligation, ...]:
+def _resolved_obligations() -> tuple[ValidationRequirement, ...]:
     return (
-        ProofObligation(
+        ValidationRequirement(
             kind="site_alias_resolved",
             field="site_id",
             reason="OCH-01_alias_bound_to_ocheong_plant_1",
             obligation_id="raw-conflict-resolution:site_alias:resolved",
         ),
-        ProofObligation(
+        ValidationRequirement(
             kind="period_validated",
             field="period",
             reason="period_inside_active_reporting_window",
             obligation_id="raw-conflict-resolution:period:validated",
         ),
-        ProofObligation(
+        ValidationRequirement(
             kind="unit_conversion_policy_applied",
             field="electricity_mwh",
             reason="GWh_to_MWh_conversion_factor_1000",
             obligation_id="raw-conflict-resolution:unit_conversion:applied",
         ),
-        ProofObligation(
+        ValidationRequirement(
             kind="source_conflict_resolved",
             field="electricity_mwh",
             reason="ems_source_selected_by_resolution_evidence",
@@ -239,9 +239,9 @@ def _resolved_obligations() -> tuple[ProofObligation, ...]:
     )
 
 
-def _reference_bindings() -> tuple[ReferenceBinding, ...]:
+def _reference_bindings() -> tuple[CanonicalReference, ...]:
     return (
-        ReferenceBinding(
+        CanonicalReference(
             binding_id=ALIAS_BINDING_ID,
             claim_id=SCENARIO_ID,
             reference_id="site-alias:OCH-01->ocheong_plant_1",
@@ -249,7 +249,7 @@ def _reference_bindings() -> tuple[ReferenceBinding, ...]:
             selector_rule_id="synthetic.raw_claim_conflict_resolution.fixture",
             source_witness_ids=("w-site-alias-policy",),
         ),
-        ReferenceBinding(
+        CanonicalReference(
             binding_id=PERIOD_BINDING_ID,
             claim_id=SCENARIO_ID,
             reference_id="reporting-period:2025-03",
@@ -257,7 +257,7 @@ def _reference_bindings() -> tuple[ReferenceBinding, ...]:
             selector_rule_id="synthetic.raw_claim_conflict_resolution.fixture",
             source_witness_ids=("w-reporting-period-policy",),
         ),
-        ReferenceBinding(
+        CanonicalReference(
             binding_id=UNIT_CONVERSION_BINDING_ID,
             claim_id=SCENARIO_ID,
             reference_id="unit-conversion:GWh_to_MWh",
@@ -265,7 +265,7 @@ def _reference_bindings() -> tuple[ReferenceBinding, ...]:
             selector_rule_id="synthetic.raw_claim_conflict_resolution.fixture",
             source_witness_ids=("w-unit-conversion-policy",),
         ),
-        ReferenceBinding(
+        CanonicalReference(
             binding_id=RESOLUTION_BINDING_ID,
             claim_id=CANONICAL_ELECTRICITY_CLAIM_ID,
             reference_id="source-conflict-resolution:ems_export_preferred",
@@ -279,7 +279,7 @@ def _reference_bindings() -> tuple[ReferenceBinding, ...]:
     )
 
 
-def _derived_claims() -> tuple[DerivedClaim, ...]:
+def _derived_claims() -> tuple[CalculatedClaim, ...]:
     email_mwh = EMAIL_GWH * GWH_TO_MWH_FACTOR
     ems_mwh = EMS_GWH * GWH_TO_MWH_FACTOR
     return (
@@ -295,7 +295,7 @@ def _derived_claims() -> tuple[DerivedClaim, ...]:
             input_field="ems_electricity_gwh",
             output_value=_number(ems_mwh),
         ),
-        DerivedClaim(
+        CalculatedClaim(
             claim_id=CANONICAL_ELECTRICITY_CLAIM_ID,
             field="electricity_mwh",
             value=_number(ems_mwh),
@@ -332,8 +332,8 @@ def _source_electricity_claim(
     field: str,
     input_field: str,
     output_value: int | float,
-) -> DerivedClaim:
-    return DerivedClaim(
+) -> CalculatedClaim:
+    return CalculatedClaim(
         claim_id=claim_id,
         field=field,
         value=output_value,
@@ -357,7 +357,7 @@ def _source_electricity_claim(
     )
 
 
-def _projection_source(report: CompileReport) -> dict[str, object]:
+def _projection_source(report: ValidationReport) -> dict[str, object]:
     values = {claim.field: claim.value for claim in report.checked_claims}
     values.update({claim.field: claim.value for claim in report.derived_claims})
     return values

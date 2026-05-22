@@ -1,4 +1,4 @@
-from comp import ProjectionSpec
+from comp import PublicOutputSpec
 from comp.compiler_tool import active_retrieval_query_policies
 
 from tests.domain_scenarios.assertions import assert_receipt_trace
@@ -211,7 +211,7 @@ def test_l_energy_pcf_governance_replays_projection_with_dependency_fingerprints
 
     replay = replay_scenario_projection(
         result,
-        ProjectionSpec(PROJECTION_ID, PROJECTION_FIELDS),
+        PublicOutputSpec(PROJECTION_ID, PROJECTION_FIELDS),
     )
 
     assert replay.public_row == EXPECTED_PROJECTION

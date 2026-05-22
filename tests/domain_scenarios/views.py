@@ -127,7 +127,7 @@ def replay_trace_view(result) -> dict[str, Any] | None:
     if receipt is None or result.projection is None:
         return None
 
-    from comp import ProjectionSpec
+    from comp import PublicOutputSpec
     from comp.persistence import ProjectionReplayBlocked
     from tests.domain_scenarios.persistence import (
         replay_scenario_projection,
@@ -138,7 +138,7 @@ def replay_trace_view(result) -> dict[str, Any] | None:
     try:
         replay = replay_scenario_projection(
             result,
-            ProjectionSpec(receipt.projection_id, tuple(result.projection.keys())),
+            PublicOutputSpec(receipt.projection_id, tuple(result.projection.keys())),
             bundle=bundle,
         )
     except ProjectionReplayBlocked as exc:
@@ -181,7 +181,7 @@ def proof_graph_view(result) -> dict[str, Any] | None:
     if receipt is None or result.projection is None:
         return None
 
-    from comp import ProjectionSpec
+    from comp import PublicOutputSpec
     from comp.explanation import export_receipt_proof_graph
     from comp.persistence import ProjectionReplayBlocked
     from tests.domain_scenarios.persistence import (
@@ -193,7 +193,7 @@ def proof_graph_view(result) -> dict[str, Any] | None:
     try:
         replay = replay_scenario_projection(
             result,
-            ProjectionSpec(receipt.projection_id, tuple(result.projection.keys())),
+            PublicOutputSpec(receipt.projection_id, tuple(result.projection.keys())),
             bundle=bundle,
         )
     except ProjectionReplayBlocked:

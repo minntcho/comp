@@ -24,8 +24,6 @@ class ClaimCandidate:
     origin: str = "llm_inferred"
 
 
-ClaimHypothesis = ClaimCandidate
-
 
 @dataclass(frozen=True)
 class EvidenceRef:
@@ -39,8 +37,6 @@ class EvidenceRef:
     def grounded(self) -> bool:
         return self.source is not None or self.span is not None
 
-
-EvidenceWitness = EvidenceRef
 
 
 def evidence_ref_fingerprint(witness: EvidenceRef) -> DependencyFingerprint:
@@ -56,8 +52,6 @@ def evidence_ref_fingerprint(witness: EvidenceRef) -> DependencyFingerprint:
         },
     )
 
-
-evidence_witness_fingerprint = evidence_ref_fingerprint
 
 
 @dataclass(frozen=True)
@@ -120,8 +114,6 @@ class ValidationRequirement:
     calculation_requirement: CalculationRequirement | None = None
 
 
-ProofObligation = ValidationRequirement
-
 
 @dataclass(frozen=True)
 class SemanticJudgment:
@@ -156,7 +148,4 @@ class ValidationReport:
     reference_candidates: tuple[ReferenceOption, ...] = field(default_factory=tuple)
     reference_bindings: tuple[CanonicalReference, ...] = field(default_factory=tuple)
     derived_claims: tuple[CalculatedClaim, ...] = field(default_factory=tuple)
-    can_project_public_row: bool = False
-
-
-CompileReport = ValidationReport
+    can_build_public_output: bool = False

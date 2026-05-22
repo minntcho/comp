@@ -7,7 +7,7 @@ from typing import Any
 
 from comp.judgment.receipts import (
     DependencyFingerprint,
-    ProjectionValueCommitment,
+    PublicOutputValueCommitment,
     PublicOutputReceipt,
     PublicOutputReceiptCitations,
 )
@@ -418,7 +418,7 @@ def _commit_receipt_from_row(row: Any) -> PublicOutputReceipt:
 
 
 def _projection_value_commitment_to_body(
-    commitment: ProjectionValueCommitment,
+    commitment: PublicOutputValueCommitment,
 ) -> dict[str, Any]:
     return {
         "field": commitment.field,
@@ -431,8 +431,8 @@ def _projection_value_commitment_to_body(
 
 def _projection_value_commitment_from_body(
     body: Mapping[str, Any],
-) -> ProjectionValueCommitment:
-    return ProjectionValueCommitment(
+) -> PublicOutputValueCommitment:
+    return PublicOutputValueCommitment(
         field=body["field"],
         source_kind=body["source_kind"],
         source_id=body["source_id"],
@@ -464,7 +464,7 @@ def _dependency_fingerprint_from_body(
 
 
 def _receipt_value_to_body(value: Any) -> Any:
-    if isinstance(value, ProjectionValueCommitment):
+    if isinstance(value, PublicOutputValueCommitment):
         return {
             "__receipt_type__": "projection_value_commitment",
             "value": _projection_value_commitment_to_body(value),

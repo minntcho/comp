@@ -4,10 +4,10 @@ from comp.compiler_tool import (
     CalculationFormula,
     CalculationInput,
     CheckedClaim,
-    CompileReport,
+    ValidationReport,
     CompilerProfile,
     DomainPack,
-    ReferenceBinding,
+    CanonicalReference,
     ReferenceCatalog,
     ReferenceRecord,
     ReferenceSelectionCriteria,
@@ -127,11 +127,11 @@ def criteria() -> ReferenceSelectionCriteria:
     )
 
 
-def blocked_report() -> CompileReport:
+def blocked_report() -> ValidationReport:
     result = calculate_derived_claim(
         output_claim_id=OUTPUT_CLAIM_ID,
         input_claim=input_claim(),
-        reference_binding=ReferenceBinding(
+        reference_binding=CanonicalReference(
             binding_id="bind-electricity-factor",
             claim_id=INPUT_CLAIM_ID,
             reference_id="pcf.factor.unknown",
@@ -141,7 +141,7 @@ def blocked_report() -> CompileReport:
         formula=formula(),
     )
     return apply_calculation_result(
-        CompileReport(
+        ValidationReport(
             status="accepted",
             checked_claims=(
                 CheckedClaim(

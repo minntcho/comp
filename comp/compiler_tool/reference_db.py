@@ -4,7 +4,7 @@ import re
 from dataclasses import dataclass, field
 from typing import Any
 
-from comp.compiler_tool.references import ReferenceCandidate
+from comp.compiler_tool.references import ReferenceOption
 from comp.judgment.receipts import DependencyFingerprint
 
 
@@ -35,8 +35,8 @@ class ReferenceRecord:
         candidate_id: str,
         retrieval_method: str,
         retrieval_score: float | None = None,
-    ) -> ReferenceCandidate:
-        return ReferenceCandidate(
+    ) -> ReferenceOption:
+        return ReferenceOption(
             candidate_id=candidate_id,
             reference_id=self.reference_id,
             reference_type=self.reference_type,
@@ -71,7 +71,7 @@ class ReferenceCatalog:
         reference_type: str | None = None,
         limit: int = 10,
         retrieval_method: str = "keyword",
-    ) -> tuple[ReferenceCandidate, ...]:
+    ) -> tuple[ReferenceOption, ...]:
         scored: list[tuple[float, ReferenceRecord]] = []
         for record in self.records:
             if reference_type is not None and record.reference_type != reference_type:

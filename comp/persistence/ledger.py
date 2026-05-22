@@ -8,7 +8,7 @@ from comp.judgment import (
     PublicOutputBlocked,
     PublicOutputReceipt,
     PublicOutputSpec,
-    project_public_row,
+    build_public_output,
 )
 from comp.persistence.digest import artifact_digest
 from comp.persistence.envelope import ArtifactEnvelope
@@ -133,7 +133,7 @@ def verify_materialized_public_projection(
     receipt: PublicOutputReceipt,
 ) -> dict[str, Any]:
     try:
-        authorized_row = project_public_row(row, projection, receipt=receipt)
+        authorized_row = build_public_output(row, projection, receipt=receipt)
     except PublicOutputBlocked as exc:
         raise ProjectionReplayBlocked(
             "Materialized public output cannot be replayed from receipt."

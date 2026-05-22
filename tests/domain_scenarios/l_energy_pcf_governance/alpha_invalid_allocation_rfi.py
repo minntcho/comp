@@ -3,11 +3,11 @@ from __future__ import annotations
 from comp import SubjectRef
 from comp.compiler_tool import (
     CheckedClaim,
-    CompileReport,
-    EvidenceWitness,
+    ValidationReport,
+    EvidenceRef,
     FailedClaim,
     Hazard,
-    ProofObligation,
+    ValidationRequirement,
     prepare_commit,
     with_recomputed_status,
 )
@@ -82,12 +82,12 @@ def run_alpha_invalid_allocation_rfi_scenario():
     )
 
 
-def alpha_invalid_allocation_report() -> CompileReport:
+def alpha_invalid_allocation_report() -> ValidationReport:
     return with_recomputed_status(
-        CompileReport(
+        ValidationReport(
             status="accepted",
             evidence_witnesses=(
-                EvidenceWitness(
+                EvidenceRef(
                     witness_id="source:alpha-metal-initial-submission",
                     field="raw_material_name",
                     source="tests/e2e/cases/001-l-energy-pcf-governance.yaml",
@@ -113,7 +113,7 @@ def alpha_invalid_allocation_report() -> CompileReport:
                 ),
             ),
             obligations=(
-                ProofObligation(
+                ValidationRequirement(
                     kind="find_context",
                     field="rolling_residence_time",
                     reason="physical_allocation_parameter_required",
@@ -127,7 +127,7 @@ def alpha_invalid_allocation_report() -> CompileReport:
                     severity="block",
                 ),
             ),
-            can_project_public_row=False,
+            can_build_public_output=False,
         )
     )
 

@@ -24,11 +24,11 @@ def test_user_messages_translate_common_kernel_reasons_to_korean_actions():
     }
 
     blocked_terms = (
-        "ClaimHypothesis",
-        "EvidenceWitness",
-        "ReferenceCandidate",
-        "ReferenceBinding",
-        "CommitReceipt",
+        "ClaimCandidate",
+        "EvidenceRef",
+        "ReferenceOption",
+        "CanonicalReference",
+        "PublicOutputReceipt",
         "Projection",
         "PublicOutputReceipt",
     )
@@ -51,7 +51,7 @@ def test_user_messages_are_display_metadata_not_authority_state():
     message = user_message("public_output_receipt_required")
 
     assert not hasattr(message, "can_authorize_public_output")
-    assert not hasattr(message, "can_project_public_row")
+    assert not hasattr(message, "can_build_public_output")
     with pytest.raises(FrozenInstanceError):
         message.ko = "다른 메시지"
     with pytest.raises(TypeError):

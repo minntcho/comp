@@ -8,15 +8,15 @@ This directory tracks the active architecture for the `comp` rebuild.
 
 ```text
 candidate / obligation / judgment / reference / calculation
--> CommitPackage
--> GovernanceDecision
--> CommitReceipt
+-> ReviewPackage
+-> ReviewDecision
+-> PublicOutputReceipt
 -> Judgment Facts
 -> receipt-gated projection
 ```
 
 The compiler does not create public truth directly. Public projection requires a
-`CommitReceipt`.
+`PublicOutputReceipt`.
 
 ## Active Map
 
@@ -84,36 +84,36 @@ Use this layer map when adding code or reviewing PRs:
 
 ```text
 semantic
-  ProofObligation(kind="semantic_judgment_required")
+  ValidationRequirement(kind="semantic_judgment_required")
   SemanticJudgment protocol validation
 
 reference
   ReferenceQuery
   ReferenceResolver / EmbeddingResolverStub
-  reference_search_required -> candidate-only ReferenceCandidate
-  ReferenceCandidate
-  ReferenceBinding
+  reference_search_required -> candidate-only ReferenceOption
+  ReferenceOption
+  CanonicalReference
   deterministic reference selection
 
 calculation
   CalculationRequirement
   CalculationTrace
-  DerivedClaim
+  CalculatedClaim
 
 resolver tasks
-  ProofObligation -> ResolverTask
+  ValidationRequirement -> ResolverTask
   RetrievalQueryPolicy
   ResolverTask -> ReferenceQuery
   resolver-facing task type, required artifact, and payload
 
 governance / commit
-  CommitPackage
-  GovernanceDecision
-  CommitReceipt builder
+  ReviewPackage
+  ReviewDecision
+  PublicOutputReceipt builder
   CommitPreparation
 
 judgment facts
-  CompileReport -> Fact
+  ValidationReport -> Fact
   CommitPreparation -> Fact
 ```
 

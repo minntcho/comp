@@ -3,10 +3,10 @@ from __future__ import annotations
 from dataclasses import replace
 
 from comp.compiler_tool.calculations import CalculationRequirement
-from comp.compiler_tool.models import CompileReport, ProofObligation
+from comp.compiler_tool.models import ValidationReport, ValidationRequirement
 
 
-def plan_calculation_resolution(report: CompileReport) -> CompileReport:
+def plan_calculation_resolution(report: ValidationReport) -> ValidationReport:
     follow_ups = tuple(
         follow_up
         for obligation in report.obligations
@@ -23,13 +23,13 @@ def plan_calculation_resolution(report: CompileReport) -> CompileReport:
     return replace(
         report,
         obligations=obligations,
-        can_project_public_row=False,
+        can_build_public_output=False,
     )
 
 
 def _follow_up_obligations(
-    obligation: ProofObligation,
-) -> tuple[ProofObligation, ...]:
+    obligation: ValidationRequirement,
+) -> tuple[ValidationRequirement, ...]:
     requirement = obligation.calculation_requirement
     if obligation.kind != "calculation_blocked" or requirement is None:
         return ()
@@ -39,7 +39,7 @@ def _follow_up_obligations(
         return ()
 
     return (
-        ProofObligation(
+        ValidationRequirement(
             kind=kind,
             field=obligation.field,
             reason=requirement.reason,

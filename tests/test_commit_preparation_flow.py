@@ -1,20 +1,20 @@
 import pytest
 
-from comp import ProjectionBlocked, ProjectionSpec, project_public_row
+from comp import PublicOutputBlocked, PublicOutputSpec, build_public_output
 from comp.compiler_tool import (
     CalculationTrace,
     CheckedClaim,
-    CompileReport,
-    DerivedClaim,
+    ValidationReport,
+    CalculatedClaim,
     FailedClaim,
-    ProofObligation,
-    ReferenceBinding,
+    ValidationRequirement,
+    CanonicalReference,
     prepare_commit,
 )
 
 
 def test_prepare_commit_builds_package_decision_and_receipt_for_accepted_report():
-    report = CompileReport(
+    report = ValidationReport(
         status="accepted",
         checked_claims=(
             CheckedClaim(
@@ -25,7 +25,7 @@ def test_prepare_commit_builds_package_decision_and_receipt_for_accepted_report(
             ),
         ),
         reference_bindings=(
-            ReferenceBinding(
+            CanonicalReference(
                 binding_id="bind-amount-factor",
                 claim_id="hyp-1:amount",
                 reference_id="factor.kr_grid.2024.location_based",
@@ -33,7 +33,7 @@ def test_prepare_commit_builds_package_decision_and_receipt_for_accepted_report(
             ),
         ),
         derived_claims=(
-            DerivedClaim(
+            CalculatedClaim(
                 claim_id="hyp-1:co2e_emission",
                 field="co2e_emission",
                 value=0.48,
@@ -60,7 +60,7 @@ def test_prepare_commit_builds_package_decision_and_receipt_for_accepted_report(
     assert preparation.package.complete is True
     assert preparation.decision.status == "commit"
     assert preparation.receipt is not None
-    assert preparation.can_project_public_row is True
+    assert preparation.can_build_public_output is True
 
     snapshot = dict(preparation.receipt.barrier_snapshot)
     assert snapshot["checked_claim_witness_ids"] == ("span-amount",)
@@ -71,19 +71,19 @@ def test_prepare_commit_builds_package_decision_and_receipt_for_accepted_report(
     assert preparation.receipt.projection_id == "public-row"
     assert preparation.receipt.authorized_fields == ("amount", "co2e_emission")
 
-    row = project_public_row(
+    row = build_public_output(
         {"amount": 1200, "co2e_emission": 0.48, "internal_note": "hidden"},
-        ProjectionSpec("public-row", ("amount", "co2e_emission")),
+        PublicOutputSpec("public-row", ("amount", "co2e_emission")),
         receipt=preparation.receipt,
     )
     assert row == {"amount": 1200, "co2e_emission": 0.48}
 
 
 def test_prepare_commit_returns_hold_without_receipt_for_open_obligations():
-    report = CompileReport(
+    report = ValidationReport(
         status="accepted",
         obligations=(
-            ProofObligation(
+            ValidationRequirement(
                 kind="reference_selection_required",
                 field="co2e_emission",
                 reason="ambiguous",
@@ -104,17 +104,17 @@ def test_prepare_commit_returns_hold_without_receipt_for_open_obligations():
     )
     assert preparation.decision.status == "hold"
     assert preparation.receipt is None
-    assert preparation.can_project_public_row is False
-    with pytest.raises(ProjectionBlocked):
-        project_public_row(
+    assert preparation.can_build_public_output is False
+    with pytest.raises(PublicOutputBlocked):
+        build_public_output(
             {"co2e_emission": 0.48},
-            ProjectionSpec("public-row", ("co2e_emission",)),
+            PublicOutputSpec("public-row", ("co2e_emission",)),
             receipt=preparation.receipt,
         )
 
 
 def test_prepare_commit_returns_reject_without_receipt_for_terminal_failures():
-    report = CompileReport(
+    report = ValidationReport(
         status="accepted",
         failed_claims=(
             FailedClaim(

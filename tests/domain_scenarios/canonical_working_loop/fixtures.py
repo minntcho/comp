@@ -5,15 +5,15 @@ import re
 from comp.compiler_tool import (
     CalculationFormula,
     CalculationInput,
-    ClaimHypothesis,
-    CompileReport,
+    ClaimCandidate,
+    ValidationReport,
     CompilerTool,
     CompilerProfile,
     DomainPack,
-    EvidenceWitness,
+    EvidenceRef,
     EmbeddingResolverStub,
     InterpretationHypothesis,
-    ReferenceBinding,
+    CanonicalReference,
     ReferenceCatalog,
     ReferenceIndexEntry,
     ReferenceRecord,
@@ -43,47 +43,47 @@ def extract_raw_evidence(raw_text: str) -> InterpretationHypothesis:
         hypothesis_id="hyp:canonical-raw-pcf",
         subject_id=SUBJECT_ID,
         claims=(
-            ClaimHypothesis("activity", "electricity", witness_id="w-activity"),
-            ClaimHypothesis(
+            ClaimCandidate("activity", "electricity", witness_id="w-activity"),
+            ClaimCandidate(
                 "electricity_kwh",
                 amount,
                 witness_id="w-electricity-kwh",
                 origin="deterministic_extractor",
             ),
-            ClaimHypothesis("unit", "kWh", witness_id="w-unit"),
-            ClaimHypothesis("reporting_year", year, witness_id="w-reporting-year"),
-            ClaimHypothesis("geography", "KR", witness_id="w-geography"),
+            ClaimCandidate("unit", "kWh", witness_id="w-unit"),
+            ClaimCandidate("reporting_year", year, witness_id="w-reporting-year"),
+            ClaimCandidate("geography", "KR", witness_id="w-geography"),
         ),
         witnesses=(
-            EvidenceWitness(
+            EvidenceRef(
                 "w-activity",
                 "activity",
                 source=source,
                 span="electricity",
                 text=raw_text,
             ),
-            EvidenceWitness(
+            EvidenceRef(
                 "w-electricity-kwh",
                 "electricity_kwh",
                 source=source,
                 span="1200kWh",
                 text=raw_text,
             ),
-            EvidenceWitness(
+            EvidenceRef(
                 "w-unit",
                 "unit",
                 source=source,
                 span="kWh",
                 text=raw_text,
             ),
-            EvidenceWitness(
+            EvidenceRef(
                 "w-reporting-year",
                 "reporting_year",
                 source=source,
                 span="2024",
                 text=raw_text,
             ),
-            EvidenceWitness(
+            EvidenceRef(
                 "w-geography",
                 "geography",
                 source=source,
@@ -94,7 +94,7 @@ def extract_raw_evidence(raw_text: str) -> InterpretationHypothesis:
     )
 
 
-def compile_raw_evidence(raw_text: str) -> CompileReport:
+def compile_raw_evidence(raw_text: str) -> ValidationReport:
     return CompilerTool(
         allowed_units=frozenset({"kwh"}),
         known_fields=frozenset(
@@ -109,11 +109,11 @@ def compile_raw_evidence(raw_text: str) -> CompileReport:
     ).compile_interpretation(extract_raw_evidence(raw_text))
 
 
-def open_calculation_obligation(report: CompileReport) -> CompileReport:
+def open_calculation_obligation(report: ValidationReport) -> ValidationReport:
     result = calculate_derived_claim(
         output_claim_id=OUTPUT_CLAIM_ID,
         input_claim=input_claim_from_report(report),
-        reference_binding=ReferenceBinding(
+        reference_binding=CanonicalReference(
             binding_id="bind-canonical-electricity-factor",
             claim_id=INPUT_CLAIM_ID,
             reference_id="pcf.factor.unknown",
@@ -235,7 +235,7 @@ def profile() -> CompilerProfile:
     )
 
 
-def retrieval_query_context(report: CompileReport) -> dict[str, object]:
+def retrieval_query_context(report: ValidationReport) -> dict[str, object]:
     values = {claim.field: claim.value for claim in report.checked_claims}
     return {
         "geography": "Korea" if values["geography"] == "KR" else values["geography"],
@@ -266,7 +266,7 @@ def formula() -> CalculationFormula:
     )
 
 
-def input_claim_from_report(report: CompileReport) -> CalculationInput:
+def input_claim_from_report(report: ValidationReport) -> CalculationInput:
     values = {claim.field: claim.value for claim in report.checked_claims}
     return CalculationInput(
         claim_id=INPUT_CLAIM_ID,
@@ -276,7 +276,7 @@ def input_claim_from_report(report: CompileReport) -> CalculationInput:
     )
 
 
-def projection_source(report: CompileReport) -> dict[str, object]:
+def projection_source(report: ValidationReport) -> dict[str, object]:
     values: dict[str, object] = {
         claim.field: claim.value for claim in report.checked_claims
     }

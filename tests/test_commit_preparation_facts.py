@@ -1,8 +1,8 @@
 from comp import JudgmentState, SubjectRef
 from comp.compiler_tool import (
     CheckedClaim,
-    CompileReport,
-    ProofObligation,
+    ValidationReport,
+    ValidationRequirement,
     add_commit_preparation_facts,
     commit_preparation_to_facts,
     prepare_commit,
@@ -11,7 +11,7 @@ from comp.compiler_tool import (
 
 def test_commit_preparation_to_facts_records_package_decision_and_receipt():
     preparation = prepare_commit(
-        CompileReport(
+        ValidationReport(
             status="accepted",
             checked_claims=(
                 CheckedClaim(
@@ -56,10 +56,10 @@ def test_commit_preparation_to_facts_records_package_decision_and_receipt():
 
 def test_commit_preparation_to_facts_keeps_hold_visible_without_receipt_fact():
     preparation = prepare_commit(
-        CompileReport(
+        ValidationReport(
             status="accepted",
             obligations=(
-                ProofObligation(
+                ValidationRequirement(
                     kind="reference_selection_required",
                     field="co2e_emission",
                     reason="ambiguous",
@@ -96,7 +96,7 @@ def test_commit_preparation_to_facts_keeps_hold_visible_without_receipt_fact():
 
 def test_add_commit_preparation_facts_updates_judgment_state_once():
     preparation = prepare_commit(
-        CompileReport(status="accepted"),
+        ValidationReport(status="accepted"),
         subject_id="facility-1",
         public_row_id="public-row-1",
         projection_id="public-row",

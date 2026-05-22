@@ -6,24 +6,24 @@ from comp.compiler_tool.calculation_report import apply_calculation_result
 from comp.compiler_tool.calculations import (
     CalculationFormula,
     CalculationInput,
-    DerivedClaim,
+    CalculatedClaim,
     calculate_derived_claim,
 )
-from comp.compiler_tool.models import CompileReport, ProofObligation
+from comp.compiler_tool.models import ValidationReport, ValidationRequirement
 from comp.compiler_tool.reference_db import ReferenceCatalog
-from comp.compiler_tool.references import ReferenceBinding
+from comp.compiler_tool.references import CanonicalReference
 from comp.compiler_tool.report_status import with_recomputed_status
 
 
 def retry_blocked_calculation(
-    report: CompileReport,
+    report: ValidationReport,
     catalog: ReferenceCatalog,
     *,
     input_claim: CalculationInput,
-    reference_binding: ReferenceBinding,
+    reference_binding: CanonicalReference,
     formula: CalculationFormula,
     output_claim_id: str,
-) -> CompileReport:
+) -> ValidationReport:
     result = calculate_derived_claim(
         output_claim_id=output_claim_id,
         input_claim=input_claim,
@@ -44,7 +44,7 @@ def retry_blocked_calculation(
                 report.resolved_obligations,
                 resolved,
             ),
-            can_project_public_row=False,
+            can_build_public_output=False,
         )
         return with_recomputed_status(
             replace(
@@ -53,7 +53,7 @@ def retry_blocked_calculation(
                     base_report.derived_claims,
                     result.derived_claim,
                 ),
-                can_project_public_row=False,
+                can_build_public_output=False,
             )
         )
 
@@ -66,13 +66,13 @@ def retry_blocked_calculation(
 
 
 def _split_matching_calculation_obligations(
-    obligations: tuple[ProofObligation, ...],
+    obligations: tuple[ValidationRequirement, ...],
     *,
     formula: CalculationFormula,
     output_claim_id: str,
-) -> tuple[tuple[ProofObligation, ...], tuple[ProofObligation, ...]]:
-    open_obligations: list[ProofObligation] = []
-    resolved: list[ProofObligation] = []
+) -> tuple[tuple[ValidationRequirement, ...], tuple[ValidationRequirement, ...]]:
+    open_obligations: list[ValidationRequirement] = []
+    resolved: list[ValidationRequirement] = []
     for obligation in obligations:
         if _matches_calculation_obligation(
             obligation,
@@ -86,7 +86,7 @@ def _split_matching_calculation_obligations(
 
 
 def _matches_calculation_obligation(
-    obligation: ProofObligation,
+    obligation: ValidationRequirement,
     *,
     formula: CalculationFormula,
     output_claim_id: str,
@@ -108,9 +108,9 @@ def _matches_calculation_obligation(
 
 
 def _append_unique_obligations(
-    existing: tuple[ProofObligation, ...],
-    additions: tuple[ProofObligation, ...],
-) -> tuple[ProofObligation, ...]:
+    existing: tuple[ValidationRequirement, ...],
+    additions: tuple[ValidationRequirement, ...],
+) -> tuple[ValidationRequirement, ...]:
     result = existing
     for obligation in additions:
         if obligation not in result:
@@ -119,9 +119,9 @@ def _append_unique_obligations(
 
 
 def _append_unique_derived_claim(
-    existing: tuple[DerivedClaim, ...],
-    addition: DerivedClaim,
-) -> tuple[DerivedClaim, ...]:
+    existing: tuple[CalculatedClaim, ...],
+    addition: CalculatedClaim,
+) -> tuple[CalculatedClaim, ...]:
     if any(claim.claim_id == addition.claim_id for claim in existing):
         return existing
     return (*existing, addition)

@@ -3,20 +3,20 @@ from __future__ import annotations
 from collections.abc import Iterable
 
 from comp.compiler_tool.models import (
-    CompileReport,
+    ValidationReport,
     Hazard,
-    ProofObligation,
+    ValidationRequirement,
     SemanticJudgment,
 )
 from comp.compiler_tool.report_status import with_recomputed_status
 
 
 def apply_semantic_judgments(
-    report: CompileReport,
+    report: ValidationReport,
     judgments: Iterable[SemanticJudgment],
     *,
     available_span_ids: Iterable[str] | None = None,
-) -> CompileReport:
+) -> ValidationReport:
     """Discharge semantic obligations when submitted judgments satisfy protocol."""
 
     judgments_by_obligation: dict[str, list[SemanticJudgment]] = {}
@@ -26,8 +26,8 @@ def apply_semantic_judgments(
     available_spans = (
         frozenset(available_span_ids) if available_span_ids is not None else None
     )
-    open_obligations: list[ProofObligation] = []
-    newly_resolved: list[ProofObligation] = []
+    open_obligations: list[ValidationRequirement] = []
+    newly_resolved: list[ValidationRequirement] = []
     hazards = list(report.hazards)
 
     for obligation in report.obligations:
@@ -69,7 +69,7 @@ def apply_semantic_judgments(
         open_obligations.append(obligation)
 
     return with_recomputed_status(
-        CompileReport(
+        ValidationReport(
             status=report.status,
             evidence_witnesses=report.evidence_witnesses,
             checked_claims=report.checked_claims,
@@ -85,13 +85,13 @@ def apply_semantic_judgments(
             reference_candidates=report.reference_candidates,
             reference_bindings=report.reference_bindings,
             derived_claims=report.derived_claims,
-            can_project_public_row=report.can_project_public_row,
+            can_build_public_output=report.can_build_public_output,
         )
     )
 
 
 def _judgment_satisfies_protocol(
-    obligation: ProofObligation,
+    obligation: ValidationRequirement,
     judgment: SemanticJudgment,
     *,
     available_span_ids: frozenset[str] | None,
@@ -119,7 +119,7 @@ def _judgment_satisfies_protocol(
     return True
 
 
-def _obligation_id(obligation: ProofObligation) -> str:
+def _obligation_id(obligation: ValidationRequirement) -> str:
     if obligation.obligation_id:
         return obligation.obligation_id
     return f"{obligation.kind}:{obligation.field}:{obligation.reason}"

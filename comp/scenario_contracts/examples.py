@@ -4,9 +4,9 @@ import json
 from pathlib import Path
 
 from comp.judgment import (
-    CommitReceipt,
-    CommitReceiptCitations,
-    ProjectionValueCommitment,
+    PublicOutputReceipt,
+    PublicOutputReceiptCitations,
+    PublicOutputValueCommitment,
 )
 from comp.persistence import ArtifactEnvelope
 from comp.scenario_contracts.artifacts import write_artifact_envelopes
@@ -33,20 +33,20 @@ def write_public_projection_smoke_bundle(
 
     public_row = {"site": "plant-a", "amount": 100}
     commitments = (
-        ProjectionValueCommitment.from_value(
+        PublicOutputValueCommitment.from_value(
             field="site",
             source_kind="checked_claim",
             source_id="checked_claim:site:smoke",
             value=public_row["site"],
         ),
-        ProjectionValueCommitment.from_value(
+        PublicOutputValueCommitment.from_value(
             field="amount",
             source_kind="checked_claim",
             source_id="checked_claim:amount:smoke",
             value=public_row["amount"],
         ),
     )
-    citations = CommitReceiptCitations(
+    citations = PublicOutputReceiptCitations(
         governance_decision_id="governance_decision:smoke",
         governance_status="commit",
         governance_reasons=("ready",),
@@ -71,7 +71,7 @@ def write_public_projection_smoke_bundle(
         projection_value_commitments=commitments,
         dependency_fingerprints=(),
     )
-    receipt = CommitReceipt(
+    receipt = PublicOutputReceipt(
         draft_id="draft:smoke",
         winner_receipt_ids=("governance_decision:smoke",),
         barrier_snapshot=citations.to_barrier_snapshot(),

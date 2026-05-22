@@ -1,7 +1,7 @@
 from comp.compiler_tool import (
-    CompileReport,
+    ValidationReport,
     InterpretationHypothesis,
-    ProofObligation,
+    ValidationRequirement,
     SemanticJudgment,
     SemanticJudgmentRequirement,
 )
@@ -17,8 +17,8 @@ from minchoagnt import (
 )
 
 
-def _semantic_obligation() -> ProofObligation:
-    return ProofObligation(
+def _semantic_obligation() -> ValidationRequirement:
+    return ValidationRequirement(
         kind="semantic_judgment_required",
         field="scope2_method",
         reason="support_required",
@@ -40,7 +40,7 @@ def _compile_result() -> CompCompileResult:
     return CompCompileResult(
         hypothesis=InterpretationHypothesis("hyp-sem", "facility-1"),
         subject=SubjectRef("claim", "hyp-sem"),
-        report=CompileReport(
+        report=ValidationReport(
             status="review_required",
             obligations=(_semantic_obligation(),),
         ),
@@ -86,7 +86,7 @@ def test_semantic_resolver_task_becomes_llm_work_order_with_limited_tools():
             forbidden_outputs=(
                 "create_reference_binding",
                 "create_commit_receipt",
-                "project_public_row",
+                "build_public_output",
             ),
             expected_artifacts=("semantic_judgment", "abstention"),
             budget=(("max_artifacts", 1),),

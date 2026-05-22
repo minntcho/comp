@@ -1,9 +1,9 @@
 from comp.compiler_tool import (
     CalculationFormula,
     CalculationInput,
-    CompileReport,
-    ProofObligation,
-    ReferenceBinding,
+    ValidationReport,
+    ValidationRequirement,
+    CanonicalReference,
     ReferenceCatalog,
     ReferenceRecord,
     apply_calculation_result,
@@ -30,7 +30,7 @@ def _input(unit="kWh"):
 
 
 def _binding(reference_id="factor.kr_grid.2024.location_based"):
-    return ReferenceBinding(
+    return CanonicalReference(
         binding_id="bind-amount-factor",
         claim_id="hyp-1:amount",
         reference_id=reference_id,
@@ -65,7 +65,7 @@ def _blocked_report(*, catalog=None, binding=None, input_claim=None):
         formula=_formula(),
     )
     return apply_calculation_result(
-        CompileReport(status="accepted"),
+        ValidationReport(status="accepted"),
         calculation,
         output_claim_id="hyp-1:co2e_emission",
         formula=_formula(),
@@ -80,7 +80,7 @@ def test_unknown_reference_opens_reference_search_obligation():
     assert planned.status == "blocked"
     assert planned.obligations[0].kind == "calculation_blocked"
     follow_up = planned.obligations[1]
-    assert follow_up == ProofObligation(
+    assert follow_up == ValidationRequirement(
         kind="reference_search_required",
         field="co2e_emission",
         reason="unknown_reference",
@@ -129,10 +129,10 @@ def test_calculation_resolution_planning_is_idempotent():
 
 
 def test_report_without_calculation_requirement_is_unchanged():
-    report = CompileReport(
+    report = ValidationReport(
         status="blocked",
         obligations=(
-            ProofObligation(
+            ValidationRequirement(
                 kind="calculation_blocked",
                 field="co2e_emission",
                 reason="unit_mismatch",

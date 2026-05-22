@@ -1,8 +1,8 @@
-from comp.compiler_tool import EvidenceWitness, evidence_witness_fingerprint
+from comp.compiler_tool import EvidenceRef, evidence_ref_fingerprint
 
 
 def _witness(*, span="1200kWh", text="Seoul office used 1200kWh electricity."):
-    return EvidenceWitness(
+    return EvidenceRef(
         witness_id="w-electricity-kwh",
         field="electricity_kwh",
         source="raw-evidence:canonical-working-loop",
@@ -11,11 +11,11 @@ def _witness(*, span="1200kWh", text="Seoul office used 1200kWh electricity."):
     )
 
 
-def test_evidence_witness_fingerprint_pins_source_span_body():
-    fingerprint = evidence_witness_fingerprint(_witness())
-    same_fingerprint = evidence_witness_fingerprint(_witness())
-    changed_span_fingerprint = evidence_witness_fingerprint(_witness(span="9999kWh"))
-    changed_text_fingerprint = evidence_witness_fingerprint(
+def test_evidence_ref_fingerprint_pins_source_span_body():
+    fingerprint = evidence_ref_fingerprint(_witness())
+    same_fingerprint = evidence_ref_fingerprint(_witness())
+    changed_span_fingerprint = evidence_ref_fingerprint(_witness(span="9999kWh"))
+    changed_text_fingerprint = evidence_ref_fingerprint(
         _witness(text="Seoul office used 9999kWh electricity.")
     )
 
