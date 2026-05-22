@@ -70,6 +70,13 @@ block PRs by themselves.
 2. `archive/architecture/legacy-archive-cutover-plan.md`
 3. `archive/architecture/llm-orchestrated-compiler-tool-loop.md`
 
+## API References
+
+These documents classify public package surfaces. They are not architecture
+authority contracts unless an active contract explicitly references them.
+
+1. `api/compiler-tool.md`
+
 ## Examples
 
 Examples are runnable or copyable guides for public surfaces. They are not

@@ -62,6 +62,10 @@ from comp.compiler_tool import prepare_commit, build_public_output_receipt
 from comp.compiler_tool import compile_report_to_facts
 ```
 
+`docs/api/compiler-tool.md` classifies this stable quickstart surface separately
+from advanced and experimental helper exports. `comp.compiler_tool.__all__` is
+an import-convenience surface, not the stability contract.
+
 `comp.persistence`는 replayable artifact record와 receipt ledger surface를
 노출한다. persisted row는 authority가 아니라 receipt로 재검증되어야 하는
 view다.
