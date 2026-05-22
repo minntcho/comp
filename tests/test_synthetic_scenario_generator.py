@@ -46,17 +46,17 @@ def test_synthetic_data_models_live_outside_generator_module() -> None:
 def test_synthetic_expected_receipt_oracle_lives_outside_generator_module() -> None:
     from comp.scenarios.synthetic.oracle import (
         calculation_requirement_id,
+        expected_smoke_oracle,
         expected_smoke_receipt,
         reference_search_requirement_id,
     )
-    from comp.scenarios.synthetic.run_builders import build_synthetic_pcf_smoke_run
 
     config = SyntheticScenarioConfig.pcf_smoke(seed=7)
     run = generate_synthetic_pcf_run(config)
     derived_value = run.oracle.expected_calculated_claims[0].value
 
     assert expected_smoke_receipt.__module__ == "comp.scenarios.synthetic.oracle"
-    assert build_synthetic_pcf_smoke_run.__globals__["expected_smoke_receipt"] is (
+    assert expected_smoke_oracle.__globals__["expected_smoke_receipt"] is (
         expected_smoke_receipt
     )
     assert run.oracle.expected_receipt == expected_smoke_receipt(
@@ -116,23 +116,44 @@ def test_synthetic_smoke_oracle_lives_outside_run_builders_module() -> None:
     assert run.oracle == expected_smoke_oracle(config, raw_row)
 
 
+def test_synthetic_resolution_oracle_lives_outside_run_builders_module() -> None:
+    from comp.scenarios.synthetic.anomaly_specs import (
+        missing_unit_resolution_artifact,
+        missing_unit_spec,
+    )
+    from comp.scenarios.synthetic.oracle import expected_resolution_oracle
+    from comp.scenarios.synthetic.run_builders import build_synthetic_pcf_resolution_run
+
+    config = SyntheticScenarioConfig.pcf_resolution(seed=17)
+    missing_unit = missing_unit_spec(config)
+    raw_row = missing_unit["row"]
+    resolution = missing_unit_resolution_artifact(raw_row)
+    run = build_synthetic_pcf_resolution_run(config)
+
+    assert expected_resolution_oracle.__module__ == "comp.scenarios.synthetic.oracle"
+    assert build_synthetic_pcf_resolution_run.__globals__[
+        "expected_resolution_oracle"
+    ] is expected_resolution_oracle
+    assert run.oracle == expected_resolution_oracle(config, missing_unit, resolution)
+
+
 def test_synthetic_resolution_oracle_expectations_live_outside_run_builders_module() -> None:
     from comp.scenarios.synthetic.oracle import (
         expected_calculation_requirement,
         expected_reference_search_requirement,
+        expected_resolution_oracle,
         expected_resolution_artifact,
     )
-    from comp.scenarios.synthetic.run_builders import build_synthetic_pcf_resolution_run
 
     config = SyntheticScenarioConfig.pcf_resolution(seed=17)
-    run = build_synthetic_pcf_resolution_run(config)
+    run = generate_synthetic_pcf_run(config)
     resolution = run.resolution_artifacts.unit_witnesses[0]
 
     assert (
         expected_reference_search_requirement.__module__
         == "comp.scenarios.synthetic.oracle"
     )
-    assert build_synthetic_pcf_resolution_run.__globals__[
+    assert expected_resolution_oracle.__globals__[
         "expected_reference_search_requirement"
     ] is expected_reference_search_requirement
     assert run.oracle.expected_resolved_validation_requirements[1:] == (
@@ -227,6 +248,7 @@ def test_synthetic_pcf_fixtures_live_outside_run_builders_module() -> None:
         pcf_master,
         pcf_reference_record,
     )
+    from comp.scenarios.synthetic.oracle import expected_smoke_oracle
     from comp.scenarios.synthetic.run_builders import build_synthetic_pcf_smoke_run
 
     config = SyntheticScenarioConfig.pcf_smoke(seed=7)
@@ -235,7 +257,7 @@ def test_synthetic_pcf_fixtures_live_outside_run_builders_module() -> None:
 
     assert pcf_master.__module__ == "comp.scenarios.synthetic.pcf_fixtures"
     assert build_synthetic_pcf_smoke_run.__globals__["pcf_master"] is pcf_master
-    assert build_synthetic_pcf_smoke_run.__globals__["calculate_co2e_value"] is (
+    assert expected_smoke_oracle.__globals__["calculate_co2e_value"] is (
         calculate_co2e_value
     )
     assert run.master == pcf_master(config)
