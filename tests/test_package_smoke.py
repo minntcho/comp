@@ -296,6 +296,12 @@ def test_architecture_docs_are_classified_by_governance_status():
             "yes",
             "2026-05-20",
         ),
+        "friendly-authority-vocabulary.md": (
+            "north-star",
+            "trust-kernel",
+            "limited",
+            "2026-05-22",
+        ),
         "legacy-archive-cutover-plan.md": (
             "historical-note",
             "docs",
@@ -397,9 +403,27 @@ def test_docs_index_groups_architecture_docs_by_governance_authority():
         "### Historical Notes"
     )
     assert "architecture/active-surface-cutover.md" in docs_index
+    assert "architecture/friendly-authority-vocabulary.md" in docs_index
     assert "architecture/legacy-archive-cutover-plan.md" in docs_index
     assert "architecture/llm-orchestrated-compiler-tool-loop.md" in docs_index
     assert "architecture/production-trust-spine-database.md" in docs_index
+
+
+def test_friendly_authority_vocabulary_names_rename_path_without_moving_authority():
+    vocabulary = Path(
+        "docs/architecture/friendly-authority-vocabulary.md"
+    ).read_text(encoding="utf-8")
+
+    assert "Status: north-star" in vocabulary
+    assert "ClaimHypothesis` | `ClaimCandidate" in vocabulary
+    assert "EvidenceWitness` | `EvidenceRef" in vocabulary
+    assert "ProofObligation` | `ValidationRequirement" in vocabulary
+    assert "ReferenceBinding` | `CanonicalReference" in vocabulary
+    assert "CommitReceipt` | `PublicOutputReceipt" in vocabulary
+    assert "공개 승인 증표" in vocabulary
+    assert "감사 산출물 기록" in vocabulary
+    assert "Canonical rename with deprecated aliases" in vocabulary
+    assert "Only a clean public-output receipt can authorize public output." in vocabulary
 
 
 def test_production_database_north_star_is_provisional_and_discoverable():
