@@ -9,6 +9,7 @@ from comp.explanation import (
     ReceiptProofGraph,
     artifact_node_id,
     dependency_fingerprint_node_id,
+    explain_public_field,
     export_receipt_proof_graph,
     public_field_node_id,
     public_projection_node_id,
@@ -122,6 +123,76 @@ def test_public_projection_fields_connect_to_receipt_and_value_sources():
         projection_id,
         receipt_id,
     )
+
+
+def test_explain_public_field_returns_existing_field_path_without_authority():
+    case = receipt_projection_case(amount=100)
+    artifacts = artifact_store_for_receipt(
+        case.receipt,
+        committed_values=case.source_values,
+    )
+    replay = replay_public_projection(
+        case.source_values,
+        case.projection,
+        receipt=case.receipt,
+        artifacts=artifacts,
+    )
+    graph = export_receipt_proof_graph(
+        receipt=case.receipt,
+        replay=replay,
+        artifacts=artifacts,
+    )
+
+    explanation = explain_public_field(graph, field="amount")
+
+    assert explanation.field == "amount"
+    assert explanation.field_node_id == public_field_node_id(
+        "public-row-1",
+        "public-row",
+        "amount",
+    )
+    assert explanation.path_node_ids == dict(graph.field_paths)["amount"]
+    assert explanation.authorized_by == receipt_node_id(case.receipt)
+    assert explanation.authority == "explanation_only"
+    assert explanation.can_authorize_public_projection is False
+    assert explanation.to_payload() == {
+        "field": "amount",
+        "field_node_id": public_field_node_id(
+            "public-row-1",
+            "public-row",
+            "amount",
+        ),
+        "authorized_by": receipt_node_id(case.receipt),
+        "path_node_ids": dict(graph.field_paths)["amount"],
+        "authority": "explanation_only",
+        "can_authorize_public_projection": False,
+    }
+
+
+def test_explain_public_field_rejects_unknown_or_invented_field_nodes():
+    case = receipt_projection_case(amount=100)
+    artifacts = artifact_store_for_receipt(
+        case.receipt,
+        committed_values=case.source_values,
+    )
+    replay = replay_public_projection(
+        case.source_values,
+        case.projection,
+        receipt=case.receipt,
+        artifacts=artifacts,
+    )
+    graph = export_receipt_proof_graph(
+        receipt=case.receipt,
+        replay=replay,
+        artifacts=artifacts,
+    )
+
+    try:
+        explain_public_field(graph, field="missing")
+    except ProofGraphExportError as exc:
+        assert "public field" in str(exc)
+    else:
+        raise AssertionError("Expected unknown field explanation to fail.")
 
 
 def test_dependency_fingerprints_are_explanation_nodes():

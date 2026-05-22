@@ -2,7 +2,7 @@
 
 Status: active-contract
 Owner: explanation
-Last checked against code: 2026-05-20
+Last checked against code: 2026-05-22
 Can block PRs: yes
 
 This document fixes the role of receipt-scoped graph export in the active
@@ -307,14 +307,32 @@ The full graph is useful, but product workflows usually begin at a field:
 public_row.co2e_kg
 ```
 
-The graph layer should eventually support a read-only field explanation helper:
+The graph layer supports a read-only field explanation helper:
 
 ```python
 explain_public_field(graph, field="co2e_kg")
 ```
 
-The helper should return a path through receipt-cited artifacts only. It should
-not search the full compile report or infer missing provenance.
+The helper returns a `PublicFieldExplanation` path through existing graph nodes
+only. It should not search the full compile report, call
+`replay_public_projection(...)`, call the projection gate, inspect an
+`ArtifactStore`, or infer missing provenance.
+
+The return model is explicitly explanation-only:
+
+```python
+PublicFieldExplanation(
+    field="co2e_kg",
+    field_node_id="public_field:...",
+    authorized_by="commit_receipt:...",
+    path_node_ids=(...),
+    authority="explanation_only",
+    can_authorize_public_projection=False,
+)
+```
+
+Unknown fields, missing field paths, or paths that reference nodes outside
+`graph.nodes` must fail clearly instead of inventing an explanation.
 
 ## 10. Completeness Tests
 
@@ -324,6 +342,7 @@ Graph tests should focus on authority boundaries and provenance completeness:
 every replay artifact ref appears as a node
 every dependency fingerprint appears as a typed node
 every public projection field connects to the PublicOutputReceipt
+field-level explanations return existing field paths only
 every cited checked claim connects to at least one evidence witness
 every derived claim connects to calculation trace, formula, and dependencies
 raw committed values are absent from graph payloads by default
@@ -465,6 +484,7 @@ successful replay can be normalized into ReceiptProofGraph
 receipt-cited artifacts appear as nodes
 dependency fingerprints appear as typed nodes
 public projection and public fields connect back to the receipt
+explain_public_field returns existing field paths without replaying
 graph payload hides raw values by default
 graph explicitly cannot authorize public projection
 scenario JSON includes proof_graph

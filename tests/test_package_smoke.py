@@ -505,7 +505,7 @@ def test_architecture_docs_are_classified_by_governance_status():
             "active-contract",
             "explanation",
             "yes",
-            "2026-05-20",
+            "2026-05-22",
         ),
         "retrieval-fabric-north-star.md": (
             "north-star",
@@ -754,6 +754,11 @@ def test_receipt_proof_graph_contract_names_prework_boundaries():
     assert "dependency_graph" not in graph_doc
     assert "comp.views.receipt_graph" in graph_doc
     assert "MySQLArtifactStore is an ArtifactStore implementation" in graph_doc
+    assert "explain_public_field(graph, field=\"co2e_kg\")" in graph_doc
+    assert "PublicFieldExplanation" in graph_doc
+    assert "`replay_public_projection(...)`, call the projection gate" in graph_doc
+    assert "inspect an\n`ArtifactStore`" in graph_doc
+    assert "field-level explanations return existing field paths only" in graph_doc
 
 
 def test_receipt_graph_renderers_have_non_authority_module_boundary():
@@ -812,9 +817,16 @@ def test_pyproject_packages_comp_core_scenarios_and_agent_layer():
     dependencies = pyproject["project"].get("dependencies", [])
     assert not any(dependency.startswith("lark") for dependency in dependencies)
 
-    from comp.explanation import ReceiptProofGraph, export_receipt_proof_graph
+    from comp.explanation import (
+        PublicFieldExplanation,
+        ReceiptProofGraph,
+        explain_public_field,
+        export_receipt_proof_graph,
+    )
 
     assert ReceiptProofGraph is not None
+    assert PublicFieldExplanation is not None
+    assert explain_public_field is not None
     assert export_receipt_proof_graph is not None
     assert ArtifactStore is not None
     assert ArtifactEnvelope is not None
