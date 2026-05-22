@@ -8,7 +8,7 @@ from typing import Any
 
 from comp.judgment import PublicOutputReceipt, PublicOutputSpec
 from comp.persistence.ledger import ReceiptLedgerKey
-from comp.persistence.mysql import commit_receipt_from_body
+from comp.persistence.mysql import commit_receipt_from_body, commit_receipt_to_body
 from comp.scenario_contracts.manifest import ScenarioManifestError
 
 
@@ -45,6 +45,41 @@ def load_runtime_case(path: str | Path) -> RuntimeCase:
     if not isinstance(payload, Mapping):
         raise ScenarioManifestError("RuntimeCase file must contain an object.")
     return runtime_case_from_mapping(payload)
+
+
+def write_runtime_case(runtime_case: RuntimeCase, path: str | Path) -> Path:
+    runtime_case_path = Path(path)
+    runtime_case_path.parent.mkdir(parents=True, exist_ok=True)
+    runtime_case_path.write_text(
+        json.dumps(runtime_case_to_mapping(runtime_case), indent=2, sort_keys=True),
+        encoding="utf-8",
+    )
+    return runtime_case_path
+
+
+def runtime_case_to_mapping(runtime_case: RuntimeCase) -> dict[str, object]:
+    return {
+        "case_id": runtime_case.case_id,
+        "receipts": [
+            commit_receipt_to_body(receipt) for receipt in runtime_case.receipts
+        ],
+        "projections": [
+            runtime_projection_to_mapping(projection)
+            for projection in runtime_case.projections
+        ],
+    }
+
+
+def runtime_projection_to_mapping(
+    projection: RuntimeProjection,
+) -> dict[str, object]:
+    return {
+        "public_row_id": projection.public_row_id,
+        "projection_id": projection.projection_id,
+        "draft_id": projection.draft_id,
+        "output_fields": list(projection.output_fields),
+        "row": dict(projection.row),
+    }
 
 
 def runtime_case_from_mapping(payload: Mapping[str, Any]) -> RuntimeCase:
@@ -104,4 +139,7 @@ __all__ = [
     "RuntimeProjection",
     "load_runtime_case",
     "runtime_case_from_mapping",
+    "runtime_case_to_mapping",
+    "runtime_projection_to_mapping",
+    "write_runtime_case",
 ]
