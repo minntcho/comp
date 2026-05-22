@@ -122,8 +122,8 @@ DomainScenarioResult
 ```
 
 Scenario helpers may prepare external artifact bodies for fixture-only records,
-but they should not construct `ArtifactEnvelope` objects directly or duplicate
-receipt-ref coverage policy.
+but they should pass them through `ExternalArtifactMaterialSource`, not construct
+`ArtifactEnvelope` objects directly or duplicate receipt-ref coverage policy.
 
 ## External Scenario Packs
 

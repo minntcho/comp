@@ -29,6 +29,8 @@ from comp.persistence import (
 )
 from comp.runtime import (
     CompilerRunArtifactMaterializationError,
+    ExternalArtifactMaterial,
+    ExternalArtifactMaterialSource,
     materialize_compiler_run_artifacts,
 )
 
@@ -39,7 +41,9 @@ def test_materialize_compiler_run_artifacts_builds_replayable_materials():
     materials = materialize_compiler_run_artifacts(
         report,
         preparation,
-        external_artifact_bodies=external_bodies,
+        external_material_source=ExternalArtifactMaterialSource.from_bodies(
+            external_bodies
+        ),
     )
     assert all(isinstance(material, ArtifactMaterial) for material in materials)
     assert {
@@ -102,8 +106,26 @@ def test_materialize_compiler_run_artifacts_requires_external_dependency_body():
         materialize_compiler_run_artifacts(
             report,
             preparation,
-            external_artifact_bodies=missing_reference_record,
+            external_material_source=ExternalArtifactMaterialSource.from_bodies(
+                missing_reference_record
+            ),
         )
+
+
+def test_external_artifact_material_source_rejects_conflicting_materials():
+    first = ExternalArtifactMaterial(
+        artifact_kind="reference_record",
+        artifact_id="factor-1",
+        body={"reference_id": "factor-1", "factor_value": 0.1},
+    )
+    second = ExternalArtifactMaterial(
+        artifact_kind="reference_record",
+        artifact_id="factor-1",
+        body={"reference_id": "factor-1", "factor_value": 0.2},
+    )
+
+    with pytest.raises(CompilerRunArtifactMaterializationError, match="conflicting"):
+        ExternalArtifactMaterialSource((first, second))
 
 
 def _accepted_compiler_run():
