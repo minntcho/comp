@@ -115,7 +115,7 @@ def _synthetic_source_content_digest(rows: tuple[dict[str, Any], ...]) -> str:
     return f"sha256:{hashlib.sha256(encoded).hexdigest()}"
 
 
-def _synthetic_source_dependency_refs(
+def synthetic_source_dependency_refs(
     config: SyntheticScenarioConfig,
 ) -> tuple[ExpectedDependencyRef, ...]:
     return tuple(
@@ -148,5 +148,6 @@ def _synthetic_source_identities(
 __all__ = [
     "build_synthetic_loaded_source",
     "build_synthetic_loaded_sources",
+    "synthetic_source_dependency_refs",
     "synthetic_source_input_dependency_id",
 ]

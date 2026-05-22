@@ -43,6 +43,33 @@ def test_synthetic_data_models_live_outside_generator_module() -> None:
     )
 
 
+def test_synthetic_expected_receipt_oracle_lives_outside_generator_module() -> None:
+    from comp.scenarios.synthetic.oracle import (
+        calculation_obligation_id,
+        expected_smoke_receipt,
+        reference_search_obligation_id,
+    )
+
+    config = SyntheticScenarioConfig.pcf_smoke(seed=7)
+    run = generate_synthetic_pcf_run(config)
+    derived_value = run.oracle.expected_derived_claims[0].value
+
+    assert expected_smoke_receipt.__module__ == "comp.scenarios.synthetic.oracle"
+    assert generate_synthetic_pcf_run.__globals__["expected_smoke_receipt"] is (
+        expected_smoke_receipt
+    )
+    assert run.oracle.expected_receipt == expected_smoke_receipt(
+        config,
+        source_witness_id=f"witness:{config.source_row_id}:electricity_kwh",
+        derived_value=derived_value,
+    )
+    assert run.oracle.expected_receipt is not None
+    assert run.oracle.expected_receipt.resolved_obligation_ids == (
+        reference_search_obligation_id(config),
+        calculation_obligation_id(config),
+    )
+
+
 def test_synthetic_pcf_generator_writes_oracle_not_truth(tmp_path: Path) -> None:
     config = SyntheticScenarioConfig.pcf_smoke(seed=7)
 

@@ -38,8 +38,12 @@ from comp.scenarios.synthetic.models import (
     SyntheticResolutionArtifacts,
     SyntheticRun,
 )
+from comp.scenarios.synthetic.oracle import (
+    calculation_obligation_id,
+    expected_smoke_receipt,
+    reference_search_obligation_id,
+)
 from comp.scenarios.synthetic.sources import (
-    _synthetic_source_dependency_refs,
     build_synthetic_loaded_source,
     build_synthetic_loaded_sources,
     synthetic_source_input_dependency_id,
@@ -129,7 +133,7 @@ def generate_synthetic_pcf_run(config: SyntheticScenarioConfig) -> SyntheticRun:
                     witness_id=source_witness_id,
                 ),
             ),
-            expected_receipt=_expected_smoke_receipt(
+            expected_receipt=expected_smoke_receipt(
                 config,
                 source_witness_id=source_witness_id,
                 derived_value=derived_value,
@@ -223,13 +227,13 @@ def _generate_synthetic_pcf_resolution_run(
             expected_resolved_obligations=(
                 resolved_obligation,
                 ExpectedObligation(
-                    obligation_id=_reference_search_obligation_id(config),
+                    obligation_id=reference_search_obligation_id(config),
                     kind="reference_search_required",
                     field="co2e_kg",
                     reason="unknown_reference",
                 ),
                 ExpectedObligation(
-                    obligation_id=_calculation_obligation_id(config),
+                    obligation_id=calculation_obligation_id(config),
                     kind="calculation_blocked",
                     field="co2e_kg",
                     reason="unknown_reference",
@@ -246,14 +250,14 @@ def _generate_synthetic_pcf_resolution_run(
                     source_ref=resolution.source_ref,
                 ),
             ),
-            expected_receipt=_expected_smoke_receipt(
+            expected_receipt=expected_smoke_receipt(
                 config,
                 source_witness_id=source_witness_id,
                 derived_value=derived_value,
                 resolved_obligation_ids=(
                     resolved_obligation.obligation_id,
-                    _reference_search_obligation_id(config),
-                    _calculation_obligation_id(config),
+                    reference_search_obligation_id(config),
+                    calculation_obligation_id(config),
                 ),
             ),
         ),
@@ -542,90 +546,6 @@ def _multiply(left: int | float, right: int | float) -> int | float:
     if value == value.to_integral_value():
         return float(value)
     return float(value)
-
-
-def _expected_smoke_receipt(
-    config: SyntheticScenarioConfig,
-    *,
-    source_witness_id: str,
-    derived_value: int | float,
-    resolved_obligation_ids: tuple[str, ...] | None = None,
-) -> ExpectedReceipt:
-    commit_package_id = f"commit-package:{config.subject_id}"
-    governance_decision_id = f"governance-decision:{commit_package_id}"
-    manifest_dependency_id = _synthetic_manifest_dependency_id(config)
-    resolved_ids = resolved_obligation_ids or (
-        _reference_search_obligation_id(config),
-        _calculation_obligation_id(config),
-    )
-    source_dependency_refs = _synthetic_source_dependency_refs(config)
-    return ExpectedReceipt(
-        public_row_id=config.public_row_id,
-        projection_id=config.projection_id,
-        authorized_fields=("electricity_kwh", "co2e_kg"),
-        public_row={
-            "electricity_kwh": config.electricity_kwh,
-            "co2e_kg": derived_value,
-        },
-        governance_status="commit",
-        commit_package_id=commit_package_id,
-        governance_decision_id=governance_decision_id,
-        checked_claim_witness_ids=(source_witness_id,),
-        reference_binding_ids=(config.binding_id,),
-        derived_claim_ids=(config.output_claim_id,),
-        calculation_trace_ids=(f"trace:{config.output_claim_id}",),
-        formula_ids=(config.formula_id,),
-        resolved_obligation_ids=resolved_ids,
-        dependency_refs=(
-            ExpectedDependencyRef(
-                dependency_kind="synthetic_manifest",
-                dependency_id=manifest_dependency_id,
-            ),
-            *source_dependency_refs,
-        ),
-        artifact_refs=(
-            ExpectedArtifactRef(commit_package_id, "commit_package"),
-            ExpectedArtifactRef(governance_decision_id, "governance_decision"),
-            ExpectedArtifactRef(
-                f"checked_claim:electricity_kwh:{source_witness_id}",
-                "checked_claim",
-            ),
-            ExpectedArtifactRef(config.output_claim_id, "derived_claim"),
-            ExpectedArtifactRef(source_witness_id, "evidence_witness"),
-            ExpectedArtifactRef(config.binding_id, "reference_binding"),
-            ExpectedArtifactRef(
-                f"trace:{config.output_claim_id}",
-                "calculation_trace",
-            ),
-            ExpectedArtifactRef(config.formula_id, "formula"),
-            ExpectedArtifactRef(manifest_dependency_id, "synthetic_manifest"),
-            *(
-                ExpectedArtifactRef(
-                    ref.dependency_id,
-                    ref.dependency_kind,
-                )
-                for ref in source_dependency_refs
-            ),
-        ),
-    )
-
-
-def _synthetic_manifest_dependency_id(config: SyntheticScenarioConfig) -> str:
-    return f"synthetic_manifest:{config.scenario_id}:seed-{config.seed}"
-
-
-def _reference_search_obligation_id(config: SyntheticScenarioConfig) -> str:
-    return (
-        f"resolve:{config.formula_id}:{config.output_claim_id}:"
-        "reference_search_required"
-    )
-
-
-def _calculation_obligation_id(config: SyntheticScenarioConfig) -> str:
-    return (
-        f"calculation:{config.formula_id}:{config.output_claim_id}:"
-        "unknown_reference"
-    )
 
 
 __all__ = [
