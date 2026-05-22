@@ -66,9 +66,9 @@ override active contracts.
 These documents preserve migration context and older reasoning. They cannot
 block PRs by themselves.
 
-1. `architecture/active-surface-cutover.md`
-2. `architecture/legacy-archive-cutover-plan.md`
-3. `architecture/llm-orchestrated-compiler-tool-loop.md`
+1. `archive/architecture/active-surface-cutover.md`
+2. `archive/architecture/legacy-archive-cutover-plan.md`
+3. `archive/architecture/llm-orchestrated-compiler-tool-loop.md`
 
 ## Compiler Tool Layers
 
@@ -127,3 +127,9 @@ docs/archive/2026-migration/README.md
 
 Historical migration documents are reference material, not active policy for
 this branch.
+
+Implementation plans and execution logs are archived under:
+
+```text
+docs/archive/plans/
+```
