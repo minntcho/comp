@@ -81,6 +81,45 @@ DOC_OWNERS = {
     "scenario-lab",
     "trust-kernel",
 }
+COMPILER_TOOL_STABLE_PUBLIC = {
+    "CompilerTool",
+    "ValidationReport",
+    "resolver_tasks_from_report",
+    "prepare_commit",
+    "build_public_output_receipt",
+    "compile_report_to_facts",
+}
+COMPILER_TOOL_ADVANCED_PUBLIC = {
+    "SemanticJudgment",
+    "ReferenceOption",
+    "CanonicalReference",
+    "CalculationTrace",
+    "CalculatedClaim",
+    "ReviewPackage",
+    "ReviewDecision",
+    "ReferenceCatalog",
+    "ReferenceResolver",
+}
+COMPILER_TOOL_EXPERIMENTAL_NOT_QUICKSTART = {
+    "active_retrieval_query_policies",
+    "profile_declaration_fingerprint",
+    "domain_pack_declaration_fingerprint",
+    "rule_family_declaration_fingerprint",
+    "semantic_rubric_declaration_fingerprint",
+    "reference_query_for_obligation_from_policy",
+    "reference_query_for_obligation_from_profile_policy",
+    "reference_query_for_obligation_from_policies",
+    "reference_query_for_obligation_from_resolver_tasks",
+    "reference_query_from_resolver_task",
+    "select_reference_binding",
+    "apply_reference_selection",
+    "retry_blocked_calculation",
+    "apply_calculation_result",
+    "add_compile_report_facts",
+    "add_commit_preparation_facts",
+    "with_recomputed_status",
+    "recompute_report_status",
+}
 
 
 def _governed_architecture_docs():
@@ -100,6 +139,15 @@ def _doc_header(path):
 
 def _docs_relative_path(path):
     return path.relative_to("docs").as_posix()
+
+
+def _readme_compiler_tool_quickstart():
+    readme = Path("README.md").read_text(encoding="utf-8")
+    for block in readme.split("```python")[1:]:
+        code = block.split("```", 1)[0]
+        if "from comp.compiler_tool import" in code:
+            return code
+    raise AssertionError("README does not include a compiler_tool quickstart block.")
 
 
 def test_top_level_package_exposes_active_judgment_surface():
@@ -127,96 +175,40 @@ def test_top_level_package_no_longer_exports_legacy_runner_surface():
     assert not hasattr(comp, "PipelineRunResult")
 
 
-def test_readme_compiler_tool_import_surface_is_exported():
-    from comp.compiler_tool import (
-        CalculatedClaim,
-        CanonicalReference,
-        ClaimCandidate,
-        ValidationReport,
-        CompilerTool,
-        EvidenceRef,
-        EmbeddingResolverStub,
-        ReferenceIndexEntry,
-        ReferenceQuery,
-        ReferenceResolver,
-        ReferenceCatalogSnapshot,
-        ReviewDecision,
-        ReviewPackage,
-        RetrievalQueryPolicy,
-        RetrievalQueryRule,
-        active_retrieval_query_policies,
-        calculation_formula_declaration_fingerprint,
-        domain_pack_declaration_fingerprint,
-        evidence_ref_fingerprint,
-        evidence_ref_fingerprint,
-        profile_declaration_fingerprint,
-        profile_allowed_units,
-        profile_known_fields,
-        reference_catalog_snapshot_fingerprint,
-        reference_query_for_obligation_from_profile_policy,
-        reference_query_for_obligation_from_policies,
-        reference_query_for_obligation_from_policy,
-        reference_query_for_obligation_from_resolver_tasks,
-        reference_query_from_resolver_task,
-        reference_record_fingerprint,
-        ReferenceOption,
-        resolve_reference_retrieval_obligations,
-        rule_family_declaration_fingerprint,
-        semantic_rubric_declaration_fingerprint,
-        ValidationRequirement,
-        ValidationReport,
-        build_public_output_receipt,
-        build_public_output_receipt,
-        compile_report_to_facts,
-        prepare_commit,
-        PublicOutputReceipt,
-        PublicOutputReceiptCitations,
-        resolver_tasks_from_report,
-    )
+def test_compiler_tool_stable_public_surface_is_exported_and_in_readme():
+    import comp.compiler_tool as compiler_tool
 
-    assert CalculatedClaim is not None
-    assert CanonicalReference is not None
-    assert ClaimCandidate is not None
-    assert CompilerTool is not None
-    assert ValidationReport is not None
-    assert EvidenceRef is not None
-    assert resolver_tasks_from_report is not None
-    assert prepare_commit is not None
-    assert build_public_output_receipt is build_public_output_receipt
-    assert build_public_output_receipt is not None
-    assert PublicOutputReceipt is not None
-    assert PublicOutputReceiptCitations is not None
-    assert compile_report_to_facts is not None
-    assert ReferenceQuery is not None
-    assert ReferenceIndexEntry is not None
-    assert ReferenceResolver is not None
-    assert ReferenceCatalogSnapshot is not None
-    assert ReviewDecision is not None
-    assert ReviewPackage is not None
-    assert EmbeddingResolverStub is not None
-    assert RetrievalQueryPolicy is not None
-    assert RetrievalQueryRule is not None
-    assert calculation_formula_declaration_fingerprint is not None
-    assert domain_pack_declaration_fingerprint is not None
-    assert evidence_ref_fingerprint is not None
-    assert evidence_ref_fingerprint is not None
-    assert active_retrieval_query_policies is not None
-    assert profile_declaration_fingerprint is not None
-    assert profile_allowed_units is not None
-    assert profile_known_fields is not None
-    assert reference_query_for_obligation_from_policies is not None
-    assert reference_query_for_obligation_from_profile_policy is not None
-    assert reference_query_for_obligation_from_policy is not None
-    assert reference_query_from_resolver_task is not None
-    assert reference_query_for_obligation_from_resolver_tasks is not None
-    assert ReferenceOption is not None
-    assert reference_catalog_snapshot_fingerprint is not None
-    assert reference_record_fingerprint is not None
-    assert rule_family_declaration_fingerprint is not None
-    assert semantic_rubric_declaration_fingerprint is not None
-    assert ValidationRequirement is not None
-    assert ValidationReport is not None
-    assert resolve_reference_retrieval_obligations is not None
+    quickstart = _readme_compiler_tool_quickstart()
+
+    for name in COMPILER_TOOL_STABLE_PUBLIC:
+        assert hasattr(compiler_tool, name), name
+        assert name in quickstart, name
+
+
+def test_compiler_tool_advanced_surface_is_documented():
+    import comp.compiler_tool as compiler_tool
+
+    api_doc = Path("docs/api/compiler-tool.md").read_text(encoding="utf-8")
+    docs_index = Path("docs/index.md").read_text(encoding="utf-8")
+
+    assert "## API References" in docs_index
+    assert "api/compiler-tool.md" in docs_index
+    assert "Advanced public API" in api_doc
+    for name in COMPILER_TOOL_ADVANCED_PUBLIC:
+        assert hasattr(compiler_tool, name), name
+        assert name in api_doc, name
+    assert "__all__ is an import-convenience surface" in api_doc
+    assert "__all__ is not the stability contract" in api_doc
+
+
+def test_compiler_tool_experimental_surface_is_not_in_readme_quickstart():
+    quickstart = _readme_compiler_tool_quickstart()
+    api_doc = Path("docs/api/compiler-tool.md").read_text(encoding="utf-8")
+
+    assert "Experimental / internal-ish API" in api_doc
+    for name in COMPILER_TOOL_EXPERIMENTAL_NOT_QUICKSTART:
+        assert name in api_doc, name
+        assert name not in quickstart, name
 
 
 def test_readme_tracks_persistence_active_surface():
