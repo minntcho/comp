@@ -103,6 +103,33 @@
           "covers_comp_scenario_ids": [
             "l_energy.tier0_physical_allocation.v1"
           ]
+        },
+        {
+          "id": "synthetic_pcf_anomaly",
+          "status": "seed",
+          "scope": "synthetic-generator-e2e",
+          "cutover_state": "parallel-validation",
+          "covers_comp_scenario_ids": [
+            "synthetic_pcf.anomaly.v1"
+          ]
+        },
+        {
+          "id": "synthetic_pcf_resolution",
+          "status": "seed",
+          "scope": "synthetic-generator-e2e",
+          "cutover_state": "parallel-validation",
+          "covers_comp_scenario_ids": [
+            "synthetic_pcf.resolution.v1"
+          ]
+        },
+        {
+          "id": "synthetic_pcf_smoke",
+          "status": "seed",
+          "scope": "synthetic-generator-e2e",
+          "cutover_state": "parallel-validation",
+          "covers_comp_scenario_ids": [
+            "synthetic_pcf.smoke.v1"
+          ]
         }
       ],
       "notes": [
