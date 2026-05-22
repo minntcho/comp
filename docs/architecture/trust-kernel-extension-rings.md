@@ -2,7 +2,7 @@
 
 Status: active-contract
 Owner: trust-kernel
-Last checked against code: 2026-05-20
+Last checked against code: 2026-05-22
 Can block PRs: yes
 
 This document names the outer shape of the `comp` rebuild. The core is a small
@@ -270,6 +270,39 @@ scenario tests are fixture verdicts, not production authority
 Avoid namespace-wide relocation unless a boundary is already clear. If a module
 moves, first answer which authority it currently holds, whether that authority
 belongs there, and which layer should own it.
+
+### Machine-Checked Import Boundaries
+
+Authority modules cannot import presentation, display, or explanation modules.
+This is checked by `tests/test_authority_import_boundaries.py`.
+
+```text
+comp.judgment must not import comp.compiler_tool
+comp.judgment must not import comp.persistence
+comp.judgment must not import comp.explanation
+comp.judgment must not import comp.views
+comp.judgment must not import comp.schema_labels
+comp.judgment must not import comp.user_messages
+
+comp.compiler_tool must not import comp.persistence
+comp.compiler_tool must not import comp.explanation
+comp.compiler_tool must not import comp.views
+comp.compiler_tool must not import comp.schema_labels
+comp.compiler_tool must not import comp.user_messages
+
+comp.persistence must not import comp.compiler_tool
+comp.persistence must not import comp.explanation
+comp.persistence must not import comp.views
+comp.persistence must not import comp.schema_labels
+comp.persistence must not import comp.user_messages
+
+comp.views.receipt_graph must remain render-only
+```
+
+The proof graph exporter may read receipt, replay-report, and artifact-store
+types, but it must not call replay or public-output authorization. Renderers may
+format existing graph payloads, but they must not export graphs, replay
+projections, or authorize public rows.
 
 ## Review Rules
 
