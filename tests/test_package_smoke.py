@@ -609,6 +609,7 @@ def test_pyproject_packages_comp_core_scenarios_and_agent_layer():
 
 def test_legacy_pipeline_sources_are_not_active_files():
     assert not [path for path in LEGACY_ACTIVE_PATHS if Path(path).exists()]
+    assert not Path("legacy").exists()
     assert "comp.runner" not in (comp.__doc__ or "")
 
 

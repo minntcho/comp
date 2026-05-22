@@ -160,11 +160,9 @@ from comp import Fact, JudgmentState, SubjectRef
 from comp.judgment import SelectionReceipt, CommitReceipt
 ```
 
-legacy runner가 필요한 과거 테스트나 reference material은 archive snapshot을 사용한다.
-
-```text
-legacy/archive/pipeline_legacy_20260518/
-```
+legacy runner가 필요한 과거 테스트나 reference material은 repository history의
+cutover 이전 snapshot을 사용한다. 현재 tree에는 legacy archive copy를 유지하지
+않는다.
 
 `comp.runner`, pass exports, root legacy modules, and legacy DSL/eval/builtin
 facades are not active package source after PR4c.
@@ -214,6 +212,7 @@ PR1은 다음을 만족하면 된다.
 `from comp import Fact, JudgmentState, SubjectRef`가 가능하다.
 `from comp import ESGPipelineRunner`는 더 이상 active contract가 아니다.
 package smoke test가 judgment-core surface 기준으로 갱신된다.
-legacy runner 파일은 active source tree에서 내려가고 archive snapshot에 남는다.
+legacy runner 파일은 active source tree에서 내려가며, 필요한 과거 snapshot은
+repository history에서 확인한다.
 README가 active surface 기준을 설명한다.
 ```

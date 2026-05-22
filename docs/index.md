@@ -114,13 +114,8 @@ judgments or reference queries, but they do not mint commit receipts.
 
 ## Historical Reference
 
-Later migration documents are preserved outside the active surface at:
-
-```text
-legacy/current-migration-state-20260429
-```
-
-Archive notes live at:
+Later migration documents and legacy pass-pipeline snapshots are preserved in
+repository history, not as active tree content. Archive notes live at:
 
 ```text
 docs/archive/2026-migration/README.md
