@@ -23,8 +23,11 @@ def scenario_result_view(result) -> dict[str, Any]:
 
 
 def report_view(report) -> dict[str, Any]:
+    from comp.views import validation_summary_view
+
     return {
         "status": report.status,
+        "friendly_summary": validation_summary_view(report),
         "open_obligations": [
             _obligation_view(obligation)
             for obligation in report.obligations
