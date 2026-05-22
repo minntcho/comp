@@ -24,6 +24,10 @@ Read `architecture/document-governance.md` first when deciding whether a
 document can block a PR. The rest of the architecture docs are grouped by that
 authority model.
 
+The document header is the metadata source of truth for `Status`, `Owner`,
+`Last checked against code`, and `Can block PRs`. For finding governed docs,
+this index is the navigation source of truth.
+
 ### Active Contracts
 
 These documents can block PRs when a change violates their authority boundary

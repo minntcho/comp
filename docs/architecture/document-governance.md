@@ -2,7 +2,7 @@
 
 Status: active-contract
 Owner: trust-kernel
-Last checked against code: 2026-05-20
+Last checked against code: 2026-05-22
 Can block PRs: yes
 
 This document defines how architecture documents gain or lose authority in the
@@ -22,6 +22,23 @@ Some docs are historical context.
 
 Every architecture document that is used in review should declare its authority
 level near the top.
+
+## Metadata And Navigation
+
+Document headers are the metadata source of truth.
+
+```text
+Status
+Owner
+Last checked against code
+Can block PRs
+```
+
+`docs/index.md` is the navigation source of truth.
+
+The index groups documents for humans, but it must not become a second source
+of authority metadata. If the index and a document header disagree, fix the
+stale one in the same PR.
 
 ## Authority Levels
 
@@ -94,6 +111,31 @@ Can block PRs: yes | limited | no
 the code shape on that date. It is not a promise that the document will remain
 fresh forever.
 
+## Location Rules
+
+Status and location should agree.
+
+After the lifecycle migration, docs/architecture/ root is an entry surface. It
+may contain a README, governance entry point, or short routing document; the
+governed architecture body should live under the status-specific directories.
+
+```text
+active-contract -> docs/architecture/contracts/
+implementation-map -> docs/architecture/maps/
+north-star -> docs/architecture/north-stars/
+historical-note -> docs/archive/architecture/
+implementation plan -> docs/archive/plans/
+migration history -> docs/archive/migration/
+```
+
+The current repository may still contain documents that predate this physical
+layout. New documents should follow this layout immediately, and migration PRs
+should move obvious existing documents without changing their review meaning.
+
+Implementation plans, execution logs, and temporary PR plans should not be
+created under `docs/architecture/`. They may be useful, but they are not active
+architecture contracts.
+
 ## Review Checklist
 
 Before adding or promoting a document, answer:
@@ -119,6 +161,7 @@ implementation-map -> historical-note
 north-star -> historical-note
 ```
 
+After the lifecycle migration, demotion changes both status and location.
 Demotion is not deletion. It preserves useful reasoning while removing review
 authority.
 
