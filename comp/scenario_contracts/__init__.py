@@ -15,6 +15,7 @@ from comp.scenario_contracts.artifacts import (
     load_artifact_envelopes,
     write_artifact_envelopes,
 )
+from comp.scenario_contracts.examples import write_public_projection_smoke_bundle
 from comp.scenario_contracts.manifest import (
     ScenarioManifest,
     ScenarioManifestError,
@@ -41,6 +42,7 @@ __all__ = [
     "runtime_case_to_mapping",
     "runtime_projection_to_mapping",
     "write_artifact_envelopes",
+    "write_public_projection_smoke_bundle",
     "write_report",
     "write_runtime_case",
 ]

@@ -5,6 +5,7 @@ import sys
 from collections.abc import Sequence
 
 from comp.scenario_contracts import load_manifest, run_scenario
+from comp.scenario_contracts import write_public_projection_smoke_bundle
 
 
 def main(argv: Sequence[str] | None = None) -> int:
@@ -21,6 +22,10 @@ def main(argv: Sequence[str] | None = None) -> int:
         result = run_scenario(args.manifest, report_path=args.report)
         print(f"{result.scenario_id}: {result.status}")
         return 0 if result.status == "passed" else 1
+    if args.scenario_command == "init":
+        manifest_path = write_public_projection_smoke_bundle(args.target)
+        print(f"created {manifest_path}")
+        return 0
     parser.print_help(sys.stderr)
     return 2
 
@@ -44,6 +49,11 @@ def _build_parser() -> argparse.ArgumentParser:
     )
     run.add_argument("manifest")
     run.add_argument("--report")
+    init = scenario_subparsers.add_parser(
+        "init",
+        help="Create a runnable public-projection smoke scenario bundle.",
+    )
+    init.add_argument("target")
     return parser
 
 
