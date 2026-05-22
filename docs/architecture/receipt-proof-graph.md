@@ -356,6 +356,22 @@ than reconstructing graph semantics independently. Renderer code belongs in
 compiler, resolver, calculator, governance gate, projection gate, or replay
 function.
 
+The initial CLI is file-based and exports a graph from an already materialized
+receipt, replay report, and artifact envelope set:
+
+```text
+comp-receipt-graph export-json \
+  --receipt receipt.json \
+  --replay replay.json \
+  --artifacts artifacts.json \
+  --output proof-graph.json
+```
+
+The CLI consumes replay outputs; it does not replay projections itself.
+Artifact envelope bodies should use the persistence JSON codec so tuple, list,
+decimal, and scalar values keep the same digest material they had at replay
+time.
+
 MySQLArtifactStore is an ArtifactStore implementation. It stores and
 retrieves replay artifacts; it does not become a graph backend or a policy
 authority.

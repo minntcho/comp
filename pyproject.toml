@@ -31,3 +31,4 @@ packages = [
 
 [project.scripts]
 minchoagnt = "minchoagnt.cli:main"
+comp-receipt-graph = "comp.explanation.receipt_graph_cli:main"

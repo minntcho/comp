@@ -490,6 +490,7 @@ def test_pyproject_packages_comp_core_scenarios_and_agent_layer():
 
     scripts = pyproject["project"].get("scripts", {})
     assert scripts["minchoagnt"] == "minchoagnt.cli:main"
+    assert scripts["comp-receipt-graph"] == "comp.explanation.receipt_graph_cli:main"
 
     dependencies = pyproject["project"].get("dependencies", [])
     assert not any(dependency.startswith("lark") for dependency in dependencies)

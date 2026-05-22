@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, field
 from typing import Any
@@ -124,6 +125,9 @@ class ReceiptProofGraph:
                 for field, node_ids in self.field_paths
             ),
         }
+
+    def to_json(self) -> str:
+        return json.dumps(self.to_payload(), indent=2, sort_keys=True)
 
 
 def export_receipt_proof_graph(
