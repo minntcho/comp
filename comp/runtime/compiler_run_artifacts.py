@@ -39,20 +39,6 @@ class ExternalArtifactMaterialSource:
         object.__setattr__(self, "materials", material_tuple)
         object.__setattr__(self, "_bodies", _external_bodies_by_key(material_tuple))
 
-    @classmethod
-    def from_bodies(
-        cls,
-        bodies: Mapping[tuple[str, str], Mapping[str, Any]],
-    ) -> "ExternalArtifactMaterialSource":
-        return cls(
-            ExternalArtifactMaterial(
-                artifact_kind=artifact_kind,
-                artifact_id=artifact_id,
-                body=body,
-            )
-            for (artifact_kind, artifact_id), body in bodies.items()
-        )
-
     def body_for(self, ref: ArtifactRef) -> Mapping[str, Any]:
         try:
             return dict(self._bodies[(ref.artifact_kind, ref.artifact_id)])
