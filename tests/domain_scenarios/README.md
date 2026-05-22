@@ -51,7 +51,7 @@ They are pressure tests for the compiler contract, not golden snapshots of a
 final LCA, DPP, UI, or reference database schema.
 
 Scenario creation guidance lives in
-`docs/architecture/domain-scenario-pack-generation.md`. Treat larger scenarios
+`docs/architecture/maps/domain-scenario-pack-generation.md`. Treat larger scenarios
 as swappable Scenario Pack modules, not hard-coded golden fixtures.
 
 The shared test-support layer now exposes:

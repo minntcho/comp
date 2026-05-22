@@ -539,10 +539,10 @@ quality can come later.
 
 ## Relationship To Working Theory
 
-`obligation-kernel-working-theory.md` remains the detailed working theory for
-the current implementation slice: obligations, semantic judgments,
-reference-grounded calculation, commit packages, governance decisions, and
-receipts.
+`docs/architecture/maps/obligation-kernel-working-theory.md` remains the
+detailed working theory for the current implementation slice: obligations,
+semantic judgments, reference-grounded calculation, commit packages, governance
+decisions, and receipts.
 
 This document is the north star for future retrieval work. Use it to decide
 whether a proposed embedding, memory, rule, or LLM feature respects the kernel

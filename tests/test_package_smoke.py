@@ -123,9 +123,28 @@ COMPILER_TOOL_EXPERIMENTAL_NOT_QUICKSTART = {
 
 
 def _governed_architecture_docs():
-    return sorted(Path("docs/architecture").glob("*.md")) + sorted(
-        Path("docs/archive/architecture").glob("*.md")
+    governed_dirs = (
+        Path("docs/architecture"),
+        Path("docs/architecture/contracts"),
+        Path("docs/architecture/maps"),
+        Path("docs/architecture/north-stars"),
+        Path("docs/archive/architecture"),
     )
+    return sorted(path for directory in governed_dirs for path in directory.glob("*.md"))
+
+
+def _matches_lifecycle_location(path, status):
+    if status == "active-contract":
+        return path == Path("docs/architecture/document-governance.md") or path.match(
+            "docs/architecture/contracts/*.md"
+        )
+    if status == "implementation-map":
+        return path.match("docs/architecture/maps/*.md")
+    if status == "north-star":
+        return path.match("docs/architecture/north-stars/*.md")
+    if status == "historical-note":
+        return path.match("docs/archive/architecture/*.md")
+    raise AssertionError(f"Unknown architecture doc status: {status}")
 
 
 def _doc_header(path):
@@ -232,9 +251,9 @@ def test_persistence_exports_mysql_backend_surface():
 
 
 def test_trust_kernel_hardening_documents_projection_numeric_policy():
-    hardening = Path("docs/architecture/trust-kernel-hardening.md").read_text(
-        encoding="utf-8"
-    )
+    hardening = Path(
+        "docs/architecture/contracts/trust-kernel-hardening.md"
+    ).read_text(encoding="utf-8")
 
     assert "## Projection Numeric Value Policy" in hardening
     assert "PublicOutputValueCommitment" in hardening
@@ -242,9 +261,9 @@ def test_trust_kernel_hardening_documents_projection_numeric_policy():
 
 
 def test_trust_kernel_hardening_documents_profile_baseline_policy():
-    hardening = Path("docs/architecture/trust-kernel-hardening.md").read_text(
-        encoding="utf-8"
-    )
+    hardening = Path(
+        "docs/architecture/contracts/trust-kernel-hardening.md"
+    ).read_text(encoding="utf-8")
 
     assert "profile-declared baseline" in hardening
     assert "known fields and allowed units" in hardening
@@ -253,7 +272,7 @@ def test_trust_kernel_hardening_documents_profile_baseline_policy():
 
 def test_working_theory_status_section_tracks_current_rebuild_state():
     working_theory = Path(
-        "docs/architecture/obligation-kernel-working-theory.md"
+        "docs/architecture/maps/obligation-kernel-working-theory.md"
     ).read_text(encoding="utf-8")
 
     assert "## 13. Current Implementation Status" in working_theory
@@ -271,7 +290,7 @@ def test_working_theory_status_section_tracks_current_rebuild_state():
 
 def test_domain_scenario_generation_guide_tracks_swappable_pack_contract():
     guide = Path(
-        "docs/architecture/domain-scenario-pack-generation.md"
+        "docs/architecture/maps/domain-scenario-pack-generation.md"
     ).read_text(encoding="utf-8")
 
     assert "Scenario Pack" in guide
@@ -304,27 +323,27 @@ def test_document_governance_classifies_architecture_doc_authority():
     assert "document-governance.md" in docs_index
 
     required_headers = {
-        "docs/architecture/trust-kernel-extension-rings.md": (
+        "docs/architecture/contracts/trust-kernel-extension-rings.md": (
             "Status: active-contract",
             "Can block PRs: yes",
         ),
-        "docs/architecture/persistence-ledger-boundary.md": (
+        "docs/architecture/contracts/persistence-ledger-boundary.md": (
             "Status: active-contract",
             "Can block PRs: yes",
         ),
-        "docs/architecture/artifact-envelope-builder.md": (
+        "docs/architecture/contracts/artifact-envelope-builder.md": (
             "Status: active-contract",
             "Can block PRs: yes",
         ),
-        "docs/architecture/retrieval-fabric-north-star.md": (
+        "docs/architecture/north-stars/retrieval-fabric-north-star.md": (
             "Status: north-star",
             "Can block PRs: limited",
         ),
-        "docs/architecture/obligation-kernel-working-theory.md": (
+        "docs/architecture/maps/obligation-kernel-working-theory.md": (
             "Status: implementation-map",
             "Can block PRs: limited",
         ),
-        "docs/architecture/domain-scenario-pack-generation.md": (
+        "docs/architecture/maps/domain-scenario-pack-generation.md": (
             "Status: implementation-map",
             "Can block PRs: limited",
         ),
@@ -392,10 +411,7 @@ def test_governed_architecture_docs_match_index_and_lifecycle_location():
         rel_path = _docs_relative_path(path)
 
         assert rel_path in docs_index, path
-        if header["Status"] == "historical-note":
-            assert path.match("docs/archive/architecture/*.md"), path
-        else:
-            assert path.match("docs/architecture/*.md"), path
+        assert _matches_lifecycle_location(path, header["Status"]), path
 
     assert not [
         path
@@ -517,9 +533,7 @@ def test_architecture_docs_are_classified_by_governance_status():
         ),
     }
 
-    architecture_docs = sorted(Path("docs/architecture").glob("*.md")) + sorted(
-        Path("docs/archive/architecture").glob("*.md")
-    )
+    architecture_docs = _governed_architecture_docs()
     assert {path.name for path in architecture_docs} == set(expected_status)
 
     for path in architecture_docs:
@@ -533,10 +547,22 @@ def test_architecture_docs_are_classified_by_governance_status():
 
 def test_historical_notes_and_plans_live_in_archive_locations():
     root_architecture_docs = sorted(Path("docs/architecture").glob("*.md"))
+    body_architecture_docs = [
+        path
+        for directory in (
+            Path("docs/architecture/contracts"),
+            Path("docs/architecture/maps"),
+            Path("docs/architecture/north-stars"),
+        )
+        for path in directory.glob("*.md")
+    ]
     archived_architecture_docs = sorted(Path("docs/archive/architecture").glob("*.md"))
     archived_plan_docs = sorted(Path("docs/archive/plans").glob("*.md"))
 
     assert not Path("docs/superpowers/plans").exists()
+    assert {path.name for path in root_architecture_docs} == {
+        "document-governance.md",
+    }
     assert {path.name for path in archived_architecture_docs} == {
         "active-surface-cutover.md",
         "legacy-archive-cutover-plan.md",
@@ -551,7 +577,7 @@ def test_historical_notes_and_plans_live_in_archive_locations():
 
     assert not [
         path
-        for path in root_architecture_docs
+        for path in root_architecture_docs + body_architecture_docs
         if "Status: historical-note" in path.read_text(encoding="utf-8")
     ]
     for path in archived_architecture_docs:
@@ -581,11 +607,11 @@ def test_docs_index_groups_architecture_docs_by_governance_authority():
         "### Historical Notes"
     )
     assert "archive/architecture/active-surface-cutover.md" in docs_index
-    assert "architecture/friendly-authority-vocabulary.md" in docs_index
+    assert "architecture/contracts/friendly-authority-vocabulary.md" in docs_index
     assert "archive/architecture/legacy-archive-cutover-plan.md" in docs_index
     assert "archive/architecture/llm-orchestrated-compiler-tool-loop.md" in docs_index
-    assert "architecture/production-trust-spine-database.md" in docs_index
-    assert "architecture/scenario-trust-runtime-bridge.md" in docs_index
+    assert "architecture/north-stars/production-trust-spine-database.md" in docs_index
+    assert "architecture/north-stars/scenario-trust-runtime-bridge.md" in docs_index
     assert "docs/archive/plans/" in docs_index
     assert "examples/scenario_pack_repo/README.md" in docs_index
 
@@ -616,9 +642,9 @@ def test_downstream_scenario_pack_skeleton_documents_ci_contract():
 
 
 def test_scenario_trust_runtime_bridge_keeps_public_runner_narrow():
-    bridge = Path("docs/architecture/scenario-trust-runtime-bridge.md").read_text(
-        encoding="utf-8"
-    )
+    bridge = Path(
+        "docs/architecture/north-stars/scenario-trust-runtime-bridge.md"
+    ).read_text(encoding="utf-8")
 
     assert "Status: north-star" in bridge
     assert "External packs prepare canonical or candidate trust inputs." in bridge
@@ -632,7 +658,7 @@ def test_scenario_trust_runtime_bridge_keeps_public_runner_narrow():
 
 def test_friendly_authority_vocabulary_names_rename_path_without_moving_authority():
     vocabulary = Path(
-        "docs/architecture/friendly-authority-vocabulary.md"
+        "docs/architecture/contracts/friendly-authority-vocabulary.md"
     ).read_text(encoding="utf-8")
 
     assert "Status: active-contract" in vocabulary
@@ -665,10 +691,10 @@ def test_friendly_authority_vocabulary_names_rename_path_without_moving_authorit
 
 def test_production_database_north_star_is_provisional_and_discoverable():
     db_north_star = Path(
-        "docs/architecture/production-trust-spine-database.md"
+        "docs/architecture/north-stars/production-trust-spine-database.md"
     ).read_text(encoding="utf-8")
     persistence_boundary = Path(
-        "docs/architecture/persistence-ledger-boundary.md"
+        "docs/architecture/contracts/persistence-ledger-boundary.md"
     ).read_text(encoding="utf-8")
 
     assert "Status: north-star" in db_north_star
@@ -680,10 +706,10 @@ def test_production_database_north_star_is_provisional_and_discoverable():
 
 def test_production_database_north_star_tracks_v1_mysql_spine():
     db_doc = Path(
-        "docs/architecture/production-trust-spine-database.md"
+        "docs/architecture/north-stars/production-trust-spine-database.md"
     ).read_text(encoding="utf-8")
     persistence_doc = Path(
-        "docs/architecture/persistence-ledger-boundary.md"
+        "docs/architecture/contracts/persistence-ledger-boundary.md"
     ).read_text(encoding="utf-8")
 
     assert "## 12. Current Implementation Status" in db_doc
@@ -694,7 +720,7 @@ def test_production_database_north_star_tracks_v1_mysql_spine():
 
 
 def test_receipt_proof_graph_contract_names_prework_boundaries():
-    graph_doc = Path("docs/architecture/receipt-proof-graph.md").read_text(
+    graph_doc = Path("docs/architecture/contracts/receipt-proof-graph.md").read_text(
         encoding="utf-8"
     )
 
