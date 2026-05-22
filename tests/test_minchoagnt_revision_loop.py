@@ -106,6 +106,7 @@ def test_deterministic_revision_loop_recompiles_revised_hypothesis():
     assert revised_claim.witness_id == "w-unit"
     assert trace.iterations[0].result.report.status == "accepted"
     assert trace.final.report.status == "accepted"
+    assert trace.stop_reason == "accepted"
 
 
 def test_revision_loop_never_mints_receipts_after_accepted_report():
@@ -158,6 +159,75 @@ def test_unsupported_unit_reflection_stays_unhandled():
     )
     assert revision.hypothesis == hypothesis
     assert revision.applied_requirement_ids == ()
+
+
+def test_unapplied_witness_request_is_visible_in_revision_trace():
+    result = _adapter().compile(_missing_unit_witness_hypothesis())
+    reflection = obligation_reflection(result.report)
+
+    revision = revised_hypothesis_fixture(
+        result.hypothesis,
+        reflection,
+        fixture_rules=(),
+    )
+
+    assert revision.hypothesis == result.hypothesis
+    assert revision.applied_requirement_ids == ()
+    assert revision.unapplied_requirement_ids == (
+        "validation_requirement:find_source_witness:unit:missing_source_witness",
+    )
+
+
+def test_revision_loop_records_no_revision_stop_reason():
+    trace = deterministic_revision_loop(
+        _adapter(),
+        _missing_unit_witness_hypothesis(),
+        fixture_rules=(),
+        max_revisions=2,
+    )
+
+    assert trace.iterations == ()
+    assert trace.stop_reason == "no_revision"
+    assert trace.final.report.status == "blocked"
+
+
+def test_revision_loop_records_max_revisions_stop_reason():
+    trace = deterministic_revision_loop(
+        _adapter(),
+        _missing_unit_witness_hypothesis(),
+        fixture_rules=(
+            WitnessFixtureRule(
+                field="unit",
+                witness_id="w-unit",
+                source=None,
+            ),
+        ),
+        max_revisions=1,
+    )
+
+    assert len(trace.iterations) == 1
+    assert trace.iterations[0].result.report.status == "blocked"
+    assert trace.stop_reason == "max_revisions"
+
+
+def test_revision_loop_records_initial_accepted_stop_reason():
+    accepted = InterpretationHypothesis(
+        hypothesis_id="hyp-accepted",
+        subject_id="claim-1",
+        claims=(ClaimCandidate("unit", "kwh", witness_id="w-unit"),),
+        witnesses=(EvidenceRef("w-unit", "unit", source="invoice.csv"),),
+    )
+
+    trace = deterministic_revision_loop(
+        _adapter(),
+        accepted,
+        fixture_rules=(),
+        max_revisions=2,
+    )
+
+    assert trace.initial.report.status == "accepted"
+    assert trace.iterations == ()
+    assert trace.stop_reason == "accepted"
 
 
 def _adapter():
