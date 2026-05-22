@@ -84,7 +84,7 @@ _REGISTERED_SCENARIOS = (
     SYNTHETIC_PCF_ANOMALY_SCENARIO,
     SYNTHETIC_PCF_RESOLUTION_SCENARIO,
 )
-_DOWNSTREAM_CANDIDATE_IDS = frozenset(
+_LARGE_DOMAIN_DOWNSTREAM_IDS = frozenset(
     scenario.scenario_id
     for scenario in (
         ALPHA_INVALID_ALLOCATION_SCENARIO,
@@ -98,20 +98,46 @@ _DOWNSTREAM_CANDIDATE_IDS = frozenset(
         L_ENERGY_PCF_GOVERNANCE_SCENARIO,
     )
 )
-_SCENARIO_RESIDENCY = {
-    scenario.scenario_id: ScenarioResidency(
-        tier="downstream-candidate",
-        target_pack="comp-scenario-packs",
-        reason=(
-            "large domain workflow fixture retained temporarily until the "
-            "downstream scenario pack owns it"
-        ),
+_SYNTHETIC_PCF_DOWNSTREAM_IDS = frozenset(
+    scenario.scenario_id
+    for scenario in (
+        SYNTHETIC_PCF_SMOKE_SCENARIO,
+        SYNTHETIC_PCF_ANOMALY_SCENARIO,
+        SYNTHETIC_PCF_RESOLUTION_SCENARIO,
     )
-    if scenario.scenario_id in _DOWNSTREAM_CANDIDATE_IDS
-    else ScenarioResidency(
+)
+_DOWNSTREAM_CANDIDATE_IDS = (
+    _LARGE_DOMAIN_DOWNSTREAM_IDS | _SYNTHETIC_PCF_DOWNSTREAM_IDS
+)
+
+
+def _scenario_residency_for(scenario_id: str) -> ScenarioResidency:
+    if scenario_id in _LARGE_DOMAIN_DOWNSTREAM_IDS:
+        return ScenarioResidency(
+            tier="downstream-candidate",
+            target_pack="comp-scenario-packs",
+            reason=(
+                "large domain workflow fixture retained temporarily until the "
+                "downstream scenario pack owns it"
+            ),
+        )
+    if scenario_id in _SYNTHETIC_PCF_DOWNSTREAM_IDS:
+        return ScenarioResidency(
+            tier="downstream-candidate",
+            target_pack="comp-scenario-packs",
+            reason=(
+                "synthetic generator fixture retained temporarily until the "
+                "downstream scenario pack owns generated replay checks"
+            ),
+        )
+    return ScenarioResidency(
         tier="core-kernel",
         reason="small authority boundary scenario for comp kernel regression",
     )
+
+
+_SCENARIO_RESIDENCY = {
+    scenario.scenario_id: _scenario_residency_for(scenario.scenario_id)
     for scenario in _REGISTERED_SCENARIOS
 }
 

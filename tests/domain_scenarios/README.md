@@ -147,13 +147,16 @@ core-kernel
   small scenarios where failure likely means a comp authority-kernel regression
 
 downstream-candidate
-  larger domain workflows retained temporarily until comp-scenario-packs owns them
+  currently internal scenarios retained until comp-scenario-packs owns them
 ```
 
 Current core-kernel scenarios include `canonical_working_loop`, `tiny_pcf`,
-synthetic PCF smoke/anomaly/resolution, and the raw-claim boundary scenarios.
-Current downstream-candidate scenarios are the `l_energy.*` family and
-`l_energy_pcf_governance.v1`.
+and the raw-claim boundary scenarios. Current downstream-candidate scenarios
+are the `l_energy.*` family, `l_energy_pcf_governance.v1`, and synthetic PCF smoke/anomaly/resolution.
+
+Downstream-candidate is not a removal instruction. Keep the internal scenario
+until a downstream pack has copied or reconstructed the same trust meaning, run
+it through public `comp` APIs, and passed parallel validation.
 
 ## Local Runner
 

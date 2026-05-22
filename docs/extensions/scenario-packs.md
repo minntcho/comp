@@ -53,8 +53,6 @@ raw_claim_conflict
 raw_claim_conflict_resolution
 tiny_pcf
 canonical_working_loop
-synthetic_pcf.smoke
-synthetic_pcf.anomaly
 minimal receipt/projection/replay cases
 ```
 
@@ -74,6 +72,16 @@ downstream-candidate
 This metadata is not a runtime authority source. It is a maintenance signal for
 reviewing whether a scenario still belongs in the `comp` repo.
 
+`downstream-candidate` does not mean immediate deletion. Candidate scenarios
+should move through this sequence:
+
+```text
+copy/reconstruct -> external run -> parallel validation -> internal shrink/remove
+```
+
+Until the downstream pack can run the same trust meaning through public `comp`
+APIs, the internal scenario remains as regression coverage.
+
 ## What Moves Downstream
 
 Large scenarios should move to downstream scenario-pack repositories when they
@@ -83,6 +91,13 @@ Examples:
 
 ```text
 full L-Energy supplier workflow
+synthetic PCF smoke/anomaly/resolution scenarios
+large generated datasets
+messy source adapter rehearsals
+projection query benchmarks
+replay performance benchmarks
+migration rehearsal cases
+agent-produced candidate ingestion tests
 platform YAML import
 RFI workflow engine
 external certificate verification
@@ -94,6 +109,11 @@ product-specific persistence flows
 
 A downstream scenario belongs outside `comp` when a failure is more likely to
 indicate a domain pack, platform, importer, UI, or workflow regression.
+
+The first external run should stay smaller than the large domain packs. Start
+with `public_projection_smoke`, because it proves a downstream repository can
+install `comp`, use prepared `RuntimeCase` and `ArtifactEnvelope` files, run the
+public scenario bridge, and emit a report without importing `tests.*`.
 
 ## Dependency Direction
 

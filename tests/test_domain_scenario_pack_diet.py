@@ -24,9 +24,6 @@ def test_domain_scenario_registry_marks_core_and_downstream_candidate_sets():
         "synthetic.raw_claim_hypothesis_acceptance.v1",
         "synthetic.raw_claim_conflict.v1",
         "synthetic.raw_claim_conflict_resolution.v1",
-        "synthetic_pcf.smoke.v1",
-        "synthetic_pcf.anomaly.v1",
-        "synthetic_pcf.resolution.v1",
     }
     assert downstream_ids == {
         "l_energy.alpha_invalid_allocation_rfi.v1",
@@ -38,6 +35,9 @@ def test_domain_scenario_registry_marks_core_and_downstream_candidate_sets():
         "l_energy.tier0_physical_allocation.v1",
         "l_energy.final_bottom_up_pcf_rollup.v1",
         "l_energy_pcf_governance.v1",
+        "synthetic_pcf.smoke.v1",
+        "synthetic_pcf.anomaly.v1",
+        "synthetic_pcf.resolution.v1",
     }
 
 
@@ -46,6 +46,7 @@ def test_domain_scenario_residency_metadata_explains_diet_boundary():
         "synthetic.raw_claim_conflict_resolution.v1"
     )
     l_energy_residency = scenario_residency("l_energy.final_bottom_up_pcf_rollup.v1")
+    synthetic_residency = scenario_residency("synthetic_pcf.smoke.v1")
 
     assert raw_claim_residency.tier == "core-kernel"
     assert raw_claim_residency.target_pack is None
@@ -54,6 +55,10 @@ def test_domain_scenario_residency_metadata_explains_diet_boundary():
     assert l_energy_residency.tier == "downstream-candidate"
     assert l_energy_residency.target_pack == "comp-scenario-packs"
     assert "large domain workflow" in l_energy_residency.reason
+
+    assert synthetic_residency.tier == "downstream-candidate"
+    assert synthetic_residency.target_pack == "comp-scenario-packs"
+    assert "synthetic generator" in synthetic_residency.reason
 
 
 def test_domain_scenario_docs_explain_residency_tiers():
@@ -66,4 +71,7 @@ def test_domain_scenario_docs_explain_residency_tiers():
     assert "core-kernel" in readme
     assert "downstream-candidate" in readme
     assert "l_energy.*" in readme
+    assert "synthetic PCF smoke/anomaly/resolution" in readme
+    assert "copy/reconstruct -> external run -> parallel validation" in extension_doc
+    assert "public_projection_smoke" in extension_doc
     assert "registry exposes residency metadata" in extension_doc

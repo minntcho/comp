@@ -75,6 +75,7 @@ def test_domain_scenario_cli_lists_registered_scenarios(capsys):
         "l_energy.final_bottom_up_pcf_rollup.v1\tdownstream-candidate\t"
         in captured.out
     )
+    assert "synthetic_pcf.smoke.v1\tdownstream-candidate\t" in captured.out
 
 
 def test_domain_scenario_cli_runs_human_summary(capsys):
