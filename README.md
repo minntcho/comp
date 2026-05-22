@@ -28,6 +28,86 @@ ReviewDecision != public authority
 PublicOutputReceipt == projection gate
 ```
 
+## 5-minute quickstart: receipt 없이는 공개되지 않는다
+
+<!-- compiler-tool-quickstart:start -->
+```python
+from comp import PublicOutputBlocked, PublicOutputSpec, build_public_output
+from comp.compiler_tool import (
+    ClaimCandidate,
+    CompilerTool,
+    EvidenceRef,
+    InterpretationHypothesis,
+    prepare_commit,
+)
+
+hypothesis = InterpretationHypothesis(
+    hypothesis_id="hyp-1",
+    subject_id="facility-1",
+    claims=(
+        ClaimCandidate(field="amount", value=1200, witness_id="span-amount"),
+        ClaimCandidate(field="unit", value="kWh", witness_id="span-unit"),
+    ),
+    witnesses=(
+        EvidenceRef(
+            witness_id="span-amount",
+            field="amount",
+            source="invoice.pdf",
+            span="p1: electricity amount",
+        ),
+        EvidenceRef(
+            witness_id="span-unit",
+            field="unit",
+            source="invoice.pdf",
+            span="p1: electricity unit",
+        ),
+    ),
+)
+
+report = CompilerTool(
+    known_fields=frozenset({"amount", "unit"}),
+    allowed_units=frozenset({"kWh"}),
+).compile_interpretation(hypothesis)
+
+assert report.status == "accepted"
+assert report.can_build_public_output is False
+
+projection = PublicOutputSpec("public-row", ("amount", "unit"))
+source_row = {
+    "amount": 1200,
+    "unit": "kWh",
+    "internal_note": "operator note, not public",
+}
+
+blocked_without_receipt = False
+try:
+    build_public_output(source_row, projection)
+except PublicOutputBlocked:
+    blocked_without_receipt = True
+
+assert blocked_without_receipt is True
+
+preparation = prepare_commit(
+    report,
+    subject_id="facility-1",
+    public_row_id="public-row-1",
+    projection_id="public-row",
+)
+
+assert preparation.receipt is not None
+
+row = build_public_output(source_row, projection, receipt=preparation.receipt)
+
+assert row == {"amount": 1200, "unit": "kWh"}
+assert "internal_note" not in row
+```
+<!-- compiler-tool-quickstart:end -->
+
+`CompilerTool`은 후보 claim과 evidence 위치를 `ValidationReport`로 바꾼다.
+`ValidationReport`가 accepted여도 공개 권한은 없다. `prepare_commit(...)`이
+clean package와 commit decision을 확인해 `PublicOutputReceipt`를 만들 때만
+`build_public_output(...)`이 통과한다.
+
 embedding과 LLM도 같은 원칙을 따른다.
 
 ```text
