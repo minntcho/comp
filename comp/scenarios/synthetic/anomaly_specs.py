@@ -13,7 +13,7 @@ from comp.scenarios.synthetic.config import SyntheticScenarioConfig
 from comp.scenarios.synthetic.models import (
     ExpectedFailedClaim,
     ExpectedHazard,
-    ExpectedObligation,
+    ExpectedValidationRequirement,
     InjectedAnomaly,
     RawElectricityRow,
     SyntheticResolutionArtifact,
@@ -42,8 +42,8 @@ def missing_unit_spec(config: SyntheticScenarioConfig) -> dict[str, Any]:
             field="unit",
             description="electricity activity row omits its unit",
         ),
-        "obligation": ExpectedObligation(
-            obligation_id="synthetic-obligation:missing_unit",
+        "validation_requirement": ExpectedValidationRequirement(
+            requirement_id="synthetic-obligation:missing_unit",
             kind="find_source_witness",
             field="unit",
             reason="missing_unit",
@@ -84,8 +84,8 @@ def _wrong_unit_spec(config: SyntheticScenarioConfig) -> dict[str, Any]:
             field="unit",
             description="electricity activity row uses an unsupported unit",
         ),
-        "obligation": ExpectedObligation(
-            obligation_id="synthetic-obligation:wrong_unit",
+        "validation_requirement": ExpectedValidationRequirement(
+            requirement_id="synthetic-obligation:wrong_unit",
             kind="find_source_witness",
             field="unit",
             reason="unsupported_unit",
@@ -112,8 +112,8 @@ def _period_mismatch_spec(config: SyntheticScenarioConfig) -> dict[str, Any]:
             field="period",
             description="electricity activity row falls outside the reporting period",
         ),
-        "obligation": ExpectedObligation(
-            obligation_id="synthetic-obligation:period_mismatch",
+        "validation_requirement": ExpectedValidationRequirement(
+            requirement_id="synthetic-obligation:period_mismatch",
             kind="find_context",
             field="period",
             reason="period_mismatch",
@@ -139,8 +139,8 @@ def _negative_amount_spec(config: SyntheticScenarioConfig) -> dict[str, Any]:
             field="electricity_kwh",
             description="electricity activity amount is negative",
         ),
-        "obligation": ExpectedObligation(
-            obligation_id="synthetic-obligation:negative_amount",
+        "validation_requirement": ExpectedValidationRequirement(
+            requirement_id="synthetic-obligation:negative_amount",
             kind="investigate_activity_amount",
             field="electricity_kwh",
             reason="negative_amount",
@@ -177,8 +177,8 @@ def _site_alias_spec(config: SyntheticScenarioConfig) -> dict[str, Any]:
             field="site_id",
             description="electricity activity row uses an unrecognized site alias",
         ),
-        "obligation": ExpectedObligation(
-            obligation_id="synthetic-obligation:site_alias",
+        "validation_requirement": ExpectedValidationRequirement(
+            requirement_id="synthetic-obligation:site_alias",
             kind="resolve_site_identity",
             field="site_id",
             reason="site_alias",

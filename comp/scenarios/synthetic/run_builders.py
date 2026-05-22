@@ -17,8 +17,8 @@ from comp.scenarios.synthetic.models import (
 )
 from comp.scenarios.synthetic.oracle import (
     expected_anomaly_oracle,
-    expected_calculation_obligation,
-    expected_reference_search_obligation,
+    expected_calculation_requirement,
+    expected_reference_search_requirement,
     expected_resolution_artifact,
     expected_smoke_receipt,
 )
@@ -72,9 +72,9 @@ def build_synthetic_pcf_resolution_run(
     source_witness_id = electricity_witness_id(raw_row.source_row_id)
     derived_value = calculate_co2e_value(raw_row.amount, config.factor_value)
     resolution = missing_unit_resolution_artifact(raw_row)
-    resolved_obligation = missing_unit["obligation"]
-    reference_search_obligation = expected_reference_search_obligation(config)
-    calculation_obligation = expected_calculation_obligation(config)
+    resolved_requirement = missing_unit["validation_requirement"]
+    reference_search_requirement = expected_reference_search_requirement(config)
+    calculation_requirement = expected_calculation_requirement(config)
 
     return SyntheticRun(
         config=config,
@@ -106,9 +106,9 @@ def build_synthetic_pcf_resolution_run(
                 electricity_source_map(config.input_claim_id, raw_row),
             ),
             expected_resolved_validation_requirements=(
-                resolved_obligation,
-                reference_search_obligation,
-                calculation_obligation,
+                resolved_requirement,
+                reference_search_requirement,
+                calculation_requirement,
             ),
             expected_resolution_artifacts=(
                 expected_resolution_artifact(resolution),
@@ -118,9 +118,9 @@ def build_synthetic_pcf_resolution_run(
                 source_witness_id=source_witness_id,
                 derived_value=derived_value,
                 resolved_obligation_ids=(
-                    resolved_obligation.obligation_id,
-                    reference_search_obligation.obligation_id,
-                    calculation_obligation.obligation_id,
+                    resolved_requirement.requirement_id,
+                    reference_search_requirement.requirement_id,
+                    calculation_requirement.requirement_id,
                 ),
             ),
         ),

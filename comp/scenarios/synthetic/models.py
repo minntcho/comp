@@ -189,15 +189,15 @@ class ExpectedFailedClaim:
 
 
 @dataclass(frozen=True)
-class ExpectedObligation:
-    obligation_id: str
+class ExpectedValidationRequirement:
+    requirement_id: str
     kind: str
     field: str
     reason: str
 
     def to_row(self) -> dict[str, Any]:
         return {
-            "obligation_id": self.obligation_id,
+            "requirement_id": self.requirement_id,
             "kind": self.kind,
             "field": self.field,
             "reason": self.reason,
@@ -402,12 +402,12 @@ class SyntheticInputBundle:
 class SyntheticOracle:
     expected_claims: tuple[ExpectedClaim, ...]
     expected_calculated_claims: tuple[ExpectedCalculatedClaim, ...]
-    expected_validation_requirements: tuple[ExpectedObligation, ...]
+    expected_validation_requirements: tuple[ExpectedValidationRequirement, ...]
     expected_hazards: tuple[ExpectedHazard, ...]
     expected_failed_claims: tuple[ExpectedFailedClaim, ...]
     injected_anomalies: tuple[InjectedAnomaly, ...]
     source_to_expected_claim_map: tuple[ExpectedSourceMap, ...]
-    expected_resolved_validation_requirements: tuple[ExpectedObligation, ...] | None = None
+    expected_resolved_validation_requirements: tuple[ExpectedValidationRequirement, ...] | None = None
     expected_resolution_artifacts: tuple[ExpectedResolutionArtifact, ...] | None = None
     expected_receipt: ExpectedReceipt | None = None
 
@@ -449,7 +449,7 @@ __all__ = [
     "ExpectedCalculatedClaim",
     "ExpectedFailedClaim",
     "ExpectedHazard",
-    "ExpectedObligation",
+    "ExpectedValidationRequirement",
     "ExpectedReceipt",
     "ExpectedResolutionArtifact",
     "ExpectedSourceMap",

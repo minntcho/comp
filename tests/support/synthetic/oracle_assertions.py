@@ -13,7 +13,7 @@ from comp.scenarios.synthetic import (
     ExpectedCalculatedClaim,
     ExpectedFailedClaim,
     ExpectedHazard,
-    ExpectedObligation,
+    ExpectedValidationRequirement,
     ExpectedReceipt,
     ExpectedResolutionArtifact,
     ExpectedSourceMap,
@@ -46,8 +46,8 @@ def load_synthetic_oracle(oracle_dir: Path) -> SyntheticOracle:
             for row in _read_csv(oracle_dir / "expected_calculated_claims.csv")
         ),
         expected_validation_requirements=tuple(
-            ExpectedObligation(
-                obligation_id=row["obligation_id"],
+            ExpectedValidationRequirement(
+                requirement_id=row["requirement_id"],
                 kind=row["kind"],
                 field=row["field"],
                 reason=row["reason"],
@@ -120,7 +120,7 @@ def assert_synthetic_oracle_matches_report(
     assert _failed_claim_rows(report) == _expected_failed_claim_rows(
         oracle
     ), "expected failed claims did not match report.failed_claims"
-    assert _obligation_rows(report) == _expected_obligation_rows(
+    assert _obligation_rows(report) == _expected_requirement_rows(
         oracle
     ), "expected validation requirements did not match report.validation_requirements"
     assert _hazard_rows(report) == _expected_hazard_rows(
@@ -129,7 +129,7 @@ def assert_synthetic_oracle_matches_report(
     if oracle.expected_resolved_validation_requirements is not None:
         assert _resolved_obligation_rows(
             report
-        ) == _expected_resolved_obligation_rows(
+        ) == _expected_resolved_requirement_rows(
             oracle
         ), "expected resolved obligations did not match report.resolved_validation_requirements"
     _assert_source_map_matches_witnesses(oracle, report)
@@ -234,33 +234,33 @@ def _failed_claim_rows(report: ValidationReport) -> tuple[tuple[Any, ...], ...]:
     )
 
 
-def _expected_obligation_rows(
+def _expected_requirement_rows(
     oracle: SyntheticOracle,
 ) -> tuple[tuple[Any, ...], ...]:
     return tuple(
         (
-            obligation.obligation_id,
-            obligation.kind,
-            obligation.field,
-            obligation.reason,
+            requirement.requirement_id,
+            requirement.kind,
+            requirement.field,
+            requirement.reason,
         )
-        for obligation in oracle.expected_validation_requirements
+        for requirement in oracle.expected_validation_requirements
     )
 
 
-def _expected_resolved_obligation_rows(
+def _expected_resolved_requirement_rows(
     oracle: SyntheticOracle,
 ) -> tuple[tuple[Any, ...], ...]:
     if oracle.expected_resolved_validation_requirements is None:
         return ()
     return tuple(
         (
-            obligation.obligation_id,
-            obligation.kind,
-            obligation.field,
-            obligation.reason,
+            requirement.requirement_id,
+            requirement.kind,
+            requirement.field,
+            requirement.reason,
         )
-        for obligation in oracle.expected_resolved_validation_requirements
+        for requirement in oracle.expected_resolved_validation_requirements
     )
 
 
@@ -362,12 +362,12 @@ def _read_expected_receipt(path: Path) -> ExpectedReceipt | None:
 
 def _read_expected_validation_requirements_if_exists(
     path: Path,
-) -> tuple[ExpectedObligation, ...] | None:
+) -> tuple[ExpectedValidationRequirement, ...] | None:
     if not path.exists():
         return None
     return tuple(
-        ExpectedObligation(
-            obligation_id=row["obligation_id"],
+        ExpectedValidationRequirement(
+            requirement_id=row["requirement_id"],
             kind=row["kind"],
             field=row["field"],
             reason=row["reason"],
