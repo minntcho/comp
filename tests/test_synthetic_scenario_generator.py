@@ -126,7 +126,7 @@ def test_synthetic_resolution_oracle_lives_outside_run_builders_module() -> None
 
     config = SyntheticScenarioConfig.pcf_resolution(seed=17)
     missing_unit = missing_unit_spec(config)
-    raw_row = missing_unit["row"]
+    raw_row = missing_unit.row
     resolution = missing_unit_resolution_artifact(raw_row)
     run = build_synthetic_pcf_resolution_run(config)
 
@@ -181,6 +181,29 @@ def test_synthetic_anomaly_oracle_lives_outside_run_builders_module() -> None:
     assert run.oracle == expected_anomaly_oracle(specs)
 
 
+def test_synthetic_anomaly_specs_are_typed_records() -> None:
+    from comp.scenarios.synthetic.anomaly_specs import (
+        AnomalySpec,
+        anomaly_specs,
+        missing_unit_spec,
+    )
+
+    config = SyntheticScenarioConfig.pcf_anomaly(seed=11)
+    missing_unit = missing_unit_spec(config)
+    specs = anomaly_specs(config)
+
+    assert isinstance(missing_unit, AnomalySpec)
+    assert all(isinstance(spec, AnomalySpec) for spec in specs)
+    assert missing_unit.row.source_row_id == "ERP-SYN-PCF-MISSING-UNIT"
+    assert missing_unit.anomaly.anomaly_type == "missing_unit"
+    assert (
+        missing_unit.validation_requirement.requirement_id
+        == "synthetic-obligation:missing_unit"
+    )
+    assert missing_unit.hazard is not None
+    assert missing_unit.failed_claim is None
+
+
 def test_synthetic_anomaly_specs_live_outside_generator_module() -> None:
     from comp.scenarios.synthetic.anomaly_specs import (
         anomaly_specs,
@@ -197,8 +220,8 @@ def test_synthetic_anomaly_specs_live_outside_generator_module() -> None:
 
     assert anomaly_specs.__module__ == "comp.scenarios.synthetic.anomaly_specs"
     assert build_synthetic_pcf_anomaly_run.__globals__["anomaly_specs"] is anomaly_specs
-    assert tuple(spec["row"] for spec in specs) == run.raw_sources.electricity_rows
-    assert tuple(spec["anomaly"] for spec in specs) == run.oracle.injected_anomalies
+    assert tuple(spec.row for spec in specs) == run.raw_sources.electricity_rows
+    assert tuple(spec.anomaly for spec in specs) == run.oracle.injected_anomalies
 
     resolution_run = generate_synthetic_pcf_run(
         SyntheticScenarioConfig.pcf_resolution(seed=17)

@@ -1,7 +1,6 @@
 from __future__ import annotations
 
-from typing import Any
-
+from comp.scenarios.synthetic.anomaly_specs import AnomalySpec
 from comp.scenarios.synthetic.config import SyntheticScenarioConfig
 from comp.scenarios.synthetic.models import (
     ExpectedArtifactRef,
@@ -122,13 +121,13 @@ def expected_smoke_oracle(
 
 def expected_resolution_oracle(
     config: SyntheticScenarioConfig,
-    missing_unit: dict[str, Any],
+    missing_unit: AnomalySpec,
     resolution: SyntheticResolutionArtifact,
 ) -> SyntheticOracle:
-    raw_row = missing_unit["row"]
+    raw_row = missing_unit.row
     source_witness_id = electricity_witness_id(raw_row.source_row_id)
     derived_value = calculate_co2e_value(raw_row.amount, config.factor_value)
-    resolved_requirement = missing_unit["validation_requirement"]
+    resolved_requirement = missing_unit.validation_requirement
     reference_search_requirement = expected_reference_search_requirement(config)
     calculation_requirement = expected_calculation_requirement(config)
 
@@ -146,7 +145,7 @@ def expected_resolution_oracle(
         expected_validation_requirements=(),
         expected_hazards=(),
         expected_failed_claims=(),
-        injected_anomalies=(missing_unit["anomaly"],),
+        injected_anomalies=(missing_unit.anomaly,),
         source_to_expected_claim_map=(
             electricity_source_map(config.input_claim_id, raw_row),
         ),
@@ -171,8 +170,8 @@ def expected_resolution_oracle(
     )
 
 
-def expected_anomaly_oracle(specs: tuple[dict[str, Any], ...]) -> SyntheticOracle:
-    rows = tuple(spec["row"] for spec in specs)
+def expected_anomaly_oracle(specs: tuple[AnomalySpec, ...]) -> SyntheticOracle:
+    rows = tuple(spec.row for spec in specs)
     expected_claims = tuple(
         electricity_expected_claim(
             f"synthetic-pcf-anomaly:{row.source_row_id}:electricity_kwh",
@@ -193,15 +192,15 @@ def expected_anomaly_oracle(specs: tuple[dict[str, Any], ...]) -> SyntheticOracl
         expected_claims=expected_claims,
         expected_calculated_claims=(),
         expected_validation_requirements=tuple(
-            spec["validation_requirement"] for spec in specs
+            spec.validation_requirement for spec in specs
         ),
         expected_hazards=tuple(
-            spec["hazard"] for spec in specs if spec["hazard"] is not None
+            spec.hazard for spec in specs if spec.hazard is not None
         ),
         expected_failed_claims=tuple(
-            spec["failed_claim"] for spec in specs if spec["failed_claim"] is not None
+            spec.failed_claim for spec in specs if spec.failed_claim is not None
         ),
-        injected_anomalies=tuple(spec["anomaly"] for spec in specs),
+        injected_anomalies=tuple(spec.anomaly for spec in specs),
         source_to_expected_claim_map=expected_maps,
     )
 
