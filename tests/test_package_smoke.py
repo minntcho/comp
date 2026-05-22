@@ -796,6 +796,16 @@ def test_friendly_authority_vocabulary_names_rename_path_without_moving_authorit
     assert "`PublicOutputReceipt.projection_id`" in vocabulary
     assert "`DependencyFingerprint.dependency_kind=\"evidence_witness\"`" in vocabulary
     assert "Do not add a blanket ban on `projection` or `witness`" in vocabulary
+    assert "### Residual obligation vocabulary" in vocabulary
+    assert "`ReviewPackage.open_obligation_ids`" in vocabulary
+    assert "`PublicOutputReceiptCitations.resolved_obligation_ids`" in vocabulary
+    assert "`SyntheticResolutionArtifact.obligation_id`" in vocabulary
+    assert "`ExpectedReceipt.resolved_obligation_ids`" in vocabulary
+    assert "Do not rename all remaining `obligation` strings in one PR." in vocabulary
+    assert "Receipt schema and governance facts" in vocabulary
+    assert "Synthetic resolution artifact payloads" in vocabulary
+    assert "Docs prose and historical theory language" in vocabulary
+    assert "Test-local wording" in vocabulary
     assert "Only a clean public-output receipt can authorize public output." in vocabulary
 
 

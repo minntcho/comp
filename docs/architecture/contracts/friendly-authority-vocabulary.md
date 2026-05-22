@@ -198,6 +198,42 @@ migration, not search-and-replace cleanup.
 identifiers for source spans and receipt citations. Rename them only when the
 receipt, replay, and scenario-contract payloads move together.
 
+### Residual obligation vocabulary
+
+The active validation model has moved to `ValidationRequirement.requirement_id`.
+Remaining `obligation` strings are not one kind of debt. They fall into four
+different boundaries:
+
+| Residual surface | Classification | Rename rule |
+| --- | --- | --- |
+| `ReviewPackage.open_obligation_ids` | Receipt schema and governance facts | Keep until a receipt/barrier codec migration can prove old-body replay and new-body output together. |
+| `ReviewPackage.resolved_obligation_ids` | Receipt schema and governance facts | Keep with `open_obligation_ids`; do not split the pair. |
+| `PublicOutputReceiptCitations.open_obligation_ids` | Receipt schema and governance facts | Keep because it is part of the public-output barrier snapshot. |
+| `PublicOutputReceiptCitations.resolved_obligation_ids` | Receipt schema and governance facts | Keep because replay and proof graphs cite this serialized field. |
+| `SyntheticResolutionArtifact.obligation_id` | Synthetic resolution artifact payloads | Keep until the synthetic fixture CSV/body schema moves with loaders, writers, oracle assertions, and replay fixtures. |
+| `ExpectedResolutionArtifact.obligation_id` | Synthetic resolution artifact payloads | Keep with `SyntheticResolutionArtifact.obligation_id`; it mirrors the fixture payload. |
+| `ExpectedReceipt.resolved_obligation_ids` | Synthetic expected receipt payloads | Keep until expected receipt fixtures and receipt citations migrate together. |
+| `synthetic-obligation:*` string ids | Fixture id values | Keep as stable ids unless a fixture migration rewrites expected outputs intentionally. |
+| `obligation-kernel-working-theory.md` prose | Docs prose and historical theory language | Do not batch-edit; update only when that map is revised or demoted. |
+| Test function names and local variables using `obligation` | Test-local wording | Rename opportunistically with the behavior under test, not as a standalone churn PR. |
+
+Do not rename all remaining `obligation` strings in one PR. A safe migration
+must pick exactly one boundary:
+
+```text
+Receipt schema and governance facts
+Synthetic resolution artifact payloads
+Docs prose and historical theory language
+Test-local wording
+```
+
+The review question is:
+
+```text
+Does this PR move one serialized or authority boundary completely, or is it only
+making the vocabulary look cleaner while leaving replay and receipt fields split?
+```
+
 ## 7. Non-Goals
 
 Do not use Korean Python class names.
