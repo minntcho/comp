@@ -23,7 +23,11 @@ AUTHORITY_BOUNDARY_RULES = (
             "comp.views",
             "comp.schema_labels",
             "comp.user_messages",
+            "comp.scenario_contracts",
             "comp.scenarios",
+            "comp.domains",
+            "comp.products",
+            "comp.adapters",
             "comp.runtime",
             "minchoagnt",
         ),
@@ -37,7 +41,11 @@ AUTHORITY_BOUNDARY_RULES = (
             "comp.views",
             "comp.schema_labels",
             "comp.user_messages",
+            "comp.scenario_contracts",
             "comp.scenarios",
+            "comp.domains",
+            "comp.products",
+            "comp.adapters",
             "comp.runtime",
             "minchoagnt",
         ),
@@ -137,6 +145,23 @@ def test_trust_kernel_contract_documents_machine_checked_import_boundaries():
         "comp.compiler_tool must not import comp.persistence",
         "comp.persistence must not import comp.explanation",
         "comp.views.receipt_graph must remain render-only",
+        "tests/test_authority_import_boundaries.py",
+    )
+    for line in expected_lines:
+        assert line in contract
+
+
+def test_compiler_domain_boundary_documents_machine_checked_import_boundaries():
+    contract = Path(
+        "docs/architecture/contracts/compiler-domain-boundary.md"
+    ).read_text(encoding="utf-8")
+
+    expected_lines = (
+        "Core code must own protocol, not domain meaning.",
+        "DomainPack is a declaration library.",
+        "CompilerProfile is the active behavior lock.",
+        "Neither is authority.",
+        "Core authority modules must not import concrete domain, product, scenario, runtime, or agent packages.",
         "tests/test_authority_import_boundaries.py",
     )
     for line in expected_lines:

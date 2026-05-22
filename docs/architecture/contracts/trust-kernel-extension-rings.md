@@ -133,6 +133,9 @@ until the profile activates their rules, rubrics, judge policy, retrieval
 policies, or projection policy. Receipts should preserve the profile behavior
 identity through deterministic dependency fingerprints.
 
+The consolidated review contract for this ring lives in
+`compiler-domain-boundary.md`.
+
 ### Compiler Gate / Trust Kernel
 
 The compiler gate is intentionally small. It validates submitted artifacts and
@@ -275,6 +278,8 @@ belongs there, and which layer should own it.
 
 Authority modules cannot import presentation, display, or explanation modules.
 This is checked by `tests/test_authority_import_boundaries.py`.
+The compiler/domain import boundary is consolidated in
+`compiler-domain-boundary.md`.
 
 ```text
 comp.judgment must not import comp.compiler_tool
@@ -283,12 +288,24 @@ comp.judgment must not import comp.explanation
 comp.judgment must not import comp.views
 comp.judgment must not import comp.schema_labels
 comp.judgment must not import comp.user_messages
+comp.judgment must not import comp.scenario_contracts
+comp.judgment must not import comp.scenarios
+comp.judgment must not import comp.domains
+comp.judgment must not import comp.products
+comp.judgment must not import comp.adapters
+comp.judgment must not import comp.runtime
 
 comp.compiler_tool must not import comp.persistence
 comp.compiler_tool must not import comp.explanation
 comp.compiler_tool must not import comp.views
 comp.compiler_tool must not import comp.schema_labels
 comp.compiler_tool must not import comp.user_messages
+comp.compiler_tool must not import comp.scenario_contracts
+comp.compiler_tool must not import comp.scenarios
+comp.compiler_tool must not import comp.domains
+comp.compiler_tool must not import comp.products
+comp.compiler_tool must not import comp.adapters
+comp.compiler_tool must not import comp.runtime
 
 comp.persistence must not import comp.compiler_tool
 comp.persistence must not import comp.explanation

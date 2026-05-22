@@ -15,6 +15,9 @@ is the first phase: keep the trust kernel small, keep outer rings
 non-authoritative, and preserve the authority promotion path through deterministic
 gates.
 
+The reviewable compiler/domain boundary is consolidated in
+`compiler-domain-boundary.md`.
+
 ## Thesis
 
 `comp` does not create truth. It compiles the conditions under which a value can
@@ -58,6 +61,8 @@ clean `PublicOutputReceipt`.
 ## Core / Domain Boundary
 
 Core code must own protocol, not ESG meaning.
+For the reviewable compiler/domain contract, see
+`compiler-domain-boundary.md`.
 
 Raw claim promotion is a domain-layer operation. A promotion helper may turn
 supported extractor candidates into `CheckedClaim`, `CanonicalReference`,
