@@ -36,7 +36,7 @@ class CalculationTrace:
 
 
 @dataclass(frozen=True)
-class DerivedClaim:
+class CalculatedClaim:
     claim_id: str
     field: str
     value: Any
@@ -51,6 +51,9 @@ class DerivedClaim:
     @property
     def can_authorize_public_projection(self) -> bool:
         return False
+
+
+DerivedClaim = CalculatedClaim
 
 
 @dataclass(frozen=True)
@@ -297,6 +300,7 @@ def _number(value: Decimal) -> int | float:
 __all__ = [
     "CalculationStep",
     "CalculationTrace",
+    "CalculatedClaim",
     "DerivedClaim",
     "CalculationInput",
     "CalculationFormula",

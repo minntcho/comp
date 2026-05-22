@@ -235,8 +235,8 @@ PublicOutput is a receipt-verifiable view, not authority.
 
 ## 7. Current Implementation Status
 
-The first compiler-side intake and validation names are now available as
-canonical Python objects with deprecated aliases:
+The first compiler-side names are now available as canonical Python objects
+with deprecated aliases:
 
 ```text
 ClaimCandidate is canonical.
@@ -250,14 +250,27 @@ ProofObligation remains a compatibility alias.
 
 evidence_ref_fingerprint is canonical.
 evidence_witness_fingerprint remains a compatibility alias.
+
+ReferenceOption is canonical.
+ReferenceCandidate remains a compatibility alias.
+
+CanonicalReference is canonical.
+ReferenceBinding remains a compatibility alias.
+
+CalculatedClaim is canonical.
+DerivedClaim remains a compatibility alias.
+
+ValidationReport is canonical.
+CompileReport remains a compatibility alias.
 ```
 
 The underlying evidence fingerprint payload still uses
 `dependency_kind="evidence_witness"` so existing receipt and replay dependency
 digests stay stable during the rename window.
 
-This first step does not rename report fields such as `evidence_witnesses` or
-`obligations`; those are compatibility surfaces for a later, more careful PR.
+This step does not rename report fields such as `evidence_witnesses`,
+`reference_candidates`, `reference_bindings`, `derived_claims`, or
+`obligations`; those are compatibility surfaces for later, more careful PRs.
 
 ## 8. Non-Goals
 

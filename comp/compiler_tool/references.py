@@ -4,7 +4,7 @@ from dataclasses import dataclass, field
 
 
 @dataclass(frozen=True)
-class ReferenceCandidate:
+class ReferenceOption:
     candidate_id: str
     reference_id: str
     reference_type: str
@@ -18,7 +18,7 @@ class ReferenceCandidate:
         _require_authority(
             actual=self.authority,
             expected="candidate_only",
-            artifact="ReferenceCandidate",
+            artifact="ReferenceOption",
         )
 
     @property
@@ -35,7 +35,7 @@ class RejectedReferenceCandidate:
 
 
 @dataclass(frozen=True)
-class ReferenceBinding:
+class CanonicalReference:
     binding_id: str
     claim_id: str
     reference_id: str
@@ -52,7 +52,7 @@ class ReferenceBinding:
         _require_authority(
             actual=self.authority,
             expected="canonical_binding",
-            artifact="ReferenceBinding",
+            artifact="CanonicalReference",
         )
 
     @property
@@ -65,8 +65,14 @@ def _require_authority(*, actual: str, expected: str, artifact: str) -> None:
         raise ValueError(f"{artifact} authority must be {expected!r}")
 
 
+ReferenceCandidate = ReferenceOption
+ReferenceBinding = CanonicalReference
+
+
 __all__ = [
+    "ReferenceOption",
     "ReferenceCandidate",
     "RejectedReferenceCandidate",
+    "CanonicalReference",
     "ReferenceBinding",
 ]
