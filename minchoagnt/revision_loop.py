@@ -1,7 +1,8 @@
 from __future__ import annotations
 
+from collections.abc import Iterable
 from dataclasses import dataclass, field, replace
-from typing import Literal
+from typing import Any, Literal
 
 from comp.compiler_tool import (
     ClaimCandidate,
@@ -57,6 +58,85 @@ class RevisionWorkItem:
     @property
     def can_authorize_public_projection(self) -> bool:
         return False
+
+
+@dataclass(frozen=True)
+class RevisionWorkerSubmission:
+    work_item_id: str
+    action: str
+    artifact: Any
+
+
+@dataclass(frozen=True)
+class RevisionAbstention:
+    abstention_id: str
+    work_item_id: str
+    reason: str
+    category: str
+
+    @property
+    def can_authorize_public_projection(self) -> bool:
+        return False
+
+
+@dataclass(frozen=True)
+class RevisionWorkerResult:
+    work_item_id: str
+    submissions: tuple[RevisionWorkerSubmission, ...] = field(default_factory=tuple)
+    abstention: RevisionAbstention | None = None
+
+    @property
+    def can_authorize_public_projection(self) -> bool:
+        return False
+
+
+class DeterministicRevisionWorker:
+    def __init__(
+        self,
+        *,
+        submissions: Iterable[RevisionWorkerSubmission] = (),
+        abstentions: Iterable[RevisionAbstention] = (),
+    ):
+        self.submissions = tuple(submissions)
+        self.abstentions = tuple(abstentions)
+
+    def run(self, work_item: RevisionWorkItem) -> RevisionWorkerResult:
+        for abstention in self.abstentions:
+            if abstention.work_item_id == work_item.work_item_id:
+                return RevisionWorkerResult(
+                    work_item_id=work_item.work_item_id,
+                    abstention=abstention,
+                )
+
+        submissions = tuple(
+            submission
+            for submission in self.submissions
+            if submission.work_item_id == work_item.work_item_id
+        )
+        for submission in submissions:
+            if (
+                submission.action in work_item.forbidden_outputs
+                or submission.action not in work_item.allowed_actions
+            ):
+                return RevisionWorkerResult(
+                    work_item_id=work_item.work_item_id,
+                    abstention=RevisionAbstention(
+                        abstention_id=(
+                            f"abstain:{work_item.work_item_id}:forbidden_action"
+                        ),
+                        work_item_id=work_item.work_item_id,
+                        reason=(
+                            f"Action {submission.action} is not allowed for this "
+                            "revision work item."
+                        ),
+                        category="forbidden_action",
+                    ),
+                )
+
+        return RevisionWorkerResult(
+            work_item_id=work_item.work_item_id,
+            submissions=submissions,
+        )
 
 
 @dataclass(frozen=True)
@@ -139,6 +219,20 @@ def revision_work_items_from_reflection(
             expected_artifacts=("evidence_witness", "abstention"),
         )
         for request in reflection.witness_requests
+    )
+
+
+def fixture_rules_from_revision_worker_results(
+    worker_results: Iterable[RevisionWorkerResult],
+) -> tuple[WitnessFixtureRule, ...]:
+    return tuple(
+        submission.artifact
+        for worker_result in worker_results
+        for submission in worker_result.submissions
+        if (
+            submission.action == "attach_grounded_witness"
+            and isinstance(submission.artifact, WitnessFixtureRule)
+        )
     )
 
 
@@ -272,15 +366,20 @@ def _revise_claim_witness(
 
 
 __all__ = [
+    "DeterministicRevisionWorker",
     "LoopTrace",
     "ObligationReflection",
+    "RevisionAbstention",
     "RevisedHypothesis",
     "RevisionStopReason",
     "RevisionIteration",
     "RevisionWorkItem",
+    "RevisionWorkerResult",
+    "RevisionWorkerSubmission",
     "WitnessFixtureRule",
     "WitnessRequest",
     "deterministic_revision_loop",
+    "fixture_rules_from_revision_worker_results",
     "obligation_reflection",
     "revision_work_items_from_reflection",
     "revised_hypothesis_fixture",
