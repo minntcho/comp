@@ -112,6 +112,9 @@ def render_scenario_summary(
     scenario: ScenarioDefinition,
     result: DomainScenarioResult,
 ) -> str:
+    from comp.views import validation_summary_view
+
+    validation_summary = validation_summary_view(result.report)
     lines = [
         f"Scenario: {scenario.scenario_id}",
         f"Title: {scenario.title}",
@@ -119,8 +122,9 @@ def render_scenario_summary(
         f"Commit: {result.preparation.decision.status}",
         f"Projection: {'present' if result.projection is not None else 'absent'}",
         "",
-        "Resolver steps:",
     ]
+    lines.extend(_render_validation_summary_lines(validation_summary))
+    lines.append("Resolver steps:")
     lines.extend(f"- {step}" for step in result.resolver_steps)
     lines.extend(
         (
@@ -163,6 +167,25 @@ def render_scenario_summary(
             )
         )
     return "\n".join(lines)
+
+
+def _render_validation_summary_lines(summary: dict[str, Any]) -> list[str]:
+    public_output = summary["public_output"]
+    open_requirements = summary["open_requirements"]
+    lines = [
+        "Validation summary:",
+        f"- {summary['label_ko']}: {summary['status_ko']}",
+        f"- {public_output['label_ko']}: {public_output['state_ko']}",
+    ]
+    lines.extend(
+        f"- {section['label_ko']}: {section['count']}"
+        for section in summary["sections"]
+    )
+    lines.append(f"- 보완 필요 항목: {len(open_requirements)}")
+    for requirement in open_requirements:
+        lines.append(f"  - {requirement['field']}: {requirement['message_ko']}")
+    lines.append("")
+    return lines
 
 
 def _dependency_manifest_count(replay_trace: dict[str, object]) -> int:
