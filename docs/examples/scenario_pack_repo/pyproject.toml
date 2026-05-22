@@ -1,0 +1,8 @@
+[project]
+name = "comp-scenario-packs"
+version = "0.0.0"
+description = "Downstream scenario packs for comp compatibility and operations rehearsals"
+requires-python = ">=3.11"
+dependencies = [
+  "comp @ git+https://github.com/minntcho/comp@main",
+]

@@ -140,6 +140,9 @@ Do not import `tests.*` or backend-specific JSON codecs from a downstream pack.
 See `docs/examples/scenario_contracts/README.md` for the minimal prepared bundle
 shape.
 
+See `docs/examples/scenario_pack_repo/README.md` for a copyable downstream repo
+skeleton with `pyproject.toml` and a GitHub Actions scenario-contract workflow.
+
 ## Review Rule
 
 Before adding a large scenario to `comp`, ask:
