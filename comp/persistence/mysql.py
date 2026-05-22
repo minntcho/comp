@@ -101,8 +101,7 @@ class MySQLArtifactStore:
 
     def record(self, envelope: ArtifactEnvelope) -> ArtifactEnvelope:
         verify_artifact_envelope(envelope)
-        existing = self._get_optional(envelope.artifact_id)
-        if existing is None:
+        try:
             with self.connection.cursor() as cursor:
                 cursor.execute(
                     """
@@ -124,16 +123,13 @@ class MySQLArtifactStore:
                 )
             self.connection.commit()
             return envelope
-        if (
-            existing.artifact_kind != envelope.artifact_kind
-            or existing.schema_version != envelope.schema_version
-            or existing.body_digest != envelope.body_digest
-        ):
-            raise ArtifactConflict(
-                f"Artifact already recorded with different content: "
-                f"{envelope.artifact_id}."
-            )
-        return existing
+        except Exception as exc:
+            _rollback(self.connection)
+            if _is_duplicate_key_error(exc):
+                existing = self._get_optional(envelope.artifact_id)
+                if existing is not None:
+                    return _resolve_artifact_duplicate(existing, envelope)
+            raise
 
     def get(self, artifact_id: str) -> ArtifactEnvelope:
         existing = self._get_optional(artifact_id)
@@ -176,8 +172,7 @@ class MySQLReceiptLedger:
 
     def record(self, receipt: PublicOutputReceipt) -> PublicOutputReceipt:
         key = ReceiptLedgerKey.from_receipt(receipt)
-        existing = self._get_optional(key)
-        if existing is None:
+        try:
             rid = receipt_id(receipt)
             body = commit_receipt_to_body(receipt)
             with self.connection.cursor() as cursor:
@@ -201,12 +196,13 @@ class MySQLReceiptLedger:
                 _insert_receipt_indexes(cursor, rid, receipt)
             self.connection.commit()
             return receipt
-        if existing != receipt:
-            raise ReceiptConflict(
-                f"Public-output receipt ledger root already recorded with "
-                f"different content: {key.public_row_id}."
-            )
-        return existing
+        except Exception as exc:
+            _rollback(self.connection)
+            if _is_duplicate_key_error(exc):
+                existing = self._get_optional(key)
+                if existing is not None:
+                    return _resolve_receipt_duplicate(existing, receipt, key)
+            raise
 
     def get(
         self,
@@ -253,6 +249,49 @@ def receipt_id(receipt: PublicOutputReceipt) -> str:
     canonical = _json_dump(encode_persistence_json(body))
     digest = hashlib.sha256(canonical.encode("utf-8")).hexdigest()
     return f"receipt:sha256:{digest}"
+
+
+def _resolve_artifact_duplicate(
+    existing: ArtifactEnvelope,
+    envelope: ArtifactEnvelope,
+) -> ArtifactEnvelope:
+    if (
+        existing.artifact_kind != envelope.artifact_kind
+        or existing.schema_version != envelope.schema_version
+        or existing.body_digest != envelope.body_digest
+    ):
+        raise ArtifactConflict(
+            f"Artifact already recorded with different content: "
+            f"{envelope.artifact_id}."
+        )
+    return existing
+
+
+def _resolve_receipt_duplicate(
+    existing: PublicOutputReceipt,
+    receipt: PublicOutputReceipt,
+    key: ReceiptLedgerKey,
+) -> PublicOutputReceipt:
+    if existing != receipt:
+        raise ReceiptConflict(
+            f"Public-output receipt ledger root already recorded with "
+            f"different content: {key.public_row_id}."
+        )
+    return existing
+
+
+def _is_duplicate_key_error(exc: Exception) -> bool:
+    args = getattr(exc, "args", ())
+    if args:
+        code = args[0]
+        return code == 1062 or str(code) == "1062"
+    return False
+
+
+def _rollback(connection: Any) -> None:
+    rollback = getattr(connection, "rollback", None)
+    if rollback is not None:
+        rollback()
 
 
 def _insert_receipt_indexes(

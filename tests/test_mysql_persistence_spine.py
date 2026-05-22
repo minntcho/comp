@@ -1,4 +1,7 @@
+import json
 import os
+import time
+from concurrent.futures import ThreadPoolExecutor
 from dataclasses import replace
 from decimal import Decimal
 from typing import get_type_hints
@@ -14,6 +17,7 @@ from comp.persistence import (
     replay_public_projection,
     verify_artifact_envelope,
 )
+from comp.persistence.codec import commit_receipt_to_body, encode_persistence_json
 from tests.support.persistence_cases import (
     artifact_store_for_receipt,
     claim_envelope,
@@ -171,6 +175,64 @@ def test_mysql_artifact_store_rejects_conflicting_content():
         connection.close()
 
 
+def test_mysql_artifact_store_returns_existing_after_duplicate_insert_race():
+    from comp.persistence.mysql import MySQLArtifactStore, apply_trust_spine_schema
+
+    writer = _connect_mysql()
+    contender = _connect_mysql()
+    inspector = _connect_mysql()
+    envelope = claim_envelope(value=1200)
+    try:
+        apply_trust_spine_schema(writer)
+        _reset_spine(writer)
+        _insert_artifact_envelope(writer, envelope)
+
+        with ThreadPoolExecutor(max_workers=1) as executor:
+            future = executor.submit(MySQLArtifactStore(contender).record, envelope)
+            _allow_lock_wait(future)
+            writer.commit()
+
+            assert future.result(timeout=5) == envelope
+
+        assert _table_count(inspector, "artifact_envelopes") == 1
+    finally:
+        writer.rollback()
+        contender.rollback()
+        writer.close()
+        contender.close()
+        inspector.close()
+
+
+def test_mysql_artifact_store_conflict_after_duplicate_insert_race():
+    from comp.persistence.mysql import MySQLArtifactStore, apply_trust_spine_schema
+
+    writer = _connect_mysql()
+    contender = _connect_mysql()
+    inspector = _connect_mysql()
+    existing = claim_envelope(value=1200)
+    incoming = claim_envelope(value=1201)
+    try:
+        apply_trust_spine_schema(writer)
+        _reset_spine(writer)
+        _insert_artifact_envelope(writer, existing)
+
+        with ThreadPoolExecutor(max_workers=1) as executor:
+            future = executor.submit(MySQLArtifactStore(contender).record, incoming)
+            _allow_lock_wait(future)
+            writer.commit()
+
+            with pytest.raises(ArtifactConflict, match="artifact:claim:1"):
+                future.result(timeout=5)
+
+        assert _table_count(inspector, "artifact_envelopes") == 1
+    finally:
+        writer.rollback()
+        contender.rollback()
+        writer.close()
+        contender.close()
+        inspector.close()
+
+
 def test_mysql_artifact_store_rejects_invalid_digest():
     from comp.persistence.mysql import MySQLArtifactStore, apply_trust_spine_schema
 
@@ -228,6 +290,36 @@ def test_mysql_receipt_ledger_rejects_conflicting_receipt_root():
         connection.close()
 
 
+def test_mysql_receipt_ledger_conflict_after_duplicate_insert_race():
+    from comp.persistence.mysql import MySQLReceiptLedger, apply_trust_spine_schema
+
+    writer = _connect_mysql()
+    contender = _connect_mysql()
+    inspector = _connect_mysql()
+    receipt = receipt_projection_case(amount=100).receipt
+    changed = replace(receipt, authorized_fields=("site",))
+    try:
+        apply_trust_spine_schema(writer)
+        _reset_spine(writer)
+        _insert_receipt_root(writer, receipt)
+
+        with ThreadPoolExecutor(max_workers=1) as executor:
+            future = executor.submit(MySQLReceiptLedger(contender).record, changed)
+            _allow_lock_wait(future)
+            writer.commit()
+
+            with pytest.raises(ReceiptConflict, match="public-row-1"):
+                future.result(timeout=5)
+
+        assert _table_count(inspector, "ledger_commit_receipts") == 1
+    finally:
+        writer.rollback()
+        contender.rollback()
+        writer.close()
+        contender.close()
+        inspector.close()
+
+
 def test_mysql_receipt_ledger_populates_receipt_indexes():
     from comp.persistence.mysql import MySQLReceiptLedger, apply_trust_spine_schema
 
@@ -253,6 +345,29 @@ def test_mysql_receipt_ledger_populates_receipt_indexes():
     assert value_commitments == len(receipt.citations.projection_value_commitments)
     assert dependencies == len(receipt.citations.dependency_fingerprints)
     assert refs == len(set(receipt_artifact_refs(receipt)))
+
+
+def test_mysql_receipt_ledger_rolls_back_root_when_index_insert_fails():
+    from comp.persistence.mysql import MySQLReceiptLedger, apply_trust_spine_schema
+
+    connection = _connect_mysql()
+    try:
+        apply_trust_spine_schema(connection)
+        _reset_spine(connection)
+        receipt = _receipt_with_duplicate_value_commitments()
+
+        with pytest.raises(Exception):
+            MySQLReceiptLedger(connection).record(receipt)
+
+        assert _spine_counts(connection) == {
+            "ledger_commit_receipts": 0,
+            "ledger_receipt_value_commitments": 0,
+            "ledger_receipt_dependency_fingerprints": 0,
+            "ledger_receipt_artifact_refs": 0,
+        }
+    finally:
+        connection.rollback()
+        connection.close()
 
 
 def test_mysql_artifact_store_supports_replay_public_projection():
@@ -354,3 +469,92 @@ def _payload_has_key(value, key: str) -> bool:
     if isinstance(value, (tuple, list)):
         return any(_payload_has_key(item, key) for item in value)
     return False
+
+
+def _allow_lock_wait(future):
+    time.sleep(0.2)
+    assert not future.done()
+
+
+def _insert_artifact_envelope(connection, envelope):
+    with connection.cursor() as cursor:
+        cursor.execute(
+            """
+            insert into artifact_envelopes (
+              artifact_id, artifact_kind, schema_version, body_digest,
+              body, source_refs, meta
+            )
+            values (%s, %s, %s, %s, %s, %s, %s)
+            """,
+            (
+                envelope.artifact_id,
+                envelope.artifact_kind,
+                envelope.schema_version,
+                envelope.body_digest,
+                _json_dump(encode_persistence_json(envelope.body)),
+                _json_dump(encode_persistence_json(envelope.source_refs)),
+                _json_dump(encode_persistence_json(envelope.meta)),
+            ),
+        )
+
+
+def _insert_receipt_root(connection, receipt):
+    from comp.persistence.mysql import receipt_id
+
+    rid = receipt_id(receipt)
+    with connection.cursor() as cursor:
+        cursor.execute(
+            """
+            insert into ledger_commit_receipts (
+              receipt_id, public_row_id, projection_id, draft_id,
+              receipt_digest, receipt_body
+            )
+            values (%s, %s, %s, %s, %s, %s)
+            """,
+            (
+                rid,
+                receipt.public_row_id,
+                receipt.projection_id,
+                receipt.draft_id,
+                rid.removeprefix("receipt:"),
+                _json_dump(encode_persistence_json(commit_receipt_to_body(receipt))),
+            ),
+        )
+
+
+def _receipt_with_duplicate_value_commitments():
+    receipt = receipt_projection_case(amount=100).receipt
+    assert receipt.citations is not None
+    first = receipt.citations.projection_value_commitments[0]
+    citations = replace(
+        receipt.citations,
+        projection_value_commitments=(first, first),
+    )
+    return replace(receipt, citations=citations)
+
+
+def _spine_counts(connection):
+    return {
+        table: _table_count(connection, table)
+        for table in (
+            "ledger_commit_receipts",
+            "ledger_receipt_value_commitments",
+            "ledger_receipt_dependency_fingerprints",
+            "ledger_receipt_artifact_refs",
+        )
+    }
+
+
+def _table_count(connection, table):
+    with connection.cursor() as cursor:
+        cursor.execute(f"select count(*) from {table}")
+        return cursor.fetchone()[0]
+
+
+def _json_dump(value):
+    return json.dumps(
+        value,
+        ensure_ascii=True,
+        separators=(",", ":"),
+        sort_keys=True,
+    )
