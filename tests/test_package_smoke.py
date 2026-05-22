@@ -394,6 +394,12 @@ def test_architecture_docs_are_classified_by_governance_status():
             "limited",
             "2026-05-20",
         ),
+        "scenario-trust-runtime-bridge.md": (
+            "north-star",
+            "scenario-lab",
+            "limited",
+            "2026-05-22",
+        ),
         "trust-kernel-extension-rings.md": (
             "active-contract",
             "trust-kernel",
@@ -445,6 +451,22 @@ def test_docs_index_groups_architecture_docs_by_governance_authority():
     assert "architecture/legacy-archive-cutover-plan.md" in docs_index
     assert "architecture/llm-orchestrated-compiler-tool-loop.md" in docs_index
     assert "architecture/production-trust-spine-database.md" in docs_index
+    assert "architecture/scenario-trust-runtime-bridge.md" in docs_index
+
+
+def test_scenario_trust_runtime_bridge_keeps_public_runner_narrow():
+    bridge = Path("docs/architecture/scenario-trust-runtime-bridge.md").read_text(
+        encoding="utf-8"
+    )
+
+    assert "Status: north-star" in bridge
+    assert "External packs prepare canonical or candidate trust inputs." in bridge
+    assert "Product ingestion stays outside comp." in bridge
+    assert "TrustRuntime" in bridge
+    assert "input_mode: canonical_bundle" in bridge
+    assert "comp scenario run" in bridge
+    assert "tests.domain_scenarios" in bridge
+    assert "Does the change keep raw product ingestion outside comp?" in bridge
 
 
 def test_friendly_authority_vocabulary_names_rename_path_without_moving_authority():
