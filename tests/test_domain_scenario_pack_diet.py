@@ -132,6 +132,28 @@ def test_domain_scenario_docs_explain_residency_tiers():
     assert "l_energy_alpha_invalid_allocation_rfi" in extension_doc
     assert "l_energy_alpha_physical_allocation_correction" in extension_doc
     assert "registry exposes residency metadata" in extension_doc
+    assert "Scenario replay uses the production materializer boundary" in readme
+    assert "materialize_compiler_run_artifacts(...)" in readme
+    assert "should not construct `ArtifactEnvelope` objects directly" in readme
+
+
+def test_domain_scenario_replay_uses_production_materializer_boundary():
+    source = Path("tests/domain_scenarios/persistence.py").read_text(
+        encoding="utf-8"
+    )
+
+    assert "materialize_compiler_run_artifacts" in source
+    assert "build_receipt_envelope_set" in source
+    assert "external_artifact_bodies=_scenario_external_artifact_bodies(result)" in source
+
+    for stale_policy in (
+        "ArtifactEnvelope.from_body(",
+        "receipt_artifact_refs(",
+        "evidence_ref_fingerprint",
+        "_artifact_envelope_for_ref",
+        "_artifact_body_for_ref",
+    ):
+        assert stale_policy not in source
 
 
 def test_downstream_registry_records_active_pack_cutover_state():

@@ -922,6 +922,8 @@ def test_artifact_envelope_builder_contract_separates_coverage_from_materializat
         "`comp.runtime.compiler_run_artifacts`",
         "`materialize_compiler_run_artifacts(...)`",
         "It must not mint receipts, call `build_public_output(...)`, record",
+        "Domain Scenario Lab replay must exercise the same path:",
+        "must not recreate `ArtifactEnvelope` construction or receipt-ref coverage",
         "`tests/test_artifact_envelope_builder.py`",
         "`tests/test_compiler_run_artifact_materializer.py`",
     ):
