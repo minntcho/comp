@@ -233,7 +233,33 @@ PublicOutputReceipt is required for public output.
 PublicOutput is a receipt-verifiable view, not authority.
 ```
 
-## 7. Non-Goals
+## 7. Current Implementation Status
+
+The first compiler-side intake and validation names are now available as
+canonical Python objects with deprecated aliases:
+
+```text
+ClaimCandidate is canonical.
+ClaimHypothesis remains a compatibility alias.
+
+EvidenceRef is canonical.
+EvidenceWitness remains a compatibility alias.
+
+ValidationRequirement is canonical.
+ProofObligation remains a compatibility alias.
+
+evidence_ref_fingerprint is canonical.
+evidence_witness_fingerprint remains a compatibility alias.
+```
+
+The underlying evidence fingerprint payload still uses
+`dependency_kind="evidence_witness"` so existing receipt and replay dependency
+digests stay stable during the rename window.
+
+This first step does not rename report fields such as `evidence_witnesses` or
+`obligations`; those are compatibility surfaces for a later, more careful PR.
+
+## 8. Non-Goals
 
 Do not use Korean Python class names.
 
@@ -250,7 +276,7 @@ Do not rename persistence internals just to make them friendlier. Persistence
 names must continue to protect digest, schema-version, replay, and append-only
 ledger semantics.
 
-## 8. Promotion Rule
+## 9. Promotion Rule
 
 While this document is a north star, it can guide naming review and onboarding
 discussion, but it should not block unrelated PRs by itself.

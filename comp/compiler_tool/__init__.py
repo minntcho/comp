@@ -24,8 +24,10 @@ from comp.compiler_tool.governance import (
 )
 from comp.compiler_tool.models import (
     CheckedClaim,
+    ClaimCandidate,
     ClaimHypothesis,
     CompileReport,
+    EvidenceRef,
     EvidenceWitness,
     FailedClaim,
     Hazard,
@@ -35,6 +37,8 @@ from comp.compiler_tool.models import (
     SemanticJudgmentRequirement,
     UncheckedArea,
     UnknownClaim,
+    ValidationRequirement,
+    evidence_ref_fingerprint,
     evidence_witness_fingerprint,
 )
 from comp.compiler_tool.profiles import (
@@ -130,14 +134,18 @@ from comp.compiler_tool.judgment_adapter import (
 
 __all__ = [
     "InterpretationHypothesis",
+    "ClaimCandidate",
     "ClaimHypothesis",
+    "EvidenceRef",
     "EvidenceWitness",
+    "evidence_ref_fingerprint",
     "evidence_witness_fingerprint",
     "CompileReport",
     "CheckedClaim",
     "FailedClaim",
     "UnknownClaim",
     "UncheckedArea",
+    "ValidationRequirement",
     "ProofObligation",
     "SemanticJudgmentRequirement",
     "SemanticJudgment",

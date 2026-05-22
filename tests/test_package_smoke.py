@@ -76,8 +76,10 @@ def test_top_level_package_no_longer_exports_legacy_runner_surface():
 
 def test_readme_compiler_tool_import_surface_is_exported():
     from comp.compiler_tool import (
+        ClaimCandidate,
         CompileReport,
         CompilerTool,
+        EvidenceRef,
         EmbeddingResolverStub,
         ReferenceIndexEntry,
         ReferenceQuery,
@@ -88,6 +90,7 @@ def test_readme_compiler_tool_import_surface_is_exported():
         active_retrieval_query_policies,
         calculation_formula_declaration_fingerprint,
         domain_pack_declaration_fingerprint,
+        evidence_ref_fingerprint,
         evidence_witness_fingerprint,
         profile_declaration_fingerprint,
         profile_allowed_units,
@@ -102,14 +105,17 @@ def test_readme_compiler_tool_import_surface_is_exported():
         resolve_reference_retrieval_obligations,
         rule_family_declaration_fingerprint,
         semantic_rubric_declaration_fingerprint,
+        ValidationRequirement,
         build_commit_receipt,
         compile_report_to_facts,
         prepare_commit,
         resolver_tasks_from_report,
     )
 
+    assert ClaimCandidate is not None
     assert CompilerTool is not None
     assert CompileReport is not None
+    assert EvidenceRef is not None
     assert resolver_tasks_from_report is not None
     assert prepare_commit is not None
     assert build_commit_receipt is not None
@@ -123,6 +129,7 @@ def test_readme_compiler_tool_import_surface_is_exported():
     assert RetrievalQueryRule is not None
     assert calculation_formula_declaration_fingerprint is not None
     assert domain_pack_declaration_fingerprint is not None
+    assert evidence_ref_fingerprint is not None
     assert evidence_witness_fingerprint is not None
     assert active_retrieval_query_policies is not None
     assert profile_declaration_fingerprint is not None
@@ -137,6 +144,7 @@ def test_readme_compiler_tool_import_surface_is_exported():
     assert reference_record_fingerprint is not None
     assert rule_family_declaration_fingerprint is not None
     assert semantic_rubric_declaration_fingerprint is not None
+    assert ValidationRequirement is not None
     assert resolve_reference_retrieval_obligations is not None
 
 
@@ -423,6 +431,8 @@ def test_friendly_authority_vocabulary_names_rename_path_without_moving_authorit
     assert "공개 승인 증표" in vocabulary
     assert "감사 산출물 기록" in vocabulary
     assert "Canonical rename with deprecated aliases" in vocabulary
+    assert "ClaimCandidate is canonical." in vocabulary
+    assert "ProofObligation remains a compatibility alias." in vocabulary
     assert "Only a clean public-output receipt can authorize public output." in vocabulary
 
 
