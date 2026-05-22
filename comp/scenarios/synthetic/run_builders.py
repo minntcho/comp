@@ -10,25 +10,16 @@ from comp.scenarios.synthetic.manifest import build_manifest
 from comp.scenarios.synthetic.models import (
     OUTPUT_CONTRACT,
     RESOLUTION_OUTPUT_CONTRACT,
-    SyntheticOracle,
     SyntheticRawSources,
     SyntheticResolutionArtifacts,
     SyntheticRun,
 )
 from comp.scenarios.synthetic.oracle import (
     expected_anomaly_oracle,
-    expected_calculation_requirement,
-    expected_reference_search_requirement,
-    expected_resolution_artifact,
+    expected_resolution_oracle,
     expected_smoke_oracle,
-    expected_smoke_receipt,
 )
 from comp.scenarios.synthetic.pcf_fixtures import (
-    calculate_co2e_value,
-    co2e_expected_calculated_claim,
-    electricity_expected_claim,
-    electricity_source_map,
-    electricity_witness_id,
     pcf_master,
     raw_electricity_row,
 )
@@ -50,12 +41,7 @@ def build_synthetic_pcf_resolution_run(
 ) -> SyntheticRun:
     missing_unit = missing_unit_spec(config)
     raw_row = missing_unit["row"]
-    source_witness_id = electricity_witness_id(raw_row.source_row_id)
-    derived_value = calculate_co2e_value(raw_row.amount, config.factor_value)
     resolution = missing_unit_resolution_artifact(raw_row)
-    resolved_requirement = missing_unit["validation_requirement"]
-    reference_search_requirement = expected_reference_search_requirement(config)
-    calculation_requirement = expected_calculation_requirement(config)
 
     return SyntheticRun(
         config=config,
@@ -68,43 +54,7 @@ def build_synthetic_pcf_resolution_run(
         resolution_artifacts=SyntheticResolutionArtifacts(
             unit_witnesses=(resolution,),
         ),
-        oracle=SyntheticOracle(
-            expected_claims=(
-                electricity_expected_claim(
-                    config.input_claim_id,
-                    raw_row,
-                    unit=resolution.resolved_value,
-                ),
-            ),
-            expected_calculated_claims=(
-                co2e_expected_calculated_claim(config, derived_value),
-            ),
-            expected_validation_requirements=(),
-            expected_hazards=(),
-            expected_failed_claims=(),
-            injected_anomalies=(missing_unit["anomaly"],),
-            source_to_expected_claim_map=(
-                electricity_source_map(config.input_claim_id, raw_row),
-            ),
-            expected_resolved_validation_requirements=(
-                resolved_requirement,
-                reference_search_requirement,
-                calculation_requirement,
-            ),
-            expected_resolution_artifacts=(
-                expected_resolution_artifact(resolution),
-            ),
-            expected_receipt=expected_smoke_receipt(
-                config,
-                source_witness_id=source_witness_id,
-                derived_value=derived_value,
-                resolved_obligation_ids=(
-                    resolved_requirement.requirement_id,
-                    reference_search_requirement.requirement_id,
-                    calculation_requirement.requirement_id,
-                ),
-            ),
-        ),
+        oracle=expected_resolution_oracle(config, missing_unit, resolution),
         output_contract=RESOLUTION_OUTPUT_CONTRACT,
     )
 
