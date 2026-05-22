@@ -439,7 +439,9 @@ def test_architecture_docs_are_classified_by_governance_status():
         ),
     }
 
-    architecture_docs = sorted(Path("docs/architecture").glob("*.md"))
+    architecture_docs = sorted(Path("docs/architecture").glob("*.md")) + sorted(
+        Path("docs/archive/architecture").glob("*.md")
+    )
     assert {path.name for path in architecture_docs} == set(expected_status)
 
     for path in architecture_docs:
@@ -449,6 +451,35 @@ def test_architecture_docs_are_classified_by_governance_status():
         assert f"Owner: {owner}" in text
         assert f"Last checked against code: {checked_date}" in text
         assert f"Can block PRs: {blocking}" in text
+
+
+def test_historical_notes_and_plans_live_in_archive_locations():
+    root_architecture_docs = sorted(Path("docs/architecture").glob("*.md"))
+    archived_architecture_docs = sorted(Path("docs/archive/architecture").glob("*.md"))
+    archived_plan_docs = sorted(Path("docs/archive/plans").glob("*.md"))
+
+    assert not Path("docs/superpowers/plans").exists()
+    assert {path.name for path in archived_architecture_docs} == {
+        "active-surface-cutover.md",
+        "legacy-archive-cutover-plan.md",
+        "llm-orchestrated-compiler-tool-loop.md",
+    }
+    assert {path.name for path in archived_plan_docs} == {
+        "2026-05-20-trust-kernel-hardening.md",
+        "2026-05-21-production-trust-spine-db-v1.md",
+        "2026-05-21-raw-claim-promotion-boundary.md",
+        "2026-05-22-receipt-proof-graph-boundary-prework.md",
+    }
+
+    assert not [
+        path
+        for path in root_architecture_docs
+        if "Status: historical-note" in path.read_text(encoding="utf-8")
+    ]
+    for path in archived_architecture_docs:
+        text = path.read_text(encoding="utf-8")
+        assert "Status: historical-note" in text
+        assert "Can block PRs: no" in text
 
 
 def test_docs_index_groups_architecture_docs_by_governance_authority():
@@ -471,12 +502,13 @@ def test_docs_index_groups_architecture_docs_by_governance_authority():
     assert docs_index.index("### North Stars") < docs_index.index(
         "### Historical Notes"
     )
-    assert "architecture/active-surface-cutover.md" in docs_index
+    assert "archive/architecture/active-surface-cutover.md" in docs_index
     assert "architecture/friendly-authority-vocabulary.md" in docs_index
-    assert "architecture/legacy-archive-cutover-plan.md" in docs_index
-    assert "architecture/llm-orchestrated-compiler-tool-loop.md" in docs_index
+    assert "archive/architecture/legacy-archive-cutover-plan.md" in docs_index
+    assert "archive/architecture/llm-orchestrated-compiler-tool-loop.md" in docs_index
     assert "architecture/production-trust-spine-database.md" in docs_index
     assert "architecture/scenario-trust-runtime-bridge.md" in docs_index
+    assert "docs/archive/plans/" in docs_index
 
 
 def test_scenario_trust_runtime_bridge_keeps_public_runner_narrow():

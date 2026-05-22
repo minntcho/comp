@@ -126,7 +126,7 @@ artifact를 제출할 수 있지만, commit receipt를 만들 권한은 없다.
 docs/index.md
 docs/architecture/retrieval-fabric-north-star.md
 docs/architecture/obligation-kernel-working-theory.md
-docs/architecture/llm-orchestrated-compiler-tool-loop.md
+docs/archive/architecture/llm-orchestrated-compiler-tool-loop.md
 docs/architecture/memory-assisted-compiler-loop.md
 ```
 
