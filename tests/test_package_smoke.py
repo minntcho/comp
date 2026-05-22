@@ -481,7 +481,7 @@ def test_architecture_docs_are_classified_by_governance_status():
             "active-contract",
             "agent-layer",
             "yes",
-            "2026-05-20",
+            "2026-05-22",
         ),
         "obligation-kernel-working-theory.md": (
             "implementation-map",
@@ -768,6 +768,23 @@ def test_receipt_graph_renderers_have_non_authority_module_boundary():
     assert "export_receipt_proof_graph" not in receipt_graph.__dict__
     assert "replay_public_projection" not in receipt_graph.__dict__
     assert "build_public_output" not in receipt_graph.__dict__
+
+
+def test_memory_assisted_loop_documents_agent_core_boundary_contract():
+    loop_doc = Path(
+        "docs/architecture/contracts/memory-assisted-compiler-loop.md"
+    ).read_text(encoding="utf-8")
+
+    assert "## 3.1 Agent Core Boundary Contract" in loop_doc
+    for line in (
+        "`comp` must not import `minchoagnt`.",
+        "`minchoagnt` may import `comp.compiler_tool` report, resolver-task, and fact-adapter contracts.",
+        "`minchoagnt` must not import `PublicOutputReceipt`, receipt builders, replay engines, or projection gates.",
+        "`CompCompilerAdapter` records report-derived facts and leaves receipt issuance to `comp` governance and receipt paths.",
+        "Agent output is proposal and resolution material, not projection authority.",
+        "tests/test_authority_import_boundaries.py",
+    ):
+        assert line in loop_doc
 
 
 def test_pyproject_packages_comp_core_scenarios_and_agent_layer():

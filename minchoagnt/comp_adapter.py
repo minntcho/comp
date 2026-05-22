@@ -23,7 +23,7 @@ from comp.compiler_tool import (
     resolver_task_from_obligation,
     resolver_tasks_from_report,
 )
-from comp.judgment import PublicOutputReceipt, Fact, JudgmentState, SubjectRef
+from comp.judgment import Fact, JudgmentState, SubjectRef
 
 
 @dataclass(frozen=True)
@@ -32,7 +32,7 @@ class CompCompileResult:
     subject: SubjectRef
     report: ValidationReport
     judgment: JudgmentState = field(default_factory=JudgmentState)
-    receipt: PublicOutputReceipt | None = None
+    receipt: None = None
 
 
 @dataclass(frozen=True)
