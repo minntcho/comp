@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from decimal import Decimal
+
 from comp.scenarios.synthetic.config import SyntheticScenarioConfig
 from comp.scenarios.synthetic.models import (
     ExpectedCalculatedClaim,
@@ -64,6 +66,16 @@ def electricity_witness_id(source_row_id: str) -> str:
     return f"witness:{source_row_id}:electricity_kwh"
 
 
+def calculate_co2e_value(
+    activity_amount: int | float,
+    factor_value: int | float,
+) -> int | float:
+    value = Decimal(str(activity_amount)) * Decimal(str(factor_value))
+    if value == value.to_integral_value():
+        return float(value)
+    return float(value)
+
+
 def electricity_expected_claim(
     claim_id: str,
     row: RawElectricityRow,
@@ -108,6 +120,7 @@ def co2e_expected_calculated_claim(
 
 
 __all__ = [
+    "calculate_co2e_value",
     "co2e_expected_calculated_claim",
     "electricity_expected_claim",
     "electricity_source_map",

@@ -132,6 +132,7 @@ def test_synthetic_run_builders_live_outside_generator_module() -> None:
 
 def test_synthetic_pcf_fixtures_live_outside_run_builders_module() -> None:
     from comp.scenarios.synthetic.pcf_fixtures import (
+        calculate_co2e_value,
         electricity_expected_claim,
         electricity_source_map,
         pcf_master,
@@ -145,8 +146,15 @@ def test_synthetic_pcf_fixtures_live_outside_run_builders_module() -> None:
 
     assert pcf_master.__module__ == "comp.scenarios.synthetic.pcf_fixtures"
     assert build_synthetic_pcf_smoke_run.__globals__["pcf_master"] is pcf_master
+    assert build_synthetic_pcf_smoke_run.__globals__["calculate_co2e_value"] is (
+        calculate_co2e_value
+    )
     assert run.master == pcf_master(config)
     assert run.master.reference_catalog == (pcf_reference_record(config),)
+    assert run.oracle.expected_derived_claims[0].value == calculate_co2e_value(
+        raw_row.amount,
+        config.factor_value,
+    )
     assert run.oracle.expected_claims == (
         electricity_expected_claim(config.input_claim_id, raw_row),
     )

@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-from decimal import Decimal
-
 from comp.scenarios.synthetic.anomaly_specs import (
     anomaly_specs,
     missing_unit_resolution_artifact,
@@ -25,6 +23,7 @@ from comp.scenarios.synthetic.oracle import (
     reference_search_obligation_id,
 )
 from comp.scenarios.synthetic.pcf_fixtures import (
+    calculate_co2e_value,
     co2e_expected_calculated_claim,
     electricity_expected_claim,
     electricity_source_map,
@@ -37,7 +36,7 @@ from comp.scenarios.synthetic.pcf_fixtures import (
 def build_synthetic_pcf_smoke_run(config: SyntheticScenarioConfig) -> SyntheticRun:
     raw_row = raw_electricity_row(config)
     source_witness_id = electricity_witness_id(raw_row.source_row_id)
-    derived_value = _multiply(raw_row.amount, config.factor_value)
+    derived_value = calculate_co2e_value(raw_row.amount, config.factor_value)
     expected_claim = electricity_expected_claim(config.input_claim_id, raw_row)
     return SyntheticRun(
         config=config,
@@ -71,7 +70,7 @@ def build_synthetic_pcf_resolution_run(
     missing_unit = missing_unit_spec(config)
     raw_row = missing_unit["row"]
     source_witness_id = electricity_witness_id(raw_row.source_row_id)
-    derived_value = _multiply(raw_row.amount, config.factor_value)
+    derived_value = calculate_co2e_value(raw_row.amount, config.factor_value)
     resolution = missing_unit_resolution_artifact(raw_row)
     resolved_obligation = missing_unit["obligation"]
 
@@ -188,14 +187,6 @@ def build_synthetic_pcf_anomaly_run(
             source_to_expected_claim_map=expected_maps,
         ),
     )
-
-
-def _multiply(left: int | float, right: int | float) -> int | float:
-    value = Decimal(str(left)) * Decimal(str(right))
-    if value == value.to_integral_value():
-        return float(value)
-    return float(value)
-
 
 __all__ = [
     "build_synthetic_pcf_anomaly_run",
