@@ -136,6 +136,23 @@ Implementation plans, execution logs, and temporary PR plans should not be
 created under `docs/architecture/`. They may be useful, but they are not active
 architecture contracts.
 
+## Smoke Enforcement
+
+Package smoke tests enforce the parts of this policy that can be checked
+mechanically:
+
+```text
+required header keys
+status-to-blocking match
+lifecycle location
+index listing
+```
+
+The scanner checks governed architecture docs in `docs/architecture/` and
+`docs/archive/architecture/`. It is intentionally narrow: it prevents authority
+metadata drift and plan-log leakage without trying to judge whether a document's
+argument is correct.
+
 ## Review Checklist
 
 Before adding or promoting a document, answer:
