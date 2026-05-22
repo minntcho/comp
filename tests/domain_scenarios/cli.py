@@ -13,7 +13,7 @@ from tests.domain_scenarios.core import (
     assert_scenario_contract,
     run_scenario,
 )
-from tests.domain_scenarios.registry import registered_scenarios
+from tests.domain_scenarios.registry import registered_scenarios, scenario_residency
 
 
 @dataclass(frozen=True)
@@ -233,7 +233,8 @@ def _build_parser() -> argparse.ArgumentParser:
 
 def _render_scenario_list(scenarios: Iterable[ScenarioDefinition]) -> str:
     return "\n".join(
-        f"{scenario.scenario_id}\t{scenario.title}"
+        f"{scenario.scenario_id}\t{scenario_residency(scenario.scenario_id).tier}"
+        f"\t{scenario.title}"
         for scenario in scenarios
     )
 

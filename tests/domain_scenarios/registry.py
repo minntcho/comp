@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from dataclasses import dataclass
+
 from tests.domain_scenarios.core import ScenarioDefinition
 from tests.domain_scenarios.canonical_working_loop.scenario import (
     SCENARIO as CANONICAL_WORKING_LOOP_SCENARIO,
@@ -55,10 +57,36 @@ from tests.domain_scenarios.synthetic_pcf_smoke.scenario import (
 from tests.domain_scenarios.tiny_pcf.scenario import SCENARIO as TINY_PCF_SCENARIO
 
 
-def registered_scenarios() -> tuple[ScenarioDefinition, ...]:
-    return (
-        CANONICAL_WORKING_LOOP_SCENARIO,
-        TINY_PCF_SCENARIO,
+@dataclass(frozen=True)
+class ScenarioResidency:
+    tier: str
+    reason: str
+    target_pack: str | None = None
+
+
+_REGISTERED_SCENARIOS = (
+    CANONICAL_WORKING_LOOP_SCENARIO,
+    TINY_PCF_SCENARIO,
+    ALPHA_INVALID_ALLOCATION_SCENARIO,
+    ALPHA_PHYSICAL_ALLOCATION_SCENARIO,
+    STEEL_FRAME_PROXY_SCENARIO,
+    CARBON_TECH_CERTIFICATE_SCENARIO,
+    L_MATERIALS_COMPOSITION_SCENARIO,
+    C_PACK_YIELD_ROLLUP_SCENARIO,
+    TIER0_PHYSICAL_ALLOCATION_SCENARIO,
+    FINAL_BOTTOM_UP_ROLLUP_SCENARIO,
+    L_ENERGY_PCF_GOVERNANCE_SCENARIO,
+    RAW_CLAIM_HYPOTHESIS_GATE_SCENARIO,
+    RAW_CLAIM_HYPOTHESIS_ACCEPTANCE_SCENARIO,
+    RAW_CLAIM_CONFLICT_SCENARIO,
+    RAW_CLAIM_CONFLICT_RESOLUTION_SCENARIO,
+    SYNTHETIC_PCF_SMOKE_SCENARIO,
+    SYNTHETIC_PCF_ANOMALY_SCENARIO,
+    SYNTHETIC_PCF_RESOLUTION_SCENARIO,
+)
+_LARGE_DOMAIN_DOWNSTREAM_IDS = frozenset(
+    scenario.scenario_id
+    for scenario in (
         ALPHA_INVALID_ALLOCATION_SCENARIO,
         ALPHA_PHYSICAL_ALLOCATION_SCENARIO,
         STEEL_FRAME_PROXY_SCENARIO,
@@ -68,14 +96,80 @@ def registered_scenarios() -> tuple[ScenarioDefinition, ...]:
         TIER0_PHYSICAL_ALLOCATION_SCENARIO,
         FINAL_BOTTOM_UP_ROLLUP_SCENARIO,
         L_ENERGY_PCF_GOVERNANCE_SCENARIO,
-        RAW_CLAIM_HYPOTHESIS_GATE_SCENARIO,
-        RAW_CLAIM_HYPOTHESIS_ACCEPTANCE_SCENARIO,
-        RAW_CLAIM_CONFLICT_SCENARIO,
-        RAW_CLAIM_CONFLICT_RESOLUTION_SCENARIO,
+    )
+)
+_SYNTHETIC_PCF_DOWNSTREAM_IDS = frozenset(
+    scenario.scenario_id
+    for scenario in (
         SYNTHETIC_PCF_SMOKE_SCENARIO,
         SYNTHETIC_PCF_ANOMALY_SCENARIO,
         SYNTHETIC_PCF_RESOLUTION_SCENARIO,
     )
+)
+_DOWNSTREAM_CANDIDATE_IDS = (
+    _LARGE_DOMAIN_DOWNSTREAM_IDS | _SYNTHETIC_PCF_DOWNSTREAM_IDS
+)
 
 
-__all__ = ["registered_scenarios"]
+def _scenario_residency_for(scenario_id: str) -> ScenarioResidency:
+    if scenario_id in _LARGE_DOMAIN_DOWNSTREAM_IDS:
+        return ScenarioResidency(
+            tier="downstream-candidate",
+            target_pack="comp-scenario-packs",
+            reason=(
+                "large domain workflow fixture retained temporarily until the "
+                "downstream scenario pack owns it"
+            ),
+        )
+    if scenario_id in _SYNTHETIC_PCF_DOWNSTREAM_IDS:
+        return ScenarioResidency(
+            tier="downstream-candidate",
+            target_pack="comp-scenario-packs",
+            reason=(
+                "synthetic generator fixture retained temporarily until the "
+                "downstream scenario pack owns generated replay checks"
+            ),
+        )
+    return ScenarioResidency(
+        tier="core-kernel",
+        reason="small authority boundary scenario for comp kernel regression",
+    )
+
+
+_SCENARIO_RESIDENCY = {
+    scenario.scenario_id: _scenario_residency_for(scenario.scenario_id)
+    for scenario in _REGISTERED_SCENARIOS
+}
+
+
+def registered_scenarios() -> tuple[ScenarioDefinition, ...]:
+    return _REGISTERED_SCENARIOS
+
+
+def core_kernel_scenarios() -> tuple[ScenarioDefinition, ...]:
+    return tuple(
+        scenario
+        for scenario in _REGISTERED_SCENARIOS
+        if _SCENARIO_RESIDENCY[scenario.scenario_id].tier == "core-kernel"
+    )
+
+
+def downstream_candidate_scenarios() -> tuple[ScenarioDefinition, ...]:
+    return tuple(
+        scenario
+        for scenario in _REGISTERED_SCENARIOS
+        if _SCENARIO_RESIDENCY[scenario.scenario_id].tier == "downstream-candidate"
+    )
+
+
+def scenario_residency(scenario_id: str) -> ScenarioResidency:
+    return _SCENARIO_RESIDENCY[scenario_id]
+
+
+__all__ = [
+    "ScenarioResidency",
+    "core_kernel_scenarios",
+    "downstream_candidate_scenarios",
+    "registered_scenarios",
+    "scenario_residency",
+]

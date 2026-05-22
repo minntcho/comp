@@ -137,6 +137,27 @@ docs/extensions/scenario-packs.md
 docs/extensions/downstream-registry.json
 ```
 
+## Scenario Residency
+
+The registry exposes residency metadata so internal scenario sprawl is visible
+before it becomes package shape.
+
+```text
+core-kernel
+  small scenarios where failure likely means a comp authority-kernel regression
+
+downstream-candidate
+  currently internal scenarios retained until comp-scenario-packs owns them
+```
+
+Current core-kernel scenarios include `canonical_working_loop`, `tiny_pcf`,
+and the raw-claim boundary scenarios. Current downstream-candidate scenarios
+are the `l_energy.*` family, `l_energy_pcf_governance.v1`, and synthetic PCF smoke/anomaly/resolution.
+
+Downstream-candidate is not a removal instruction. Keep the internal scenario
+until a downstream pack has copied or reconstructed the same trust meaning, run
+it through public `comp` APIs, and passed parallel validation.
+
 ## Local Runner
 
 The scenario registry can also be inspected without opening the pytest files:
@@ -144,6 +165,8 @@ The scenario registry can also be inspected without opening the pytest files:
 ```bash
 python -m tests.domain_scenarios list
 ```
+
+The list output includes scenario id, residency tier, and title.
 
 Run one scenario as a human-readable trace summary:
 
