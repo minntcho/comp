@@ -9,7 +9,7 @@ from comp.judgment.receipts import DependencyFingerprint, ProjectionValueCommitm
 
 
 @dataclass(frozen=True)
-class CommitPackage:
+class ReviewPackage:
     package_id: str
     subject_id: str
     report_status: str
@@ -38,6 +38,9 @@ class CommitPackage:
         return False
 
 
+CommitPackage = ReviewPackage
+
+
 def build_commit_package(
     report: CompileReport,
     *,
@@ -46,7 +49,7 @@ def build_commit_package(
     profile_id: str | None = None,
     semantic_judgment_ids: Iterable[str] = (),
     dependency_fingerprints: Iterable[DependencyFingerprint] = (),
-) -> CommitPackage:
+) -> ReviewPackage:
     report_status = recompute_report_status(report)
     open_obligation_ids = tuple(
         _obligation_id(obligation) for obligation in report.obligations
@@ -56,7 +59,7 @@ def build_commit_package(
     )
     hazard_ids = tuple(_hazard_id(hazard) for hazard in report.hazards)
 
-    return CommitPackage(
+    return ReviewPackage(
         package_id=package_id or f"commit-package:{subject_id}",
         subject_id=subject_id,
         report_status=report_status,
@@ -147,4 +150,4 @@ def _unique(values: Iterable[str]) -> tuple[str, ...]:
     return tuple(unique_values)
 
 
-__all__ = ["CommitPackage", "build_commit_package"]
+__all__ = ["ReviewPackage", "CommitPackage", "build_commit_package"]

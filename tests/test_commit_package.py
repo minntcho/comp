@@ -6,7 +6,10 @@ from comp.compiler_tool import (
     Hazard,
     ProofObligation,
     ReferenceBinding,
+    ReviewDecision,
+    ReviewPackage,
     build_commit_package,
+    decide_governance,
 )
 
 
@@ -76,6 +79,26 @@ def test_commit_package_collects_report_artifacts_without_receipt_authority():
     assert package.hazard_ids == ()
     assert package.complete is True
     assert package.can_authorize_public_projection is False
+
+
+def test_friendly_review_names_are_canonical_with_legacy_aliases():
+    from comp.compiler_tool import CommitPackage, GovernanceDecision
+
+    package = CommitPackage(
+        package_id="package-1",
+        subject_id="facility-1",
+        report_status="accepted",
+        complete=True,
+    )
+    decision = decide_governance(package)
+
+    assert CommitPackage is ReviewPackage
+    assert GovernanceDecision is ReviewDecision
+    assert type(package).__name__ == "ReviewPackage"
+    assert type(decision).__name__ == "ReviewDecision"
+    assert package.can_authorize_public_projection is False
+    assert decision.can_authorize_public_projection is False
+    assert decision.can_issue_commit_receipt is True
 
 
 def test_commit_package_is_incomplete_with_open_blocking_obligation():

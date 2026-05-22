@@ -17,10 +17,15 @@ from comp.compiler_tool.calculation_report import apply_calculation_result
 from comp.compiler_tool.calculation_resolution import plan_calculation_resolution
 from comp.compiler_tool.calculation_retry import retry_blocked_calculation
 from comp.compiler_tool.commit_flow import CommitPreparation, prepare_commit
-from comp.compiler_tool.commit_package import CommitPackage, build_commit_package
+from comp.compiler_tool.commit_package import (
+    CommitPackage,
+    ReviewPackage,
+    build_commit_package,
+)
 from comp.compiler_tool.governance import (
     GovernanceDecision,
     GovernanceStatus,
+    ReviewDecision,
     decide_governance,
 )
 from comp.compiler_tool.models import (
@@ -172,8 +177,10 @@ __all__ = [
     "CommitPreparation",
     "prepare_commit",
     "CommitPackage",
+    "ReviewPackage",
     "build_commit_package",
     "GovernanceDecision",
+    "ReviewDecision",
     "GovernanceStatus",
     "decide_governance",
     "ReferenceOption",

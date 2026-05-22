@@ -3,13 +3,13 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Literal
 
-from comp.compiler_tool.commit_package import CommitPackage
+from comp.compiler_tool.commit_package import ReviewPackage
 
 GovernanceStatus = Literal["commit", "hold", "reject"]
 
 
 @dataclass(frozen=True)
-class GovernanceDecision:
+class ReviewDecision:
     decision_id: str
     package_id: str
     subject_id: str
@@ -26,13 +26,16 @@ class GovernanceDecision:
         return False
 
 
+GovernanceDecision = ReviewDecision
+
+
 def decide_governance(
-    package: CommitPackage,
+    package: ReviewPackage,
     *,
     decision_id: str | None = None,
-) -> GovernanceDecision:
+) -> ReviewDecision:
     status, reasons = _evaluate_package(package)
-    return GovernanceDecision(
+    return ReviewDecision(
         decision_id=decision_id or f"governance-decision:{package.package_id}",
         package_id=package.package_id,
         subject_id=package.subject_id,
@@ -43,7 +46,7 @@ def decide_governance(
 
 
 def _evaluate_package(
-    package: CommitPackage,
+    package: ReviewPackage,
 ) -> tuple[GovernanceStatus, tuple[str, ...]]:
     if package.complete:
         return "commit", ("commit_package_complete",)
@@ -56,7 +59,7 @@ def _evaluate_package(
     return "hold", reasons
 
 
-def _incomplete_reasons(package: CommitPackage) -> tuple[str, ...]:
+def _incomplete_reasons(package: ReviewPackage) -> tuple[str, ...]:
     reasons = []
     if package.report_status != "accepted":
         reasons.append(f"report_status:{package.report_status}")
@@ -70,4 +73,9 @@ def _incomplete_reasons(package: CommitPackage) -> tuple[str, ...]:
     return tuple(reasons)
 
 
-__all__ = ["GovernanceDecision", "GovernanceStatus", "decide_governance"]
+__all__ = [
+    "ReviewDecision",
+    "GovernanceDecision",
+    "GovernanceStatus",
+    "decide_governance",
+]
