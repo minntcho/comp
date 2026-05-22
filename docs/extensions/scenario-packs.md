@@ -61,6 +61,19 @@ minimal receipt/projection/replay cases
 An internal scenario belongs in `comp` when a failure indicates a likely kernel
 contract regression.
 
+The internal registry exposes residency metadata:
+
+```text
+core-kernel
+  internal authority-kernel regression scenario
+
+downstream-candidate
+  currently internal scenario that should move once a downstream pack owns it
+```
+
+This metadata is not a runtime authority source. It is a maintenance signal for
+reviewing whether a scenario still belongs in the `comp` repo.
+
 ## What Moves Downstream
 
 Large scenarios should move to downstream scenario-pack repositories when they
