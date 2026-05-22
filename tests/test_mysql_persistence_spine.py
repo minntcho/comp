@@ -1,6 +1,7 @@
 import os
 from dataclasses import replace
 from decimal import Decimal
+from typing import get_type_hints
 
 import pytest
 
@@ -62,6 +63,17 @@ def test_mysql_spine_module_exists():
     from comp.persistence.mysql import apply_trust_spine_schema
 
     assert apply_trust_spine_schema is not None
+
+
+def test_mysql_artifact_store_satisfies_graph_export_artifact_store_protocol():
+    from comp.explanation import export_receipt_proof_graph
+    from comp.persistence import ArtifactStore
+    from comp.persistence.mysql import MySQLArtifactStore
+
+    hints = get_type_hints(export_receipt_proof_graph)
+
+    assert hints["artifacts"] is ArtifactStore
+    assert isinstance(MySQLArtifactStore(object()), ArtifactStore)
 
 
 def test_persistence_codec_roundtrips_tuple_and_decimal_body():
@@ -271,3 +283,74 @@ def test_mysql_artifact_store_supports_replay_public_projection():
 
     assert report.public_row == case.public_row
     assert report.artifact_refs == receipt_artifact_refs(case.receipt)
+
+
+def test_mysql_spine_supports_replay_then_receipt_proof_graph_export():
+    from comp.explanation import export_receipt_proof_graph
+    from comp.persistence.mysql import (
+        MySQLArtifactStore,
+        MySQLReceiptLedger,
+        apply_trust_spine_schema,
+    )
+
+    case = receipt_projection_case(amount=100, site="plant-a")
+    memory_store = artifact_store_for_receipt(
+        case.receipt,
+        committed_values=case.source_values,
+    )
+
+    connection = _connect_mysql()
+    try:
+        apply_trust_spine_schema(connection)
+        _reset_spine(connection)
+        mysql_store = MySQLArtifactStore(connection)
+        mysql_ledger = MySQLReceiptLedger(connection)
+        for envelope in memory_store.envelopes():
+            mysql_store.record(envelope)
+        mysql_ledger.record(case.receipt)
+
+        persisted_receipt = mysql_ledger.get(
+            public_row_id=case.receipt.public_row_id,
+            projection_id=case.receipt.projection_id,
+            draft_id=case.receipt.draft_id,
+        )
+        replay = replay_public_projection(
+            case.source_values,
+            case.projection,
+            receipt=persisted_receipt,
+            artifacts=mysql_store,
+        )
+        graph = export_receipt_proof_graph(
+            receipt=persisted_receipt,
+            replay=replay,
+            artifacts=mysql_store,
+        )
+    finally:
+        connection.close()
+
+    payload = graph.to_payload()
+    node_kinds = {node["node_kind"] for node in payload["nodes"]}
+    edge_kinds = {edge["edge_kind"] for edge in payload["edges"]}
+
+    assert replay.public_row == case.public_row
+    assert graph.authority == "explanation_only"
+    assert graph.can_authorize_public_projection is False
+    assert graph.replay_receipt_key.public_row_id == case.receipt.public_row_id
+    assert {
+        "commit_receipt",
+        "public_projection",
+        "dependency_fingerprint",
+    } <= node_kinds
+    assert {"authorized_by", "pinned_dependency", "projected_as"} <= edge_kinds
+    assert "plant-a" not in repr(payload)
+    assert not _payload_has_key(payload, "value")
+
+
+def _payload_has_key(value, key: str) -> bool:
+    if isinstance(value, dict):
+        return key in value or any(
+            _payload_has_key(item, key) for item in value.values()
+        )
+    if isinstance(value, (tuple, list)):
+        return any(_payload_has_key(item, key) for item in value)
+    return False

@@ -412,6 +412,18 @@ ledger_receipt_artifact_refs
   authority.
 ```
 
+The replay and graph-export connection is intentionally one-way:
+
+```text
+MySQL receipt/artifact stores
+  -> replay_public_projection(...)
+  -> ReceiptProofGraph export
+  -> JSON / Mermaid / Graphviz views
+```
+
+The MySQL spine persists the replay inputs. It does not store a separate graph
+truth, run replay on its own, or authorize projection outside `CommitReceipt`.
+
 The implemented V1 slice intentionally does not include workflow, registry,
 projection cache, typed artifact index, or domain-specific view tables yet.
 Those remain provisional follow-on layers around the artifact/receipt spine.
