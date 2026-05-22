@@ -98,9 +98,12 @@ def test_domain_scenario_cli_runs_json_view(capsys):
     exit_code = main(["run", "tiny_pcf.location_based_electricity.v1", "--json"])
 
     captured = capsys.readouterr()
+    payload = json.loads(captured.out)
     assert exit_code == 0
     assert '"scenario_id": "tiny_pcf.location_based_electricity.v1"' in captured.out
     assert '"projection": {' in captured.out
+    assert payload["proof_graph"]["authority"] == "explanation_only"
+    assert payload["proof_graph"]["can_authorize_public_projection"] is False
     assert captured.err == ""
 
 
@@ -496,6 +499,41 @@ def test_scenario_result_view_exposes_replay_trace_manifest_summary():
     assert "value" not in str(replay_trace["artifact_digests"])
 
 
+def test_scenario_result_view_exposes_proof_graph_from_successful_replay():
+    result = run_canonical_working_loop_scenario()
+
+    view = scenario_result_view(result)
+
+    proof_graph = view["proof_graph"]
+    assert proof_graph["authority"] == "explanation_only"
+    assert proof_graph["can_authorize_public_projection"] is False
+    assert proof_graph["receipt_node_id"] == (
+        "commit_receipt:"
+        "public-row:canonical-raw-pcf-1:"
+        "canonical-pcf-public-row:"
+        "commit-package:product:canonical-raw-pcf-1"
+    )
+    assert any(
+        node["node_kind"] == "public_projection"
+        for node in proof_graph["nodes"]
+    )
+    assert any(
+        edge["edge_kind"] == "authorized_by"
+        for edge in proof_graph["edges"]
+    )
+    assert not _payload_has_key(proof_graph, "value")
+    assert not _payload_has_key(proof_graph, "text")
+
+
+def test_scenario_result_view_omits_proof_graph_when_replay_is_absent():
+    result = run_synthetic_pcf_anomaly_scenario()
+
+    view = scenario_result_view(result)
+
+    assert view["replay_trace"] is None
+    assert view["proof_graph"] is None
+
+
 def test_tiny_pcf_scenario_exports_json_ready_viewer_payload():
     exported = run_tiny_pcf_scenario().to_dict()
 
@@ -517,3 +555,12 @@ def test_tiny_pcf_scenario_exports_json_ready_viewer_payload():
     assert exported["commit"]["governance_status"] == "commit"
     assert exported["commit"]["receipt_id"] == "public-row:tiny-pcf-1"
     assert exported["projection"] == EXPECTED_PROJECTION
+    assert exported["proof_graph"]["authority"] == "explanation_only"
+
+
+def _payload_has_key(value, key: str) -> bool:
+    if isinstance(value, dict):
+        return key in value or any(_payload_has_key(item, key) for item in value.values())
+    if isinstance(value, (tuple, list)):
+        return any(_payload_has_key(item, key) for item in value)
+    return False

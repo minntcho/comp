@@ -165,6 +165,11 @@ python -m tests.domain_scenarios run l_energy_pcf_governance.v1 --json
 python -m tests.domain_scenarios run-all --json
 ```
 
+When a scenario has a commit receipt and replayable projection, the JSON payload
+includes `proof_graph`. The graph is explanation-only: it is derived after
+replay succeeds, hides raw committed values by default, and cannot authorize a
+projection.
+
 The runner is intentionally generic. It only knows about `ScenarioDefinition`,
 `registered_scenarios()`, `run_scenario()`, and `DomainScenarioResult`; scenario
 packs own their domain fixtures and expected contracts.
