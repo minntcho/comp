@@ -76,6 +76,7 @@ Examples are runnable or copyable guides for public surfaces. They are not
 authority contracts unless an active contract explicitly references them.
 
 1. `examples/scenario_contracts/README.md`
+2. `examples/scenario_pack_repo/README.md`
 
 ## Compiler Tool Layers
 

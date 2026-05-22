@@ -509,6 +509,31 @@ def test_docs_index_groups_architecture_docs_by_governance_authority():
     assert "architecture/production-trust-spine-database.md" in docs_index
     assert "architecture/scenario-trust-runtime-bridge.md" in docs_index
     assert "docs/archive/plans/" in docs_index
+    assert "examples/scenario_pack_repo/README.md" in docs_index
+
+
+def test_downstream_scenario_pack_skeleton_documents_ci_contract():
+    readme = Path("docs/examples/scenario_pack_repo/README.md").read_text(
+        encoding="utf-8"
+    )
+    pyproject = Path("docs/examples/scenario_pack_repo/pyproject.toml").read_text(
+        encoding="utf-8"
+    )
+    workflow = Path(
+        "docs/examples/scenario_pack_repo/.github/workflows/scenario-contracts.yml"
+    ).read_text(encoding="utf-8")
+    extensions = Path("docs/extensions/scenario-packs.md").read_text(
+        encoding="utf-8"
+    )
+
+    assert "comp-scenario-packs" in readme
+    assert "comp scenario init packs/public_projection_smoke" in readme
+    assert "comp scenario run packs/public_projection_smoke/scenario.json" in readme
+    assert "Do not import `tests.*`" in readme
+    assert "comp @ git+https://github.com/minntcho/comp@main" in pyproject
+    assert "python -m pip install -e ." in workflow
+    assert "comp scenario run packs/public_projection_smoke/scenario.json" in workflow
+    assert "examples/scenario_pack_repo/README.md" in extensions
 
 
 def test_scenario_trust_runtime_bridge_keeps_public_runner_narrow():
