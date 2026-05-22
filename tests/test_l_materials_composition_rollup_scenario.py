@@ -109,7 +109,7 @@ def test_l_materials_invalid_composition_blocks_mapping_and_projection():
     assert report.reference_bindings == ()
     assert report.derived_claims == ()
     assert preparation.receipt is None
-    with pytest.raises(ProjectionBlocked, match="CommitReceipt"):
+    with pytest.raises(ProjectionBlocked, match="public-output receipt"):
         project_public_row(
             {"composition_total": 0.95},
             ProjectionSpec(PROJECTION_ID, PROJECTION_FIELDS),

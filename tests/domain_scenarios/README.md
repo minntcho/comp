@@ -28,8 +28,8 @@ passes through `CompilerTool`, opens a calculation obligation, resolves a
 reference search obligation through `ResolverTask`, a profile-active
 `RetrievalQueryPolicy`, and the retrieval bridge, turns candidate-only retrieval
 results into a canonical binding through deterministic selection, calculates a
-derived claim, mints a commit receipt, and projects only through the receipt
-gate.
+derived claim, mints a public-output receipt, and projects only through the
+receipt gate.
 
 The smaller scenario `tiny_pcf` is a product-carbon-footprint slice that exercises
 reference search, near-miss rejection, canonical binding, calculation trace,
@@ -78,8 +78,8 @@ Strong assertions are encouraged for core invariants:
 ReferenceCandidate remains candidate_only
 retrieval_score never authorizes truth
 ReferenceBinding is required for calculation authority
-DerivedClaim cannot authorize public projection
-CommitReceipt is required for projection
+DerivedClaim cannot authorize public output
+PublicOutputReceipt is required for public output
 open obligations prevent receipt issuance
 receipt traces binding, formula, calculation, and derived-claim evidence
 receipt dependency fingerprints pin replay profile/reference dependencies
@@ -165,8 +165,8 @@ python -m tests.domain_scenarios run l_energy_pcf_governance.v1 --json
 python -m tests.domain_scenarios run-all --json
 ```
 
-When a scenario has a commit receipt and replayable projection, the JSON payload
-includes `proof_graph`. The graph is explanation-only: it is derived after
+When a scenario has a public-output receipt and replayable projection, the JSON
+payload includes `proof_graph`. The graph is explanation-only: it is derived after
 replay succeeds, hides raw committed values by default, and cannot authorize a
 projection.
 

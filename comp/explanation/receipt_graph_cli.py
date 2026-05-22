@@ -89,7 +89,11 @@ def _add_export_parser(
     help_text: str,
 ) -> argparse.ArgumentParser:
     export = subparsers.add_parser(name, help=help_text)
-    export.add_argument("--receipt", required=True, help="CommitReceipt body JSON path.")
+    export.add_argument(
+        "--receipt",
+        required=True,
+        help="Public-output receipt body JSON path.",
+    )
     export.add_argument("--replay", required=True, help="ProjectionReplayReport JSON path.")
     export.add_argument(
         "--artifacts",

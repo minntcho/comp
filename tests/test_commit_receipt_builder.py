@@ -10,9 +10,12 @@ from comp.compiler_tool import (
     DerivedClaim,
     DependencyFingerprint,
     ProjectionValueCommitment,
+    PublicOutputReceipt,
+    PublicOutputReceiptCitations,
     ReceiptBuildBlocked,
     build_commit_package,
     build_commit_receipt,
+    build_public_output_receipt,
     decide_governance,
 )
 
@@ -69,6 +72,31 @@ def test_commit_receipt_builder_cites_package_and_governance_artifacts():
     )
     assert snapshot["open_obligation_ids"] == ()
     assert snapshot["hazard_ids"] == ()
+
+
+def test_friendly_receipt_builder_name_is_canonical_with_legacy_alias():
+    package = CommitPackage(
+        package_id="commit-package:facility-1",
+        subject_id="facility-1",
+        report_status="accepted",
+        checked_claim_fields=("amount",),
+        checked_claim_witness_ids=("span-amount",),
+        complete=True,
+    )
+    decision = decide_governance(package)
+
+    receipt = build_public_output_receipt(
+        package,
+        decision,
+        public_row_id="public-row-1",
+        projection_id="public-row",
+    )
+
+    assert build_commit_receipt is build_public_output_receipt
+    assert isinstance(receipt, PublicOutputReceipt)
+    assert isinstance(receipt.citations, PublicOutputReceiptCitations)
+    assert CommitReceiptCitations is PublicOutputReceiptCitations
+    assert type(receipt).__name__ == "PublicOutputReceipt"
 
 
 def test_commit_receipt_builder_exposes_typed_citations():
@@ -321,7 +349,7 @@ def test_commit_receipt_cannot_authorize_different_projection():
         projection_id="public-row",
     )
 
-    with pytest.raises(ProjectionBlocked, match="authorize this projection"):
+    with pytest.raises(ProjectionBlocked, match="authorize this public output"):
         project_public_row(
             {"site": "plant-a", "amount": 100},
             ProjectionSpec("audit-row", ("site", "amount")),

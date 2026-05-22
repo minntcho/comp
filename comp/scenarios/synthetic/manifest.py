@@ -72,8 +72,8 @@ def build_manifest(
         "output_contract": output_contract,
         "authority": "oracle_for_tests_only",
         "non_authority_notice": (
-            "Synthetic oracle files are test expectations. CommitReceipt remains "
-            "the only public projection authority."
+            "Synthetic oracle files are test expectations. PublicOutputReceipt "
+            "remains the only public-output authority."
         ),
         "reproducibility": {
             "seed": config.seed,

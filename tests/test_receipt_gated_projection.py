@@ -3,9 +3,14 @@ import pytest
 import comp
 from comp import (
     CommitReceipt,
+    CommitReceiptCitations,
     ProjectionBlocked,
     ProjectionSpec,
     ProjectionValueCommitment,
+    PublicOutputBlocked,
+    PublicOutputReceipt,
+    PublicOutputReceiptCitations,
+    PublicOutputSpec,
     project_public_row,
 )
 from comp.compiler_tool import CompileReport
@@ -16,8 +21,51 @@ def test_accepted_compile_report_without_commit_receipt_cannot_project_public_ro
     projection = ProjectionSpec("public-row", ("site", "amount"))
 
     assert report.can_project_public_row is False
-    with pytest.raises(ProjectionBlocked, match="CommitReceipt"):
+    with pytest.raises(PublicOutputBlocked, match="public-output receipt"):
         project_public_row({"site": "plant-a", "amount": 100}, projection)
+
+
+def test_friendly_public_output_names_are_canonical_with_legacy_aliases():
+    projection = ProjectionSpec("public-row", ("site",))
+    receipt = CommitReceipt(
+        draft_id="draft-1",
+        winner_receipt_ids=("selection-1",),
+        barrier_snapshot=(("active_hazards", ()),),
+        public_row_id="public-row-1",
+        projection_id="public-row",
+        authorized_fields=("site",),
+        citations=CommitReceiptCitations(
+            governance_decision_id="decision-1",
+            governance_status="commit",
+            governance_reasons=("commit_package_complete",),
+            commit_package_id="package-1",
+            commit_package_complete=True,
+            subject_id="facility-1",
+            projection_id="public-row",
+            authorized_fields=("site",),
+            profile_id=None,
+            report_status="accepted",
+            checked_claim_fields=("site",),
+            checked_claim_witness_ids=("span-site",),
+            semantic_judgment_ids=(),
+            reference_binding_ids=(),
+            derived_claim_fields=(),
+            derived_claim_ids=(),
+            calculation_trace_ids=(),
+            formula_ids=(),
+            resolved_obligation_ids=(),
+            open_obligation_ids=(),
+            hazard_ids=(),
+        ),
+    )
+
+    assert ProjectionSpec is PublicOutputSpec
+    assert ProjectionBlocked is PublicOutputBlocked
+    assert CommitReceipt is PublicOutputReceipt
+    assert CommitReceiptCitations is PublicOutputReceiptCitations
+    assert type(projection).__name__ == "PublicOutputSpec"
+    assert type(receipt).__name__ == "PublicOutputReceipt"
+    assert type(receipt.citations).__name__ == "PublicOutputReceiptCitations"
 
 
 def test_commit_receipt_allows_public_projection():
@@ -198,7 +246,7 @@ def test_projection_rejects_receipt_without_citations():
         authorized_fields=("site",),
     )
 
-    with pytest.raises(ProjectionBlocked, match="clean commit receipt"):
+    with pytest.raises(ProjectionBlocked, match="clean public-output receipt"):
         project_public_row({"site": "plant-a"}, projection, receipt=receipt)
 
 
@@ -236,7 +284,7 @@ def test_projection_rejects_receipt_with_unclean_citations():
         ),
     )
 
-    with pytest.raises(ProjectionBlocked, match="clean commit receipt"):
+    with pytest.raises(ProjectionBlocked, match="clean public-output receipt"):
         project_public_row({"site": "plant-a"}, projection, receipt=receipt)
 
 

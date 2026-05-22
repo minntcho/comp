@@ -5,9 +5,9 @@ from dataclasses import dataclass, field
 from typing import Any, Protocol, runtime_checkable
 
 from comp.judgment import (
-    CommitReceipt,
-    ProjectionBlocked,
-    ProjectionSpec,
+    PublicOutputBlocked,
+    PublicOutputReceipt,
+    PublicOutputSpec,
     project_public_row,
 )
 from comp.persistence.digest import artifact_digest
@@ -31,7 +31,7 @@ class ReceiptConflict(PersistenceError):
 
 
 class ProjectionReplayBlocked(PersistenceError):
-    """Raised when a materialized projection cannot be replayed from a receipt."""
+    """Raised when a materialized public output cannot be replayed."""
 
 
 @runtime_checkable
@@ -54,7 +54,7 @@ class ReceiptLedgerKey:
         _require_non_empty("draft_id", self.draft_id)
 
     @classmethod
-    def from_receipt(cls, receipt: CommitReceipt) -> "ReceiptLedgerKey":
+    def from_receipt(cls, receipt: PublicOutputReceipt) -> "ReceiptLedgerKey":
         return cls(
             public_row_id=receipt.public_row_id,
             projection_id=receipt.projection_id,
@@ -92,9 +92,9 @@ class InMemoryArtifactStore:
 
 @dataclass
 class InMemoryReceiptLedger:
-    _receipts: dict[ReceiptLedgerKey, CommitReceipt] = field(default_factory=dict)
+    _receipts: dict[ReceiptLedgerKey, PublicOutputReceipt] = field(default_factory=dict)
 
-    def record(self, receipt: CommitReceipt) -> CommitReceipt:
+    def record(self, receipt: PublicOutputReceipt) -> PublicOutputReceipt:
         key = ReceiptLedgerKey.from_receipt(receipt)
         existing = self._receipts.get(key)
         if existing is None:
@@ -102,8 +102,8 @@ class InMemoryReceiptLedger:
             return receipt
         if existing != receipt:
             raise ReceiptConflict(
-                f"CommitReceipt ledger root already recorded with different "
-                f"content: {key.public_row_id}."
+                f"Public-output receipt ledger root already recorded with "
+                f"different content: {key.public_row_id}."
             )
         return existing
 
@@ -113,7 +113,7 @@ class InMemoryReceiptLedger:
         public_row_id: str,
         projection_id: str,
         draft_id: str,
-    ) -> CommitReceipt:
+    ) -> PublicOutputReceipt:
         return self._receipts[
             ReceiptLedgerKey(
                 public_row_id=public_row_id,
@@ -122,25 +122,25 @@ class InMemoryReceiptLedger:
             )
         ]
 
-    def receipts(self) -> tuple[CommitReceipt, ...]:
+    def receipts(self) -> tuple[PublicOutputReceipt, ...]:
         return tuple(self._receipts.values())
 
 
 def verify_materialized_public_projection(
     row: Mapping[str, Any],
-    projection: ProjectionSpec,
+    projection: PublicOutputSpec,
     *,
-    receipt: CommitReceipt,
+    receipt: PublicOutputReceipt,
 ) -> dict[str, Any]:
     try:
         authorized_row = project_public_row(row, projection, receipt=receipt)
-    except ProjectionBlocked as exc:
+    except PublicOutputBlocked as exc:
         raise ProjectionReplayBlocked(
-            "Materialized public projection cannot be replayed from receipt."
+            "Materialized public output cannot be replayed from receipt."
         ) from exc
     if dict(row) != authorized_row:
         raise ProjectionReplayBlocked(
-            "Materialized public projection is not the receipt-authorized view."
+            "Materialized public output is not the receipt-authorized view."
         )
     return authorized_row
 

@@ -1,7 +1,7 @@
 """Synthetic scenario generator for comp tests.
 
 This package produces raw inputs and oracle expectations. It does not validate
-claims, issue receipts, or authorize public projection.
+claims, issue receipts, or authorize public output.
 """
 
 from comp.scenarios.synthetic.adapters import SyntheticPcfAdapter

@@ -36,9 +36,12 @@ class CommitSpec:
 
 
 @dataclass(frozen=True)
-class ProjectionSpec:
+class PublicOutputSpec:
     projection_id: str
     output_fields: tuple[str, ...]
+
+
+ProjectionSpec = PublicOutputSpec
 
 
 @dataclass(frozen=True)
@@ -46,7 +49,7 @@ class CompiledJudgmentProgram:
     transfers: tuple[TransferRule, ...] = field(default_factory=tuple)
     bundles: tuple[BundleSpec, ...] = field(default_factory=tuple)
     commits: tuple[CommitSpec, ...] = field(default_factory=tuple)
-    projections: tuple[ProjectionSpec, ...] = field(default_factory=tuple)
+    projections: tuple[PublicOutputSpec, ...] = field(default_factory=tuple)
 
 
 __all__ = [
@@ -54,6 +57,7 @@ __all__ = [
     "TransferRule",
     "BundleSpec",
     "CommitSpec",
+    "PublicOutputSpec",
     "ProjectionSpec",
     "CompiledJudgmentProgram",
 ]

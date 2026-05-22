@@ -69,7 +69,7 @@ class DependencyFingerprint:
 
 
 @dataclass(frozen=True, slots=True)
-class CommitReceiptCitations:
+class PublicOutputReceiptCitations:
     governance_decision_id: str
     governance_status: str
     governance_reasons: tuple[str, ...]
@@ -129,15 +129,21 @@ class CommitReceiptCitations:
         )
 
 
+CommitReceiptCitations = PublicOutputReceiptCitations
+
+
 @dataclass(frozen=True, slots=True)
-class CommitReceipt:
+class PublicOutputReceipt:
     draft_id: str
     winner_receipt_ids: tuple[str, ...]
     barrier_snapshot: tuple[tuple[str, Any], ...]
     public_row_id: str
     projection_id: str
     authorized_fields: tuple[str, ...]
-    citations: CommitReceiptCitations | None = None
+    citations: PublicOutputReceiptCitations | None = None
+
+
+CommitReceipt = PublicOutputReceipt
 
 
 def _value_digest(value: Any) -> str:
@@ -196,6 +202,8 @@ __all__ = [
     "SelectionReceipt",
     "ProjectionValueCommitment",
     "DependencyFingerprint",
+    "PublicOutputReceipt",
+    "PublicOutputReceiptCitations",
     "CommitReceipt",
     "CommitReceiptCitations",
 ]

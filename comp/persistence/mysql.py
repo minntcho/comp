@@ -6,10 +6,10 @@ from collections.abc import Mapping
 from typing import Any
 
 from comp.judgment.receipts import (
-    CommitReceipt,
-    CommitReceiptCitations,
     DependencyFingerprint,
     ProjectionValueCommitment,
+    PublicOutputReceipt,
+    PublicOutputReceiptCitations,
 )
 from comp.persistence.codec import decode_persistence_json, encode_persistence_json
 from comp.persistence.envelope import ArtifactEnvelope
@@ -175,7 +175,7 @@ class MySQLReceiptLedger:
     def __init__(self, connection: Any):
         self.connection = connection
 
-    def record(self, receipt: CommitReceipt) -> CommitReceipt:
+    def record(self, receipt: PublicOutputReceipt) -> PublicOutputReceipt:
         key = ReceiptLedgerKey.from_receipt(receipt)
         existing = self._get_optional(key)
         if existing is None:
@@ -204,8 +204,8 @@ class MySQLReceiptLedger:
             return receipt
         if existing != receipt:
             raise ReceiptConflict(
-                f"CommitReceipt ledger root already recorded with different "
-                f"content: {key.public_row_id}."
+                f"Public-output receipt ledger root already recorded with "
+                f"different content: {key.public_row_id}."
             )
         return existing
 
@@ -215,14 +215,14 @@ class MySQLReceiptLedger:
         public_row_id: str,
         projection_id: str,
         draft_id: str,
-    ) -> CommitReceipt:
+    ) -> PublicOutputReceipt:
         key = ReceiptLedgerKey(public_row_id, projection_id, draft_id)
         existing = self._get_optional(key)
         if existing is None:
             raise KeyError(key)
         return existing
 
-    def receipts(self) -> tuple[CommitReceipt, ...]:
+    def receipts(self) -> tuple[PublicOutputReceipt, ...]:
         with self.connection.cursor() as cursor:
             cursor.execute(
                 """
@@ -233,7 +233,7 @@ class MySQLReceiptLedger:
             )
             return tuple(_commit_receipt_from_row(row) for row in cursor.fetchall())
 
-    def _get_optional(self, key: ReceiptLedgerKey) -> CommitReceipt | None:
+    def _get_optional(self, key: ReceiptLedgerKey) -> PublicOutputReceipt | None:
         with self.connection.cursor() as cursor:
             cursor.execute(
                 """
@@ -249,14 +249,14 @@ class MySQLReceiptLedger:
         return _commit_receipt_from_row(row)
 
 
-def receipt_id(receipt: CommitReceipt) -> str:
+def receipt_id(receipt: PublicOutputReceipt) -> str:
     body = commit_receipt_to_body(receipt)
     canonical = _json_dump(encode_persistence_json(body))
     digest = hashlib.sha256(canonical.encode("utf-8")).hexdigest()
     return f"receipt:sha256:{digest}"
 
 
-def commit_receipt_to_body(receipt: CommitReceipt) -> dict[str, Any]:
+def commit_receipt_to_body(receipt: PublicOutputReceipt) -> dict[str, Any]:
     citations = None
     if receipt.citations is not None:
         citations = {
@@ -301,11 +301,11 @@ def commit_receipt_to_body(receipt: CommitReceipt) -> dict[str, Any]:
     }
 
 
-def commit_receipt_from_body(body: Mapping[str, Any]) -> CommitReceipt:
+def commit_receipt_from_body(body: Mapping[str, Any]) -> PublicOutputReceipt:
     citations_body = body["citations"]
     citations = None
     if citations_body is not None:
-        citations = CommitReceiptCitations(
+        citations = PublicOutputReceiptCitations(
             governance_decision_id=citations_body["governance_decision_id"],
             governance_status=citations_body["governance_status"],
             governance_reasons=tuple(citations_body["governance_reasons"]),
@@ -338,7 +338,7 @@ def commit_receipt_from_body(body: Mapping[str, Any]) -> CommitReceipt:
                 for item in citations_body["dependency_fingerprints"]
             ),
         )
-    return CommitReceipt(
+    return PublicOutputReceipt(
         draft_id=body["draft_id"],
         winner_receipt_ids=tuple(body["winner_receipt_ids"]),
         barrier_snapshot=_receipt_value_from_body(body["barrier_snapshot"]),
@@ -349,7 +349,11 @@ def commit_receipt_from_body(body: Mapping[str, Any]) -> CommitReceipt:
     )
 
 
-def _insert_receipt_indexes(cursor: Any, rid: str, receipt: CommitReceipt) -> None:
+def _insert_receipt_indexes(
+    cursor: Any,
+    rid: str,
+    receipt: PublicOutputReceipt,
+) -> None:
     if receipt.citations is None:
         return
     for commitment in receipt.citations.projection_value_commitments:
@@ -409,7 +413,7 @@ def _artifact_envelope_from_row(row: Any) -> ArtifactEnvelope:
     )
 
 
-def _commit_receipt_from_row(row: Any) -> CommitReceipt:
+def _commit_receipt_from_row(row: Any) -> PublicOutputReceipt:
     return commit_receipt_from_body(decode_persistence_json(_json_load(row[0])))
 
 

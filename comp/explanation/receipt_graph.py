@@ -5,7 +5,7 @@ from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, field
 from typing import Any
 
-from comp.judgment import CommitReceipt
+from comp.judgment import PublicOutputReceipt
 from comp.persistence import (
     ArtifactRef,
     ArtifactStore,
@@ -132,7 +132,7 @@ class ReceiptProofGraph:
 
 def export_receipt_proof_graph(
     *,
-    receipt: CommitReceipt,
+    receipt: PublicOutputReceipt,
     replay: ProjectionReplayReport,
     artifacts: ArtifactStore,
 ) -> ReceiptProofGraph:
@@ -152,7 +152,7 @@ def export_receipt_proof_graph(
     return builder.export()
 
 
-def receipt_node_id(receipt: CommitReceipt) -> str:
+def receipt_node_id(receipt: PublicOutputReceipt) -> str:
     return (
         "commit_receipt:"
         f"{receipt.public_row_id}:{receipt.projection_id}:{receipt.draft_id}"
@@ -182,7 +182,7 @@ class _ReceiptProofGraphBuilder:
     def __init__(
         self,
         *,
-        receipt: CommitReceipt,
+        receipt: PublicOutputReceipt,
         replay: ProjectionReplayReport,
         artifacts: ArtifactStore,
     ) -> None:
@@ -217,7 +217,7 @@ class _ReceiptProofGraphBuilder:
             ProofNode(
                 node_id=receipt_node_id(self._receipt),
                 node_kind="commit_receipt",
-                label=f"Commit receipt: {self._receipt.public_row_id}",
+                label=f"Public-output receipt: {self._receipt.public_row_id}",
                 metadata=_metadata(
                     public_row_id=self._receipt.public_row_id,
                     projection_id=self._receipt.projection_id,
@@ -236,7 +236,7 @@ class _ReceiptProofGraphBuilder:
             ProofNode(
                 node_id=projection_node_id,
                 node_kind="public_projection",
-                label=f"Public projection: {self._receipt.projection_id}",
+                label=f"Public output: {self._receipt.projection_id}",
                 metadata=_metadata(
                     public_row_id=self._receipt.public_row_id,
                     projection_id=self._receipt.projection_id,
@@ -595,7 +595,7 @@ class _ReceiptProofGraphBuilder:
 
 
 def _validate_replay_scope(
-    receipt: CommitReceipt,
+    receipt: PublicOutputReceipt,
     replay: ProjectionReplayReport,
 ) -> None:
     expected = ReceiptLedgerKey.from_receipt(receipt)
@@ -675,7 +675,7 @@ def _is_safe_metadata_value(value: Any) -> bool:
     return False
 
 
-def _commitments_by_field(receipt: CommitReceipt):
+def _commitments_by_field(receipt: PublicOutputReceipt):
     if receipt.citations is None:
         return {}
     return {

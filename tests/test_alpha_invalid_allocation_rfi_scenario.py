@@ -67,7 +67,7 @@ def test_alpha_invalid_allocation_cannot_create_receipt_or_projection():
     assert result.report.derived_claims == ()
     assert result.preparation.receipt is None
     assert result.projection is None
-    with pytest.raises(ProjectionBlocked, match="CommitReceipt"):
+    with pytest.raises(ProjectionBlocked, match="public-output receipt"):
         project_public_row(
             {"raw_material_name": RAW_MATERIAL_NAME},
             ProjectionSpec(PROJECTION_ID, PROJECTION_FIELDS),

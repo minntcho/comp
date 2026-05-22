@@ -1,21 +1,24 @@
 from __future__ import annotations
 
-from comp.compiler_tool.commit_package import CommitPackage
-from comp.compiler_tool.governance import GovernanceDecision
-from comp.judgment.receipts import CommitReceipt, CommitReceiptCitations
+from comp.compiler_tool.commit_package import ReviewPackage
+from comp.compiler_tool.governance import ReviewDecision
+from comp.judgment.receipts import (
+    PublicOutputReceipt,
+    PublicOutputReceiptCitations,
+)
 
 
 class ReceiptBuildBlocked(RuntimeError):
-    """Raised when a governance decision cannot mint a commit receipt."""
+    """Raised when a review decision cannot mint a public-output receipt."""
 
 
-def build_commit_receipt(
-    package: CommitPackage,
-    decision: GovernanceDecision,
+def build_public_output_receipt(
+    package: ReviewPackage,
+    decision: ReviewDecision,
     *,
     public_row_id: str,
     projection_id: str,
-) -> CommitReceipt:
+) -> PublicOutputReceipt:
     _validate_receipt_inputs(package, decision, projection_id=projection_id)
     authorized_fields = _authorized_fields(package)
     citations = _receipt_citations(
@@ -24,7 +27,7 @@ def build_commit_receipt(
         projection_id=projection_id,
         authorized_fields=authorized_fields,
     )
-    return CommitReceipt(
+    return PublicOutputReceipt(
         draft_id=package.package_id,
         winner_receipt_ids=(decision.decision_id,),
         barrier_snapshot=citations.to_barrier_snapshot(),
@@ -35,32 +38,35 @@ def build_commit_receipt(
     )
 
 
+build_commit_receipt = build_public_output_receipt
+
+
 def _validate_receipt_inputs(
-    package: CommitPackage,
-    decision: GovernanceDecision,
+    package: ReviewPackage,
+    decision: ReviewDecision,
     *,
     projection_id: str,
 ) -> None:
     if not projection_id:
-        raise ReceiptBuildBlocked("Commit receipt requires a projection id.")
+        raise ReceiptBuildBlocked("Public-output receipt requires an output id.")
     if decision.package_id != package.package_id:
-        raise ReceiptBuildBlocked("Commit receipt package mismatch.")
+        raise ReceiptBuildBlocked("Public-output receipt package mismatch.")
     if decision.subject_id != package.subject_id:
-        raise ReceiptBuildBlocked("Commit receipt subject mismatch.")
+        raise ReceiptBuildBlocked("Public-output receipt subject mismatch.")
     if not decision.can_issue_commit_receipt:
-        raise ReceiptBuildBlocked("Commit receipt requires a commit decision.")
+        raise ReceiptBuildBlocked("Public-output receipt requires a commit decision.")
     if not package.complete:
-        raise ReceiptBuildBlocked("Commit receipt requires a complete package.")
+        raise ReceiptBuildBlocked("Public-output receipt requires a complete package.")
 
 
 def _receipt_citations(
-    package: CommitPackage,
-    decision: GovernanceDecision,
+    package: ReviewPackage,
+    decision: ReviewDecision,
     *,
     projection_id: str,
     authorized_fields: tuple[str, ...],
-) -> CommitReceiptCitations:
-    return CommitReceiptCitations(
+) -> PublicOutputReceiptCitations:
+    return PublicOutputReceiptCitations(
         governance_decision_id=decision.decision_id,
         governance_status=decision.status,
         governance_reasons=decision.reasons,
@@ -87,7 +93,7 @@ def _receipt_citations(
     )
 
 
-def _authorized_fields(package: CommitPackage) -> tuple[str, ...]:
+def _authorized_fields(package: ReviewPackage) -> tuple[str, ...]:
     return _unique((*package.checked_claim_fields, *package.derived_claim_fields))
 
 
@@ -102,4 +108,8 @@ def _unique(values: tuple[str, ...]) -> tuple[str, ...]:
     return tuple(unique_values)
 
 
-__all__ = ["ReceiptBuildBlocked", "build_commit_receipt"]
+__all__ = [
+    "ReceiptBuildBlocked",
+    "build_public_output_receipt",
+    "build_commit_receipt",
+]
