@@ -21,11 +21,13 @@ from comp.compiler_tool import (
     calculate_derived_claim,
 )
 from comp.compiler_tool.models import CompileReport, ProofObligation
-from comp.scenarios.synthetic.generator import (
+from comp.scenarios.synthetic.models import (
     SYNTHETIC_SOURCE_INPUT_KIND,
     SyntheticInputBundle,
     SyntheticLoadedSource,
     SyntheticResolutionArtifact,
+)
+from comp.scenarios.synthetic.sources import (
     synthetic_source_input_dependency_id,
 )
 from comp.scenarios.synthetic.references import reference_catalog_from_input_bundle

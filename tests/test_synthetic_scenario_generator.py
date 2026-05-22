@@ -28,6 +28,21 @@ def test_synthetic_run_writer_lives_outside_generator_module() -> None:
     assert writer.__module__ == "comp.scenarios.synthetic.writer"
 
 
+def test_synthetic_data_models_live_outside_generator_module() -> None:
+    from comp.scenarios.synthetic.models import SyntheticRun as model_run
+    from comp.scenarios.synthetic.sources import (
+        build_synthetic_loaded_source as source_builder,
+    )
+
+    assert generate_synthetic_pcf_run(
+        SyntheticScenarioConfig.pcf_smoke(seed=7)
+    ).__class__ is model_run
+    assert model_run.__module__ == "comp.scenarios.synthetic.models"
+    assert load_synthetic_input_bundle.__globals__["build_synthetic_loaded_source"] is (
+        source_builder
+    )
+
+
 def test_synthetic_pcf_generator_writes_oracle_not_truth(tmp_path: Path) -> None:
     config = SyntheticScenarioConfig.pcf_smoke(seed=7)
 

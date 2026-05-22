@@ -8,7 +8,7 @@ from pathlib import Path
 from typing import Any, Callable
 
 from comp.scenarios.synthetic.config import SyntheticScenarioConfig
-from comp.scenarios.synthetic.generator import (
+from comp.scenarios.synthetic.models import (
     MasterReferenceRecord,
     RawElectricityRow,
     SyntheticLoadedSource,
@@ -17,6 +17,8 @@ from comp.scenarios.synthetic.generator import (
     SyntheticRawSources,
     SyntheticResolutionArtifact,
     SyntheticResolutionArtifacts,
+)
+from comp.scenarios.synthetic.sources import (
     build_synthetic_loaded_source,
 )
 
