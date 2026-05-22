@@ -21,6 +21,13 @@ from tests.support.synthetic.oracle_assertions import (
 )
 
 
+def test_synthetic_run_writer_lives_outside_generator_module() -> None:
+    from comp.scenarios.synthetic.writer import write_synthetic_run as writer
+
+    assert write_synthetic_run is writer
+    assert writer.__module__ == "comp.scenarios.synthetic.writer"
+
+
 def test_synthetic_pcf_generator_writes_oracle_not_truth(tmp_path: Path) -> None:
     config = SyntheticScenarioConfig.pcf_smoke(seed=7)
 

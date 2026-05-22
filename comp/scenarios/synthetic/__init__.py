@@ -33,7 +33,6 @@ from comp.scenarios.synthetic.generator import (
     build_synthetic_loaded_sources,
     generate_synthetic_pcf_run,
     synthetic_source_input_dependency_id,
-    write_synthetic_run,
 )
 from comp.scenarios.synthetic.loaders import (
     SyntheticInputLoadError,
@@ -49,6 +48,7 @@ from comp.scenarios.synthetic.raw_claim_promotion import (
     UnitConversionSupport,
     promote_raw_claim_hypothesis,
 )
+from comp.scenarios.synthetic.writer import write_synthetic_run
 
 __all__ = [
     "AllocationSupport",
