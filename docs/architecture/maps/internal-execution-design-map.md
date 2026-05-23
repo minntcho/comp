@@ -164,6 +164,20 @@ These are conceptual outcomes, not committed API names. The point is that each
 outcome changes what is submitted to validation or held back from it. None of
 these outcomes is public-output authority.
 
+### Attribute policy is a separate decision boundary
+
+Attribute-handling policy should be separate from claim validation. Its job is
+to decide how incoming attributes are treated before validation: accepted,
+mapped, proposed, rejected, or held. The compiler should not own that policy and
+should not accumulate source-specific field-name special cases. The compiler
+should receive only candidate claims that the selected attribute policy has made
+compiler-facing for the run.
+
+Changing attribute policy changes what is submitted to validation. It does not
+change what counts as validation, does not make proposed fields active by
+itself, does not close validation requirements, and does not authorize public
+projection.
+
 ### Public authority remains downstream of validation, commit, receipt, and replay
 
 A flexible attribute layer would make the system more adaptable, but it must not
