@@ -594,6 +594,12 @@ def test_architecture_docs_are_classified_by_governance_status():
             "limited",
             "2026-05-21",
         ),
+        "internal-execution-design-map.md": (
+            "implementation-map",
+            "trust-kernel",
+            "limited",
+            "2026-05-23",
+        ),
         "extension-port-contracts.md": (
             "active-contract",
             "trust-kernel",

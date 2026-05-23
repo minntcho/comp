@@ -45,6 +45,27 @@ jobs:
           python -m pip install --upgrade pip
           python -m pip install -e ".[test,db]"
 
+      - name: Wait for MySQL TCP readiness
+        run: |
+          python - <<'PY'
+          import socket
+          import time
+
+          host = "127.0.0.1"
+          port = 3306
+          deadline = time.time() + 90
+          last_error = None
+          while time.time() < deadline:
+              try:
+                  with socket.create_connection((host, port), timeout=2):
+                      print("MySQL TCP port is reachable.")
+                      raise SystemExit(0)
+              except OSError as exc:
+                  last_error = exc
+                  time.sleep(2)
+          raise SystemExit(f"MySQL did not become reachable in time: {last_error}")
+          PY
+
       - name: Run unit and scenario tests
         env:
           COMP_TEST_MYSQL_HOST: 127.0.0.1
