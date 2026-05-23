@@ -1,8 +1,9 @@
 # Internal Execution Design Map
 
-Status: planning-map
-Owner: compiler
-Can block PRs: no
+Status: implementation-map
+Owner: trust-kernel
+Last checked against code: 2026-05-23
+Can block PRs: limited
 
 This document is a top-level map for discussing `comp` internal execution
 capabilities before they become implementation work, API contracts, or PR-sized
