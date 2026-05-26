@@ -190,9 +190,10 @@ implemented, these terms are architectural contract vocabulary.
 
 The first implementation slices live in `comp.policy`. They expose
 `MaterialDescriptor`, `PolicyEffect`, `ScopedGrant`, `SelectionDecision`, and
-`DecisionLedger` as pre-validation vocabulary only. They do not expose
-`SelectedValidationContract`, receipt builders, projection gates, or replay
-authority.
+`DecisionLedger` as pre-validation vocabulary only. The next slice exposes
+`SelectedValidationContract` as compiler-facing input shape, not validation
+authority. These slices do not expose receipt builders, projection gates, or
+replay authority.
 
 Existing `CompilerProfile`, `DomainPack`, `RetrievalQueryPolicy`,
 reference-selection, resolver-task, and profile/schema selection-tier surfaces

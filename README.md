@@ -158,12 +158,13 @@ from comp.persistence import replay_public_projection
 
 `comp.policy`는 pre-validation policy boundary vocabulary를 노출한다. 이
 표면은 validation handoff 전 material, policy effect, scoped grant,
-selection decision, decision ledger를 설명하기 위한 것이며, validation
-authority, receipt authority, replay authority가 아니다.
+selection decision, decision ledger, selected validation contract를 설명하기
+위한 것이다. validation authority, receipt authority, replay authority가 아니다.
 
 ```python
 from comp.policy import MaterialDescriptor, PolicyEffect
 from comp.policy import ScopedGrant, SelectionDecision, DecisionLedger
+from comp.policy import SelectedValidationContract
 ```
 
 legacy pipeline runner, pass-pipeline module, compatibility facade는 active

@@ -358,6 +358,7 @@ comp.policy.PolicyEffect
 comp.policy.ScopedGrant
 comp.policy.SelectionDecision
 comp.policy.DecisionLedger
+comp.policy.SelectedValidationContract
 CompilerProfile
 DomainPack
 RetrievalQueryPolicy
@@ -369,12 +370,13 @@ replay_public_projection(...)
 ```
 
 `comp.policy.MaterialDescriptor`, `PolicyEffect`, `ScopedGrant`,
-`SelectionDecision`, and `DecisionLedger` are the first minimal vocabulary
-slices. They describe pre-validation material, policy effects, scoped pipeline
-access, selection status, and decision audit records. They do not validate
-claims, authorize projection, or replay receipts. A selected decision still
-requires a `validation_handoff` grant before it can be considered for compiler
-handoff, and that handoff remains pre-validation.
+`SelectionDecision`, `DecisionLedger`, and `SelectedValidationContract` are the
+first minimal vocabulary slices. They describe pre-validation material, policy
+effects, scoped pipeline access, selection status, decision audit records, and
+the compiler-facing contract shape. They do not validate claims, authorize
+projection, or replay receipts. A selected decision still requires a
+`validation_handoff` grant before it can be included in a selected validation
+contract, and that contract remains pre-validation.
 
 The other surfaces show the existing authority direction: profiles declare
 behavior, retrieval produces candidates, deterministic selectors bind
