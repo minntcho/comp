@@ -1,4 +1,5 @@
 import ast
+import tomllib
 from collections.abc import Iterable
 from dataclasses import dataclass
 from pathlib import Path
@@ -12,7 +13,42 @@ class ImportBoundaryRule:
     forbidden_imports: tuple[str, ...] = ()
 
 
+PACKAGE_BOUNDARY_ROLES = {
+    "comp": "top-level judgment facade",
+    "comp.cli": "outer command adapter",
+    "comp.compiler_tool": "compiler authority path",
+    "comp.explanation": "explanation-only graph exporter",
+    "comp.judgment": "judgment kernel",
+    "comp.persistence": "persistence replay path",
+    "comp.policy": "pre-validation policy vocabulary",
+    "comp.runtime": "scenario runtime adapter",
+    "comp.scenario_contracts": "scenario contract harness",
+    "comp.scenarios": "minimal scenario package namespace",
+    "comp.scenarios.synthetic": "synthetic scenario fixture adapter",
+    "comp.views": "render-only view layer",
+    "minchoagnt": "agent orchestration layer",
+}
+
+
 AUTHORITY_BOUNDARY_RULES = (
+    ImportBoundaryRule(
+        label="top-level judgment facade",
+        paths=(Path("comp/__init__.py"),),
+        forbidden_prefixes=(
+            "comp.cli",
+            "comp.compiler_tool",
+            "comp.explanation",
+            "comp.persistence",
+            "comp.policy",
+            "comp.runtime",
+            "comp.scenario_contracts",
+            "comp.scenarios",
+            "comp.views",
+            "comp.schema_labels",
+            "comp.user_messages",
+            "minchoagnt",
+        ),
+    ),
     ImportBoundaryRule(
         label="judgment kernel",
         paths=(Path("comp/judgment"),),
@@ -141,6 +177,37 @@ AUTHORITY_BOUNDARY_RULES = (
         ),
     ),
 )
+
+
+def test_top_level_comp_facade_has_machine_checked_boundary():
+    labels = {rule.label for rule in AUTHORITY_BOUNDARY_RULES}
+    assert "top-level judgment facade" in labels
+
+    contract = Path(
+        "docs/architecture/contracts/trust-kernel-extension-rings.md"
+    ).read_text(encoding="utf-8")
+
+    expected_lines = (
+        "comp top-level package must remain a judgment facade",
+        "comp must not import comp.compiler_tool",
+        "comp must not import comp.policy",
+        "Every packaged surface has an explicit boundary role",
+    )
+    for line in expected_lines:
+        assert line in contract
+
+
+def test_packaged_surfaces_have_explicit_boundary_roles_documented():
+    pyproject = tomllib.loads(Path("pyproject.toml").read_text(encoding="utf-8"))
+    packages = set(pyproject["tool"]["setuptools"]["packages"])
+
+    assert set(PACKAGE_BOUNDARY_ROLES) == packages
+
+    contract = Path(
+        "docs/architecture/contracts/trust-kernel-extension-rings.md"
+    ).read_text(encoding="utf-8")
+    for package, role in PACKAGE_BOUNDARY_ROLES.items():
+        assert f"{package}: {role}" in contract
 
 
 def test_authority_modules_do_not_import_presentation_or_explanation_layers():

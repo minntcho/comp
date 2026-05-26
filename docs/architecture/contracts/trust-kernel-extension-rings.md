@@ -2,7 +2,7 @@
 
 Status: active-contract
 Owner: trust-kernel
-Last checked against code: 2026-05-22
+Last checked against code: 2026-05-26
 Can block PRs: yes
 
 This document names the outer shape of the `comp` rebuild. The core is a small
@@ -282,6 +282,16 @@ The compiler/domain import boundary is consolidated in
 `compiler-domain-boundary.md`.
 
 ```text
+comp top-level package must remain a judgment facade
+comp must not import comp.cli
+comp must not import comp.compiler_tool
+comp must not import comp.persistence
+comp must not import comp.policy
+comp must not import comp.runtime
+comp must not import comp.scenario_contracts
+comp must not import comp.scenarios
+comp must not import minchoagnt
+
 comp.judgment must not import comp.compiler_tool
 comp.judgment must not import comp.persistence
 comp.judgment must not import comp.explanation
@@ -320,6 +330,24 @@ The proof graph exporter may read receipt, replay-report, and artifact-store
 types, but it must not call replay or public-output authorization. Renderers may
 format existing graph payloads, but they must not export graphs, replay
 projections, or authorize public rows.
+
+Every packaged surface has an explicit boundary role:
+
+```text
+comp: top-level judgment facade
+comp.cli: outer command adapter
+comp.compiler_tool: compiler authority path
+comp.explanation: explanation-only graph exporter
+comp.judgment: judgment kernel
+comp.persistence: persistence replay path
+comp.policy: pre-validation policy vocabulary
+comp.runtime: scenario runtime adapter
+comp.scenario_contracts: scenario contract harness
+comp.scenarios: minimal scenario package namespace
+comp.scenarios.synthetic: synthetic scenario fixture adapter
+comp.views: render-only view layer
+minchoagnt: agent orchestration layer
+```
 
 ## Review Rules
 
