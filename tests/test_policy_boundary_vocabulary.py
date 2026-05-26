@@ -580,6 +580,85 @@ def test_policy_assembly_builds_decision_ledger_from_subject_effects():
     assert contract.authorizes_public_projection is False
 
 
+def test_policy_assembly_builds_selected_contract_with_ledger():
+    from comp.policy import PolicyAssembly, PolicyAssemblySubject, PolicyEffect
+
+    effects = (
+        PolicyEffect(
+            effect_id="effect:select:plant",
+            effect_kind="select",
+            subject_id="material:plant",
+            basis="declared alias",
+        ),
+        PolicyEffect(
+            effect_id="effect:grant:plant:validation-handoff",
+            effect_kind="grant_scope",
+            subject_id="material:plant",
+            basis="declared alias selected",
+            scope="validation_handoff",
+        ),
+        PolicyEffect(
+            effect_id="effect:grant:plant:projection-candidate",
+            effect_kind="grant_scope",
+            subject_id="material:plant",
+            basis="eligible for later receipt consideration",
+            scope="projection_candidate",
+        ),
+        PolicyEffect(
+            effect_id="effect:select:fuel_used",
+            effect_kind="select",
+            subject_id="material:fuel_used",
+            basis="embedding score 0.96",
+        ),
+        PolicyEffect(
+            effect_id="effect:hold:fuel_used",
+            effect_kind="hold",
+            subject_id="material:fuel_used",
+            basis="unit evidence required",
+        ),
+    )
+
+    ledger, contract = PolicyAssembly(
+        policy_profile_id="profile:strict-public",
+    ).assemble_selected_validation_contract(
+        ledger_id="ledger:run-1",
+        contract_id="selected-contract:run-1",
+        contract_basis="assembly finalized validation handoff",
+        ledger_digest="digest:ledger-run-1",
+        effects=effects,
+        subjects=(
+            PolicyAssemblySubject(
+                decision_id="decision:plant->site",
+                subject_id="material:plant",
+                target_id="field:site",
+            ),
+            PolicyAssemblySubject(
+                decision_id="decision:fuel_used->amount",
+                subject_id="material:fuel_used",
+                target_id="field:amount",
+            ),
+        ),
+        ledger_meta=(("run_id", "run-1"),),
+        contract_meta=(("assembly_id", "assembly:run-1"),),
+    )
+
+    assert ledger.ledger_id == "ledger:run-1"
+    assert tuple(decision.status for decision in ledger.decisions) == (
+        "selected",
+        "held",
+    )
+    assert contract.contract_id == "selected-contract:run-1"
+    assert contract.policy_profile_id == "profile:strict-public"
+    assert contract.ledger_id == "ledger:run-1"
+    assert contract.ledger_digest == "digest:ledger-run-1"
+    assert contract.basis == "assembly finalized validation handoff"
+    assert contract.selected_decision_ids == ("decision:plant->site",)
+    assert contract.projection_candidate_decision_ids == ("decision:plant->site",)
+    assert contract.meta == (("assembly_id", "assembly:run-1"),)
+    assert contract.authorizes_public_projection is False
+    assert ledger.authorizes_public_projection is False
+
+
 def test_policy_assembly_rejects_unassembled_effects_and_duplicate_subjects():
     from comp.policy import PolicyAssembly, PolicyAssemblySubject, PolicyEffect
 

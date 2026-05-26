@@ -449,6 +449,37 @@ class PolicyAssembly:
             meta=tuple(meta),
         )
 
+    def assemble_selected_validation_contract(
+        self,
+        *,
+        ledger_id: str,
+        contract_id: str,
+        contract_basis: str,
+        subjects: tuple[PolicyAssemblySubject, ...],
+        effects: tuple[PolicyEffect, ...],
+        descriptors: tuple[MaterialDescriptor, ...] = (),
+        ledger_meta: tuple[tuple[str, Any], ...] = (),
+        contract_meta: tuple[tuple[str, Any], ...] = (),
+        ledger_digest: str | None = None,
+        contract_version: str = "policy-boundary-selected-validation-contract-v1",
+    ) -> tuple[DecisionLedger, SelectedValidationContract]:
+        ledger = self.assemble_ledger(
+            ledger_id=ledger_id,
+            subjects=subjects,
+            effects=effects,
+            descriptors=descriptors,
+            meta=ledger_meta,
+        )
+        contract = SelectedValidationContract.from_ledger(
+            contract_id=contract_id,
+            ledger=ledger,
+            basis=contract_basis,
+            ledger_digest=ledger_digest,
+            contract_version=contract_version,
+            meta=contract_meta,
+        )
+        return ledger, contract
+
     def _resolve_subject(
         self,
         subject: PolicyAssemblySubject,

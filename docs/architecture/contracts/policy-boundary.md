@@ -85,6 +85,10 @@ kernel invariants first and profile-specific composition rules second.
 output into a `DecisionLedger`. It preserves audit material; it does not
 validate claims, authorize projection, or replay receipt paths.
 
+`PolicyAssembly` may also build a matching `SelectedValidationContract` from the
+assembled ledger. This is a handoff-shaping convenience, not validation
+authority.
+
 `ScopedGrant` records which pipeline scope a subject may enter, under which
 basis and conditions. It is not a receipt, validation result, or replay proof.
 
@@ -200,8 +204,9 @@ The first implementation slices live in `comp.policy`. They expose
 `MaterialDescriptor`, `PolicyEffect`, `ConflictResolver`, `PolicyAssembly`,
 `ScopedGrant`, `SelectionDecision`, and `DecisionLedger` as pre-validation
 vocabulary only. `ConflictResolver` may compose effects into decisions and
-scoped grants, and `PolicyAssembly` may assemble a `DecisionLedger`, but neither
-validates claims or authorizes projection. The next slice exposes
+scoped grants, and `PolicyAssembly` may assemble a `DecisionLedger` and matching
+`SelectedValidationContract`, but neither validates claims or authorizes
+projection. The next slice exposes
 `SelectedValidationContract` as compiler-facing input shape, not validation
 authority. `comp.runtime.ValidationHandoff` bridges selected validation
 contracts into compiler-facing hypotheses without compiling, committing,

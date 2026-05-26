@@ -169,6 +169,10 @@ from comp.policy import ScopedGrant, SelectionDecision, DecisionLedger
 from comp.policy import SelectedValidationContract
 ```
 
+`PolicyAssembly` can assemble a `DecisionLedger` and matching
+`SelectedValidationContract` together, while keeping both artifacts
+pre-validation and non-authoritative.
+
 `comp.runtime.ValidationHandoff`는 selected validation contract를
 `InterpretationHypothesis`로 옮기는 얇은 runtime bridge다. contract에 포함된
 selected decision만 compiler-facing hypothesis로 넘길 수 있다. It has no
