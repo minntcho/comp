@@ -4,6 +4,9 @@ This note captures the current working shape for profile and schema selection in
 
 It does not freeze API names, class names, module layout, implementation order, or a final algorithm. It records the intended execution distinction between deterministic contract resolution, semantic candidate retrieval, and judgment-assisted selection.
 
+`docs/architecture/contracts/policy-boundary.md` defines the authority boundary
+that these selection strategies must obey.
+
 ## Core Idea
 
 Profile and schema selection should not treat every unresolved attribute the same way.

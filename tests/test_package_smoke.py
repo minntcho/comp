@@ -532,6 +532,34 @@ def test_document_governance_documents_smoke_enforcement():
     assert "index listing" in governance
 
 
+def test_policy_boundary_contract_keeps_policy_non_authoritative():
+    policy_boundary = Path(
+        "docs/architecture/contracts/policy-boundary.md"
+    ).read_text(encoding="utf-8")
+    selection_tiers = Path(
+        "docs/profile-schema-selection-resolution-tiers.md"
+    ).read_text(encoding="utf-8")
+
+    for line in (
+        "Policy may shape validation input. Policy may not validate.",
+        "It does not govern compiler validation, receipt authority, or replay authority.",
+        "A `ScopedGrant` is pipeline access, not trust authority.",
+        "`projection_candidate` means pre-authority eligibility for later receipt",
+        "PublicOutputReceipt",
+        "Kernel invariants are non-overridable.",
+        "No policy output validates a claim.",
+        "No scoped grant authorizes public projection.",
+        "No embedding or LLM output enters validation_handoff without selection basis.",
+        "ScopedGrant is not PublicOutputReceipt.",
+        "Capabilities may recommend. Policies may issue scoped access.",
+        "Not every term in this document is currently a public Python API.",
+    ):
+        assert line in policy_boundary
+
+    assert "docs/architecture/contracts/policy-boundary.md" in selection_tiers
+    assert "selection strategies must obey" in selection_tiers
+
+
 def test_governed_architecture_docs_have_valid_machine_readable_headers():
     for path in _governed_architecture_docs():
         header = _doc_header(path)
@@ -648,6 +676,12 @@ def test_architecture_docs_are_classified_by_governance_status():
             "yes",
             "2026-05-22",
         ),
+        "policy-boundary.md": (
+            "active-contract",
+            "trust-kernel",
+            "yes",
+            "2026-05-26",
+        ),
         "production-trust-spine-database.md": (
             "north-star",
             "persistence",
@@ -761,6 +795,7 @@ def test_docs_index_groups_architecture_docs_by_governance_authority():
     )
     assert "archive/architecture/active-surface-cutover.md" in docs_index
     assert "architecture/contracts/compiler-domain-boundary.md" in docs_index
+    assert "architecture/contracts/policy-boundary.md" in docs_index
     assert "architecture/contracts/friendly-authority-vocabulary.md" in docs_index
     assert "archive/architecture/legacy-archive-cutover-plan.md" in docs_index
     assert "archive/architecture/llm-orchestrated-compiler-tool-loop.md" in docs_index
