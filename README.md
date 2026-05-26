@@ -273,6 +273,10 @@ policy-assembled-trust-kernel
   policy-boundary를 넘지 않는 선에서 MaterialDescriptor, PolicyEffect,
   scoped grant, decision ledger, selected validation contract가 어떻게 조립될 수
   있는지 설명하는 implementation map이다.
+
+product-facade-observation
+  docs/architecture/maps/product-facade-observation.md describes product-shaped
+  facade observation outside comp; it does not make `comp.runtime` a production runtime.
 ```
 
 현재 policy 이행축은 broad framework를 한 번에 세우는 것이 아니다.

@@ -698,6 +698,45 @@ def test_policy_assembled_trust_kernel_map_tracks_growth_shape():
         assert line in policy_map
 
 
+def test_product_facade_observation_map_defines_lab_without_contracting_lifecycle():
+    product_map = Path(
+        "docs/architecture/maps/product-facade-observation.md"
+    ).read_text(encoding="utf-8")
+    readme = Path("README.md").read_text(encoding="utf-8")
+
+    for line in (
+        "Status: implementation-map",
+        "This map is observational, not prescriptive.",
+        "not an artifact lifecycle contract",
+        "comp.runtime is not production runtime",
+        "reference/conformance runtime surface",
+        "outside the `comp` package",
+        "first facade must be comp-backed",
+        "ceremony measurement, not independent authority reimplementation",
+        "submit(input)",
+        "publish(run_id)",
+        "audit(public_row_id)",
+        "canonical_fast_path",
+        "policy_preflight_path",
+        "artifact touch log",
+        "This shape is illustrative.",
+        "not a stable artifact registry or passport schema",
+        "no artifact registry yet",
+        "no Artifact Passport schema yet",
+        "no comp.contracts extraction yet",
+        "no native production authority engine yet",
+        "Fast path may skip policy preflight",
+        "must never skip compiler validation",
+        "receipt-gated projection",
+        "replay requirements when those states are claimed",
+        "Promotion to Artifact Lifecycle Boundary requires",
+    ):
+        assert line in product_map
+
+    assert "product-facade-observation.md" in readme
+    assert "does not make `comp.runtime` a production runtime" in readme
+
+
 def test_governed_architecture_docs_have_valid_machine_readable_headers():
     for path in _governed_architecture_docs():
         header = _doc_header(path)
@@ -809,6 +848,12 @@ def test_architecture_docs_are_classified_by_governance_status():
             "2026-05-20",
         ),
         "policy-assembled-trust-kernel.md": (
+            "implementation-map",
+            "trust-kernel",
+            "limited",
+            "2026-05-26",
+        ),
+        "product-facade-observation.md": (
             "implementation-map",
             "trust-kernel",
             "limited",
@@ -941,6 +986,7 @@ def test_docs_index_groups_architecture_docs_by_governance_authority():
     assert "architecture/contracts/compiler-domain-boundary.md" in docs_index
     assert "architecture/contracts/policy-boundary.md" in docs_index
     assert "architecture/maps/policy-assembled-trust-kernel.md" in docs_index
+    assert "architecture/maps/product-facade-observation.md" in docs_index
     assert "architecture/contracts/friendly-authority-vocabulary.md" in docs_index
     assert "archive/architecture/legacy-archive-cutover-plan.md" in docs_index
     assert "archive/architecture/llm-orchestrated-compiler-tool-loop.md" in docs_index
