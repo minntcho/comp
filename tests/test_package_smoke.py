@@ -560,6 +560,32 @@ def test_policy_boundary_contract_keeps_policy_non_authoritative():
     assert "selection strategies must obey" in selection_tiers
 
 
+def test_policy_assembled_trust_kernel_map_tracks_growth_shape():
+    policy_map = Path(
+        "docs/architecture/maps/policy-assembled-trust-kernel.md"
+    ).read_text(encoding="utf-8")
+
+    for line in (
+        "Status: implementation-map",
+        "The active authority contract remains",
+        "policy-boundary.md",
+        "The process kernel is fixed.",
+        "Policy assemblies are profile-specific.",
+        "Capability activation is artifact-conditioned.",
+        "Authority boundaries are invariant.",
+        "`SelectedValidationContract` freezes what the compiler is allowed to see",
+        "selected for validation != selected for projection",
+        "`ScopedGrant` is pipeline access, not trust authority.",
+        "`DecisionLedger` is the audit spine for policy assembly.",
+        "PublicOutputReceipt",
+        "Future policy work should connect to that direction instead of introducing a",
+        "parallel source of selection truth, validation truth, receipt truth, or",
+        "projection truth.",
+        "This map does not prescribe:",
+    ):
+        assert line in policy_map
+
+
 def test_governed_architecture_docs_have_valid_machine_readable_headers():
     for path in _governed_architecture_docs():
         header = _doc_header(path)
@@ -669,6 +695,12 @@ def test_architecture_docs_are_classified_by_governance_status():
             "trust-kernel",
             "limited",
             "2026-05-20",
+        ),
+        "policy-assembled-trust-kernel.md": (
+            "implementation-map",
+            "trust-kernel",
+            "limited",
+            "2026-05-26",
         ),
         "persistence-ledger-boundary.md": (
             "active-contract",
@@ -796,6 +828,7 @@ def test_docs_index_groups_architecture_docs_by_governance_authority():
     assert "archive/architecture/active-surface-cutover.md" in docs_index
     assert "architecture/contracts/compiler-domain-boundary.md" in docs_index
     assert "architecture/contracts/policy-boundary.md" in docs_index
+    assert "architecture/maps/policy-assembled-trust-kernel.md" in docs_index
     assert "architecture/contracts/friendly-authority-vocabulary.md" in docs_index
     assert "archive/architecture/legacy-archive-cutover-plan.md" in docs_index
     assert "archive/architecture/llm-orchestrated-compiler-tool-loop.md" in docs_index
