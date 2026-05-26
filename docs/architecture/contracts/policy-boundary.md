@@ -193,8 +193,10 @@ Not every term in this document is currently a public Python API. Until
 implemented, these terms are architectural contract vocabulary.
 
 The first implementation slices live in `comp.policy`. They expose
-`MaterialDescriptor`, `PolicyEffect`, `ScopedGrant`, `SelectionDecision`, and
-`DecisionLedger` as pre-validation vocabulary only. The next slice exposes
+`MaterialDescriptor`, `PolicyEffect`, `ConflictResolver`, `ScopedGrant`,
+`SelectionDecision`, and `DecisionLedger` as pre-validation vocabulary only.
+`ConflictResolver` may compose effects into decisions and scoped grants, but it
+does not validate claims or authorize projection. The next slice exposes
 `SelectedValidationContract` as compiler-facing input shape, not validation
 authority. `comp.runtime.ValidationHandoff` bridges selected validation
 contracts into compiler-facing hypotheses without compiling, committing,
