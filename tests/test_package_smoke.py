@@ -390,6 +390,35 @@ def test_readme_tracks_policy_boundary_vocabulary_surface():
     assert "replay authority가 아니다" in readme
 
 
+def test_readme_routes_new_work_through_current_architecture_entrypoints():
+    readme = Path("README.md").read_text(encoding="utf-8")
+
+    for entrypoint in (
+        "docs/index.md",
+        "docs/architecture/document-governance.md",
+        "docs/architecture/contracts/policy-boundary.md",
+        "docs/architecture/maps/policy-assembled-trust-kernel.md",
+    ):
+        assert entrypoint in readme
+
+    assert readme.index("docs/index.md") < readme.index(
+        "docs/architecture/document-governance.md"
+    )
+    assert readme.index(
+        "docs/architecture/contracts/policy-boundary.md"
+    ) < readme.index("docs/architecture/maps/policy-assembled-trust-kernel.md")
+
+    for guardrail in (
+        "작업 시작 전에 이 순서로 현재 authority를 확인한다.",
+        "policy-boundary",
+        "policy-assembled-trust-kernel",
+        "새 policy work는 `comp.policy`처럼 작은 pre-validation vocabulary "
+        "slice에서 시작한다.",
+        "archive 문서는 current guidance가 아니다.",
+    ):
+        assert guardrail in readme
+
+
 def test_persistence_exports_mysql_backend_surface():
     from comp.persistence import (
         MySQLArtifactStore,

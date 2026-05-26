@@ -214,31 +214,62 @@ artifact를 제출할 수 있지만, commit receipt를 만들 권한은 없다.
 
 ## 문서 읽는 순서
 
-현재 active architecture 문서는 여기서 시작한다.
+작업 시작 전에 이 순서로 현재 authority를 확인한다.
 
 ```text
 docs/index.md
-docs/architecture/north-stars/retrieval-fabric-north-star.md
-docs/architecture/maps/obligation-kernel-working-theory.md
-docs/archive/architecture/llm-orchestrated-compiler-tool-loop.md
-docs/architecture/contracts/memory-assisted-compiler-loop.md
+docs/architecture/document-governance.md
+docs/architecture/contracts/policy-boundary.md
+docs/architecture/maps/policy-assembled-trust-kernel.md
 ```
 
 역할은 대략 이렇다.
 
 ```text
-retrieval-fabric-north-star
-  embedding / retrieval / LLM resolver / reference DB의 장기 방향을 고정한다.
+docs/index.md
+  현재 architecture 문서의 navigation source of truth다. 새 작업은 먼저
+  Active Contracts, Implementation Maps, North Stars 중 어떤 면을 건드리는지
+  여기서 찾는다.
 
-obligation-kernel-working-theory
-  현재 구현 slice의 세부 working theory를 담는다.
+document-governance
+  어떤 문서가 PR을 막을 수 있는지, status와 위치가 어떻게 맞아야 하는지,
+  docs/index.md와 문서 header가 각각 어떤 authority를 갖는지 정의한다.
 
-llm-orchestrated-compiler-tool-loop
-  LLM이 compiler diagnostic과 obligation을 어떻게 다루는지 설명한다.
+policy-boundary
+  pre-validation policy가 할 수 있는 일과 할 수 없는 일을 고정하는 active
+  contract다. Policy may shape validation input. Policy may not validate.
+  Policy may not authorize public projection. Policy may not replace replay.
 
-memory-assisted-compiler-loop
-  minchoagnt memory / skill loop가 obligation resolution을 어떻게 보조하는지 설명한다.
+policy-assembled-trust-kernel
+  policy-boundary를 넘지 않는 선에서 MaterialDescriptor, PolicyEffect,
+  scoped grant, decision ledger, selected validation contract가 어떻게 조립될 수
+  있는지 설명하는 implementation map이다.
 ```
+
+현재 policy 이행축은 broad framework를 한 번에 세우는 것이 아니다.
+새 policy work는 `comp.policy`처럼 작은 pre-validation vocabulary slice에서 시작한다.
+그 slice는 validation handoff 전 material과 policy effect를 설명할 수 있지만,
+compiler validation, receipt authority, replay authority를 대신하지 않는다.
+
+작업 영역별로 추가 확인할 문서는 `docs/index.md`에서 찾는다.
+
+```text
+compiler / receipt authority
+  docs/architecture/contracts/compiler-domain-boundary.md
+  docs/architecture/contracts/trust-kernel-extension-rings.md
+  docs/api/public-output-gate.md
+
+persistence / replay material
+  docs/architecture/contracts/artifact-envelope-builder.md
+  docs/architecture/contracts/persistence-ledger-boundary.md
+
+agent / LLM assistance
+  docs/architecture/contracts/memory-assisted-compiler-loop.md
+  docs/architecture/north-stars/llm-worker-orchestration.md
+```
+
+archive 문서는 current guidance가 아니다. 과거 판단, migration context, 왜 어떤
+길을 버렸는지 확인할 때만 사용한다.
 
 ## 재구축 규칙
 
