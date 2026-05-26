@@ -115,6 +115,27 @@ downstream-candidate
 This metadata is not a runtime authority source. It is a maintenance signal for
 reviewing whether a scenario still belongs in the `comp` repo.
 
+`docs/extensions/downstream-registry.json` also records the outer boundary as a
+Machine-readable boundary policy:
+
+```text
+comp_owns
+  authority contracts, receipts, projection gates, replay validation, and
+  minimal kernel e2e scenarios.
+
+downstream_owns
+  large domain workflows, product/platform fixtures, importers, UI/viewer flows,
+  and supplier workflows.
+
+comp_must_not
+  clone downstream repositories for PR CI, use scenario-pack git submodules,
+  import downstream scenario code in production, or require large downstream
+  scenarios before v1.
+
+cutover_sequence
+  copy_or_reconstruct -> external_run -> parallel_validation -> internal_shrink_or_remove
+```
+
 `downstream-candidate` does not mean immediate deletion. Candidate scenarios
 should move through this sequence:
 
