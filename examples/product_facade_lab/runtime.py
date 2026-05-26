@@ -14,15 +14,28 @@ from comp.compiler_tool import (
     ValidationReport,
     prepare_commit,
 )
+from comp.policy import (
+    DecisionLedger,
+    MaterialDescriptor,
+    PolicyAssembly,
+    PolicyAssemblySubject,
+    PolicyEffect,
+    SelectedValidationContract,
+)
 from comp.persistence import (
     InMemoryArtifactStore,
     ProjectionReplayReport,
     build_receipt_envelope_set,
     replay_public_projection,
 )
-from comp.runtime import materialize_compiler_run_artifacts
+from comp.runtime import (
+    ValidationHandoff,
+    ValidationHandoffClaim,
+    materialize_compiler_run_artifacts,
+)
 
 ProductRunStatus = Literal["publishable", "needs_evidence", "blocked"]
+ProductRunFlow = Literal["canonical_fast_path", "policy_preflight_path"]
 
 
 @dataclass(frozen=True)
@@ -48,6 +61,23 @@ class ProductInput:
     witnesses: tuple[ProductWitness, ...]
     known_fields: frozenset[str]
     allowed_units: frozenset[str] = frozenset()
+
+
+@dataclass(frozen=True)
+class ProductPolicyPreflightInput:
+    run_id: str
+    subject_id: str
+    public_row_id: str
+    projection_id: str
+    projection_fields: tuple[str, ...]
+    material_id: str
+    source_ref: str
+    values: Mapping[str, Any]
+    witnesses: tuple[ProductWitness, ...]
+    known_fields: frozenset[str]
+    allowed_units: frozenset[str] = frozenset()
+    policy_profile_id: str = "profile:product-facade-lab"
+    material_kind: str = "external_material"
 
 
 @dataclass(frozen=True)
@@ -101,9 +131,10 @@ class ProductAudit:
 
 @dataclass
 class _RunRecord:
-    product_input: ProductInput
+    product_input: ProductInput | ProductPolicyPreflightInput
     projection: PublicOutputSpec
     report: ValidationReport
+    flow: ProductRunFlow
     preparation: CommitPreparation | None = None
     public_row: dict[str, Any] | None = None
 
@@ -129,6 +160,7 @@ class ProductFacadeRuntime:
             product_input=product_input,
             projection=projection,
             report=report,
+            flow="canonical_fast_path",
         )
         status = _product_status(report)
         return ProductRun(
@@ -137,6 +169,39 @@ class ProductFacadeRuntime:
             status=status,
             required_actions=_required_actions(report),
             touch_log=_submit_touch_log(product_input),
+        )
+
+    def submit_policy_preflight(
+        self,
+        product_input: ProductPolicyPreflightInput,
+    ) -> ProductRun:
+        ledger, contract, handoff = _policy_preflight_handoff(product_input)
+        hypothesis = handoff.to_interpretation_hypothesis()
+        report = CompilerTool(
+            known_fields=product_input.known_fields,
+            allowed_units=product_input.allowed_units,
+        ).compile_interpretation(hypothesis)
+        projection = PublicOutputSpec(
+            product_input.projection_id,
+            product_input.projection_fields,
+        )
+        self._runs[product_input.run_id] = _RunRecord(
+            product_input=product_input,
+            projection=projection,
+            report=report,
+            flow="policy_preflight_path",
+        )
+        status = _product_status(report)
+        return ProductRun(
+            run_id=product_input.run_id,
+            public_row_id=product_input.public_row_id,
+            status=status,
+            required_actions=_required_actions(report),
+            touch_log=_policy_preflight_touch_log(
+                product_input,
+                ledger_id=ledger.ledger_id,
+                contract_id=contract.contract_id,
+            ),
         )
 
     def publish(self, run_id: str) -> ProductPublicRow:
@@ -162,7 +227,7 @@ class ProductFacadeRuntime:
             run_id=run_id,
             public_row_id=record.product_input.public_row_id,
             public_row=public_row,
-            touch_log=_publish_touch_log(),
+            touch_log=_publish_touch_log(record.flow),
         )
 
     def audit(self, public_row_id: str) -> ProductAudit:
@@ -192,21 +257,12 @@ class ProductFacadeRuntime:
             public_row_id=public_row_id,
             replay_report=replay_report,
             artifact_count=len(envelopes),
-            touch_log=_audit_touch_log(),
+            touch_log=_audit_touch_log(record.flow),
         )
 
 
 def _canonical_hypothesis(product_input: ProductInput) -> InterpretationHypothesis:
-    witnesses = tuple(
-        EvidenceRef(
-            witness_id=witness.witness_id,
-            field=witness.field,
-            source=witness.source,
-            span=witness.span,
-            text=witness.text,
-        )
-        for witness in product_input.witnesses
-    )
+    witnesses = _evidence_refs(product_input.witnesses)
     return InterpretationHypothesis(
         hypothesis_id=product_input.run_id,
         subject_id=product_input.subject_id,
@@ -221,6 +277,102 @@ def _canonical_hypothesis(product_input: ProductInput) -> InterpretationHypothes
         ),
         witnesses=witnesses,
     )
+
+
+def _policy_preflight_handoff(
+    product_input: ProductPolicyPreflightInput,
+) -> tuple[DecisionLedger, SelectedValidationContract, ValidationHandoff]:
+    descriptor = MaterialDescriptor(
+        material_id=product_input.material_id,
+        material_kind=product_input.material_kind,
+        field_knownness="partially_known",
+        risk_tier="product_preflight",
+        projection_sensitivity="public_candidate",
+        evidence_availability="available",
+        source_ref=product_input.source_ref,
+        attributes=(("observed_fields", tuple(product_input.values.keys())),),
+    )
+    subjects = tuple(
+        PolicyAssemblySubject(
+            decision_id=_policy_decision_id(product_input.run_id, field),
+            subject_id=_policy_subject_id(product_input.material_id, field),
+            target_id=f"field:{field}",
+        )
+        for field in product_input.values
+    )
+    effects = tuple(
+        effect
+        for field in product_input.values
+        for effect in (
+            PolicyEffect(
+                effect_id=f"effect:{product_input.run_id}:{field}:select",
+                effect_kind="select",
+                subject_id=_policy_subject_id(product_input.material_id, field),
+                basis="product facade policy preflight selected field",
+            ),
+            PolicyEffect(
+                effect_id=f"effect:{product_input.run_id}:{field}:handoff",
+                effect_kind="grant_scope",
+                subject_id=_policy_subject_id(product_input.material_id, field),
+                basis="selected external material may enter validation handoff",
+                scope="validation_handoff",
+            ),
+        )
+    )
+    ledger, contract = PolicyAssembly(
+        policy_profile_id=product_input.policy_profile_id,
+    ).assemble_selected_validation_contract(
+        ledger_id=f"ledger:{product_input.run_id}",
+        contract_id=f"selected-contract:{product_input.run_id}",
+        contract_basis="product facade policy preflight finalized validation handoff",
+        descriptors=(descriptor,),
+        effects=effects,
+        subjects=subjects,
+        ledger_meta=(("run_id", product_input.run_id),),
+        contract_meta=(("lab_flow", "policy_preflight_path"),),
+    )
+    handoff = ValidationHandoff(
+        handoff_id=f"handoff:{product_input.run_id}",
+        contract=contract,
+        hypothesis_id=f"hypothesis:{product_input.run_id}",
+        subject_id=product_input.subject_id,
+        claims=tuple(
+            ValidationHandoffClaim(
+                decision_id=_policy_decision_id(product_input.run_id, field),
+                claim=ClaimCandidate(
+                    field=field,
+                    value=value,
+                    witness_id=f"witness:{field}",
+                    origin="product_facade_policy_preflight",
+                ),
+            )
+            for field, value in product_input.values.items()
+        ),
+        witnesses=_evidence_refs(product_input.witnesses),
+        meta=(("material_id", product_input.material_id),),
+    )
+    return ledger, contract, handoff
+
+
+def _evidence_refs(witnesses: tuple[ProductWitness, ...]) -> tuple[EvidenceRef, ...]:
+    return tuple(
+        EvidenceRef(
+            witness_id=witness.witness_id,
+            field=witness.field,
+            source=witness.source,
+            span=witness.span,
+            text=witness.text,
+        )
+        for witness in witnesses
+    )
+
+
+def _policy_subject_id(material_id: str, field: str) -> str:
+    return f"{material_id}:{field}"
+
+
+def _policy_decision_id(run_id: str, field: str) -> str:
+    return f"decision:{run_id}:{field}"
 
 
 def _product_status(report: ValidationReport) -> ProductRunStatus:
@@ -264,9 +416,56 @@ def _submit_touch_log(product_input: ProductInput) -> ArtifactTouchLog:
     )
 
 
-def _publish_touch_log() -> ArtifactTouchLog:
+def _policy_preflight_touch_log(
+    product_input: ProductPolicyPreflightInput,
+    *,
+    ledger_id: str,
+    contract_id: str,
+) -> ArtifactTouchLog:
     return ArtifactTouchLog(
-        flow="canonical_fast_path",
+        flow="policy_preflight_path",
+        operation="submit",
+        sync_required=(
+            "MaterialDescriptor",
+            "PolicyEffect",
+            "PolicyAssembly",
+            "DecisionLedger",
+            "SelectedValidationContract",
+            "ValidationHandoff",
+            "InterpretationHypothesis",
+            "ValidationReport",
+        ),
+        sync_required_if_publishing=("PublicOutputReceipt",),
+        deferred=("ArtifactEnvelope", "ProjectionReplayReport"),
+        product_only=("ProductPolicyPreflightInput",),
+        notes=(
+            "Current comp.policy assembly creates DecisionLedger synchronously "
+            "before SelectedValidationContract.",
+            "Policy preflight shapes compiler-facing input but does not validate "
+            "claims or authorize projection.",
+            f"Ledger: {ledger_id}",
+            f"Contract: {contract_id}",
+            f"Material: {product_input.material_id}",
+        ),
+    )
+
+
+def _publish_touch_log(flow: ProductRunFlow) -> ArtifactTouchLog:
+    not_used = (
+        ("DecisionLedger", "SelectedValidationContract", "ValidationHandoff")
+        if flow == "canonical_fast_path"
+        else ()
+    )
+    notes = (
+        (
+            "Policy preflight artifacts were consumed during submit; publish "
+            "still depends on receipt-gated projection.",
+        )
+        if flow == "policy_preflight_path"
+        else ()
+    )
+    return ArtifactTouchLog(
+        flow=flow,
         operation="publish",
         sync_required=(
             "ValidationReport",
@@ -276,17 +475,14 @@ def _publish_touch_log() -> ArtifactTouchLog:
             "PublicOutputSpec",
         ),
         deferred=("ArtifactEnvelope", "ProjectionReplayReport"),
-        not_used=(
-            "DecisionLedger",
-            "SelectedValidationContract",
-            "ValidationHandoff",
-        ),
+        not_used=not_used,
+        notes=notes,
     )
 
 
-def _audit_touch_log() -> ArtifactTouchLog:
+def _audit_touch_log(flow: ProductRunFlow) -> ArtifactTouchLog:
     return ArtifactTouchLog(
-        flow="canonical_fast_path",
+        flow=flow,
         operation="audit",
         sync_required=("ArtifactEnvelope", "ProjectionReplayReport"),
         not_used=("ProofGraph",),
@@ -298,6 +494,7 @@ __all__ = [
     "ProductAudit",
     "ProductFacadeRuntime",
     "ProductInput",
+    "ProductPolicyPreflightInput",
     "ProductPublicRow",
     "ProductRun",
     "ProductWitness",

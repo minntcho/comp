@@ -130,6 +130,12 @@ What is the minimum selected contract needed for handoff?
 When is DecisionLedger useful audit material instead of submit-path ceremony?
 ```
 
+The first comp-backed lab must record whether current `comp.policy` assembly
+creates `DecisionLedger` synchronously before `SelectedValidationContract`. If it
+does, that is an observation about the present reference surface, not a final
+claim that every production-shaped preflight path must make the full ledger
+synchronous.
+
 ### publish_path
 
 Working expectation:
