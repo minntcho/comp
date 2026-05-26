@@ -349,6 +349,28 @@ comp.views: render-only view layer
 minchoagnt: agent orchestration layer
 ```
 
+Every packaged surface has a machine-checked import snapshot.
+
+```text
+comp -> comp.judgment
+comp.cli -> comp.scenario_contracts
+comp.compiler_tool -> comp.judgment
+comp.explanation -> comp.judgment, comp.persistence, comp.views
+comp.judgment -> (none)
+comp.persistence -> comp.judgment
+comp.policy -> (none)
+comp.runtime -> comp.compiler_tool, comp.persistence, comp.scenario_contracts
+comp.scenario_contracts -> comp.judgment, comp.persistence, comp.runtime
+comp.scenarios -> (none)
+comp.scenarios.synthetic -> comp.compiler_tool, comp.runtime
+comp.views -> comp, comp.compiler_tool
+minchoagnt -> comp.compiler_tool, comp.judgment
+```
+
+If a new package import appears, the PR should explain whether the package is
+moving closer to authority, farther from authority, or merely consuming a stable
+public surface. Update this snapshot in the same PR so drift is reviewable.
+
 ## Review Rules
 
 Use these rules when reviewing PRs:
