@@ -341,6 +341,137 @@ def test_selected_validation_contract_rejects_authority_shaped_scopes():
         )
 
 
+def test_conflict_resolver_holds_selected_candidate_when_restricted_by_policy():
+    from comp.policy import ConflictResolver, PolicyEffect
+
+    resolver = ConflictResolver()
+    decision = resolver.resolve_decision(
+        decision_id="decision:fuel_used->amount",
+        subject_id="material:fuel_used",
+        target_id="field:amount",
+        effects=(
+            PolicyEffect(
+                effect_id="effect:select:fuel_used",
+                effect_kind="select",
+                subject_id="material:fuel_used",
+                basis="embedding score 0.96",
+                scope="validation_handoff",
+            ),
+            PolicyEffect(
+                effect_id="effect:grant:fuel_used:validation-handoff",
+                effect_kind="grant_scope",
+                subject_id="material:fuel_used",
+                basis="candidate passed selection threshold",
+                scope="validation_handoff",
+            ),
+            PolicyEffect(
+                effect_id="effect:hold:fuel_used",
+                effect_kind="hold",
+                subject_id="material:fuel_used",
+                basis="unit evidence required",
+                reason="missing unit witness",
+            ),
+            PolicyEffect(
+                effect_id="effect:restrict:fuel_used:validation-handoff",
+                effect_kind="restrict_scope",
+                subject_id="material:fuel_used",
+                basis="evidence required before compiler handoff",
+                scope="validation_handoff",
+            ),
+        ),
+    )
+
+    assert decision.status == "held"
+    assert decision.basis == "unit evidence required"
+    assert decision.target_id == "field:amount"
+    assert decision.grants == ()
+    assert decision.denied_scopes == ("validation_handoff",)
+    assert decision.allows_scope("validation_handoff") is False
+    assert decision.authorizes_public_projection is False
+
+
+def test_conflict_resolver_turns_scope_grants_into_non_authority_grants():
+    from comp.policy import ConflictResolver, PolicyEffect
+
+    decision = ConflictResolver().resolve_decision(
+        decision_id="decision:plant->site",
+        subject_id="material:plant",
+        target_id="field:site",
+        effects=(
+            PolicyEffect(
+                effect_id="effect:select:plant",
+                effect_kind="select",
+                subject_id="material:plant",
+                basis="declared alias",
+            ),
+            PolicyEffect(
+                effect_id="effect:grant:plant:validation-handoff",
+                effect_kind="grant_scope",
+                subject_id="material:plant",
+                basis="declared alias selected",
+                scope="validation_handoff",
+                payload=(("retention", "validation_audit"),),
+            ),
+            PolicyEffect(
+                effect_id="effect:grant:plant:projection-candidate",
+                effect_kind="grant_scope",
+                subject_id="material:plant",
+                basis="eligible for later receipt consideration",
+                scope="projection_candidate",
+            ),
+        ),
+    )
+
+    assert decision.status == "selected"
+    assert decision.basis == "declared alias"
+    assert tuple(grant.scope for grant in decision.grants) == (
+        "validation_handoff",
+        "projection_candidate",
+    )
+    assert decision.grants[0].grant_id == "grant:decision:plant->site:validation_handoff"
+    assert decision.grants[0].subject_id == "decision:plant->site"
+    assert decision.grants[0].retention == "validation_audit"
+    assert decision.allows_scope("validation_handoff") is True
+    assert decision.allows_scope("projection_candidate") is True
+    assert decision.authorizes_public_projection is False
+    assert all(grant.authorizes_public_projection is False for grant in decision.grants)
+
+
+def test_conflict_resolver_rejects_authority_shaped_or_cross_subject_resolution():
+    from comp.policy import ConflictResolver, PolicyEffect
+
+    resolver = ConflictResolver()
+
+    with pytest.raises(ValueError, match="no selection status effect"):
+        resolver.resolve_decision(
+            decision_id="decision:fuel_used->amount",
+            subject_id="material:fuel_used",
+            effects=(
+                PolicyEffect(
+                    effect_id="effect:grant:fuel_used:validation-handoff",
+                    effect_kind="grant_scope",
+                    subject_id="material:fuel_used",
+                    basis="grant without status",
+                    scope="validation_handoff",
+                ),
+            ),
+        )
+
+    with pytest.raises(ValueError, match="effect subject mismatch"):
+        resolver.resolve_decision(
+            decision_id="decision:fuel_used->amount",
+            subject_id="material:fuel_used",
+            effects=(
+                PolicyEffect(
+                    effect_id="effect:select:other",
+                    effect_kind="select",
+                    subject_id="material:other",
+                    basis="wrong subject",
+                ),
+            ),
+        )
+
+
 def test_policy_package_does_not_expose_projection_or_replay_authority():
     import comp.policy as policy
 

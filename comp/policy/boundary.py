@@ -61,6 +61,13 @@ SELECTION_STATUSES = frozenset(("selected", "proposed", "held", "rejected"))
 
 _SCOPED_EFFECT_KINDS = frozenset(("grant_scope", "restrict_scope"))
 _VALIDATION_CONTRACT_SCOPES = frozenset(("validation_context", "validation_handoff"))
+_STATUS_EFFECT_TO_STATUS = {
+    "select": "selected",
+    "propose": "proposed",
+    "hold": "held",
+    "reject": "rejected",
+}
+_STATUS_EFFECT_PRIORITY = ("reject", "hold", "select", "propose")
 
 
 @dataclass(frozen=True, slots=True)
@@ -305,6 +312,82 @@ class SelectedValidationContract:
         return False
 
 
+@dataclass(frozen=True, slots=True)
+class ConflictResolver:
+    status_priority: tuple[PolicyEffectKind, ...] = _STATUS_EFFECT_PRIORITY
+
+    def __post_init__(self) -> None:
+        for effect_kind in self.status_priority:
+            if effect_kind not in _STATUS_EFFECT_TO_STATUS:
+                raise ValueError(f"unknown status priority effect kind: {effect_kind}")
+        object.__setattr__(self, "status_priority", tuple(self.status_priority))
+
+    def resolve_decision(
+        self,
+        *,
+        decision_id: str,
+        subject_id: str,
+        effects: tuple[PolicyEffect, ...],
+        target_id: str | None = None,
+        retention: str = "decision_audit",
+    ) -> SelectionDecision:
+        _require_non_empty("decision_id", decision_id)
+        _require_non_empty("subject_id", subject_id)
+        effect_tuple = tuple(effects)
+        for effect in effect_tuple:
+            if effect.subject_id != subject_id:
+                raise ValueError(
+                    "effect subject mismatch: "
+                    f"{effect.effect_id} has {effect.subject_id}, expected {subject_id}"
+                )
+
+        winning_status_effect = self._winning_status_effect(effect_tuple)
+        denied_scopes = _unique_scopes(
+            effect.scope
+            for effect in effect_tuple
+            if effect.effect_kind == "restrict_scope"
+        )
+        grants = tuple(
+            ScopedGrant(
+                grant_id=f"grant:{decision_id}:{effect.scope}",
+                subject_id=decision_id,
+                scope=effect.scope,
+                basis=effect.basis,
+                conditions=effect.payload,
+                retention=_payload_value(effect, "retention", retention),
+            )
+            for effect in effect_tuple
+            if effect.effect_kind == "grant_scope"
+            and effect.scope is not None
+            and effect.scope not in denied_scopes
+        )
+
+        return SelectionDecision(
+            decision_id=decision_id,
+            subject_id=subject_id,
+            status=_STATUS_EFFECT_TO_STATUS[winning_status_effect.effect_kind],
+            basis=winning_status_effect.basis,
+            target_id=target_id,
+            grants=grants,
+            denied_scopes=denied_scopes,
+            retention=_retention_from_effects(effect_tuple, retention),
+        )
+
+    def _winning_status_effect(
+        self,
+        effects: tuple[PolicyEffect, ...],
+    ) -> PolicyEffect:
+        for effect_kind in self.status_priority:
+            for effect in effects:
+                if effect.effect_kind == effect_kind:
+                    return effect
+        raise ValueError("no selection status effect")
+
+    @property
+    def authorizes_public_projection(self) -> bool:
+        return False
+
+
 def _require_non_empty(field_name: str, value: str) -> None:
     if not value:
         raise ValueError(f"{field_name} is required.")
@@ -315,10 +398,36 @@ def _require_unique(error_label: str, values: tuple[str, ...]) -> None:
         raise ValueError(error_label)
 
 
+def _unique_scopes(scopes) -> tuple[PipelineScope, ...]:
+    result = []
+    for scope in scopes:
+        if scope is not None and scope not in result:
+            result.append(scope)
+    return tuple(result)
+
+
+def _payload_value(effect: PolicyEffect, key: str, default):
+    for item_key, value in effect.payload:
+        if item_key == key:
+            return value
+    return default
+
+
+def _retention_from_effects(
+    effects: tuple[PolicyEffect, ...],
+    default: str,
+) -> str:
+    for effect in effects:
+        if effect.effect_kind == "set_retention":
+            return _payload_value(effect, "retention", effect.basis)
+    return default
+
+
 __all__ = [
     "PIPELINE_SCOPES",
     "POLICY_EFFECT_KINDS",
     "SELECTION_STATUSES",
+    "ConflictResolver",
     "DecisionLedger",
     "MaterialDescriptor",
     "PipelineScope",

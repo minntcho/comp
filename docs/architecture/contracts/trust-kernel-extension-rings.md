@@ -359,7 +359,7 @@ comp.explanation -> comp.judgment, comp.persistence, comp.views
 comp.judgment -> (none)
 comp.persistence -> comp.judgment
 comp.policy -> (none)
-comp.runtime -> comp.compiler_tool, comp.persistence, comp.scenario_contracts
+comp.runtime -> comp.compiler_tool, comp.persistence, comp.policy, comp.scenario_contracts
 comp.scenario_contracts -> comp.judgment, comp.persistence, comp.runtime
 comp.scenarios -> (none)
 comp.scenarios.synthetic -> comp.compiler_tool, comp.runtime

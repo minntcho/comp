@@ -41,6 +41,7 @@ EXPECTED_PACKAGE_IMPORTS = {
     "comp.runtime": (
         "comp.compiler_tool",
         "comp.persistence",
+        "comp.policy",
         "comp.scenario_contracts",
     ),
     "comp.scenario_contracts": (

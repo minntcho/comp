@@ -293,6 +293,9 @@ The assembled architecture should keep these roles separate:
 PolicyEffect
   Decision material.
 
+ConflictResolver
+  Composition step from effects to decisions and scoped grants.
+
 ScopedGrant
   Pipeline access.
 
@@ -332,7 +335,7 @@ Slice 2: Descriptor and effect vocabulary
   Introduce minimal MaterialDescriptor and PolicyEffect shapes where code needs
   them. Keep outputs non-authoritative.
 
-Slice 3: Selection decision, scoped grant, and ledger
+Slice 3: Conflict resolver, selection decision, scoped grant, and ledger
   Record selected/proposed/held/rejected outcomes with pipeline scopes and
   decision basis.
 
@@ -358,6 +361,7 @@ The current codebase already has precursor surfaces:
 ```text
 comp.policy.MaterialDescriptor
 comp.policy.PolicyEffect
+comp.policy.ConflictResolver
 comp.policy.ScopedGrant
 comp.policy.SelectionDecision
 comp.policy.DecisionLedger
@@ -373,11 +377,12 @@ PublicOutputReceipt
 replay_public_projection(...)
 ```
 
-`comp.policy.MaterialDescriptor`, `PolicyEffect`, `ScopedGrant`,
-`SelectionDecision`, `DecisionLedger`, and `SelectedValidationContract` are the
-first minimal vocabulary slices. They describe pre-validation material, policy
-effects, scoped pipeline access, selection status, decision audit records, and
-the compiler-facing contract shape. They do not validate claims, authorize
+`comp.policy.MaterialDescriptor`, `PolicyEffect`, `ConflictResolver`,
+`ScopedGrant`, `SelectionDecision`, `DecisionLedger`, and
+`SelectedValidationContract` are the first minimal vocabulary slices. They
+describe pre-validation material, policy effects, effect composition, scoped
+pipeline access, selection status, decision audit records, and the
+compiler-facing contract shape. They do not validate claims, authorize
 projection, or replay receipts. A selected decision still requires a
 `validation_handoff` grant before it can be included in a selected validation
 contract, and that contract remains pre-validation.

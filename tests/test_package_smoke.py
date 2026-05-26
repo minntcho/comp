@@ -382,6 +382,7 @@ def test_readme_tracks_policy_boundary_vocabulary_surface():
     assert "pre-validation policy boundary vocabulary" in readme
     assert "MaterialDescriptor" in readme
     assert "PolicyEffect" in readme
+    assert "ConflictResolver" in readme
     assert "ScopedGrant" in readme
     assert "SelectionDecision" in readme
     assert "DecisionLedger" in readme
@@ -609,7 +610,8 @@ def test_policy_boundary_contract_keeps_policy_non_authoritative():
         "Capabilities may recommend. Policies may issue scoped access.",
         "Not every term in this document is currently a public Python API.",
         "The first implementation slices live in `comp.policy`.",
-        "`MaterialDescriptor`, `PolicyEffect`, `ScopedGrant`, `SelectionDecision`, and",
+        "`MaterialDescriptor`, `PolicyEffect`, `ConflictResolver`, `ScopedGrant`,",
+        "`ConflictResolver` may compose effects into decisions and scoped grants",
         "`SelectedValidationContract` as compiler-facing input shape, not validation",
         "`comp.runtime.ValidationHandoff` bridges selected validation",
     ):
@@ -635,6 +637,7 @@ def test_policy_assembled_trust_kernel_map_tracks_growth_shape():
         "`SelectedValidationContract` freezes what the compiler is allowed to see",
         "selected for validation != selected for projection",
         "`ScopedGrant` is pipeline access, not trust authority.",
+        "Composition step from effects to decisions and scoped grants.",
         "`DecisionLedger` is the audit spine for policy assembly.",
         "PublicOutputReceipt",
         "Runtime bridge from selected contract to compiler input.",
@@ -644,8 +647,8 @@ def test_policy_assembled_trust_kernel_map_tracks_growth_shape():
         "parallel source of selection truth, validation truth, receipt truth, or",
         "projection truth.",
         "This map does not prescribe:",
-        "`comp.policy.MaterialDescriptor`, `PolicyEffect`, `ScopedGrant`,",
-        "`SelectionDecision`, `DecisionLedger`, and `SelectedValidationContract` are the",
+        "`comp.policy.MaterialDescriptor`, `PolicyEffect`, `ConflictResolver`,",
+        "`SelectedValidationContract` are the first minimal vocabulary slices.",
     ):
         assert line in policy_map
 
@@ -1149,6 +1152,7 @@ def test_pyproject_packages_comp_core_scenarios_and_agent_layer():
         materialize_compiler_run_artifacts,
     )
     from comp.policy import (
+        ConflictResolver,
         DecisionLedger,
         MaterialDescriptor,
         PolicyEffect,
@@ -1204,6 +1208,7 @@ def test_pyproject_packages_comp_core_scenarios_and_agent_layer():
     assert export_receipt_proof_graph is not None
     assert ArtifactStore is not None
     assert ArtifactEnvelope is not None
+    assert ConflictResolver is not None
     assert DecisionLedger is not None
     assert MaterialDescriptor is not None
     assert PolicyEffect is not None
