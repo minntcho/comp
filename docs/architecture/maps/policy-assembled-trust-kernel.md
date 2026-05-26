@@ -270,6 +270,7 @@ active mappings
 active units
 active rules
 validation scope
+selected decision target snapshot
 projection candidate scope
 decision ledger digest
 policy profile id
@@ -277,7 +278,9 @@ contract version
 ```
 
 The selected validation contract is compiler-facing input shape, not validation
-authority.
+authority. When it carries selected decision target snapshots,
+`ValidationHandoff` must bind each handoff claim field to the frozen target
+before producing compiler input.
 
 The key distinction remains:
 

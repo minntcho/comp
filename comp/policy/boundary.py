@@ -237,6 +237,9 @@ class SelectedValidationContract:
     ledger_id: str
     basis: str
     selected_decision_ids: tuple[str, ...] = field(default_factory=tuple)
+    selected_decision_targets: tuple[tuple[str, str], ...] = field(
+        default_factory=tuple
+    )
     validation_scopes: tuple[PipelineScope, ...] = ("validation_handoff",)
     projection_candidate_decision_ids: tuple[str, ...] = field(default_factory=tuple)
     ledger_digest: str | None = None
@@ -258,11 +261,24 @@ class SelectedValidationContract:
                 raise ValueError(f"{scope} is not a validation scope")
         for decision_id in self.selected_decision_ids:
             _require_non_empty("selected_decision_id", decision_id)
+        selected_decision_targets = tuple(
+            (decision_id, target_id)
+            for decision_id, target_id in self.selected_decision_targets
+        )
+        for decision_id, target_id in selected_decision_targets:
+            _require_non_empty("selected_decision_target_id", decision_id)
+            _require_non_empty("selected_decision_target", target_id)
+            if decision_id not in self.selected_decision_ids:
+                raise ValueError(f"target for unselected decision: {decision_id}")
         for decision_id in self.projection_candidate_decision_ids:
             _require_non_empty("projection_candidate_decision_id", decision_id)
         _require_unique(
             "duplicate selected decision id",
             self.selected_decision_ids,
+        )
+        _require_unique(
+            "duplicate selected decision target",
+            tuple(decision_id for decision_id, _ in selected_decision_targets),
         )
         _require_unique(
             "duplicate projection candidate decision id",
@@ -272,6 +288,11 @@ class SelectedValidationContract:
             self,
             "selected_decision_ids",
             tuple(self.selected_decision_ids),
+        )
+        object.__setattr__(
+            self,
+            "selected_decision_targets",
+            selected_decision_targets,
         )
         object.__setattr__(self, "validation_scopes", tuple(self.validation_scopes))
         object.__setattr__(
@@ -292,12 +313,25 @@ class SelectedValidationContract:
         contract_version: str = "policy-boundary-selected-validation-contract-v1",
         meta: tuple[tuple[str, Any], ...] = (),
     ) -> SelectedValidationContract:
+        selected_decisions = tuple(
+            decision
+            for decision in ledger.decisions
+            if decision.status == "selected"
+            and decision.allows_scope("validation_handoff")
+        )
         return cls(
             contract_id=contract_id,
             policy_profile_id=ledger.policy_profile_id,
             ledger_id=ledger.ledger_id,
             basis=basis,
-            selected_decision_ids=ledger.selected_validation_decision_ids(),
+            selected_decision_ids=tuple(
+                decision.decision_id for decision in selected_decisions
+            ),
+            selected_decision_targets=tuple(
+                (decision.decision_id, decision.target_id)
+                for decision in selected_decisions
+                if decision.target_id is not None
+            ),
             projection_candidate_decision_ids=tuple(
                 decision.decision_id
                 for decision in ledger.decisions
@@ -313,6 +347,12 @@ class SelectedValidationContract:
 
     def allows_validation_decision(self, decision_id: str) -> bool:
         return decision_id in self.selected_decision_ids
+
+    def target_for_validation_decision(self, decision_id: str) -> str | None:
+        for target_decision_id, target_id in self.selected_decision_targets:
+            if target_decision_id == decision_id:
+                return target_id
+        return None
 
     def digest(self) -> str:
         return policy_artifact_digest("SelectedValidationContract", self)

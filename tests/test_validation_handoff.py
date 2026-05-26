@@ -12,6 +12,7 @@ def test_validation_handoff_builds_hypothesis_from_selected_contract_claims():
         ledger_id="ledger:run-1",
         basis="policy resolver finalized validation handoff",
         selected_decision_ids=("decision:plant->site",),
+        selected_decision_targets=(("decision:plant->site", "field:site"),),
         projection_candidate_decision_ids=("decision:fuel_used->amount",),
         ledger_digest="digest:ledger-run-1",
     )
@@ -82,6 +83,35 @@ def test_validation_handoff_rejects_claims_outside_selected_contract():
             claims=(
                 ValidationHandoffClaim(
                     decision_id="decision:fuel_used->amount",
+                    claim=ClaimCandidate(field="amount", value=1200),
+                ),
+            ),
+        )
+
+
+def test_validation_handoff_rejects_claim_field_outside_selected_target():
+    from comp.compiler_tool import ClaimCandidate
+    from comp.policy import SelectedValidationContract
+    from comp.runtime import ValidationHandoff, ValidationHandoffClaim
+
+    contract = SelectedValidationContract(
+        contract_id="selected-contract:run-1",
+        policy_profile_id="profile:strict-public",
+        ledger_id="ledger:run-1",
+        basis="policy resolver finalized validation handoff",
+        selected_decision_ids=("decision:plant->site",),
+        selected_decision_targets=(("decision:plant->site", "field:site"),),
+    )
+
+    with pytest.raises(ValueError, match="claim field does not match selected target"):
+        ValidationHandoff(
+            handoff_id="handoff:run-1",
+            contract=contract,
+            hypothesis_id="hypothesis:run-1",
+            subject_id="subject:facility-1",
+            claims=(
+                ValidationHandoffClaim(
+                    decision_id="decision:plant->site",
                     claim=ClaimCandidate(field="amount", value=1200),
                 ),
             ),
