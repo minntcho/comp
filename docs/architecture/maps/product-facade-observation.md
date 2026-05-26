@@ -54,6 +54,10 @@ publish(run_id)
 audit(public_row_id)
 ```
 
+The first canonical fast-path observation lab lives at
+`examples/product_facade_lab`. That lab is comp-backed and remains outside the
+packaged `comp` surface.
+
 The first facade must be comp-backed because the goal is ceremony measurement, not independent authority reimplementation.
 A native production authority engine
 can only be considered after the facade shows which artifacts are required for
