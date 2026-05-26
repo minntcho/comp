@@ -106,6 +106,11 @@ Policy artifact digests may identify a `DecisionLedger` or
 `SelectedValidationContract` for audit linkage. A digest is not a receipt,
 replay proof, validation result, or public projection authority.
 
+`ShadowPolicyComparison` compares actual and counterfactual policy outputs by
+selected, held, rejected, and projection-candidate deltas. It is audit material
+only. It must not compile, mint receipts, replay, or authorize public
+projection.
+
 `ValidationHandoff` may translate a selected validation contract into
 compiler-facing input. If the selected contract freezes a decision target, the
 handoff claim field must match that target before it can cross the bridge. It
@@ -216,12 +221,15 @@ implemented, these terms are architectural contract vocabulary.
 
 The first implementation slices live in `comp.policy`. They expose
 `MaterialDescriptor`, `PolicyEffect`, `ConflictResolver`, `PolicyAssembly`,
-`ScopedGrant`, `SelectionDecision`, and `DecisionLedger` as pre-validation
+`ScopedGrant`, `SelectionDecision`, `DecisionLedger`,
+`SelectedValidationContract`, and `ShadowPolicyComparison` as pre-validation
 vocabulary only. `ConflictResolver` may compose effects into decisions and
 scoped grants, and `PolicyAssembly` may assemble a `DecisionLedger` and matching
 `SelectedValidationContract`, but neither validates claims or authorizes
-projection. `policy_artifact_digest(...)`, `DecisionLedger.digest()`, and
-`SelectedValidationContract.digest()` expose stable audit identifiers without
+projection. `ShadowPolicyComparison` may compare actual and counterfactual
+policy outputs, but it is audit material only. `policy_artifact_digest(...)`,
+`DecisionLedger.digest()`, `SelectedValidationContract.digest()`, and
+`ShadowPolicyComparison.digest()` expose stable audit identifiers without
 minting receipt, replay, validation, or public projection authority.
 The current selected-contract slice keeps `SelectedValidationContract` as compiler-facing input shape, not validation authority.
 `comp.runtime.ValidationHandoff` bridges selected validation contracts into

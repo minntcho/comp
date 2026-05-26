@@ -313,6 +313,9 @@ ScopedGrant
 SelectedValidationContract
   Compiler-facing contract.
 
+ShadowPolicyComparison
+  Actual-vs-counterfactual audit comparison.
+
 ValidationHandoff
   Runtime bridge from selected contract to compiler input.
 
@@ -356,7 +359,9 @@ Slice 4: Selected validation contract and validation handoff
 
 Slice 5: Retention, shadow policy, and counterfactual replay support
   Preserve enough policy-decision material to compare policy behavior without
-  changing receipt authority.
+  changing receipt authority. The first implemented part is
+  ShadowPolicyComparison, which records decision deltas without replaying or
+  authorizing projection.
 ```
 
 Each slice should come with tests that protect the authority boundary it
@@ -378,6 +383,7 @@ comp.policy.ScopedGrant
 comp.policy.SelectionDecision
 comp.policy.DecisionLedger
 comp.policy.SelectedValidationContract
+comp.policy.ShadowPolicyComparison
 comp.policy.policy_artifact_digest
 comp.runtime.ValidationHandoff
 CompilerProfile
@@ -391,13 +397,14 @@ replay_public_projection(...)
 ```
 
 `comp.policy.MaterialDescriptor`, `PolicyEffect`, `ConflictResolver`,
-`PolicyAssembly`, `ScopedGrant`, `SelectionDecision`, `DecisionLedger`, and
-`SelectedValidationContract` are the first minimal vocabulary slices. They
+`PolicyAssembly`, `ScopedGrant`, `SelectionDecision`, `DecisionLedger`,
+`SelectedValidationContract`, and `ShadowPolicyComparison` are the first
+minimal vocabulary slices. They
 describe pre-validation material, policy effects, effect composition, ledger
 and selected-contract assembly, scoped pipeline access, selection status,
-decision audit records, stable policy artifact digests, and the
-compiler-facing contract shape. They do not validate claims, authorize
-projection, or replay receipts. A selected decision still requires a
+decision audit records, stable policy artifact digests, the compiler-facing
+contract shape, and actual-vs-counterfactual policy deltas. They do not
+validate claims, authorize projection, or replay receipts. A selected decision still requires a
 `validation_handoff` grant before it can be included in a selected validation
 contract, and that contract remains pre-validation.
 

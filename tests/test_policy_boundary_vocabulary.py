@@ -917,6 +917,223 @@ def test_policy_assembly_rejects_unassembled_effects_and_duplicate_subjects():
         )
 
 
+def test_shadow_policy_comparison_records_counterfactual_deltas_without_authority():
+    from comp.policy import (
+        PolicyAssembly,
+        PolicyAssemblySubject,
+        PolicyEffect,
+        ShadowPolicyComparison,
+    )
+
+    subjects = (
+        PolicyAssemblySubject(
+            decision_id="decision:plant->site",
+            subject_id="material:plant",
+            target_id="field:site",
+        ),
+        PolicyAssemblySubject(
+            decision_id="decision:fuel_used->amount",
+            subject_id="material:fuel_used",
+            target_id="field:amount",
+        ),
+        PolicyAssemblySubject(
+            decision_id="decision:supplier->supplier_id",
+            subject_id="material:supplier",
+            target_id="field:supplier_id",
+        ),
+    )
+    actual_ledger, actual_contract = PolicyAssembly(
+        policy_profile_id="profile:strict-public",
+    ).assemble_selected_validation_contract(
+        ledger_id="ledger:actual",
+        contract_id="selected-contract:actual",
+        contract_basis="actual policy result",
+        subjects=subjects,
+        effects=(
+            PolicyEffect(
+                effect_id="effect:select:plant",
+                effect_kind="select",
+                subject_id="material:plant",
+                basis="declared alias",
+            ),
+            PolicyEffect(
+                effect_id="effect:grant:plant:validation-handoff",
+                effect_kind="grant_scope",
+                subject_id="material:plant",
+                basis="declared alias selected",
+                scope="validation_handoff",
+            ),
+            PolicyEffect(
+                effect_id="effect:grant:plant:projection-candidate",
+                effect_kind="grant_scope",
+                subject_id="material:plant",
+                basis="eligible for later receipt consideration",
+                scope="projection_candidate",
+            ),
+            PolicyEffect(
+                effect_id="effect:hold:fuel-used",
+                effect_kind="hold",
+                subject_id="material:fuel_used",
+                basis="unit evidence required",
+            ),
+            PolicyEffect(
+                effect_id="effect:reject:supplier",
+                effect_kind="reject",
+                subject_id="material:supplier",
+                basis="unsupported supplier alias",
+            ),
+        ),
+    )
+    shadow_ledger, shadow_contract = PolicyAssembly(
+        policy_profile_id="profile:shadow-relaxed",
+    ).assemble_selected_validation_contract(
+        ledger_id="ledger:shadow",
+        contract_id="selected-contract:shadow",
+        contract_basis="shadow policy result",
+        subjects=subjects,
+        effects=(
+            PolicyEffect(
+                effect_id="effect:select:plant:shadow",
+                effect_kind="select",
+                subject_id="material:plant",
+                basis="declared alias",
+            ),
+            PolicyEffect(
+                effect_id="effect:grant:plant:validation-handoff:shadow",
+                effect_kind="grant_scope",
+                subject_id="material:plant",
+                basis="declared alias selected",
+                scope="validation_handoff",
+            ),
+            PolicyEffect(
+                effect_id="effect:grant:plant:projection-candidate:shadow",
+                effect_kind="grant_scope",
+                subject_id="material:plant",
+                basis="eligible for later receipt consideration",
+                scope="projection_candidate",
+            ),
+            PolicyEffect(
+                effect_id="effect:select:fuel-used:shadow",
+                effect_kind="select",
+                subject_id="material:fuel_used",
+                basis="shadow accepted unit inference",
+            ),
+            PolicyEffect(
+                effect_id="effect:grant:fuel-used:validation-handoff:shadow",
+                effect_kind="grant_scope",
+                subject_id="material:fuel_used",
+                basis="shadow accepted unit inference",
+                scope="validation_handoff",
+            ),
+            PolicyEffect(
+                effect_id="effect:grant:fuel-used:projection-candidate:shadow",
+                effect_kind="grant_scope",
+                subject_id="material:fuel_used",
+                basis="shadow eligible for later receipt consideration",
+                scope="projection_candidate",
+            ),
+            PolicyEffect(
+                effect_id="effect:hold:supplier:shadow",
+                effect_kind="hold",
+                subject_id="material:supplier",
+                basis="shadow requires supplier review",
+            ),
+        ),
+    )
+
+    comparison = ShadowPolicyComparison.from_artifacts(
+        comparison_id="shadow-comparison:run-1",
+        basis="counterfactual policy evaluation",
+        actual_ledger=actual_ledger,
+        actual_contract=actual_contract,
+        shadow_ledger=shadow_ledger,
+        shadow_contract=shadow_contract,
+        meta=(("run_id", "run-1"),),
+    )
+
+    assert comparison.actual_policy_profile_id == "profile:strict-public"
+    assert comparison.shadow_policy_profile_id == "profile:shadow-relaxed"
+    assert comparison.actual_ledger_digest == actual_ledger.digest()
+    assert comparison.shadow_ledger_digest == shadow_ledger.digest()
+    assert comparison.actual_contract_digest == actual_contract.digest()
+    assert comparison.shadow_contract_digest == shadow_contract.digest()
+    assert comparison.selected_delta.actual_only == ()
+    assert comparison.selected_delta.shadow_only == ("decision:fuel_used->amount",)
+    assert comparison.held_delta.actual_only == ("decision:fuel_used->amount",)
+    assert comparison.held_delta.shadow_only == ("decision:supplier->supplier_id",)
+    assert comparison.rejected_delta.actual_only == ("decision:supplier->supplier_id",)
+    assert comparison.rejected_delta.shadow_only == ()
+    assert comparison.projection_candidate_delta.actual_only == ()
+    assert comparison.projection_candidate_delta.shadow_only == (
+        "decision:fuel_used->amount",
+    )
+    assert comparison.has_delta is True
+    assert comparison.digest().startswith("sha256:")
+    assert comparison.authorizes_public_projection is False
+    assert not hasattr(comparison, "compile")
+    assert not hasattr(comparison, "build_public_output_receipt")
+    assert not hasattr(comparison, "replay_public_projection")
+
+
+def test_shadow_policy_comparison_rejects_unbound_contracts():
+    from comp.policy import (
+        PolicyAssembly,
+        PolicyAssemblySubject,
+        PolicyEffect,
+        SelectedValidationContract,
+        ShadowPolicyComparison,
+    )
+
+    ledger, contract = PolicyAssembly(
+        policy_profile_id="profile:strict-public",
+    ).assemble_selected_validation_contract(
+        ledger_id="ledger:run-1",
+        contract_id="selected-contract:run-1",
+        contract_basis="policy result",
+        subjects=(
+            PolicyAssemblySubject(
+                decision_id="decision:plant->site",
+                subject_id="material:plant",
+                target_id="field:site",
+            ),
+        ),
+        effects=(
+            PolicyEffect(
+                effect_id="effect:select:plant",
+                effect_kind="select",
+                subject_id="material:plant",
+                basis="declared alias",
+            ),
+            PolicyEffect(
+                effect_id="effect:grant:plant:validation-handoff",
+                effect_kind="grant_scope",
+                subject_id="material:plant",
+                basis="declared alias selected",
+                scope="validation_handoff",
+            ),
+        ),
+    )
+    stale_contract = SelectedValidationContract(
+        contract_id="selected-contract:stale",
+        policy_profile_id="profile:strict-public",
+        ledger_id=ledger.ledger_id,
+        basis="stale policy result",
+        selected_decision_ids=contract.selected_decision_ids,
+        selected_decision_targets=contract.selected_decision_targets,
+        ledger_digest="sha256:" + "0" * 64,
+    )
+
+    with pytest.raises(ValueError, match="actual contract ledger digest mismatch"):
+        ShadowPolicyComparison.from_artifacts(
+            comparison_id="shadow-comparison:run-1",
+            basis="counterfactual policy evaluation",
+            actual_ledger=ledger,
+            actual_contract=stale_contract,
+            shadow_ledger=ledger,
+            shadow_contract=contract,
+        )
+
+
 def test_policy_package_does_not_expose_projection_or_replay_authority():
     import comp.policy as policy
 

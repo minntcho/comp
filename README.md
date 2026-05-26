@@ -159,15 +159,15 @@ from comp.persistence import replay_public_projection
 `comp.policy`는 pre-validation policy boundary vocabulary를 노출한다. 이
 표면은 validation handoff 전 material, policy effect, scoped grant,
 conflict resolver, policy assembly, selection decision, decision ledger,
-selected validation contract를 설명하기 위한 것이다. validation authority,
-receipt authority, replay authority가 아니다.
+selected validation contract, shadow policy comparison을 설명하기 위한 것이다.
+validation authority, receipt authority, replay authority가 아니다.
 
 ```python
 from comp.policy import MaterialDescriptor, PolicyEffect
 from comp.policy import PolicyAssembly, PolicyAssemblySubject, ConflictResolver
 from comp.policy import ScopedGrant, SelectionDecision, DecisionLedger
 from comp.policy import SelectedValidationContract
-from comp.policy import policy_artifact_digest
+from comp.policy import ShadowPolicyComparison, policy_artifact_digest
 ```
 
 `PolicyAssembly` can assemble a `DecisionLedger` and matching
@@ -177,8 +177,13 @@ Pipeline scope changes are represented only by `grant_scope` or
 `restrict_scope` `PolicyEffect`s; status effects such as `select` and `hold`
 do not carry scope.
 `policy_artifact_digest(...)`, `DecisionLedger.digest()`, and
-`SelectedValidationContract.digest()` provide stable audit identifiers only;
-they are not receipt authority or replay proof.
+`SelectedValidationContract.digest()`, and `ShadowPolicyComparison.digest()`
+provide stable audit identifiers only; they are not receipt authority or replay
+proof.
+`ShadowPolicyComparison` can compare actual and counterfactual policy outputs
+by selected, held, rejected, and projection-candidate deltas. It is audit
+material only and cannot compile, mint receipts, replay, or authorize public
+projection.
 
 `comp.runtime.ValidationHandoff`는 selected validation contract를
 `InterpretationHypothesis`로 옮기는 얇은 runtime bridge다. contract에 포함된

@@ -389,10 +389,13 @@ def test_readme_tracks_policy_boundary_vocabulary_surface():
     assert "SelectionDecision" in readme
     assert "DecisionLedger" in readme
     assert "SelectedValidationContract" in readme
+    assert "ShadowPolicyComparison" in readme
     assert "policy_artifact_digest" in readme
     assert "PolicyAssembly` can assemble a `DecisionLedger` and matching" in readme
     assert "Pipeline scope changes are represented only by `grant_scope`" in readme
     assert "`restrict_scope` `PolicyEffect`s" in readme
+    assert "actual and counterfactual policy outputs" in readme
+    assert "selected, held, rejected, and projection-candidate deltas" in readme
     assert "provide stable audit identifiers only" in readme
     assert "pre-validation and non-authoritative" in readme
     assert "validation" in readme
@@ -624,7 +627,11 @@ def test_policy_boundary_contract_keeps_policy_non_authoritative():
         "`PolicyAssembly` groups descriptors, effects, assembly subjects, and resolver",
         "`PolicyAssembly` may also build a matching `SelectedValidationContract`",
         "`PolicyAssembly` may assemble a `DecisionLedger` and matching",
-        "`policy_artifact_digest(...)`, `DecisionLedger.digest()`, and",
+        "`ShadowPolicyComparison` compares actual and counterfactual policy outputs",
+        "`ShadowPolicyComparison` may compare actual and counterfactual",
+        "policy outputs, but it is audit material only. `policy_artifact_digest(...)`,",
+        "`DecisionLedger.digest()`, `SelectedValidationContract.digest()`, and",
+        "`ShadowPolicyComparison.digest()` expose stable audit identifiers",
         "Policy artifact digest is not PublicOutputReceipt.",
         "Pipeline scope may appear",
         "only on `grant_scope` and `restrict_scope` effects",
@@ -670,17 +677,23 @@ def test_policy_assembled_trust_kernel_map_tracks_growth_shape():
         "`DecisionLedger` is the audit spine for policy assembly.",
         "PublicOutputReceipt",
         "Runtime bridge from selected contract to compiler input.",
+        "Actual-vs-counterfactual audit comparison.",
         "`comp.runtime.ValidationHandoff` is the first bridge",
         "`CompilerTool`, commit, receipt, projection, or replay authority.",
         "policy artifact digest",
+        "comp.policy.ShadowPolicyComparison",
         "comp.policy.policy_artifact_digest",
+        "The first implemented part is",
+        "ShadowPolicyComparison, which records decision deltas without replaying",
         "stable policy artifact digests",
+        "actual-vs-counterfactual policy deltas",
         "Future policy work should connect to that direction instead of introducing a",
         "parallel source of selection truth, validation truth, receipt truth, or",
         "projection truth.",
         "This map does not prescribe:",
         "`comp.policy.MaterialDescriptor`, `PolicyEffect`, `ConflictResolver`,",
-        "`PolicyAssembly`, `ScopedGrant`, `SelectionDecision`, `DecisionLedger`, and",
+        "`PolicyAssembly`, `ScopedGrant`, `SelectionDecision`, `DecisionLedger`,",
+        "`SelectedValidationContract`, and `ShadowPolicyComparison` are the first",
     ):
         assert line in policy_map
 
@@ -1189,10 +1202,12 @@ def test_pyproject_packages_comp_core_scenarios_and_agent_layer():
         MaterialDescriptor,
         PolicyAssembly,
         PolicyAssemblySubject,
+        PolicyDecisionDelta,
         PolicyEffect,
         ScopedGrant,
         SelectionDecision,
         SelectedValidationContract,
+        ShadowPolicyComparison,
         policy_artifact_digest,
     )
 
@@ -1248,11 +1263,13 @@ def test_pyproject_packages_comp_core_scenarios_and_agent_layer():
     assert MaterialDescriptor is not None
     assert PolicyAssembly is not None
     assert PolicyAssemblySubject is not None
+    assert PolicyDecisionDelta is not None
     assert PolicyEffect is not None
     assert policy_artifact_digest is not None
     assert ScopedGrant is not None
     assert SelectionDecision is not None
     assert SelectedValidationContract is not None
+    assert ShadowPolicyComparison is not None
     assert ArtifactMaterial is not None
     assert ArtifactRef is not None
     assert InMemoryArtifactStore is not None
