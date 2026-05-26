@@ -299,6 +299,9 @@ ScopedGrant
 SelectedValidationContract
   Compiler-facing contract.
 
+ValidationHandoff
+  Runtime bridge from selected contract to compiler input.
+
 ValidationReport
   Compiler judgment.
 
@@ -359,6 +362,7 @@ comp.policy.ScopedGrant
 comp.policy.SelectionDecision
 comp.policy.DecisionLedger
 comp.policy.SelectedValidationContract
+comp.runtime.ValidationHandoff
 CompilerProfile
 DomainPack
 RetrievalQueryPolicy
@@ -377,6 +381,11 @@ the compiler-facing contract shape. They do not validate claims, authorize
 projection, or replay receipts. A selected decision still requires a
 `validation_handoff` grant before it can be included in a selected validation
 contract, and that contract remains pre-validation.
+
+`comp.runtime.ValidationHandoff` is the first bridge from selected validation
+contract to compiler-facing `InterpretationHypothesis`. It only carries
+contract-selected claims and witnesses across the handoff boundary. It has no
+`CompilerTool`, commit, receipt, projection, or replay authority.
 
 The other surfaces show the existing authority direction: profiles declare
 behavior, retrieval produces candidates, deterministic selectors bind

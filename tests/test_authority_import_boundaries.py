@@ -118,6 +118,30 @@ AUTHORITY_BOUNDARY_RULES = (
         ),
     ),
     ImportBoundaryRule(
+        label="validation handoff bridge",
+        paths=(Path("comp/runtime/validation_handoff.py"),),
+        forbidden_prefixes=(
+            "comp.persistence",
+            "comp.explanation",
+            "comp.views",
+            "comp.schema_labels",
+            "comp.user_messages",
+            "comp.scenario_contracts",
+            "comp.scenarios",
+            "minchoagnt",
+        ),
+        forbidden_imports=(
+            "comp.compiler_tool:CompilerTool",
+            "comp.compiler_tool:CommitPreparation",
+            "comp.compiler_tool:ReviewPackage",
+            "comp.compiler_tool:PublicOutputReceipt",
+            "comp.compiler_tool:build_public_output_receipt",
+            "comp.compiler_tool:prepare_commit",
+            "comp.persistence:replay_public_projection",
+            "comp.persistence.replay:replay_public_projection",
+        ),
+    ),
+    ImportBoundaryRule(
         label="receipt proof graph exporter",
         paths=(Path("comp/explanation/receipt_graph.py"),),
         forbidden_prefixes=(

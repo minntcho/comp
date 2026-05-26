@@ -91,6 +91,10 @@ rejection, hold, and escalation decisions are auditable.
 policy decisions and grants. It selects what may be handed to compiler
 validation. It does not validate the selected material.
 
+`ValidationHandoff` may translate a selected validation contract into
+compiler-facing input. It is a bridge, not compiler validation, receipt
+authority, or replay authority.
+
 ## Grant Scopes
 
 The initial policy vocabulary may use these scopes:
@@ -192,8 +196,10 @@ The first implementation slices live in `comp.policy`. They expose
 `MaterialDescriptor`, `PolicyEffect`, `ScopedGrant`, `SelectionDecision`, and
 `DecisionLedger` as pre-validation vocabulary only. The next slice exposes
 `SelectedValidationContract` as compiler-facing input shape, not validation
-authority. These slices do not expose receipt builders, projection gates, or
-replay authority.
+authority. `comp.runtime.ValidationHandoff` bridges selected validation
+contracts into compiler-facing hypotheses without compiling, committing,
+building receipts, or replaying. These slices do not expose receipt builders,
+projection gates, or replay authority.
 
 Existing `CompilerProfile`, `DomainPack`, `RetrievalQueryPolicy`,
 reference-selection, resolver-task, and profile/schema selection-tier surfaces

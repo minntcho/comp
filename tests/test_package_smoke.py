@@ -391,6 +391,16 @@ def test_readme_tracks_policy_boundary_vocabulary_surface():
     assert "replay authority가 아니다" in readme
 
 
+def test_readme_tracks_validation_handoff_runtime_bridge():
+    readme = Path("README.md").read_text(encoding="utf-8")
+
+    assert "comp.runtime.ValidationHandoff" in readme
+    assert "selected validation contract를" in readme
+    assert "`InterpretationHypothesis`로 옮기는 얇은 runtime bridge" in readme
+    assert "compile, commit, receipt, or replay authority" in readme
+    assert "ValidationHandoffClaim" in readme
+
+
 def test_readme_routes_new_work_through_current_architecture_entrypoints():
     readme = Path("README.md").read_text(encoding="utf-8")
 
@@ -601,6 +611,7 @@ def test_policy_boundary_contract_keeps_policy_non_authoritative():
         "The first implementation slices live in `comp.policy`.",
         "`MaterialDescriptor`, `PolicyEffect`, `ScopedGrant`, `SelectionDecision`, and",
         "`SelectedValidationContract` as compiler-facing input shape, not validation",
+        "`comp.runtime.ValidationHandoff` bridges selected validation",
     ):
         assert line in policy_boundary
 
@@ -626,6 +637,9 @@ def test_policy_assembled_trust_kernel_map_tracks_growth_shape():
         "`ScopedGrant` is pipeline access, not trust authority.",
         "`DecisionLedger` is the audit spine for policy assembly.",
         "PublicOutputReceipt",
+        "Runtime bridge from selected contract to compiler input.",
+        "`comp.runtime.ValidationHandoff` is the first bridge",
+        "`CompilerTool`, commit, receipt, projection, or replay authority.",
         "Future policy work should connect to that direction instead of introducing a",
         "parallel source of selection truth, validation truth, receipt truth, or",
         "projection truth.",
@@ -1130,6 +1144,8 @@ def test_pyproject_packages_comp_core_scenarios_and_agent_layer():
         ExternalArtifactMaterial,
         ExternalArtifactMaterialSource,
         TrustRuntime,
+        ValidationHandoff,
+        ValidationHandoffClaim,
         materialize_compiler_run_artifacts,
     )
     from comp.policy import (
@@ -1208,6 +1224,8 @@ def test_pyproject_packages_comp_core_scenarios_and_agent_layer():
     assert ExternalArtifactMaterial is not None
     assert ExternalArtifactMaterialSource is not None
     assert TrustRuntime is not None
+    assert ValidationHandoff is not None
+    assert ValidationHandoffClaim is not None
     assert materialize_compiler_run_artifacts is not None
 
 

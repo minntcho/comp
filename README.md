@@ -167,6 +167,15 @@ from comp.policy import ScopedGrant, SelectionDecision, DecisionLedger
 from comp.policy import SelectedValidationContract
 ```
 
+`comp.runtime.ValidationHandoff`는 selected validation contract를
+`InterpretationHypothesis`로 옮기는 얇은 runtime bridge다. contract에 포함된
+selected decision만 compiler-facing hypothesis로 넘길 수 있다. It has no
+compile, commit, receipt, or replay authority.
+
+```python
+from comp.runtime import ValidationHandoff, ValidationHandoffClaim
+```
+
 legacy pipeline runner, pass-pipeline module, compatibility facade는 active
 package source가 아니다. 과거 pass-pipeline snapshot은 repository history에서만
 확인하고, 현재 tree에는 reference copy를 유지하지 않는다.
