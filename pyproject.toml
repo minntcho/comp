@@ -21,6 +21,7 @@ packages = [
   "comp.explanation",
   "comp.judgment",
   "comp.persistence",
+  "comp.policy",
   "comp.runtime",
   "comp.scenario_contracts",
   "comp.scenarios",

@@ -65,6 +65,23 @@ AUTHORITY_BOUNDARY_RULES = (
         ),
     ),
     ImportBoundaryRule(
+        label="policy boundary vocabulary",
+        paths=(Path("comp/policy"),),
+        forbidden_prefixes=(
+            "comp.compiler_tool",
+            "comp.judgment",
+            "comp.persistence",
+            "comp.explanation",
+            "comp.views",
+            "comp.schema_labels",
+            "comp.user_messages",
+            "comp.scenario_contracts",
+            "comp.scenarios",
+            "comp.runtime",
+            "minchoagnt",
+        ),
+    ),
+    ImportBoundaryRule(
         label="receipt proof graph exporter",
         paths=(Path("comp/explanation/receipt_graph.py"),),
         forbidden_prefixes=(
