@@ -389,7 +389,9 @@ def test_readme_tracks_policy_boundary_vocabulary_surface():
     assert "SelectionDecision" in readme
     assert "DecisionLedger" in readme
     assert "SelectedValidationContract" in readme
+    assert "policy_artifact_digest" in readme
     assert "PolicyAssembly` can assemble a `DecisionLedger` and matching" in readme
+    assert "provide stable audit identifiers only" in readme
     assert "pre-validation and non-authoritative" in readme
     assert "validation" in readme
     assert "receipt authority" in readme
@@ -618,6 +620,8 @@ def test_policy_boundary_contract_keeps_policy_non_authoritative():
         "`PolicyAssembly` groups descriptors, effects, assembly subjects, and resolver",
         "`PolicyAssembly` may also build a matching `SelectedValidationContract`",
         "`PolicyAssembly` may assemble a `DecisionLedger` and matching",
+        "`policy_artifact_digest(...)`, `DecisionLedger.digest()`, and",
+        "Policy artifact digest is not PublicOutputReceipt.",
         "`SelectedValidationContract` as compiler-facing input shape, not validation",
         "`comp.runtime.ValidationHandoff` bridges selected validation",
     ):
@@ -651,6 +655,9 @@ def test_policy_assembled_trust_kernel_map_tracks_growth_shape():
         "Runtime bridge from selected contract to compiler input.",
         "`comp.runtime.ValidationHandoff` is the first bridge",
         "`CompilerTool`, commit, receipt, projection, or replay authority.",
+        "policy artifact digest",
+        "comp.policy.policy_artifact_digest",
+        "stable policy artifact digests",
         "Future policy work should connect to that direction instead of introducing a",
         "parallel source of selection truth, validation truth, receipt truth, or",
         "projection truth.",
@@ -1169,6 +1176,7 @@ def test_pyproject_packages_comp_core_scenarios_and_agent_layer():
         ScopedGrant,
         SelectionDecision,
         SelectedValidationContract,
+        policy_artifact_digest,
     )
 
     assert pyproject["project"]["description"] == (
@@ -1224,6 +1232,7 @@ def test_pyproject_packages_comp_core_scenarios_and_agent_layer():
     assert PolicyAssembly is not None
     assert PolicyAssemblySubject is not None
     assert PolicyEffect is not None
+    assert policy_artifact_digest is not None
     assert ScopedGrant is not None
     assert SelectionDecision is not None
     assert SelectedValidationContract is not None

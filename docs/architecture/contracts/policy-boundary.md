@@ -99,6 +99,10 @@ rejection, hold, and escalation decisions are auditable.
 policy decisions and grants. It selects what may be handed to compiler
 validation. It does not validate the selected material.
 
+Policy artifact digests may identify a `DecisionLedger` or
+`SelectedValidationContract` for audit linkage. A digest is not a receipt,
+replay proof, validation result, or public projection authority.
+
 `ValidationHandoff` may translate a selected validation contract into
 compiler-facing input. It is a bridge, not compiler validation, receipt
 authority, or replay authority.
@@ -139,6 +143,7 @@ No embedding or LLM output enters validation_handoff without selection basis.
 No selected material becomes public output without PublicOutputReceipt.
 No policy assembly may bypass receipt or replay boundaries.
 ScopedGrant is not PublicOutputReceipt.
+Policy artifact digest is not PublicOutputReceipt.
 ```
 
 The policy boundary may restrict access to later pipeline stages. It may not
@@ -206,12 +211,14 @@ The first implementation slices live in `comp.policy`. They expose
 vocabulary only. `ConflictResolver` may compose effects into decisions and
 scoped grants, and `PolicyAssembly` may assemble a `DecisionLedger` and matching
 `SelectedValidationContract`, but neither validates claims or authorizes
-projection. The next slice exposes
-`SelectedValidationContract` as compiler-facing input shape, not validation
-authority. `comp.runtime.ValidationHandoff` bridges selected validation
-contracts into compiler-facing hypotheses without compiling, committing,
-building receipts, or replaying. These slices do not expose receipt builders,
-projection gates, or replay authority.
+projection. `policy_artifact_digest(...)`, `DecisionLedger.digest()`, and
+`SelectedValidationContract.digest()` expose stable audit identifiers without
+minting receipt, replay, validation, or public projection authority.
+The current selected-contract slice keeps `SelectedValidationContract` as compiler-facing input shape, not validation authority.
+`comp.runtime.ValidationHandoff` bridges selected validation contracts into
+compiler-facing hypotheses without compiling, committing, building receipts, or
+replaying. These slices do not expose receipt builders, projection gates, or
+replay authority.
 
 Existing `CompilerProfile`, `DomainPack`, `RetrievalQueryPolicy`,
 reference-selection, resolver-task, and profile/schema selection-tier surfaces

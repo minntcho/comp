@@ -245,11 +245,14 @@ scoped grants
 denied scopes
 retention class
 selected validation contract digest
+policy artifact digest
 policy profile id
 policy assembly version
 ```
 
 The ledger is explanation and audit material. It is not authority by itself.
+Its digest is an audit identifier, not a receipt, replay proof, or validation
+result.
 Its value is that future replay, review, debugging, shadow-policy comparison,
 or counterfactual analysis can see why a run shaped validation input the way it
 did.
@@ -371,6 +374,7 @@ comp.policy.ScopedGrant
 comp.policy.SelectionDecision
 comp.policy.DecisionLedger
 comp.policy.SelectedValidationContract
+comp.policy.policy_artifact_digest
 comp.runtime.ValidationHandoff
 CompilerProfile
 DomainPack
@@ -387,9 +391,9 @@ replay_public_projection(...)
 `SelectedValidationContract` are the first minimal vocabulary slices. They
 describe pre-validation material, policy effects, effect composition, ledger
 and selected-contract assembly, scoped pipeline access, selection status,
-decision audit records, and the compiler-facing contract shape. They do not
-validate claims, authorize projection, or replay receipts. A selected decision
-still requires a
+decision audit records, stable policy artifact digests, and the
+compiler-facing contract shape. They do not validate claims, authorize
+projection, or replay receipts. A selected decision still requires a
 `validation_handoff` grant before it can be included in a selected validation
 contract, and that contract remains pre-validation.
 

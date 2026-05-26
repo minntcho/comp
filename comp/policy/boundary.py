@@ -1,6 +1,8 @@
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+import hashlib
+import json
+from dataclasses import dataclass, field, fields, is_dataclass
 from typing import Any, Literal
 
 PolicyEffectKind = Literal[
@@ -220,6 +222,9 @@ class DecisionLedger:
             and decision.allows_scope("validation_handoff")
         )
 
+    def digest(self) -> str:
+        return policy_artifact_digest("DecisionLedger", self)
+
     @property
     def authorizes_public_projection(self) -> bool:
         return False
@@ -299,13 +304,18 @@ class SelectedValidationContract:
                 if decision.status == "selected"
                 and decision.allows_scope("projection_candidate")
             ),
-            ledger_digest=ledger_digest,
+            ledger_digest=(
+                ledger_digest if ledger_digest is not None else ledger.digest()
+            ),
             contract_version=contract_version,
             meta=meta,
         )
 
     def allows_validation_decision(self, decision_id: str) -> bool:
         return decision_id in self.selected_decision_ids
+
+    def digest(self) -> str:
+        return policy_artifact_digest("SelectedValidationContract", self)
 
     @property
     def authorizes_public_projection(self) -> bool:
@@ -540,6 +550,55 @@ def _retention_from_effects(
     return default
 
 
+def policy_artifact_digest(artifact_kind: str, payload: Any) -> str:
+    _require_non_empty("artifact_kind", artifact_kind)
+    digest_payload = {
+        "artifact_kind": artifact_kind,
+        "payload": _canonical_policy_payload(payload),
+    }
+    encoded = json.dumps(
+        digest_payload,
+        ensure_ascii=False,
+        separators=(",", ":"),
+        sort_keys=True,
+    ).encode("utf-8")
+    return f"sha256:{hashlib.sha256(encoded).hexdigest()}"
+
+
+def _canonical_policy_payload(value: Any) -> Any:
+    if is_dataclass(value) and not isinstance(value, type):
+        return {
+            field_info.name: _canonical_policy_payload(
+                getattr(value, field_info.name)
+            )
+            for field_info in fields(value)
+        }
+    if isinstance(value, dict):
+        return {
+            str(key): _canonical_policy_payload(value[key])
+            for key in sorted(value, key=str)
+        }
+    if isinstance(value, (tuple, list)):
+        return [_canonical_policy_payload(item) for item in value]
+    if isinstance(value, (set, frozenset)):
+        return sorted(
+            (_canonical_policy_payload(item) for item in value),
+            key=_canonical_sort_key,
+        )
+    if isinstance(value, bytes):
+        return {"bytes_hex": value.hex()}
+    return value
+
+
+def _canonical_sort_key(value: Any) -> str:
+    return json.dumps(
+        value,
+        ensure_ascii=False,
+        separators=(",", ":"),
+        sort_keys=True,
+    )
+
+
 __all__ = [
     "PIPELINE_SCOPES",
     "POLICY_EFFECT_KINDS",
@@ -556,4 +615,5 @@ __all__ = [
     "SelectionDecision",
     "SelectionStatus",
     "SelectedValidationContract",
+    "policy_artifact_digest",
 ]

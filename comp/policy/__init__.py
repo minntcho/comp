@@ -22,6 +22,7 @@ from comp.policy.boundary import (
     SelectionDecision,
     SelectionStatus,
     SelectedValidationContract,
+    policy_artifact_digest,
 )
 
 __all__ = [
@@ -40,4 +41,5 @@ __all__ = [
     "SelectionDecision",
     "SelectionStatus",
     "SelectedValidationContract",
+    "policy_artifact_digest",
 ]

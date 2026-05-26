@@ -167,11 +167,15 @@ from comp.policy import MaterialDescriptor, PolicyEffect
 from comp.policy import PolicyAssembly, PolicyAssemblySubject, ConflictResolver
 from comp.policy import ScopedGrant, SelectionDecision, DecisionLedger
 from comp.policy import SelectedValidationContract
+from comp.policy import policy_artifact_digest
 ```
 
 `PolicyAssembly` can assemble a `DecisionLedger` and matching
 `SelectedValidationContract` together, while keeping both artifacts
 pre-validation and non-authoritative.
+`policy_artifact_digest(...)`, `DecisionLedger.digest()`, and
+`SelectedValidationContract.digest()` provide stable audit identifiers only;
+they are not receipt authority or replay proof.
 
 `comp.runtime.ValidationHandoff`는 selected validation contract를
 `InterpretationHypothesis`로 옮기는 얇은 runtime bridge다. contract에 포함된
