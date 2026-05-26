@@ -226,6 +226,98 @@ def test_decision_ledger_lists_grants_and_validation_handoff_subjects():
     assert ledger.authorizes_public_projection is False
 
 
+def test_policy_artifact_digest_is_stable_and_non_authoritative():
+    from comp.policy import (
+        DecisionLedger,
+        MaterialDescriptor,
+        PolicyEffect,
+        ScopedGrant,
+        SelectionDecision,
+        policy_artifact_digest,
+    )
+
+    descriptor = MaterialDescriptor(
+        material_id="material:fuel_used",
+        material_kind="source_attribute",
+        attributes=(("raw_field", "fuel_used"),),
+    )
+    effect = PolicyEffect(
+        effect_id="effect:select:fuel_used",
+        effect_kind="select",
+        subject_id="material:fuel_used",
+        basis="declared alias",
+    )
+    grant = ScopedGrant(
+        grant_id="grant:fuel_used:validation-handoff",
+        subject_id="decision:fuel_used->amount",
+        scope="validation_handoff",
+        basis="declared alias selected",
+    )
+    decision = SelectionDecision(
+        decision_id="decision:fuel_used->amount",
+        subject_id="material:fuel_used",
+        status="selected",
+        basis="declared alias",
+        target_id="field:amount",
+        grants=(grant,),
+    )
+    ledger = DecisionLedger(
+        ledger_id="ledger:run-1",
+        policy_profile_id="profile:strict-public",
+        descriptors=(descriptor,),
+        effects=(effect,),
+        decisions=(decision,),
+        meta=(("run_id", "run-1"),),
+    )
+    same_ledger = DecisionLedger(
+        ledger_id="ledger:run-1",
+        policy_profile_id="profile:strict-public",
+        descriptors=[descriptor],
+        effects=[effect],
+        decisions=[decision],
+        meta=[("run_id", "run-1")],
+    )
+    changed_ledger = DecisionLedger(
+        ledger_id="ledger:run-1",
+        policy_profile_id="profile:strict-public",
+        descriptors=(descriptor,),
+        effects=(effect,),
+        decisions=(decision,),
+        meta=(("run_id", "run-2"),),
+    )
+
+    digest = ledger.digest()
+
+    assert digest == ledger.digest()
+    assert digest == same_ledger.digest()
+    assert digest == policy_artifact_digest("DecisionLedger", ledger)
+    assert digest.startswith("sha256:")
+    assert len(digest) == len("sha256:") + 64
+    assert all(character in "0123456789abcdef" for character in digest[7:])
+    assert changed_ledger.digest() != digest
+    assert ledger.authorizes_public_projection is False
+
+
+def test_policy_artifact_digest_canonicalizes_payload_without_minting_authority():
+    from comp.policy import policy_artifact_digest
+
+    digest = policy_artifact_digest(
+        "policy-artifact",
+        {"scope": "validation_handoff", "basis": ("declared_alias", "reviewed")},
+    )
+
+    assert digest == policy_artifact_digest(
+        "policy-artifact",
+        {"basis": ["declared_alias", "reviewed"], "scope": "validation_handoff"},
+    )
+    assert digest != policy_artifact_digest(
+        "other-policy-artifact",
+        {"basis": ["declared_alias", "reviewed"], "scope": "validation_handoff"},
+    )
+    with pytest.raises(ValueError, match="artifact_kind is required"):
+        policy_artifact_digest("", {"scope": "validation_handoff"})
+
+
 def test_selected_validation_contract_freezes_handoff_decisions_from_ledger():
     from comp.policy import (
         DecisionLedger,
@@ -305,6 +397,70 @@ def test_selected_validation_contract_freezes_handoff_decisions_from_ledger():
     assert contract.allows_validation_decision("decision:plant->site") is True
     assert contract.allows_validation_decision("decision:fuel_used->amount") is False
     assert contract.authorizes_public_projection is False
+
+
+def test_selected_validation_contract_digest_tracks_ledger_without_authority():
+    from comp.policy import PolicyAssembly, PolicyAssemblySubject, PolicyEffect
+
+    effects = (
+        PolicyEffect(
+            effect_id="effect:select:plant",
+            effect_kind="select",
+            subject_id="material:plant",
+            basis="declared alias",
+        ),
+        PolicyEffect(
+            effect_id="effect:grant:plant:validation-handoff",
+            effect_kind="grant_scope",
+            subject_id="material:plant",
+            basis="declared alias selected",
+            scope="validation_handoff",
+        ),
+    )
+    subjects = (
+        PolicyAssemblySubject(
+            decision_id="decision:plant->site",
+            subject_id="material:plant",
+            target_id="field:site",
+        ),
+    )
+    ledger, contract = PolicyAssembly(
+        policy_profile_id="profile:strict-public",
+    ).assemble_selected_validation_contract(
+        ledger_id="ledger:run-1",
+        contract_id="selected-contract:run-1",
+        contract_basis="assembly finalized validation handoff",
+        effects=effects,
+        subjects=subjects,
+    )
+    same_ledger, same_contract = PolicyAssembly(
+        policy_profile_id="profile:strict-public",
+    ).assemble_selected_validation_contract(
+        ledger_id="ledger:run-1",
+        contract_id="selected-contract:run-1",
+        contract_basis="assembly finalized validation handoff",
+        effects=effects,
+        subjects=subjects,
+    )
+
+    digest = contract.digest()
+
+    assert contract.ledger_digest == ledger.digest()
+    assert digest == contract.digest()
+    assert digest == same_contract.digest()
+    assert same_contract.ledger_digest == same_ledger.digest()
+    assert digest.startswith("sha256:")
+    assert contract.authorizes_public_projection is False
+    assert ledger.authorizes_public_projection is False
+    assert PolicyAssembly(
+        policy_profile_id="profile:strict-public",
+    ).assemble_selected_validation_contract(
+        ledger_id="ledger:run-1",
+        contract_id="selected-contract:run-1",
+        contract_basis="different handoff basis",
+        effects=effects,
+        subjects=subjects,
+    )[1].digest() != digest
 
 
 def test_selected_validation_contract_rejects_authority_shaped_scopes():
