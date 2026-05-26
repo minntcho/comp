@@ -382,7 +382,12 @@ def test_readme_tracks_policy_boundary_vocabulary_surface():
     assert "pre-validation policy boundary vocabulary" in readme
     assert "MaterialDescriptor" in readme
     assert "PolicyEffect" in readme
-    assert "validation authority, receipt authority, replay authority가 아니다" in readme
+    assert "ScopedGrant" in readme
+    assert "SelectionDecision" in readme
+    assert "DecisionLedger" in readme
+    assert "validation" in readme
+    assert "receipt authority" in readme
+    assert "replay authority가 아니다" in readme
 
 
 def test_persistence_exports_mysql_backend_surface():
@@ -563,7 +568,8 @@ def test_policy_boundary_contract_keeps_policy_non_authoritative():
         "ScopedGrant is not PublicOutputReceipt.",
         "Capabilities may recommend. Policies may issue scoped access.",
         "Not every term in this document is currently a public Python API.",
-        "The first implementation slice lives in `comp.policy`.",
+        "The first implementation slices live in `comp.policy`.",
+        "`MaterialDescriptor`, `PolicyEffect`, `ScopedGrant`, `SelectionDecision`, and",
     ):
         assert line in policy_boundary
 
@@ -593,7 +599,8 @@ def test_policy_assembled_trust_kernel_map_tracks_growth_shape():
         "parallel source of selection truth, validation truth, receipt truth, or",
         "projection truth.",
         "This map does not prescribe:",
-        "`comp.policy.MaterialDescriptor` and `comp.policy.PolicyEffect` are the first",
+        "`comp.policy.MaterialDescriptor`, `PolicyEffect`, `ScopedGrant`,",
+        "`SelectionDecision`, and `DecisionLedger` are the first minimal vocabulary",
     ):
         assert line in policy_map
 
@@ -1094,7 +1101,13 @@ def test_pyproject_packages_comp_core_scenarios_and_agent_layer():
         TrustRuntime,
         materialize_compiler_run_artifacts,
     )
-    from comp.policy import MaterialDescriptor, PolicyEffect
+    from comp.policy import (
+        DecisionLedger,
+        MaterialDescriptor,
+        PolicyEffect,
+        ScopedGrant,
+        SelectionDecision,
+    )
 
     assert pyproject["project"]["description"] == (
         "Receipt-gated proof package compiler for obligation, reference, "
@@ -1143,8 +1156,11 @@ def test_pyproject_packages_comp_core_scenarios_and_agent_layer():
     assert export_receipt_proof_graph is not None
     assert ArtifactStore is not None
     assert ArtifactEnvelope is not None
+    assert DecisionLedger is not None
     assert MaterialDescriptor is not None
     assert PolicyEffect is not None
+    assert ScopedGrant is not None
+    assert SelectionDecision is not None
     assert ArtifactMaterial is not None
     assert ArtifactRef is not None
     assert InMemoryArtifactStore is not None
