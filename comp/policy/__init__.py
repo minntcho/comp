@@ -18,6 +18,7 @@ from comp.policy.boundary import (
     ScopedGrant,
     SelectionDecision,
     SelectionStatus,
+    SelectedValidationContract,
 )
 
 __all__ = [
@@ -32,4 +33,5 @@ __all__ = [
     "ScopedGrant",
     "SelectionDecision",
     "SelectionStatus",
+    "SelectedValidationContract",
 ]

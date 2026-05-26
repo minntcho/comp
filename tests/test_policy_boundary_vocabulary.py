@@ -226,6 +226,121 @@ def test_decision_ledger_lists_grants_and_validation_handoff_subjects():
     assert ledger.authorizes_public_projection is False
 
 
+def test_selected_validation_contract_freezes_handoff_decisions_from_ledger():
+    from comp.policy import (
+        DecisionLedger,
+        ScopedGrant,
+        SelectionDecision,
+        SelectedValidationContract,
+    )
+
+    handoff_grant = ScopedGrant(
+        grant_id="grant:plant:validation-handoff",
+        subject_id="decision:plant->site",
+        scope="validation_handoff",
+        basis="declared alias selected",
+    )
+    projection_candidate_grant = ScopedGrant(
+        grant_id="grant:fuel_used:projection-candidate",
+        subject_id="decision:fuel_used->amount",
+        scope="projection_candidate",
+        basis="eligible for later receipt consideration",
+    )
+    selected_for_handoff = SelectionDecision(
+        decision_id="decision:plant->site",
+        subject_id="material:plant",
+        status="selected",
+        basis="declared alias",
+        target_id="field:site",
+        grants=(handoff_grant,),
+    )
+    selected_for_projection_consideration = SelectionDecision(
+        decision_id="decision:fuel_used->amount",
+        subject_id="material:fuel_used",
+        status="selected",
+        basis="embedding proposal retained for later receipt consideration",
+        target_id="field:amount",
+        grants=(projection_candidate_grant,),
+    )
+    held_handoff_candidate = SelectionDecision(
+        decision_id="decision:supplier_code->supplier_id",
+        subject_id="material:supplier_code",
+        status="held",
+        basis="review required",
+        target_id="field:supplier_id",
+        grants=(
+            ScopedGrant(
+                grant_id="grant:supplier_code:validation-handoff",
+                subject_id="decision:supplier_code->supplier_id",
+                scope="validation_handoff",
+                basis="blocked until reviewer approval",
+            ),
+        ),
+    )
+    ledger = DecisionLedger(
+        ledger_id="ledger:run-1",
+        policy_profile_id="profile:strict-public",
+        decisions=(
+            selected_for_handoff,
+            selected_for_projection_consideration,
+            held_handoff_candidate,
+        ),
+    )
+
+    contract = SelectedValidationContract.from_ledger(
+        contract_id="selected-contract:run-1",
+        ledger=ledger,
+        basis="policy resolver finalized validation handoff",
+        ledger_digest="digest:ledger-run-1",
+    )
+
+    assert contract.contract_id == "selected-contract:run-1"
+    assert contract.policy_profile_id == "profile:strict-public"
+    assert contract.ledger_id == "ledger:run-1"
+    assert contract.ledger_digest == "digest:ledger-run-1"
+    assert contract.selected_decision_ids == ("decision:plant->site",)
+    assert contract.projection_candidate_decision_ids == (
+        "decision:fuel_used->amount",
+    )
+    assert contract.allows_validation_decision("decision:plant->site") is True
+    assert contract.allows_validation_decision("decision:fuel_used->amount") is False
+    assert contract.authorizes_public_projection is False
+
+
+def test_selected_validation_contract_rejects_authority_shaped_scopes():
+    from comp.policy import SelectedValidationContract
+
+    with pytest.raises(ValueError, match="unknown pipeline scope"):
+        SelectedValidationContract(
+            contract_id="selected-contract:public",
+            policy_profile_id="profile:strict-public",
+            ledger_id="ledger:run-1",
+            basis="not allowed",
+            validation_scopes=("public_projection",),
+        )
+
+    with pytest.raises(ValueError, match="not a validation scope"):
+        SelectedValidationContract(
+            contract_id="selected-contract:projection",
+            policy_profile_id="profile:strict-public",
+            ledger_id="ledger:run-1",
+            basis="not allowed",
+            validation_scopes=("projection_candidate",),
+        )
+
+    with pytest.raises(ValueError, match="duplicate selected decision id"):
+        SelectedValidationContract(
+            contract_id="selected-contract:duplicate",
+            policy_profile_id="profile:strict-public",
+            ledger_id="ledger:run-1",
+            basis="duplicate handoff",
+            selected_decision_ids=(
+                "decision:plant->site",
+                "decision:plant->site",
+            ),
+        )
+
+
 def test_policy_package_does_not_expose_projection_or_replay_authority():
     import comp.policy as policy
 

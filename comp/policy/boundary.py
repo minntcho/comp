@@ -60,6 +60,7 @@ PIPELINE_SCOPES = frozenset(
 SELECTION_STATUSES = frozenset(("selected", "proposed", "held", "rejected"))
 
 _SCOPED_EFFECT_KINDS = frozenset(("grant_scope", "restrict_scope"))
+_VALIDATION_CONTRACT_SCOPES = frozenset(("validation_context", "validation_handoff"))
 
 
 @dataclass(frozen=True, slots=True)
@@ -217,9 +218,101 @@ class DecisionLedger:
         return False
 
 
+@dataclass(frozen=True, slots=True)
+class SelectedValidationContract:
+    contract_id: str
+    policy_profile_id: str
+    ledger_id: str
+    basis: str
+    selected_decision_ids: tuple[str, ...] = field(default_factory=tuple)
+    validation_scopes: tuple[PipelineScope, ...] = ("validation_handoff",)
+    projection_candidate_decision_ids: tuple[str, ...] = field(default_factory=tuple)
+    ledger_digest: str | None = None
+    contract_version: str = "policy-boundary-selected-validation-contract-v1"
+    meta: tuple[tuple[str, Any], ...] = field(default_factory=tuple)
+
+    def __post_init__(self) -> None:
+        _require_non_empty("contract_id", self.contract_id)
+        _require_non_empty("policy_profile_id", self.policy_profile_id)
+        _require_non_empty("ledger_id", self.ledger_id)
+        _require_non_empty("basis", self.basis)
+        _require_non_empty("contract_version", self.contract_version)
+        if self.ledger_digest is not None:
+            _require_non_empty("ledger_digest", self.ledger_digest)
+        for scope in self.validation_scopes:
+            if scope not in PIPELINE_SCOPES:
+                raise ValueError(f"unknown pipeline scope: {scope}")
+            if scope not in _VALIDATION_CONTRACT_SCOPES:
+                raise ValueError(f"{scope} is not a validation scope")
+        for decision_id in self.selected_decision_ids:
+            _require_non_empty("selected_decision_id", decision_id)
+        for decision_id in self.projection_candidate_decision_ids:
+            _require_non_empty("projection_candidate_decision_id", decision_id)
+        _require_unique(
+            "duplicate selected decision id",
+            self.selected_decision_ids,
+        )
+        _require_unique(
+            "duplicate projection candidate decision id",
+            self.projection_candidate_decision_ids,
+        )
+        object.__setattr__(
+            self,
+            "selected_decision_ids",
+            tuple(self.selected_decision_ids),
+        )
+        object.__setattr__(self, "validation_scopes", tuple(self.validation_scopes))
+        object.__setattr__(
+            self,
+            "projection_candidate_decision_ids",
+            tuple(self.projection_candidate_decision_ids),
+        )
+        object.__setattr__(self, "meta", tuple(self.meta))
+
+    @classmethod
+    def from_ledger(
+        cls,
+        *,
+        contract_id: str,
+        ledger: DecisionLedger,
+        basis: str,
+        ledger_digest: str | None = None,
+        contract_version: str = "policy-boundary-selected-validation-contract-v1",
+        meta: tuple[tuple[str, Any], ...] = (),
+    ) -> SelectedValidationContract:
+        return cls(
+            contract_id=contract_id,
+            policy_profile_id=ledger.policy_profile_id,
+            ledger_id=ledger.ledger_id,
+            basis=basis,
+            selected_decision_ids=ledger.selected_validation_decision_ids(),
+            projection_candidate_decision_ids=tuple(
+                decision.decision_id
+                for decision in ledger.decisions
+                if decision.status == "selected"
+                and decision.allows_scope("projection_candidate")
+            ),
+            ledger_digest=ledger_digest,
+            contract_version=contract_version,
+            meta=meta,
+        )
+
+    def allows_validation_decision(self, decision_id: str) -> bool:
+        return decision_id in self.selected_decision_ids
+
+    @property
+    def authorizes_public_projection(self) -> bool:
+        return False
+
+
 def _require_non_empty(field_name: str, value: str) -> None:
     if not value:
         raise ValueError(f"{field_name} is required.")
+
+
+def _require_unique(error_label: str, values: tuple[str, ...]) -> None:
+    if len(values) != len(set(values)):
+        raise ValueError(error_label)
 
 
 __all__ = [
@@ -234,4 +327,5 @@ __all__ = [
     "ScopedGrant",
     "SelectionDecision",
     "SelectionStatus",
+    "SelectedValidationContract",
 ]

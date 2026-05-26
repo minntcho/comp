@@ -385,6 +385,7 @@ def test_readme_tracks_policy_boundary_vocabulary_surface():
     assert "ScopedGrant" in readme
     assert "SelectionDecision" in readme
     assert "DecisionLedger" in readme
+    assert "SelectedValidationContract" in readme
     assert "validation" in readme
     assert "receipt authority" in readme
     assert "replay authority가 아니다" in readme
@@ -599,6 +600,7 @@ def test_policy_boundary_contract_keeps_policy_non_authoritative():
         "Not every term in this document is currently a public Python API.",
         "The first implementation slices live in `comp.policy`.",
         "`MaterialDescriptor`, `PolicyEffect`, `ScopedGrant`, `SelectionDecision`, and",
+        "`SelectedValidationContract` as compiler-facing input shape, not validation",
     ):
         assert line in policy_boundary
 
@@ -629,7 +631,7 @@ def test_policy_assembled_trust_kernel_map_tracks_growth_shape():
         "projection truth.",
         "This map does not prescribe:",
         "`comp.policy.MaterialDescriptor`, `PolicyEffect`, `ScopedGrant`,",
-        "`SelectionDecision`, and `DecisionLedger` are the first minimal vocabulary",
+        "`SelectionDecision`, `DecisionLedger`, and `SelectedValidationContract` are the",
     ):
         assert line in policy_map
 
@@ -1136,6 +1138,7 @@ def test_pyproject_packages_comp_core_scenarios_and_agent_layer():
         PolicyEffect,
         ScopedGrant,
         SelectionDecision,
+        SelectedValidationContract,
     )
 
     assert pyproject["project"]["description"] == (
@@ -1190,6 +1193,7 @@ def test_pyproject_packages_comp_core_scenarios_and_agent_layer():
     assert PolicyEffect is not None
     assert ScopedGrant is not None
     assert SelectionDecision is not None
+    assert SelectedValidationContract is not None
     assert ArtifactMaterial is not None
     assert ArtifactRef is not None
     assert InMemoryArtifactStore is not None
