@@ -391,9 +391,16 @@ def test_selected_validation_contract_freezes_handoff_decisions_from_ledger():
     assert contract.ledger_id == "ledger:run-1"
     assert contract.ledger_digest == "digest:ledger-run-1"
     assert contract.selected_decision_ids == ("decision:plant->site",)
+    assert contract.selected_decision_targets == (
+        ("decision:plant->site", "field:site"),
+    )
     assert contract.projection_candidate_decision_ids == (
         "decision:fuel_used->amount",
     )
+    assert contract.target_for_validation_decision("decision:plant->site") == (
+        "field:site"
+    )
+    assert contract.target_for_validation_decision("decision:fuel_used->amount") is None
     assert contract.allows_validation_decision("decision:plant->site") is True
     assert contract.allows_validation_decision("decision:fuel_used->amount") is False
     assert contract.authorizes_public_projection is False
@@ -446,6 +453,9 @@ def test_selected_validation_contract_digest_tracks_ledger_without_authority():
     digest = contract.digest()
 
     assert contract.ledger_digest == ledger.digest()
+    assert contract.selected_decision_targets == (
+        ("decision:plant->site", "field:site"),
+    )
     assert digest == contract.digest()
     assert digest == same_contract.digest()
     assert same_contract.ledger_digest == same_ledger.digest()
@@ -493,6 +503,31 @@ def test_selected_validation_contract_rejects_authority_shaped_scopes():
             selected_decision_ids=(
                 "decision:plant->site",
                 "decision:plant->site",
+            ),
+        )
+
+    with pytest.raises(ValueError, match="target for unselected decision"):
+        SelectedValidationContract(
+            contract_id="selected-contract:target",
+            policy_profile_id="profile:strict-public",
+            ledger_id="ledger:run-1",
+            basis="target mismatch",
+            selected_decision_ids=("decision:plant->site",),
+            selected_decision_targets=(
+                ("decision:fuel_used->amount", "field:amount"),
+            ),
+        )
+
+    with pytest.raises(ValueError, match="duplicate selected decision target"):
+        SelectedValidationContract(
+            contract_id="selected-contract:duplicate-target",
+            policy_profile_id="profile:strict-public",
+            ledger_id="ledger:run-1",
+            basis="duplicate target",
+            selected_decision_ids=("decision:plant->site",),
+            selected_decision_targets=(
+                ("decision:plant->site", "field:site"),
+                ("decision:plant->site", "field:site"),
             ),
         )
 

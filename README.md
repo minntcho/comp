@@ -179,7 +179,8 @@ they are not receipt authority or replay proof.
 
 `comp.runtime.ValidationHandoff`는 selected validation contract를
 `InterpretationHypothesis`로 옮기는 얇은 runtime bridge다. contract에 포함된
-selected decision만 compiler-facing hypothesis로 넘길 수 있다. It has no
+selected decision만 compiler-facing hypothesis로 넘길 수 있고, selected
+decision target snapshot이 있으면 claim field와도 맞아야 한다. It has no
 compile, commit, receipt, or replay authority.
 
 ```python

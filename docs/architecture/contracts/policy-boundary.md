@@ -97,15 +97,17 @@ rejection, hold, and escalation decisions are auditable.
 
 `SelectedValidationContract` is the compiler-facing contract produced after
 policy decisions and grants. It selects what may be handed to compiler
-validation. It does not validate the selected material.
+validation and may freeze selected decision target snapshots. It does not
+validate the selected material.
 
 Policy artifact digests may identify a `DecisionLedger` or
 `SelectedValidationContract` for audit linkage. A digest is not a receipt,
 replay proof, validation result, or public projection authority.
 
 `ValidationHandoff` may translate a selected validation contract into
-compiler-facing input. It is a bridge, not compiler validation, receipt
-authority, or replay authority.
+compiler-facing input. If the selected contract freezes a decision target, the
+handoff claim field must match that target before it can cross the bridge. It
+is a bridge, not compiler validation, receipt authority, or replay authority.
 
 ## Grant Scopes
 
@@ -216,7 +218,8 @@ projection. `policy_artifact_digest(...)`, `DecisionLedger.digest()`, and
 minting receipt, replay, validation, or public projection authority.
 The current selected-contract slice keeps `SelectedValidationContract` as compiler-facing input shape, not validation authority.
 `comp.runtime.ValidationHandoff` bridges selected validation contracts into
-compiler-facing hypotheses without compiling, committing, building receipts, or
+compiler-facing hypotheses only when claim decision ids and selected decision
+target snapshots match, without compiling, committing, building receipts, or
 replaying. These slices do not expose receipt builders, projection gates, or
 replay authority.
 

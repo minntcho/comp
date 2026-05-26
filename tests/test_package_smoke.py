@@ -404,6 +404,8 @@ def test_readme_tracks_validation_handoff_runtime_bridge():
     assert "comp.runtime.ValidationHandoff" in readme
     assert "selected validation contract를" in readme
     assert "`InterpretationHypothesis`로 옮기는 얇은 runtime bridge" in readme
+    assert "decision target snapshot" in readme
+    assert "claim field" in readme
     assert "compile, commit, receipt, or replay authority" in readme
     assert "ValidationHandoffClaim" in readme
 
@@ -622,7 +624,10 @@ def test_policy_boundary_contract_keeps_policy_non_authoritative():
         "`PolicyAssembly` may assemble a `DecisionLedger` and matching",
         "`policy_artifact_digest(...)`, `DecisionLedger.digest()`, and",
         "Policy artifact digest is not PublicOutputReceipt.",
+        "selected decision target snapshots",
+        "handoff claim field must match that target",
         "`SelectedValidationContract` as compiler-facing input shape, not validation",
+        "target snapshots match",
         "`comp.runtime.ValidationHandoff` bridges selected validation",
     ):
         assert line in policy_boundary
@@ -645,6 +650,8 @@ def test_policy_assembled_trust_kernel_map_tracks_growth_shape():
         "Capability activation is artifact-conditioned.",
         "Authority boundaries are invariant.",
         "`SelectedValidationContract` freezes what the compiler is allowed to see",
+        "selected decision target snapshot",
+        "bind each handoff claim field to the frozen target",
         "selected for validation != selected for projection",
         "`ScopedGrant` is pipeline access, not trust authority.",
         "Composition step from effects to decisions and scoped grants.",

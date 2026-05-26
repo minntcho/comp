@@ -65,11 +65,22 @@ class ValidationHandoff:
             raise ValueError("duplicate handoff claim decision id")
 
         selected_decision_ids = set(self.contract.selected_decision_ids)
-        for decision_id in claim_decision_ids:
+        for handoff_claim in self.claims:
+            decision_id = handoff_claim.decision_id
             if decision_id not in selected_decision_ids:
                 raise ValueError(
                     f"handoff claim decision is not selected for validation handoff: "
                     f"{decision_id}"
+                )
+            target_id = self.contract.target_for_validation_decision(decision_id)
+            if (
+                target_id is not None
+                and handoff_claim.claim.field != _field_name_from_target_id(target_id)
+            ):
+                raise ValueError(
+                    "handoff claim field does not match selected target: "
+                    f"{decision_id} expects {target_id}, "
+                    f"got {handoff_claim.claim.field}"
                 )
 
         missing = tuple(
@@ -84,6 +95,12 @@ class ValidationHandoff:
 def _require_non_empty(field_name: str, value: str) -> None:
     if not value:
         raise ValueError(f"{field_name} is required.")
+
+
+def _field_name_from_target_id(target_id: str) -> str:
+    if target_id.startswith("field:"):
+        return target_id.split(":", 1)[1]
+    return target_id
 
 
 __all__ = ["ValidationHandoff", "ValidationHandoffClaim"]
