@@ -2,6 +2,34 @@
   "schema_version": 1,
   "owner": "scenario-lab",
   "description": "Downstream scenario-pack repositories that consume comp as a public authority kernel.",
+  "boundary_policy": {
+    "comp_owns": [
+      "authority_contracts",
+      "receipts",
+      "projection_gates",
+      "replay_validation",
+      "minimal_kernel_e2e_scenarios"
+    ],
+    "downstream_owns": [
+      "large_domain_workflows",
+      "product_platform_fixtures",
+      "importers",
+      "ui_viewer_flows",
+      "supplier_workflows"
+    ],
+    "comp_must_not": [
+      "clone_downstream_repositories_for_pr_ci",
+      "use_git_submodules_for_scenario_packs",
+      "import_downstream_scenario_code_in_production",
+      "require_large_downstream_scenarios_before_v1"
+    ],
+    "cutover_sequence": [
+      "copy_or_reconstruct",
+      "external_run",
+      "parallel_validation",
+      "internal_shrink_or_remove"
+    ]
+  },
   "packs": [
     {
       "id": "comp-scenario-packs",

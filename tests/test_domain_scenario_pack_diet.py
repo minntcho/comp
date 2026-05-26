@@ -342,3 +342,51 @@ def test_downstream_registry_records_active_pack_cutover_state():
             "covers_comp_scenario_ids": ["synthetic_pcf.smoke.v1"],
         },
     ]
+
+
+def test_downstream_registry_records_machine_readable_boundary_policy():
+    registry = json.loads(
+        Path("docs/extensions/downstream-registry.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    boundary_policy = registry["boundary_policy"]
+    extension_doc = Path("docs/extensions/scenario-packs.md").read_text(
+        encoding="utf-8"
+    )
+
+    assert boundary_policy["comp_owns"] == [
+        "authority_contracts",
+        "receipts",
+        "projection_gates",
+        "replay_validation",
+        "minimal_kernel_e2e_scenarios",
+    ]
+    assert boundary_policy["downstream_owns"] == [
+        "large_domain_workflows",
+        "product_platform_fixtures",
+        "importers",
+        "ui_viewer_flows",
+        "supplier_workflows",
+    ]
+    assert boundary_policy["comp_must_not"] == [
+        "clone_downstream_repositories_for_pr_ci",
+        "use_git_submodules_for_scenario_packs",
+        "import_downstream_scenario_code_in_production",
+        "require_large_downstream_scenarios_before_v1",
+    ]
+    assert boundary_policy["cutover_sequence"] == [
+        "copy_or_reconstruct",
+        "external_run",
+        "parallel_validation",
+        "internal_shrink_or_remove",
+    ]
+
+    for phrase in (
+        "Machine-readable boundary policy",
+        "comp_owns",
+        "downstream_owns",
+        "comp_must_not",
+        "cutover_sequence",
+    ):
+        assert phrase in extension_doc
