@@ -89,6 +89,143 @@ def test_policy_vocabulary_rejects_authority_shaped_effects_and_scopes():
         )
 
 
+def test_scoped_grant_records_pipeline_access_without_projection_authority():
+    from comp.policy import ScopedGrant
+
+    grant = ScopedGrant(
+        grant_id="grant:fuel_used:selection",
+        subject_id="material:fuel_used",
+        scope="selection_evaluation",
+        basis="observed source attribute",
+        conditions=(("requires_review", False),),
+        retention="decision_audit",
+    )
+
+    assert grant.grant_id == "grant:fuel_used:selection"
+    assert grant.subject_id == "material:fuel_used"
+    assert grant.scope == "selection_evaluation"
+    assert grant.basis == "observed source attribute"
+    assert grant.conditions == (("requires_review", False),)
+    assert grant.retention == "decision_audit"
+    assert grant.authorizes_public_projection is False
+
+    projection_candidate = ScopedGrant(
+        grant_id="grant:fuel_used:projection-candidate",
+        subject_id="decision:fuel_used->amount",
+        scope="projection_candidate",
+        basis="selected for later receipt consideration",
+    )
+
+    assert projection_candidate.scope == "projection_candidate"
+    assert projection_candidate.authorizes_public_projection is False
+
+    with pytest.raises(ValueError, match="unknown pipeline scope"):
+        ScopedGrant(
+            grant_id="grant:public",
+            subject_id="material:fuel_used",
+            scope="public_projection",
+            basis="not allowed",
+        )
+
+
+def test_selection_decision_requires_grant_for_validation_handoff():
+    from comp.policy import ScopedGrant, SelectionDecision
+
+    selected_without_grant = SelectionDecision(
+        decision_id="decision:fuel_used->amount",
+        subject_id="material:fuel_used",
+        status="selected",
+        basis="declared alias",
+        target_id="field:amount",
+    )
+
+    assert selected_without_grant.status == "selected"
+    assert selected_without_grant.allows_scope("validation_handoff") is False
+    assert selected_without_grant.authorizes_public_projection is False
+
+    handoff_grant = ScopedGrant(
+        grant_id="grant:fuel_used:validation-handoff",
+        subject_id="decision:fuel_used->amount",
+        scope="validation_handoff",
+        basis="declared alias selected",
+    )
+    selected_with_grant = SelectionDecision(
+        decision_id="decision:fuel_used->amount",
+        subject_id="material:fuel_used",
+        status="selected",
+        basis="declared alias",
+        target_id="field:amount",
+        grants=(handoff_grant,),
+        denied_scopes=("projection_candidate",),
+    )
+
+    assert selected_with_grant.allows_scope("validation_handoff") is True
+    assert selected_with_grant.allows_scope("projection_candidate") is False
+    assert selected_with_grant.authorizes_public_projection is False
+
+    with pytest.raises(ValueError, match="unknown selection status"):
+        SelectionDecision(
+            decision_id="decision:validated",
+            subject_id="material:fuel_used",
+            status="validated",
+            basis="not allowed",
+        )
+
+
+def test_decision_ledger_lists_grants_and_validation_handoff_subjects():
+    from comp.policy import (
+        DecisionLedger,
+        MaterialDescriptor,
+        PolicyEffect,
+        ScopedGrant,
+        SelectionDecision,
+    )
+
+    descriptor = MaterialDescriptor(
+        material_id="material:fuel_used",
+        material_kind="source_attribute",
+        field_knownness="unknown",
+    )
+    effect = PolicyEffect(
+        effect_id="effect:select:fuel_used",
+        effect_kind="select",
+        subject_id="material:fuel_used",
+        basis="declared alias",
+        scope="validation_handoff",
+    )
+    grant = ScopedGrant(
+        grant_id="grant:fuel_used:validation-handoff",
+        subject_id="decision:fuel_used->amount",
+        scope="validation_handoff",
+        basis="declared alias selected",
+    )
+    decision = SelectionDecision(
+        decision_id="decision:fuel_used->amount",
+        subject_id="material:fuel_used",
+        status="selected",
+        basis="declared alias",
+        target_id="field:amount",
+        grants=(grant,),
+    )
+    ledger = DecisionLedger(
+        ledger_id="ledger:run-1",
+        policy_profile_id="profile:strict-public",
+        descriptors=(descriptor,),
+        effects=(effect,),
+        decisions=(decision,),
+    )
+
+    assert ledger.decision_for("decision:fuel_used->amount") == decision
+    assert ledger.grants_for("decision:fuel_used->amount") == (grant,)
+    assert ledger.grants_for("decision:fuel_used->amount", scope="validation_handoff") == (
+        grant,
+    )
+    assert ledger.selected_validation_decision_ids() == (
+        "decision:fuel_used->amount",
+    )
+    assert ledger.authorizes_public_projection is False
+
+
 def test_policy_package_does_not_expose_projection_or_replay_authority():
     import comp.policy as policy
 

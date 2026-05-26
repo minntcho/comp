@@ -355,6 +355,9 @@ The current codebase already has precursor surfaces:
 ```text
 comp.policy.MaterialDescriptor
 comp.policy.PolicyEffect
+comp.policy.ScopedGrant
+comp.policy.SelectionDecision
+comp.policy.DecisionLedger
 CompilerProfile
 DomainPack
 RetrievalQueryPolicy
@@ -365,10 +368,13 @@ PublicOutputReceipt
 replay_public_projection(...)
 ```
 
-`comp.policy.MaterialDescriptor` and `comp.policy.PolicyEffect` are the first
-minimal vocabulary slice. They describe pre-validation material and policy
-effects, but they do not grant validation handoff, validate claims, authorize
-projection, or replay receipts.
+`comp.policy.MaterialDescriptor`, `PolicyEffect`, `ScopedGrant`,
+`SelectionDecision`, and `DecisionLedger` are the first minimal vocabulary
+slices. They describe pre-validation material, policy effects, scoped pipeline
+access, selection status, and decision audit records. They do not validate
+claims, authorize projection, or replay receipts. A selected decision still
+requires a `validation_handoff` grant before it can be considered for compiler
+handoff, and that handoff remains pre-validation.
 
 The other surfaces show the existing authority direction: profiles declare
 behavior, retrieval produces candidates, deterministic selectors bind

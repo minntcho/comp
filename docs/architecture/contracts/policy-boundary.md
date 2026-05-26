@@ -188,10 +188,11 @@ This document defines a boundary contract for upcoming policy work.
 Not every term in this document is currently a public Python API. Until
 implemented, these terms are architectural contract vocabulary.
 
-The first implementation slice lives in `comp.policy`. It exposes
-`MaterialDescriptor` and `PolicyEffect` as pre-validation vocabulary only. It
-does not expose `ScopedGrant`, `DecisionLedger`, `SelectedValidationContract`,
-receipt builders, projection gates, or replay authority.
+The first implementation slices live in `comp.policy`. They expose
+`MaterialDescriptor`, `PolicyEffect`, `ScopedGrant`, `SelectionDecision`, and
+`DecisionLedger` as pre-validation vocabulary only. They do not expose
+`SelectedValidationContract`, receipt builders, projection gates, or replay
+authority.
 
 Existing `CompilerProfile`, `DomainPack`, `RetrievalQueryPolicy`,
 reference-selection, resolver-task, and profile/schema selection-tier surfaces
