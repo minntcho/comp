@@ -30,6 +30,31 @@ PACKAGE_BOUNDARY_ROLES = {
 }
 
 
+EXPECTED_PACKAGE_IMPORTS = {
+    "comp": ("comp.judgment",),
+    "comp.cli": ("comp.scenario_contracts",),
+    "comp.compiler_tool": ("comp.judgment",),
+    "comp.explanation": ("comp.judgment", "comp.persistence", "comp.views"),
+    "comp.judgment": (),
+    "comp.persistence": ("comp.judgment",),
+    "comp.policy": (),
+    "comp.runtime": (
+        "comp.compiler_tool",
+        "comp.persistence",
+        "comp.scenario_contracts",
+    ),
+    "comp.scenario_contracts": (
+        "comp.judgment",
+        "comp.persistence",
+        "comp.runtime",
+    ),
+    "comp.scenarios": (),
+    "comp.scenarios.synthetic": ("comp.compiler_tool", "comp.runtime"),
+    "comp.views": ("comp", "comp.compiler_tool"),
+    "minchoagnt": ("comp.compiler_tool", "comp.judgment"),
+}
+
+
 AUTHORITY_BOUNDARY_RULES = (
     ImportBoundaryRule(
         label="top-level judgment facade",
@@ -234,6 +259,22 @@ def test_packaged_surfaces_have_explicit_boundary_roles_documented():
         assert f"{package}: {role}" in contract
 
 
+def test_packaged_surfaces_match_expected_internal_import_snapshot():
+    pyproject = tomllib.loads(Path("pyproject.toml").read_text(encoding="utf-8"))
+    packages = tuple(pyproject["tool"]["setuptools"]["packages"])
+
+    assert set(EXPECTED_PACKAGE_IMPORTS) == set(packages)
+    assert _package_import_graph(packages) == EXPECTED_PACKAGE_IMPORTS
+
+    contract = Path(
+        "docs/architecture/contracts/trust-kernel-extension-rings.md"
+    ).read_text(encoding="utf-8")
+    assert "Every packaged surface has a machine-checked import snapshot." in contract
+    for package, imports in EXPECTED_PACKAGE_IMPORTS.items():
+        expected = ", ".join(imports) if imports else "(none)"
+        assert f"{package} -> {expected}" in contract
+
+
 def test_authority_modules_do_not_import_presentation_or_explanation_layers():
     violations = []
     for rule in AUTHORITY_BOUNDARY_RULES:
@@ -360,3 +401,39 @@ def _is_forbidden(imported: str, rule: ImportBoundaryRule) -> bool:
         imported == prefix or imported.startswith(f"{prefix}.")
         for prefix in rule.forbidden_prefixes
     )
+
+
+def _package_import_graph(packages: tuple[str, ...]) -> dict[str, tuple[str, ...]]:
+    graph = {package: set() for package in packages}
+    for source_path in _python_files((Path("comp"), Path("minchoagnt"))):
+        source_package = _package_for_path(source_path, packages)
+        if source_package is None:
+            continue
+        for imported in _imports(source_path):
+            target_package = _package_for_import(imported.split(":", 1)[0], packages)
+            if target_package is not None and target_package != source_package:
+                graph[source_package].add(target_package)
+    return {
+        package: tuple(sorted(imports))
+        for package, imports in graph.items()
+    }
+
+
+def _package_for_path(path: Path, packages: tuple[str, ...]) -> str | None:
+    module = ".".join(path.with_suffix("").parts)
+    return _longest_package_match(module, packages)
+
+
+def _package_for_import(imported: str, packages: tuple[str, ...]) -> str | None:
+    return _longest_package_match(imported, packages)
+
+
+def _longest_package_match(module: str, packages: tuple[str, ...]) -> str | None:
+    matches = tuple(
+        package
+        for package in packages
+        if module == package or module.startswith(f"{package}.")
+    )
+    if not matches:
+        return None
+    return max(matches, key=len)
