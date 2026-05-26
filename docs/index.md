@@ -54,6 +54,7 @@ when the PR changes the mapped area but leaves the map stale.
 2. `architecture/maps/domain-scenario-pack-generation.md`
 3. `architecture/maps/internal-execution-design-map.md`
 4. `architecture/maps/policy-assembled-trust-kernel.md`
+5. `architecture/maps/product-facade-observation.md`
 
 ### North Stars
 
