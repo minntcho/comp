@@ -391,6 +391,8 @@ def test_readme_tracks_policy_boundary_vocabulary_surface():
     assert "SelectedValidationContract" in readme
     assert "policy_artifact_digest" in readme
     assert "PolicyAssembly` can assemble a `DecisionLedger` and matching" in readme
+    assert "Pipeline scope changes are represented only by `grant_scope`" in readme
+    assert "`restrict_scope` `PolicyEffect`s" in readme
     assert "provide stable audit identifiers only" in readme
     assert "pre-validation and non-authoritative" in readme
     assert "validation" in readme
@@ -624,6 +626,11 @@ def test_policy_boundary_contract_keeps_policy_non_authoritative():
         "`PolicyAssembly` may assemble a `DecisionLedger` and matching",
         "`policy_artifact_digest(...)`, `DecisionLedger.digest()`, and",
         "Policy artifact digest is not PublicOutputReceipt.",
+        "Pipeline scope may appear",
+        "only on `grant_scope` and `restrict_scope` effects",
+        "`PolicyEffect.scope` is valid only on `grant_scope` and `restrict_scope`.",
+        "Selection status is not pipeline access",
+        "Status effects must not carry pipeline scope.",
         "selected decision target snapshots",
         "handoff claim field must match that target",
         "`SelectedValidationContract` as compiler-facing input shape, not validation",
@@ -654,6 +661,9 @@ def test_policy_assembled_trust_kernel_map_tracks_growth_shape():
         "bind each handoff claim field to the frozen target",
         "selected for validation != selected for projection",
         "`ScopedGrant` is pipeline access, not trust authority.",
+        "Status and evidence effects are unscoped",
+        "pipeline scope",
+        "grant_scope and restrict_scope effects",
         "Composition step from effects to decisions and scoped grants.",
         "Ledger and selected-contract assembly step from descriptors, effects, and",
         "and selected-contract assembly, scoped pipeline access, selection status,",

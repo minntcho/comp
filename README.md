@@ -173,6 +173,9 @@ from comp.policy import policy_artifact_digest
 `PolicyAssembly` can assemble a `DecisionLedger` and matching
 `SelectedValidationContract` together, while keeping both artifacts
 pre-validation and non-authoritative.
+Pipeline scope changes are represented only by `grant_scope` or
+`restrict_scope` `PolicyEffect`s; status effects such as `select` and `hold`
+do not carry scope.
 `policy_artifact_digest(...)`, `DecisionLedger.digest()`, and
 `SelectedValidationContract.digest()` provide stable audit identifiers only;
 they are not receipt authority or replay proof.

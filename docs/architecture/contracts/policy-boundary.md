@@ -76,7 +76,9 @@ context, or evidence-request material. It is not authority.
 
 `PolicyEffect` is the common intermediate representation produced by policies.
 Effects may propose, hold, reject, request evidence, restrict scope, require
-review, set retention, or request replay material.
+review, set retention, or request replay material. Pipeline scope may appear
+only on `grant_scope` and `restrict_scope` effects; status effects such as
+`select`, `propose`, `hold`, and `reject` must not carry scope.
 
 `ConflictResolver` combines policy effects into final decisions. It applies
 kernel invariants first and profile-specific composition rules second.
@@ -126,6 +128,10 @@ audit_only
 `validation_handoff` means the material or decision may be passed to compiler
 validation. It does not mean the material is valid.
 
+`PolicyEffect.scope` is valid only on `grant_scope` and `restrict_scope`.
+Selection status is not pipeline access; a selected decision still needs a
+scoped grant before crossing a pipeline boundary.
+
 `projection_candidate` means pre-authority eligibility for later receipt
 consideration. It does not authorize public projection. `PublicOutputReceipt`
 remains the only public projection authority.
@@ -146,6 +152,7 @@ No selected material becomes public output without PublicOutputReceipt.
 No policy assembly may bypass receipt or replay boundaries.
 ScopedGrant is not PublicOutputReceipt.
 Policy artifact digest is not PublicOutputReceipt.
+Status effects must not carry pipeline scope.
 ```
 
 The policy boundary may restrict access to later pipeline stages. It may not
