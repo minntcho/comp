@@ -297,7 +297,8 @@ The assembled architecture should keep these roles separate:
 
 ```text
 PolicyEffect
-  Decision material.
+  Decision material. Status and evidence effects are unscoped; pipeline scope
+  is carried only by grant_scope and restrict_scope effects.
 
 ConflictResolver
   Composition step from effects to decisions and scoped grants.

@@ -107,6 +107,10 @@ class PolicyEffect:
             raise ValueError(f"unknown policy effect kind: {self.effect_kind}")
         if self.scope is not None and self.scope not in PIPELINE_SCOPES:
             raise ValueError(f"unknown pipeline scope: {self.scope}")
+        if self.scope is not None and self.effect_kind not in _SCOPED_EFFECT_KINDS:
+            raise ValueError(
+                "scope is only allowed for grant_scope or restrict_scope effects"
+            )
         if self.effect_kind in _SCOPED_EFFECT_KINDS and self.scope is None:
             raise ValueError(f"scope is required for {self.effect_kind}")
         object.__setattr__(self, "payload", tuple(self.payload))

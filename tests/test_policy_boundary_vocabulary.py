@@ -41,21 +41,21 @@ def test_policy_effect_records_scope_and_basis_without_authority():
     )
 
     effect = PolicyEffect(
-        effect_id="effect:hold:fuel_used",
-        effect_kind="hold",
+        effect_id="effect:grant:fuel_used:selection",
+        effect_kind="grant_scope",
         subject_id="material:fuel_used",
-        basis="unit evidence required",
+        basis="selection evaluation allowed",
         scope="selection_evaluation",
-        reason="missing unit witness",
-        payload=(("required_evidence", "unit_witness"),),
+        reason="observed source attribute",
+        payload=(("retention", "decision_audit"),),
     )
 
-    assert "hold" in POLICY_EFFECT_KINDS
+    assert "grant_scope" in POLICY_EFFECT_KINDS
     assert "validation_handoff" in PIPELINE_SCOPES
-    assert effect.effect_kind == "hold"
+    assert effect.effect_kind == "grant_scope"
     assert effect.scope == "selection_evaluation"
-    assert effect.basis == "unit evidence required"
-    assert effect.payload == (("required_evidence", "unit_witness"),)
+    assert effect.basis == "selection evaluation allowed"
+    assert effect.payload == (("retention", "decision_audit"),)
     assert PipelineScope is not None
     assert PolicyEffectKind is not None
 
@@ -86,6 +86,15 @@ def test_policy_vocabulary_rejects_authority_shaped_effects_and_scopes():
             effect_kind="grant_scope",
             subject_id="material:fuel_used",
             basis="selection allowed",
+        )
+
+    with pytest.raises(ValueError, match="scope is only allowed"):
+        PolicyEffect(
+            effect_id="effect:hold:scoped",
+            effect_kind="hold",
+            subject_id="material:fuel_used",
+            basis="unit evidence required",
+            scope="validation_handoff",
         )
 
 
@@ -191,7 +200,6 @@ def test_decision_ledger_lists_grants_and_validation_handoff_subjects():
         effect_kind="select",
         subject_id="material:fuel_used",
         basis="declared alias",
-        scope="validation_handoff",
     )
     grant = ScopedGrant(
         grant_id="grant:fuel_used:validation-handoff",
@@ -546,7 +554,6 @@ def test_conflict_resolver_holds_selected_candidate_when_restricted_by_policy():
                 effect_kind="select",
                 subject_id="material:fuel_used",
                 basis="embedding score 0.96",
-                scope="validation_handoff",
             ),
             PolicyEffect(
                 effect_id="effect:grant:fuel_used:validation-handoff",
