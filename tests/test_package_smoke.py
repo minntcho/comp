@@ -383,6 +383,8 @@ def test_readme_tracks_policy_boundary_vocabulary_surface():
     assert "MaterialDescriptor" in readme
     assert "PolicyEffect" in readme
     assert "ConflictResolver" in readme
+    assert "PolicyAssembly" in readme
+    assert "PolicyAssemblySubject" in readme
     assert "ScopedGrant" in readme
     assert "SelectionDecision" in readme
     assert "DecisionLedger" in readme
@@ -610,8 +612,9 @@ def test_policy_boundary_contract_keeps_policy_non_authoritative():
         "Capabilities may recommend. Policies may issue scoped access.",
         "Not every term in this document is currently a public Python API.",
         "The first implementation slices live in `comp.policy`.",
-        "`MaterialDescriptor`, `PolicyEffect`, `ConflictResolver`, `ScopedGrant`,",
-        "`ConflictResolver` may compose effects into decisions and scoped grants",
+        "`MaterialDescriptor`, `PolicyEffect`, `ConflictResolver`, `PolicyAssembly`,",
+        "`PolicyAssembly` groups descriptors, effects, assembly subjects, and resolver",
+        "`PolicyAssembly` may assemble a `DecisionLedger`, but neither",
         "`SelectedValidationContract` as compiler-facing input shape, not validation",
         "`comp.runtime.ValidationHandoff` bridges selected validation",
     ):
@@ -638,6 +641,7 @@ def test_policy_assembled_trust_kernel_map_tracks_growth_shape():
         "selected for validation != selected for projection",
         "`ScopedGrant` is pipeline access, not trust authority.",
         "Composition step from effects to decisions and scoped grants.",
+        "Ledger assembly step from descriptors, effects, and decision subjects.",
         "`DecisionLedger` is the audit spine for policy assembly.",
         "PublicOutputReceipt",
         "Runtime bridge from selected contract to compiler input.",
@@ -648,7 +652,7 @@ def test_policy_assembled_trust_kernel_map_tracks_growth_shape():
         "projection truth.",
         "This map does not prescribe:",
         "`comp.policy.MaterialDescriptor`, `PolicyEffect`, `ConflictResolver`,",
-        "`SelectedValidationContract` are the first minimal vocabulary slices.",
+        "`PolicyAssembly`, `ScopedGrant`, `SelectionDecision`, `DecisionLedger`, and",
     ):
         assert line in policy_map
 
@@ -1155,6 +1159,8 @@ def test_pyproject_packages_comp_core_scenarios_and_agent_layer():
         ConflictResolver,
         DecisionLedger,
         MaterialDescriptor,
+        PolicyAssembly,
+        PolicyAssemblySubject,
         PolicyEffect,
         ScopedGrant,
         SelectionDecision,
@@ -1211,6 +1217,8 @@ def test_pyproject_packages_comp_core_scenarios_and_agent_layer():
     assert ConflictResolver is not None
     assert DecisionLedger is not None
     assert MaterialDescriptor is not None
+    assert PolicyAssembly is not None
+    assert PolicyAssemblySubject is not None
     assert PolicyEffect is not None
     assert ScopedGrant is not None
     assert SelectionDecision is not None
