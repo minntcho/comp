@@ -389,6 +389,8 @@ def test_readme_tracks_policy_boundary_vocabulary_surface():
     assert "SelectionDecision" in readme
     assert "DecisionLedger" in readme
     assert "SelectedValidationContract" in readme
+    assert "PolicyAssembly` can assemble a `DecisionLedger` and matching" in readme
+    assert "pre-validation and non-authoritative" in readme
     assert "validation" in readme
     assert "receipt authority" in readme
     assert "replay authority가 아니다" in readme
@@ -614,7 +616,8 @@ def test_policy_boundary_contract_keeps_policy_non_authoritative():
         "The first implementation slices live in `comp.policy`.",
         "`MaterialDescriptor`, `PolicyEffect`, `ConflictResolver`, `PolicyAssembly`,",
         "`PolicyAssembly` groups descriptors, effects, assembly subjects, and resolver",
-        "`PolicyAssembly` may assemble a `DecisionLedger`, but neither",
+        "`PolicyAssembly` may also build a matching `SelectedValidationContract`",
+        "`PolicyAssembly` may assemble a `DecisionLedger` and matching",
         "`SelectedValidationContract` as compiler-facing input shape, not validation",
         "`comp.runtime.ValidationHandoff` bridges selected validation",
     ):
@@ -641,7 +644,8 @@ def test_policy_assembled_trust_kernel_map_tracks_growth_shape():
         "selected for validation != selected for projection",
         "`ScopedGrant` is pipeline access, not trust authority.",
         "Composition step from effects to decisions and scoped grants.",
-        "Ledger assembly step from descriptors, effects, and decision subjects.",
+        "Ledger and selected-contract assembly step from descriptors, effects, and",
+        "and selected-contract assembly, scoped pipeline access, selection status,",
         "`DecisionLedger` is the audit spine for policy assembly.",
         "PublicOutputReceipt",
         "Runtime bridge from selected contract to compiler input.",

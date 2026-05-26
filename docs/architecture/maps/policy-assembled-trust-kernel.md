@@ -297,7 +297,8 @@ ConflictResolver
   Composition step from effects to decisions and scoped grants.
 
 PolicyAssembly
-  Ledger assembly step from descriptors, effects, and decision subjects.
+  Ledger and selected-contract assembly step from descriptors, effects, and
+  decision subjects.
 
 ScopedGrant
   Pipeline access.
@@ -385,9 +386,10 @@ replay_public_projection(...)
 `PolicyAssembly`, `ScopedGrant`, `SelectionDecision`, `DecisionLedger`, and
 `SelectedValidationContract` are the first minimal vocabulary slices. They
 describe pre-validation material, policy effects, effect composition, ledger
-assembly, scoped pipeline access, selection status, decision audit records, and
-the compiler-facing contract shape. They do not validate claims, authorize
-projection, or replay receipts. A selected decision still requires a
+and selected-contract assembly, scoped pipeline access, selection status,
+decision audit records, and the compiler-facing contract shape. They do not
+validate claims, authorize projection, or replay receipts. A selected decision
+still requires a
 `validation_handoff` grant before it can be included in a selected validation
 contract, and that contract remains pre-validation.
 
