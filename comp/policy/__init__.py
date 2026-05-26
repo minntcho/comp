@@ -16,12 +16,14 @@ from comp.policy.boundary import (
     PipelineScope,
     PolicyAssembly,
     PolicyAssemblySubject,
+    PolicyDecisionDelta,
     PolicyEffect,
     PolicyEffectKind,
     ScopedGrant,
     SelectionDecision,
     SelectionStatus,
     SelectedValidationContract,
+    ShadowPolicyComparison,
     policy_artifact_digest,
 )
 
@@ -35,11 +37,13 @@ __all__ = [
     "PipelineScope",
     "PolicyAssembly",
     "PolicyAssemblySubject",
+    "PolicyDecisionDelta",
     "PolicyEffect",
     "PolicyEffectKind",
     "ScopedGrant",
     "SelectionDecision",
     "SelectionStatus",
     "SelectedValidationContract",
+    "ShadowPolicyComparison",
     "policy_artifact_digest",
 ]

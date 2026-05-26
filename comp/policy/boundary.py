@@ -367,6 +367,140 @@ class SelectedValidationContract:
 
 
 @dataclass(frozen=True, slots=True)
+class PolicyDecisionDelta:
+    actual_only: tuple[str, ...] = field(default_factory=tuple)
+    shadow_only: tuple[str, ...] = field(default_factory=tuple)
+
+    def __post_init__(self) -> None:
+        for decision_id in self.actual_only:
+            _require_non_empty("actual_only decision id", decision_id)
+        for decision_id in self.shadow_only:
+            _require_non_empty("shadow_only decision id", decision_id)
+        _require_unique("duplicate actual-only decision id", self.actual_only)
+        _require_unique("duplicate shadow-only decision id", self.shadow_only)
+        object.__setattr__(self, "actual_only", tuple(self.actual_only))
+        object.__setattr__(self, "shadow_only", tuple(self.shadow_only))
+
+    @property
+    def has_delta(self) -> bool:
+        return bool(self.actual_only or self.shadow_only)
+
+
+@dataclass(frozen=True, slots=True)
+class ShadowPolicyComparison:
+    comparison_id: str
+    basis: str
+    actual_policy_profile_id: str
+    shadow_policy_profile_id: str
+    actual_ledger_id: str
+    shadow_ledger_id: str
+    actual_contract_id: str
+    shadow_contract_id: str
+    actual_ledger_digest: str
+    shadow_ledger_digest: str
+    actual_contract_digest: str
+    shadow_contract_digest: str
+    selected_delta: PolicyDecisionDelta = field(default_factory=PolicyDecisionDelta)
+    held_delta: PolicyDecisionDelta = field(default_factory=PolicyDecisionDelta)
+    rejected_delta: PolicyDecisionDelta = field(default_factory=PolicyDecisionDelta)
+    projection_candidate_delta: PolicyDecisionDelta = field(
+        default_factory=PolicyDecisionDelta
+    )
+    comparison_version: str = "policy-boundary-shadow-comparison-v1"
+    meta: tuple[tuple[str, Any], ...] = field(default_factory=tuple)
+
+    def __post_init__(self) -> None:
+        _require_non_empty("comparison_id", self.comparison_id)
+        _require_non_empty("basis", self.basis)
+        _require_non_empty(
+            "actual_policy_profile_id",
+            self.actual_policy_profile_id,
+        )
+        _require_non_empty(
+            "shadow_policy_profile_id",
+            self.shadow_policy_profile_id,
+        )
+        _require_non_empty("actual_ledger_id", self.actual_ledger_id)
+        _require_non_empty("shadow_ledger_id", self.shadow_ledger_id)
+        _require_non_empty("actual_contract_id", self.actual_contract_id)
+        _require_non_empty("shadow_contract_id", self.shadow_contract_id)
+        _require_non_empty("actual_ledger_digest", self.actual_ledger_digest)
+        _require_non_empty("shadow_ledger_digest", self.shadow_ledger_digest)
+        _require_non_empty("actual_contract_digest", self.actual_contract_digest)
+        _require_non_empty("shadow_contract_digest", self.shadow_contract_digest)
+        _require_non_empty("comparison_version", self.comparison_version)
+        object.__setattr__(self, "meta", tuple(self.meta))
+
+    @classmethod
+    def from_artifacts(
+        cls,
+        *,
+        comparison_id: str,
+        basis: str,
+        actual_ledger: DecisionLedger,
+        actual_contract: SelectedValidationContract,
+        shadow_ledger: DecisionLedger,
+        shadow_contract: SelectedValidationContract,
+        comparison_version: str = "policy-boundary-shadow-comparison-v1",
+        meta: tuple[tuple[str, Any], ...] = (),
+    ) -> ShadowPolicyComparison:
+        _validate_contract_bound_to_ledger("actual", actual_ledger, actual_contract)
+        _validate_contract_bound_to_ledger("shadow", shadow_ledger, shadow_contract)
+
+        return cls(
+            comparison_id=comparison_id,
+            basis=basis,
+            actual_policy_profile_id=actual_ledger.policy_profile_id,
+            shadow_policy_profile_id=shadow_ledger.policy_profile_id,
+            actual_ledger_id=actual_ledger.ledger_id,
+            shadow_ledger_id=shadow_ledger.ledger_id,
+            actual_contract_id=actual_contract.contract_id,
+            shadow_contract_id=shadow_contract.contract_id,
+            actual_ledger_digest=actual_ledger.digest(),
+            shadow_ledger_digest=shadow_ledger.digest(),
+            actual_contract_digest=actual_contract.digest(),
+            shadow_contract_digest=shadow_contract.digest(),
+            selected_delta=_decision_delta(
+                _decision_ids_by_status(actual_ledger, "selected"),
+                _decision_ids_by_status(shadow_ledger, "selected"),
+            ),
+            held_delta=_decision_delta(
+                _decision_ids_by_status(actual_ledger, "held"),
+                _decision_ids_by_status(shadow_ledger, "held"),
+            ),
+            rejected_delta=_decision_delta(
+                _decision_ids_by_status(actual_ledger, "rejected"),
+                _decision_ids_by_status(shadow_ledger, "rejected"),
+            ),
+            projection_candidate_delta=_decision_delta(
+                actual_contract.projection_candidate_decision_ids,
+                shadow_contract.projection_candidate_decision_ids,
+            ),
+            comparison_version=comparison_version,
+            meta=meta,
+        )
+
+    @property
+    def has_delta(self) -> bool:
+        return any(
+            delta.has_delta
+            for delta in (
+                self.selected_delta,
+                self.held_delta,
+                self.rejected_delta,
+                self.projection_candidate_delta,
+            )
+        )
+
+    def digest(self) -> str:
+        return policy_artifact_digest("ShadowPolicyComparison", self)
+
+    @property
+    def authorizes_public_projection(self) -> bool:
+        return False
+
+
+@dataclass(frozen=True, slots=True)
 class ConflictResolver:
     status_priority: tuple[PolicyEffectKind, ...] = _STATUS_EFFECT_PRIORITY
 
@@ -594,6 +728,51 @@ def _retention_from_effects(
     return default
 
 
+def _decision_ids_by_status(
+    ledger: DecisionLedger,
+    status: SelectionStatus,
+) -> tuple[str, ...]:
+    return tuple(
+        decision.decision_id
+        for decision in ledger.decisions
+        if decision.status == status
+    )
+
+
+def _decision_delta(
+    actual_decision_ids: tuple[str, ...],
+    shadow_decision_ids: tuple[str, ...],
+) -> PolicyDecisionDelta:
+    actual_set = frozenset(actual_decision_ids)
+    shadow_set = frozenset(shadow_decision_ids)
+    return PolicyDecisionDelta(
+        actual_only=tuple(
+            decision_id
+            for decision_id in actual_decision_ids
+            if decision_id not in shadow_set
+        ),
+        shadow_only=tuple(
+            decision_id
+            for decision_id in shadow_decision_ids
+            if decision_id not in actual_set
+        ),
+    )
+
+
+def _validate_contract_bound_to_ledger(
+    label: str,
+    ledger: DecisionLedger,
+    contract: SelectedValidationContract,
+) -> None:
+    if contract.ledger_id != ledger.ledger_id:
+        raise ValueError(f"{label} contract ledger mismatch")
+    if contract.policy_profile_id != ledger.policy_profile_id:
+        raise ValueError(f"{label} contract policy profile mismatch")
+    ledger_digest = ledger.digest()
+    if contract.ledger_digest is not None and contract.ledger_digest != ledger_digest:
+        raise ValueError(f"{label} contract ledger digest mismatch")
+
+
 def policy_artifact_digest(artifact_kind: str, payload: Any) -> str:
     _require_non_empty("artifact_kind", artifact_kind)
     digest_payload = {
@@ -653,11 +832,13 @@ __all__ = [
     "PipelineScope",
     "PolicyAssembly",
     "PolicyAssemblySubject",
+    "PolicyDecisionDelta",
     "PolicyEffect",
     "PolicyEffectKind",
     "ScopedGrant",
     "SelectionDecision",
     "SelectionStatus",
     "SelectedValidationContract",
+    "ShadowPolicyComparison",
     "policy_artifact_digest",
 ]
