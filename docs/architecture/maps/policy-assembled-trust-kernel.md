@@ -353,6 +353,8 @@ This map describes intended architecture shape, not a completed implementation.
 The current codebase already has precursor surfaces:
 
 ```text
+comp.policy.MaterialDescriptor
+comp.policy.PolicyEffect
 CompilerProfile
 DomainPack
 RetrievalQueryPolicy
@@ -363,10 +365,15 @@ PublicOutputReceipt
 replay_public_projection(...)
 ```
 
-Those surfaces show the existing authority direction: profiles declare behavior,
-retrieval produces candidates, deterministic selectors bind references,
-compiler validation judges claims, receipts authorize projection, and replay
-verifies the receipt path.
+`comp.policy.MaterialDescriptor` and `comp.policy.PolicyEffect` are the first
+minimal vocabulary slice. They describe pre-validation material and policy
+effects, but they do not grant validation handoff, validate claims, authorize
+projection, or replay receipts.
+
+The other surfaces show the existing authority direction: profiles declare
+behavior, retrieval produces candidates, deterministic selectors bind
+references, compiler validation judges claims, receipts authorize projection,
+and replay verifies the receipt path.
 
 Future policy work should connect to that direction instead of introducing a
 parallel source of selection truth, validation truth, receipt truth, or

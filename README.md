@@ -156,6 +156,14 @@ from comp.persistence import InMemoryReceiptLedger
 from comp.persistence import replay_public_projection
 ```
 
+`comp.policy`는 pre-validation policy boundary vocabulary를 노출한다. 이
+표면은 validation handoff 전 material과 policy effect를 설명하기 위한 것이며,
+validation authority, receipt authority, replay authority가 아니다.
+
+```python
+from comp.policy import MaterialDescriptor, PolicyEffect
+```
+
 legacy pipeline runner, pass-pipeline module, compatibility facade는 active
 package source가 아니다. 과거 pass-pipeline snapshot은 repository history에서만
 확인하고, 현재 tree에는 reference copy를 유지하지 않는다.
