@@ -388,6 +388,92 @@ class ConflictResolver:
         return False
 
 
+@dataclass(frozen=True, slots=True)
+class PolicyAssemblySubject:
+    decision_id: str
+    subject_id: str
+    target_id: str | None = None
+    retention: str = "decision_audit"
+
+    def __post_init__(self) -> None:
+        _require_non_empty("decision_id", self.decision_id)
+        _require_non_empty("subject_id", self.subject_id)
+        _require_non_empty("retention", self.retention)
+
+
+@dataclass(frozen=True, slots=True)
+class PolicyAssembly:
+    policy_profile_id: str
+    resolver: ConflictResolver = field(default_factory=ConflictResolver)
+
+    def __post_init__(self) -> None:
+        _require_non_empty("policy_profile_id", self.policy_profile_id)
+
+    def assemble_ledger(
+        self,
+        *,
+        ledger_id: str,
+        subjects: tuple[PolicyAssemblySubject, ...],
+        effects: tuple[PolicyEffect, ...],
+        descriptors: tuple[MaterialDescriptor, ...] = (),
+        meta: tuple[tuple[str, Any], ...] = (),
+    ) -> DecisionLedger:
+        _require_non_empty("ledger_id", ledger_id)
+        subject_tuple = tuple(subjects)
+        effect_tuple = tuple(effects)
+        _require_unique(
+            "duplicate policy assembly decision id",
+            tuple(subject.decision_id for subject in subject_tuple),
+        )
+        _require_unique(
+            "duplicate policy assembly subject id",
+            tuple(subject.subject_id for subject in subject_tuple),
+        )
+        subject_ids = frozenset(subject.subject_id for subject in subject_tuple)
+        for effect in effect_tuple:
+            if effect.subject_id not in subject_ids:
+                raise ValueError(
+                    f"unassembled policy effect subject: {effect.subject_id}"
+                )
+
+        decisions = tuple(
+            self._resolve_subject(subject, effect_tuple)
+            for subject in subject_tuple
+        )
+        return DecisionLedger(
+            ledger_id=ledger_id,
+            policy_profile_id=self.policy_profile_id,
+            descriptors=tuple(descriptors),
+            effects=effect_tuple,
+            decisions=decisions,
+            meta=tuple(meta),
+        )
+
+    def _resolve_subject(
+        self,
+        subject: PolicyAssemblySubject,
+        effects: tuple[PolicyEffect, ...],
+    ) -> SelectionDecision:
+        subject_effects = tuple(
+            effect for effect in effects if effect.subject_id == subject.subject_id
+        )
+        if not subject_effects:
+            raise ValueError(
+                f"no policy effects for assembly subject: {subject.subject_id}"
+            )
+        return self.resolver.resolve_decision(
+            decision_id=subject.decision_id,
+            subject_id=subject.subject_id,
+            effects=subject_effects,
+            target_id=subject.target_id,
+            retention=subject.retention,
+        )
+
+    @property
+    def authorizes_public_projection(self) -> bool:
+        return False
+
+
 def _require_non_empty(field_name: str, value: str) -> None:
     if not value:
         raise ValueError(f"{field_name} is required.")
@@ -431,6 +517,8 @@ __all__ = [
     "DecisionLedger",
     "MaterialDescriptor",
     "PipelineScope",
+    "PolicyAssembly",
+    "PolicyAssemblySubject",
     "PolicyEffect",
     "PolicyEffectKind",
     "ScopedGrant",

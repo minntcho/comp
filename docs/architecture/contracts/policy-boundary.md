@@ -81,6 +81,10 @@ review, set retention, or request replay material.
 `ConflictResolver` combines policy effects into final decisions. It applies
 kernel invariants first and profile-specific composition rules second.
 
+`PolicyAssembly` groups descriptors, effects, assembly subjects, and resolver
+output into a `DecisionLedger`. It preserves audit material; it does not
+validate claims, authorize projection, or replay receipt paths.
+
 `ScopedGrant` records which pipeline scope a subject may enter, under which
 basis and conditions. It is not a receipt, validation result, or replay proof.
 
@@ -193,10 +197,11 @@ Not every term in this document is currently a public Python API. Until
 implemented, these terms are architectural contract vocabulary.
 
 The first implementation slices live in `comp.policy`. They expose
-`MaterialDescriptor`, `PolicyEffect`, `ConflictResolver`, `ScopedGrant`,
-`SelectionDecision`, and `DecisionLedger` as pre-validation vocabulary only.
-`ConflictResolver` may compose effects into decisions and scoped grants, but it
-does not validate claims or authorize projection. The next slice exposes
+`MaterialDescriptor`, `PolicyEffect`, `ConflictResolver`, `PolicyAssembly`,
+`ScopedGrant`, `SelectionDecision`, and `DecisionLedger` as pre-validation
+vocabulary only. `ConflictResolver` may compose effects into decisions and
+scoped grants, and `PolicyAssembly` may assemble a `DecisionLedger`, but neither
+validates claims or authorizes projection. The next slice exposes
 `SelectedValidationContract` as compiler-facing input shape, not validation
 authority. `comp.runtime.ValidationHandoff` bridges selected validation
 contracts into compiler-facing hypotheses without compiling, committing,

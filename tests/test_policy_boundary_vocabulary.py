@@ -472,6 +472,174 @@ def test_conflict_resolver_rejects_authority_shaped_or_cross_subject_resolution(
         )
 
 
+def test_policy_assembly_builds_decision_ledger_from_subject_effects():
+    from comp.policy import (
+        MaterialDescriptor,
+        PolicyAssembly,
+        PolicyAssemblySubject,
+        PolicyEffect,
+        SelectedValidationContract,
+    )
+
+    fuel_descriptor = MaterialDescriptor(
+        material_id="material:fuel_used",
+        material_kind="source_attribute",
+        field_knownness="unknown",
+        risk_tier="medium",
+    )
+    plant_descriptor = MaterialDescriptor(
+        material_id="material:plant",
+        material_kind="source_attribute",
+        field_knownness="declared_alias",
+        risk_tier="low",
+    )
+    effects = (
+        PolicyEffect(
+            effect_id="effect:select:plant",
+            effect_kind="select",
+            subject_id="material:plant",
+            basis="declared alias",
+        ),
+        PolicyEffect(
+            effect_id="effect:grant:plant:validation-handoff",
+            effect_kind="grant_scope",
+            subject_id="material:plant",
+            basis="declared alias selected",
+            scope="validation_handoff",
+        ),
+        PolicyEffect(
+            effect_id="effect:select:fuel_used",
+            effect_kind="select",
+            subject_id="material:fuel_used",
+            basis="embedding score 0.96",
+        ),
+        PolicyEffect(
+            effect_id="effect:hold:fuel_used",
+            effect_kind="hold",
+            subject_id="material:fuel_used",
+            basis="unit evidence required",
+        ),
+        PolicyEffect(
+            effect_id="effect:restrict:fuel_used:validation-handoff",
+            effect_kind="restrict_scope",
+            subject_id="material:fuel_used",
+            basis="evidence required before compiler handoff",
+            scope="validation_handoff",
+        ),
+    )
+
+    assembly = PolicyAssembly(policy_profile_id="profile:strict-public")
+    ledger = assembly.assemble_ledger(
+        ledger_id="ledger:run-1",
+        descriptors=(fuel_descriptor, plant_descriptor),
+        effects=effects,
+        subjects=(
+            PolicyAssemblySubject(
+                decision_id="decision:plant->site",
+                subject_id="material:plant",
+                target_id="field:site",
+            ),
+            PolicyAssemblySubject(
+                decision_id="decision:fuel_used->amount",
+                subject_id="material:fuel_used",
+                target_id="field:amount",
+            ),
+        ),
+        meta=(("run_id", "run-1"),),
+    )
+
+    assert ledger.ledger_id == "ledger:run-1"
+    assert ledger.policy_profile_id == "profile:strict-public"
+    assert ledger.descriptors == (fuel_descriptor, plant_descriptor)
+    assert ledger.effects == effects
+    assert ledger.meta == (("run_id", "run-1"),)
+    assert tuple(decision.decision_id for decision in ledger.decisions) == (
+        "decision:plant->site",
+        "decision:fuel_used->amount",
+    )
+
+    plant_decision = ledger.decision_for("decision:plant->site")
+    fuel_decision = ledger.decision_for("decision:fuel_used->amount")
+
+    assert plant_decision is not None
+    assert plant_decision.status == "selected"
+    assert plant_decision.allows_scope("validation_handoff") is True
+    assert fuel_decision is not None
+    assert fuel_decision.status == "held"
+    assert fuel_decision.allows_scope("validation_handoff") is False
+    assert ledger.selected_validation_decision_ids() == ("decision:plant->site",)
+    assert assembly.authorizes_public_projection is False
+
+    contract = SelectedValidationContract.from_ledger(
+        contract_id="selected-contract:run-1",
+        ledger=ledger,
+        basis="assembly finalized validation handoff",
+    )
+
+    assert contract.selected_decision_ids == ("decision:plant->site",)
+    assert contract.authorizes_public_projection is False
+
+
+def test_policy_assembly_rejects_unassembled_effects_and_duplicate_subjects():
+    from comp.policy import PolicyAssembly, PolicyAssemblySubject, PolicyEffect
+
+    assembly = PolicyAssembly(policy_profile_id="profile:strict-public")
+
+    with pytest.raises(ValueError, match="unassembled policy effect subject"):
+        assembly.assemble_ledger(
+            ledger_id="ledger:run-1",
+            effects=(
+                PolicyEffect(
+                    effect_id="effect:select:fuel_used",
+                    effect_kind="select",
+                    subject_id="material:fuel_used",
+                    basis="declared alias",
+                ),
+            ),
+            subjects=(
+                PolicyAssemblySubject(
+                    decision_id="decision:plant->site",
+                    subject_id="material:plant",
+                ),
+            ),
+        )
+
+    with pytest.raises(ValueError, match="duplicate policy assembly decision id"):
+        assembly.assemble_ledger(
+            ledger_id="ledger:run-1",
+            effects=(
+                PolicyEffect(
+                    effect_id="effect:select:plant",
+                    effect_kind="select",
+                    subject_id="material:plant",
+                    basis="declared alias",
+                ),
+            ),
+            subjects=(
+                PolicyAssemblySubject(
+                    decision_id="decision:plant->site",
+                    subject_id="material:plant",
+                ),
+                PolicyAssemblySubject(
+                    decision_id="decision:plant->site",
+                    subject_id="material:plant-alias",
+                ),
+            ),
+        )
+
+    with pytest.raises(ValueError, match="no policy effects for assembly subject"):
+        assembly.assemble_ledger(
+            ledger_id="ledger:run-1",
+            effects=(),
+            subjects=(
+                PolicyAssemblySubject(
+                    decision_id="decision:plant->site",
+                    subject_id="material:plant",
+                ),
+            ),
+        )
+
+
 def test_policy_package_does_not_expose_projection_or_replay_authority():
     import comp.policy as policy
 
