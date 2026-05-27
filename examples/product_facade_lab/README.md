@@ -79,6 +79,16 @@ stored product-shaped material still replays through comp without constructing a
 `ProductFacadeRuntime`. The fixture runner is not a CLI, production verifier, or
 stable bundle runner.
 
+Verification bundle lab summary: the lab has observed export via
+`export_verification_bundle(...)`, file persistence via
+`write_verification_bundle(...)`, file verification via
+`verify_verification_bundle_file(...)`, a canonical fixture that verifies from
+stored material, and a missing artifact fixture that blocks replay.
+This is not a product runtime CLI.
+It is not a scenario/conformance runner, and not promotion to a stable wire
+contract, artifact registry, or native production authority engine.
+Product replay reports remain comp verification output.
+
 `compare_touch_logs` can compare two logs from the same operation, such as
 canonical `submit` and policy preflight `submit`. The comparison is an
 observation summary for spotting ceremony deltas; it is not a lifecycle

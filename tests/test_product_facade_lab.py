@@ -595,6 +595,9 @@ def test_observation_map_points_to_canonical_lab_without_promoting_runtime():
     assert "run_fixture" in lab_readme
     assert "run_all_fixtures" in lab_readme
     assert "not a CLI" in lab_readme
+    assert "Verification bundle lab summary" in lab_readme
+    assert "not a product runtime CLI" in lab_readme
+    assert "not a scenario/conformance runner" in lab_readme
     assert "native production authority engine" in lab_readme
 
 
