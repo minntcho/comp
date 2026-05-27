@@ -259,6 +259,36 @@ raw-ish external material currently pays the policy assembly and handoff cost.
 That observation can inform a later artifact lifecycle boundary, but it does not
 promote any artifact into a universal requirement.
 
+## Product Facade Response Observations
+
+Product facade response observations are still lab evidence, not a final
+production API. The lab response model records product-facing fields that a
+production runtime may later keep, rename, or replace:
+
+```text
+submit
+  status
+  publishable
+  required_actions
+  user_message
+
+publish
+  public_row_id
+  public_row
+  receipt_handle
+  replayable_now
+  audit_pending
+
+audit
+  replay_status
+  verification_errors
+  proof_graph_available
+```
+
+`required_actions` should be user-facing product language, not raw compiler
+reason strings. `touch_log` remains lab-only diagnostic material and should not
+be treated as a production response field.
+
 ## Non-Goals
 
 This map deliberately avoids:

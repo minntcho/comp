@@ -7,6 +7,7 @@ from examples.product_facade_lab import (
     ProductFacadeRuntime,
     ProductInput,
     ProductPolicyPreflightInput,
+    ProductRequiredAction,
     ProductWitness,
     compare_touch_logs,
 )
@@ -43,6 +44,8 @@ def test_canonical_fast_path_submit_publish_audit_records_touch_log():
     )
 
     assert run.status == "publishable"
+    assert run.publishable is True
+    assert run.user_message == "검증이 완료되어 공개할 수 있습니다."
     assert run.required_actions == ()
     assert run.touch_log.flow == "canonical_fast_path"
     assert run.touch_log.operation == "submit"
@@ -62,6 +65,9 @@ def test_canonical_fast_path_submit_publish_audit_records_touch_log():
     public = runtime.publish(run.run_id)
 
     assert public.public_row == {"amount": 1200, "unit": "kWh"}
+    assert public.receipt_handle.startswith("receipt:commit-package:")
+    assert public.replayable_now is False
+    assert public.audit_pending is True
     assert public.touch_log.operation == "publish"
     assert "PublicOutputReceipt" in public.touch_log.sync_required
     assert "ArtifactEnvelope" in public.touch_log.deferred
@@ -70,6 +76,9 @@ def test_canonical_fast_path_submit_publish_audit_records_touch_log():
     audit = runtime.audit(public.public_row_id)
 
     assert audit.replay_report.public_row == public.public_row
+    assert audit.replay_status == "verified"
+    assert audit.verification_errors == ()
+    assert audit.proof_graph_available is False
     assert audit.touch_log.operation == "audit"
     assert audit.touch_log.sync_required == (
         "ArtifactEnvelope",
@@ -129,6 +138,7 @@ def test_policy_preflight_path_records_policy_handoff_before_validation():
     )
 
     assert run.status == "publishable"
+    assert run.publishable is True
     assert run.required_actions == ()
     assert run.touch_log.flow == "policy_preflight_path"
     assert run.touch_log.operation == "submit"
@@ -151,6 +161,9 @@ def test_policy_preflight_path_records_policy_handoff_before_validation():
     public = runtime.publish(run.run_id)
 
     assert public.public_row == {"amount": 1200, "unit": "kWh"}
+    assert public.receipt_handle.startswith("receipt:commit-package:")
+    assert public.replayable_now is False
+    assert public.audit_pending is True
     assert public.touch_log.flow == "policy_preflight_path"
     assert "PublicOutputReceipt" in public.touch_log.sync_required
     assert public.touch_log.not_used == ()
@@ -159,8 +172,54 @@ def test_policy_preflight_path_records_policy_handoff_before_validation():
     audit = runtime.audit(public.public_row_id)
 
     assert audit.replay_report.public_row == public.public_row
+    assert audit.replay_status == "verified"
+    assert audit.verification_errors == ()
+    assert audit.proof_graph_available is False
     assert audit.touch_log.flow == "policy_preflight_path"
     assert audit.artifact_count == len(audit.replay_report.artifact_refs)
+
+
+def test_needs_evidence_submit_returns_product_facing_required_actions():
+    runtime = ProductFacadeRuntime()
+
+    run = runtime.submit(
+        ProductInput(
+            run_id="run-needs-evidence",
+            subject_id="facility-1",
+            public_row_id="public-row-needs-evidence",
+            projection_id="public-row",
+            projection_fields=("amount", "unit"),
+            values={"amount": 1200, "unit": "kWh"},
+            witnesses=(
+                ProductWitness(
+                    field="amount",
+                    source="invoice.pdf",
+                    span="p1: electricity amount",
+                    text="1200",
+                ),
+            ),
+            known_fields=frozenset({"amount", "unit"}),
+            allowed_units=frozenset({"kWh"}),
+        )
+    )
+
+    assert run.status == "needs_evidence"
+    assert run.publishable is False
+    assert run.user_message == "추가 증빙이 필요합니다."
+    assert run.required_actions == (
+        ProductRequiredAction(
+            kind="find_source_witness",
+            field="unit",
+            reason="missing_source_witness",
+            message_key="missing_evidence",
+            message="근거자료가 연결되지 않아 이 값을 검증할 수 없습니다.",
+            action="값이 나온 문서, 엑셀, 인증서 등의 위치를 연결해 주세요.",
+        ),
+    )
+    assert "missing_source_witness" not in run.required_actions[0].message
+    assert "missing_source_witness" not in run.required_actions[0].action
+    assert run.touch_log.operation == "submit"
+    assert "DecisionLedger" in run.touch_log.not_used
 
 
 def test_submit_touch_log_comparison_summarizes_observed_ceremony_delta():
@@ -353,6 +412,8 @@ def test_observation_map_points_to_canonical_lab_without_promoting_runtime():
     assert "policy preflight path" in lab_readme
     assert "compare_touch_logs" in lab_readme
     assert "observation summary" in product_map
+    assert "Product facade response observations" in product_map
+    assert "touch_log is lab-only diagnostic" in lab_readme
     assert "native production authority engine" in lab_readme
 
 

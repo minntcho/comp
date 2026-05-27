@@ -12,6 +12,7 @@ from comp.compiler_tool import (
     EvidenceRef,
     InterpretationHypothesis,
     ValidationReport,
+    ValidationRequirement,
     prepare_commit,
 )
 from comp.policy import (
@@ -33,6 +34,7 @@ from comp.runtime import (
     ValidationHandoffClaim,
     materialize_compiler_run_artifacts,
 )
+from comp.user_messages import UnknownUserMessage, user_message_for_reason
 
 ProductRunStatus = Literal["publishable", "needs_evidence", "blocked"]
 ProductRunFlow = Literal["canonical_fast_path", "policy_preflight_path"]
@@ -137,11 +139,23 @@ class ArtifactTouchLogComparison:
 
 
 @dataclass(frozen=True)
+class ProductRequiredAction:
+    kind: str
+    field: str
+    reason: str
+    message_key: str
+    message: str
+    action: str
+
+
+@dataclass(frozen=True)
 class ProductRun:
     run_id: str
     public_row_id: str
     status: ProductRunStatus
-    required_actions: tuple[str, ...]
+    publishable: bool
+    user_message: str
+    required_actions: tuple[ProductRequiredAction, ...]
     touch_log: ArtifactTouchLog
 
 
@@ -150,6 +164,9 @@ class ProductPublicRow:
     run_id: str
     public_row_id: str
     public_row: dict[str, Any]
+    receipt_handle: str
+    replayable_now: bool
+    audit_pending: bool
     touch_log: ArtifactTouchLog
 
 
@@ -158,6 +175,9 @@ class ProductAudit:
     public_row_id: str
     replay_report: ProjectionReplayReport
     artifact_count: int
+    replay_status: str
+    verification_errors: tuple[str, ...]
+    proof_graph_available: bool
     touch_log: ArtifactTouchLog
 
 
@@ -199,6 +219,8 @@ class ProductFacadeRuntime:
             run_id=product_input.run_id,
             public_row_id=product_input.public_row_id,
             status=status,
+            publishable=status == "publishable",
+            user_message=_run_user_message(status),
             required_actions=_required_actions(report),
             touch_log=_submit_touch_log(product_input),
         )
@@ -228,6 +250,8 @@ class ProductFacadeRuntime:
             run_id=product_input.run_id,
             public_row_id=product_input.public_row_id,
             status=status,
+            publishable=status == "publishable",
+            user_message=_run_user_message(status),
             required_actions=_required_actions(report),
             touch_log=_policy_preflight_touch_log(
                 product_input,
@@ -259,6 +283,9 @@ class ProductFacadeRuntime:
             run_id=run_id,
             public_row_id=record.product_input.public_row_id,
             public_row=public_row,
+            receipt_handle=_receipt_handle(preparation.receipt),
+            replayable_now=False,
+            audit_pending=True,
             touch_log=_publish_touch_log(record.flow),
         )
 
@@ -289,6 +316,9 @@ class ProductFacadeRuntime:
             public_row_id=public_row_id,
             replay_report=replay_report,
             artifact_count=len(envelopes),
+            replay_status="verified",
+            verification_errors=(),
+            proof_graph_available=False,
             touch_log=_audit_touch_log(record.flow),
         )
 
@@ -415,11 +445,45 @@ def _product_status(report: ValidationReport) -> ProductRunStatus:
     return "blocked"
 
 
-def _required_actions(report: ValidationReport) -> tuple[str, ...]:
+def _required_actions(report: ValidationReport) -> tuple[ProductRequiredAction, ...]:
     return tuple(
-        f"{requirement.kind}:{requirement.field}:{requirement.reason}"
+        _product_required_action(requirement)
         for requirement in report.validation_requirements
     )
+
+
+def _product_required_action(requirement: ValidationRequirement) -> ProductRequiredAction:
+    try:
+        message = user_message_for_reason(requirement.reason)
+    except UnknownUserMessage:
+        return ProductRequiredAction(
+            kind=requirement.kind,
+            field=requirement.field,
+            reason=requirement.reason,
+            message_key="validation_action_required",
+            message=f"{requirement.field} 값을 검증하려면 추가 정보가 필요합니다.",
+            action="요청된 증빙이나 설명을 추가해 주세요.",
+        )
+    return ProductRequiredAction(
+        kind=requirement.kind,
+        field=requirement.field,
+        reason=requirement.reason,
+        message_key=message.key,
+        message=message.ko,
+        action=message.action_ko or message.ko,
+    )
+
+
+def _run_user_message(status: ProductRunStatus) -> str:
+    if status == "publishable":
+        return "검증이 완료되어 공개할 수 있습니다."
+    if status == "needs_evidence":
+        return "추가 증빙이 필요합니다."
+    return "공개할 수 없습니다. 입력을 다시 확인해 주세요."
+
+
+def _receipt_handle(receipt) -> str:
+    return f"receipt:{receipt.draft_id}"
 
 
 def _projection_source(report: ValidationReport) -> dict[str, Any]:
@@ -588,6 +652,7 @@ __all__ = [
     "ProductInput",
     "ProductPolicyPreflightInput",
     "ProductPublicRow",
+    "ProductRequiredAction",
     "ProductRun",
     "ProductWitness",
     "compare_touch_logs",
