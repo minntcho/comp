@@ -249,6 +249,7 @@ artifact를 제출할 수 있지만, commit receipt를 만들 권한은 없다.
 docs/index.md
 docs/architecture/document-governance.md
 docs/architecture/contracts/policy-boundary.md
+docs/architecture/contracts/artifact-lifecycle-boundary.md
 docs/architecture/maps/policy-assembled-trust-kernel.md
 ```
 
@@ -268,6 +269,11 @@ policy-boundary
   pre-validation policy가 할 수 있는 일과 할 수 없는 일을 고정하는 active
   contract다. Policy may shape validation input. Policy may not validate.
   Policy may not authorize public projection. Policy may not replace replay.
+
+artifact-lifecycle-boundary
+  docs/architecture/contracts/artifact-lifecycle-boundary.md defines current
+  state-transition artifact requirements without creating an artifact registry,
+  Artifact Passport schema, or production runtime.
 
 policy-assembled-trust-kernel
   policy-boundary를 넘지 않는 선에서 MaterialDescriptor, PolicyEffect,
