@@ -325,6 +325,7 @@ The lab may serialize this shape with `export_verification_bundle(...)` or
 observation format, not a stable wire contract. JSON round-trip verification is
 useful because it exercises the future external boundary where a product app
 emits material and comp reconstructs the verification input.
+product_facade_verification_bundle.v0 is not a stability promise.
 
 The lab may read the same fixture shape with `verify_verification_bundle(...)`
 or `verify_verification_bundle_file(...)`. These helpers are a conformance-lab observation path: they return comp verification output from exported material and do not trust a product-generated replay report.
@@ -390,6 +391,7 @@ The current lab evidence supports the external-contract shape at the fixture
 level only: a product-shaped exporter can emit replayable material, and comp can
 verify or block that material later. It does not yet justify a stable bundle
 schema, CLI surface, registry, or replacement production authority engine.
+Bundle helper promotion requires a separate active-contract PR.
 
 ## Non-Goals
 

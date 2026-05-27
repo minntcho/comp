@@ -601,6 +601,36 @@ def test_observation_map_points_to_canonical_lab_without_promoting_runtime():
     assert "native production authority engine" in lab_readme
 
 
+def test_verification_bundle_helpers_have_explicit_promotion_guardrails():
+    pyproject = tomllib.loads(Path("pyproject.toml").read_text(encoding="utf-8"))
+    product_map = Path(
+        "docs/architecture/maps/product-facade-observation.md"
+    ).read_text(encoding="utf-8")
+    lifecycle_boundary = _artifact_lifecycle_boundary()
+    lab_readme = Path("examples/product_facade_lab/README.md").read_text(
+        encoding="utf-8"
+    )
+
+    scripts = pyproject["project"].get("scripts", {})
+    assert not any(
+        "product_facade_lab" in entrypoint
+        for entrypoint in scripts.values()
+    )
+    assert "product_facade_verification_bundle.v0 is not a stability promise." in (
+        product_map
+    )
+    assert "Bundle helper promotion requires a separate active-contract PR." in (
+        product_map
+    )
+    assert "Bundle helper promotion requires a separate active-contract PR." in (
+        lifecycle_boundary
+    )
+    assert "Do not promote `examples.product_facade_lab.bundle` into `comp`" in (
+        lab_readme
+    )
+    assert "Do not add a product facade console script from this lab." in lab_readme
+
+
 def _artifact_lifecycle_boundary() -> str:
     return Path("docs/architecture/contracts/artifact-lifecycle-boundary.md").read_text(
         encoding="utf-8"
