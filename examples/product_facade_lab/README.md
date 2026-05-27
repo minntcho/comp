@@ -76,6 +76,9 @@ observation. The bundle is not a stable wire contract or artifact registry.
 `verify_verification_bundle(...)` and `verify_verification_bundle_file(...)`
 read that fixture shape and return comp verification output; they do not trust
 or import a product-generated replay report.
+Do not promote `examples.product_facade_lab.bundle` into `comp`,
+`comp.runtime`, or `comp.scenario_contracts` from this lab.
+Do not add a product facade console script from this lab.
 
 Checked-in fixture bundles live under `fixtures/`. The lab-only fixture runner
 exposes `run_fixture(...)` and `run_all_fixtures(...)` so tests can verify that

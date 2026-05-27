@@ -143,6 +143,7 @@ claim lifecycle finality through an artifact registry or passport schema here
 
 This contract may later inform an artifact registry or wire contract. That
 promotion requires a separate PR with its own tests and migration rationale.
+Bundle helper promotion requires a separate active-contract PR.
 
 ## Artifact Registry Promotion Gate
 
