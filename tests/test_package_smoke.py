@@ -747,6 +747,54 @@ def test_product_facade_observation_map_defines_lab_without_contracting_lifecycl
     assert "does not make `comp.runtime` a production runtime" in readme
 
 
+def test_artifact_lifecycle_boundary_defines_state_transition_requirements():
+    boundary_doc = Path(
+        "docs/architecture/contracts/artifact-lifecycle-boundary.md"
+    ).read_text(encoding="utf-8")
+    readme = Path("README.md").read_text(encoding="utf-8")
+
+    for line in (
+        "Status: active-contract",
+        "Owner: trust-kernel",
+        "Last checked against code: 2026-05-27",
+        "Can block PRs: yes",
+        "This is not an artifact registry.",
+        "This is not an Artifact Passport schema.",
+        "This does not extract `comp.contracts`.",
+        "grounded in the first product facade lab observations",
+        "## State Transition Requirements",
+        "canonical submit -> validation",
+        "`InterpretationHypothesis`",
+        "`ValidationReport`",
+        "policy preflight submit -> validation",
+        "`MaterialDescriptor`",
+        "`PolicyEffect`",
+        "`PolicyAssembly`",
+        "`DecisionLedger`",
+        "`SelectedValidationContract`",
+        "`ValidationHandoff`",
+        "validated -> published",
+        "`ReviewPackage`",
+        "`ReviewDecision`",
+        "`PublicOutputReceipt`",
+        "`PublicOutputSpec`",
+        "published -> replayable/auditable",
+        "`ArtifactEnvelope`",
+        "`ProjectionReplayReport`",
+        "replayable/auditable -> explainable",
+        "`ProofGraph` is optional and non-authoritative.",
+        "## Non-Requirements",
+        "`DecisionLedger` is not required to publish canonical fast-path output.",
+        "Policy artifacts must not authorize public projection.",
+        "`ArtifactEnvelope` is not publish-path synchronous unless replayable state is claimed at publish time.",
+        "`ProofGraph` is not required for replay.",
+        "Product-only state must stay outside `comp` artifacts.",
+    ):
+        assert line in boundary_doc
+
+    assert "artifact-lifecycle-boundary.md" in readme
+
+
 def test_governed_architecture_docs_have_valid_machine_readable_headers():
     for path in _governed_architecture_docs():
         header = _doc_header(path)
@@ -790,6 +838,12 @@ def test_architecture_docs_are_classified_by_governance_status():
             "persistence",
             "yes",
             "2026-05-22",
+        ),
+        "artifact-lifecycle-boundary.md": (
+            "active-contract",
+            "trust-kernel",
+            "yes",
+            "2026-05-27",
         ),
         "document-governance.md": (
             "active-contract",
@@ -994,6 +1048,7 @@ def test_docs_index_groups_architecture_docs_by_governance_authority():
     )
     assert "archive/architecture/active-surface-cutover.md" in docs_index
     assert "architecture/contracts/compiler-domain-boundary.md" in docs_index
+    assert "architecture/contracts/artifact-lifecycle-boundary.md" in docs_index
     assert "architecture/contracts/policy-boundary.md" in docs_index
     assert "architecture/maps/policy-assembled-trust-kernel.md" in docs_index
     assert "architecture/maps/product-facade-observation.md" in docs_index

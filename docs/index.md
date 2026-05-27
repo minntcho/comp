@@ -36,14 +36,15 @@ without explicitly updating the contract.
 1. `architecture/document-governance.md`
 2. `architecture/contracts/trust-kernel-extension-rings.md`
 3. `architecture/contracts/policy-boundary.md`
-4. `architecture/contracts/compiler-domain-boundary.md`
-5. `architecture/contracts/extension-port-contracts.md`
-6. `architecture/contracts/artifact-envelope-builder.md`
-7. `architecture/contracts/persistence-ledger-boundary.md`
-8. `architecture/contracts/receipt-proof-graph.md`
-9. `architecture/contracts/trust-kernel-hardening.md`
-10. `architecture/contracts/memory-assisted-compiler-loop.md`
-11. `architecture/contracts/friendly-authority-vocabulary.md`
+4. `architecture/contracts/artifact-lifecycle-boundary.md`
+5. `architecture/contracts/compiler-domain-boundary.md`
+6. `architecture/contracts/extension-port-contracts.md`
+7. `architecture/contracts/artifact-envelope-builder.md`
+8. `architecture/contracts/persistence-ledger-boundary.md`
+9. `architecture/contracts/receipt-proof-graph.md`
+10. `architecture/contracts/trust-kernel-hardening.md`
+11. `architecture/contracts/memory-assisted-compiler-loop.md`
+12. `architecture/contracts/friendly-authority-vocabulary.md`
 
 ### Implementation Maps
 
