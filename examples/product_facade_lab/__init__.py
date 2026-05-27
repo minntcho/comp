@@ -1,6 +1,8 @@
 """Comp-backed product facade observation lab."""
 
 from examples.product_facade_lab.bundle import (
+    verify_verification_bundle,
+    verify_verification_bundle_file,
     verification_input_from_bundle,
     verification_input_to_bundle,
 )
@@ -36,6 +38,8 @@ __all__ = [
     "ProductWitness",
     "compare_touch_logs",
     "verify_comp_compatible_input",
+    "verify_verification_bundle",
+    "verify_verification_bundle_file",
     "verification_input_from_bundle",
     "verification_input_to_bundle",
 ]

@@ -12,7 +12,11 @@ from comp.judgment.receipts import (
     PublicOutputValueCommitment,
 )
 from comp.persistence import ArtifactEnvelope
-from examples.product_facade_lab.runtime import CompCompatibleVerificationInput
+from examples.product_facade_lab.runtime import (
+    CompCompatibleVerificationInput,
+    CompVerificationOutput,
+    verify_comp_compatible_input,
+)
 
 
 def write_verification_bundle(
@@ -26,6 +30,17 @@ def write_verification_bundle(
         encoding="utf-8",
     )
     return bundle_path
+
+
+def verify_verification_bundle(
+    bundle: Mapping[str, Any],
+) -> CompVerificationOutput:
+    return verify_comp_compatible_input(verification_input_from_bundle(bundle))
+
+
+def verify_verification_bundle_file(path: str | Path) -> CompVerificationOutput:
+    bundle = json.loads(Path(path).read_text(encoding="utf-8"))
+    return verify_verification_bundle(bundle)
 
 
 def verification_input_to_bundle(
@@ -310,6 +325,8 @@ def _restore_json_value(value: Any) -> Any:
 
 
 __all__ = [
+    "verify_verification_bundle",
+    "verify_verification_bundle_file",
     "verification_input_from_bundle",
     "verification_input_to_bundle",
     "write_verification_bundle",

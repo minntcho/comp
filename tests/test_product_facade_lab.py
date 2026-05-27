@@ -15,6 +15,8 @@ from examples.product_facade_lab import (
     ProductWitness,
     compare_touch_logs,
     verify_comp_compatible_input,
+    verify_verification_bundle,
+    verify_verification_bundle_file,
     verification_input_from_bundle,
 )
 
@@ -357,6 +359,43 @@ def test_write_verification_bundle_creates_json_file(tmp_path):
     assert verification_output.replay_status == "verified"
 
 
+def test_verify_verification_bundle_file_returns_comp_verification_output(tmp_path):
+    runtime = ProductFacadeRuntime()
+    public = _publish_canonical_runtime(runtime, "run-bundle-conformance-file")
+    bundle_path = runtime.write_verification_bundle(
+        public.public_row_id,
+        tmp_path / "verification-bundle.json",
+    )
+
+    verification_output = verify_verification_bundle_file(bundle_path)
+
+    assert isinstance(verification_output, CompVerificationOutput)
+    assert verification_output.public_row_id == public.public_row_id
+    assert verification_output.replay_status == "verified"
+    assert verification_output.verification_errors == ()
+    assert verification_output.replay_report is not None
+    assert verification_output.replay_report.public_row == public.public_row
+
+
+def test_verify_verification_bundle_reports_blocked_replay_without_product_claim():
+    runtime = ProductFacadeRuntime()
+    public = _publish_canonical_runtime(runtime, "run-bundle-conformance-blocked")
+    bundle = runtime.export_verification_bundle(public.public_row_id)
+    bundle["artifact_envelopes"] = bundle["artifact_envelopes"][:-1]
+
+    verification_output = verify_verification_bundle(bundle)
+
+    assert verification_output.public_row_id == public.public_row_id
+    assert verification_output.replay_status == "blocked"
+    assert verification_output.replay_report is None
+    assert verification_output.verification_errors
+    assert (
+        "Projection replay missing artifact"
+        in verification_output.verification_errors[0]
+    )
+    assert "replay_report" not in bundle
+
+
 def test_submit_touch_log_comparison_summarizes_observed_ceremony_delta():
     runtime = ProductFacadeRuntime()
     canonical_run = runtime.submit(
@@ -550,6 +589,7 @@ def test_observation_map_points_to_canonical_lab_without_promoting_runtime():
     assert "Product facade response observations" in product_map
     assert "touch_log is lab-only diagnostic" in lab_readme
     assert "product_facade_verification_bundle.v0" in lab_readme
+    assert "verify_verification_bundle_file" in lab_readme
     assert "not a stable wire contract" in lab_readme
     assert "native production authority engine" in lab_readme
 
