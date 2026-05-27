@@ -11,13 +11,16 @@ comp.compiler_tool.__all__ is an import-convenience surface.
 comp.compiler_tool.__all__ is not the stability contract.
 ```
 
+Broad `comp.compiler_tool` imports are compatibility imports, not stable API signals.
 `comp.compiler_tool` may export advanced or experimental symbols to keep tests,
 examples, and migration code readable. Exported does not mean permanently stable.
+A future narrow stable import surface may re-export only this section without breaking broad compatibility imports.
 
 ## Stable public API
 
 These names are the preferred import surface for package users and README
 quickstarts.
+New users should treat this Stable public API section as the only default onboarding surface.
 
 ```python
 from comp.compiler_tool import InterpretationHypothesis, ClaimCandidate, EvidenceRef
@@ -97,6 +100,7 @@ teaching an advanced compiler-tool layer.
 These names are useful for tests, adapters, resolver integrations, and review
 tools. They are public enough to import intentionally, but they should not appear
 in README quickstarts as the default user path.
+Advanced and experimental names require explicit promotion before they become stable API.
 
 ```text
 SemanticJudgment
