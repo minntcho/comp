@@ -1,5 +1,9 @@
 """Comp-backed product facade observation lab."""
 
+from examples.product_facade_lab.bundle import (
+    verification_input_from_bundle,
+    verification_input_to_bundle,
+)
 from examples.product_facade_lab.runtime import (
     ArtifactTouchLog,
     ArtifactTouchLogComparison,
@@ -32,4 +36,6 @@ __all__ = [
     "ProductWitness",
     "compare_touch_logs",
     "verify_comp_compatible_input",
+    "verification_input_from_bundle",
+    "verification_input_to_bundle",
 ]

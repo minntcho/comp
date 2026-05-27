@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import replace
+import json
 import tomllib
 from pathlib import Path
 
@@ -14,6 +15,7 @@ from examples.product_facade_lab import (
     ProductWitness,
     compare_touch_logs,
     verify_comp_compatible_input,
+    verification_input_from_bundle,
 )
 
 
@@ -247,6 +249,10 @@ def test_comp_compatible_verification_input_exports_material_without_replay_repo
     assert "can_build_public_output" not in verification_input.validation_summary
     assert verification_input.artifact_envelopes
     assert verification_input.explanation_hints == ()
+    assert verification_input.omitted_verification_outputs == (
+        "ProjectionReplayReport",
+        "ProofGraph",
+    )
     assert "ProductInput" in verification_input.product_only_excluded
     assert "ProductRun" in verification_input.product_only_excluded
     assert "ProductPublicRow" in verification_input.product_only_excluded
@@ -295,6 +301,60 @@ def test_comp_verifier_reports_blocked_input_without_trusting_product_claim():
         "Projection replay missing artifact"
         in verification_output.verification_errors[0]
     )
+
+
+def test_comp_compatible_verification_bundle_round_trips_through_json():
+    runtime = ProductFacadeRuntime()
+    public = _publish_canonical_runtime(runtime, "run-verification-bundle")
+
+    bundle = runtime.export_verification_bundle(public.public_row_id)
+    loaded_bundle = json.loads(json.dumps(bundle, sort_keys=True))
+    verification_input = verification_input_from_bundle(loaded_bundle)
+    verification_output = verify_comp_compatible_input(verification_input)
+
+    assert bundle["schema_version"] == "product_facade_verification_bundle.v0"
+    assert bundle["bundle_kind"] == "comp_compatible_verification_input"
+    assert bundle["public_row_id"] == public.public_row_id
+    assert bundle["public_row"] == public.public_row
+    assert bundle["projection"] == {
+        "projection_id": "public-row",
+        "output_fields": ["amount", "unit"],
+    }
+    assert bundle["receipt_handle"] == public.receipt_handle
+    assert bundle["validation_summary"]["status"] == "accepted"
+    assert bundle["artifact_envelopes"]
+    assert "ProjectionReplayReport" in bundle["omitted_verification_outputs"]
+    assert "ProofGraph" in bundle["omitted_verification_outputs"]
+    assert bundle["product_only_excluded"]
+    assert "touch_log" in bundle["product_only_excluded"]
+    assert "replay_report" not in bundle
+    assert "projection_replay_report" not in bundle
+    assert "proof_graph" not in bundle
+    assert verification_output.replay_status == "verified"
+    assert verification_output.replay_report is not None
+    assert verification_output.replay_report.public_row == public.public_row
+
+
+def test_write_verification_bundle_creates_json_file(tmp_path):
+    runtime = ProductFacadeRuntime()
+    public = _publish_canonical_runtime(runtime, "run-verification-file")
+    bundle_path = tmp_path / "verification-bundle.json"
+
+    written_path = runtime.write_verification_bundle(
+        public.public_row_id,
+        bundle_path,
+    )
+    loaded_bundle = json.loads(written_path.read_text(encoding="utf-8"))
+    verification_output = verify_comp_compatible_input(
+        verification_input_from_bundle(loaded_bundle)
+    )
+
+    assert written_path == bundle_path
+    assert loaded_bundle["schema_version"] == "product_facade_verification_bundle.v0"
+    assert loaded_bundle["public_row_id"] == public.public_row_id
+    assert loaded_bundle["receipt_handle"] == public.receipt_handle
+    assert "replay_report" not in loaded_bundle
+    assert verification_output.replay_status == "verified"
 
 
 def test_submit_touch_log_comparison_summarizes_observed_ceremony_delta():
@@ -489,6 +549,8 @@ def test_observation_map_points_to_canonical_lab_without_promoting_runtime():
     assert "observation summary" in product_map
     assert "Product facade response observations" in product_map
     assert "touch_log is lab-only diagnostic" in lab_readme
+    assert "product_facade_verification_bundle.v0" in lab_readme
+    assert "not a stable wire contract" in lab_readme
     assert "native production authority engine" in lab_readme
 
 

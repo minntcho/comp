@@ -47,10 +47,13 @@ verification output:
 export_verification_input(public_row_id)
   -> validation_summary
   -> public_row
+  -> PublicOutputSpec projection shape
   -> receipt_handle
   -> PublicOutputReceipt
   -> ArtifactEnvelope set
   -> optional explanation hints
+  -> omitted_verification_outputs
+  -> product_only_excluded
 
 verify_comp_compatible_input(input)
   -> replay_status
@@ -62,6 +65,10 @@ verify_comp_compatible_input(input)
 proof graph output, `touch_log`, and product-only workflow state. The product
 side exports replayable material; the comp verifier produces replay
 verification.
+
+`export_verification_bundle(...)` and `write_verification_bundle(...)` serialize
+that material as `product_facade_verification_bundle.v0` JSON for fixture
+observation. The bundle is not a stable wire contract or artifact registry.
 
 `compare_touch_logs` can compare two logs from the same operation, such as
 canonical `submit` and policy preflight `submit`. The comparison is an
