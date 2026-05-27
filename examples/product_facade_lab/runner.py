@@ -14,6 +14,7 @@ CONFORMANCE_CASES_SCHEMA_VERSION = "product_facade_conformance_cases.v0"
 FIXTURE_EXPECTED_REPLAY_STATUS = {
     "canonical_verification_bundle.json": "verified",
     "missing_artifact_verification_bundle.json": "blocked",
+    "signed_verification_bundle.json": "verified",
 }
 
 
@@ -44,6 +45,7 @@ class VerificationBundleCaseResult:
     expected_receipt_authenticity_status: str
     receipt_authenticity_status: str
     expected_verification_error_contains: str | None
+    expected_receipt_authenticity_error_contains: str | None
     public_row_id: str
     artifact_count: int
     verification_errors: tuple[str, ...]
@@ -59,12 +61,15 @@ class VerificationBundleCaseResult:
         return replay_matches and authenticity_matches and self._expected_error_matches()
 
     def _expected_error_matches(self) -> bool:
-        if self.expected_verification_error_contains is None:
-            return True
-        return any(
-            self.expected_verification_error_contains in error
-            for error in self.verification_errors
+        verification_error_matches = _contains_expected_error(
+            self.verification_errors,
+            self.expected_verification_error_contains,
         )
+        authenticity_error_matches = _contains_expected_error(
+            self.receipt_authenticity_errors,
+            self.expected_receipt_authenticity_error_contains,
+        )
+        return verification_error_matches and authenticity_error_matches
 
 
 def run_fixture(
@@ -161,6 +166,9 @@ def _run_conformance_case(
         expected_verification_error_contains=_optional_string(
             case.get("expected_verification_error_contains")
         ),
+        expected_receipt_authenticity_error_contains=_optional_string(
+            case.get("expected_receipt_authenticity_error_contains")
+        ),
         public_row_id=output.public_row_id,
         artifact_count=output.artifact_count,
         verification_errors=output.verification_errors,
@@ -179,6 +187,15 @@ def _optional_string(value: object) -> str | None:
     if value is None:
         return None
     return str(value)
+
+
+def _contains_expected_error(
+    errors: tuple[str, ...],
+    expected: str | None,
+) -> bool:
+    if expected is None:
+        return True
+    return any(expected in error for error in errors)
 
 
 def _reject_product_generated_replay_report(case: Mapping[str, Any]) -> None:

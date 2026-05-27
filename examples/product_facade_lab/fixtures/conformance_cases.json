@@ -13,6 +13,12 @@
       "expected_replay_status": "blocked",
       "expected_receipt_authenticity_status": "unsigned_legacy",
       "expected_verification_error_contains": "Projection replay missing artifact"
+    },
+    {
+      "case_id": "signed_fixture_verified",
+      "bundle": "signed_verification_bundle.json",
+      "expected_replay_status": "verified",
+      "expected_receipt_authenticity_status": "verified"
     }
   ]
 }

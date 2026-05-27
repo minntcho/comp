@@ -1,0 +1,406 @@
+{
+  "artifact_envelopes": [
+    {
+      "artifact_id": "commit-package:facility-fixture-canonical",
+      "artifact_kind": "commit_package",
+      "body": {
+        "calculation_trace_ids": {
+          "__tuple__": []
+        },
+        "checked_claim_fields": {
+          "__tuple__": [
+            "amount",
+            "unit"
+          ]
+        },
+        "checked_claim_witness_ids": {
+          "__tuple__": [
+            "witness:amount",
+            "witness:unit"
+          ]
+        },
+        "complete": true,
+        "dependency_fingerprints": {
+          "__tuple__": []
+        },
+        "derived_claim_fields": {
+          "__tuple__": []
+        },
+        "derived_claim_ids": {
+          "__tuple__": []
+        },
+        "formula_ids": {
+          "__tuple__": []
+        },
+        "hazard_ids": {
+          "__tuple__": []
+        },
+        "open_obligation_ids": {
+          "__tuple__": []
+        },
+        "package_id": "commit-package:facility-fixture-canonical",
+        "profile_id": null,
+        "projection_value_commitments": {
+          "__tuple__": [
+            {
+              "digest_alg": "sha256",
+              "field": "amount",
+              "source_id": "checked_claim:amount:witness:amount",
+              "source_kind": "checked_claim",
+              "value_digest": "sha256:7aa3fcfca9c3b08fbec22b363aa33f2f23d6dbecf3cb935c06c6900cb24d91bb"
+            },
+            {
+              "digest_alg": "sha256",
+              "field": "unit",
+              "source_id": "checked_claim:unit:witness:unit",
+              "source_kind": "checked_claim",
+              "value_digest": "sha256:2cfbd63a5121d265558a28fe2b7b85adc69b95493b333175893559a43dc8b41a"
+            }
+          ]
+        },
+        "reference_binding_ids": {
+          "__tuple__": []
+        },
+        "report_status": "accepted",
+        "resolved_obligation_ids": {
+          "__tuple__": []
+        },
+        "semantic_judgment_ids": {
+          "__tuple__": []
+        },
+        "subject_id": "facility-fixture-canonical"
+      },
+      "body_digest": "sha256:42b49874471ecf7c2344bfe8c0a18fd96f0483ccf52815de3ed4f4ac2f30c2af",
+      "meta": {
+        "__tuple__": []
+      },
+      "schema_version": "compiler-run-v1",
+      "source_refs": []
+    },
+    {
+      "artifact_id": "governance-decision:commit-package:facility-fixture-canonical",
+      "artifact_kind": "governance_decision",
+      "body": {
+        "decision_id": "governance-decision:commit-package:facility-fixture-canonical",
+        "package_id": "commit-package:facility-fixture-canonical",
+        "profile_id": null,
+        "reasons": {
+          "__tuple__": [
+            "commit_package_complete"
+          ]
+        },
+        "status": "commit",
+        "subject_id": "facility-fixture-canonical"
+      },
+      "body_digest": "sha256:cc7a18f5e329b0614403876927928a743c7e2ae863636c5ab7893ade1c955e7a",
+      "meta": {
+        "__tuple__": []
+      },
+      "schema_version": "compiler-run-v1",
+      "source_refs": []
+    },
+    {
+      "artifact_id": "checked_claim:amount:witness:amount",
+      "artifact_kind": "checked_claim",
+      "body": {
+        "claim_id": "checked_claim:amount:witness:amount",
+        "field": "amount",
+        "origin": "product_facade_canonical_input",
+        "value": 1200,
+        "witness_id": "witness:amount"
+      },
+      "body_digest": "sha256:277112dafa45dc05eba7037f898760c3c7dd3f0c76004e142b6d137d6ba43bfb",
+      "meta": {
+        "__tuple__": []
+      },
+      "schema_version": "compiler-run-v1",
+      "source_refs": []
+    },
+    {
+      "artifact_id": "checked_claim:unit:witness:unit",
+      "artifact_kind": "checked_claim",
+      "body": {
+        "claim_id": "checked_claim:unit:witness:unit",
+        "field": "unit",
+        "origin": "product_facade_canonical_input",
+        "value": "kWh",
+        "witness_id": "witness:unit"
+      },
+      "body_digest": "sha256:aa98a211fc3754d174ebef6281be1b478433a09f85780f0d83a4dc6ae376371a",
+      "meta": {
+        "__tuple__": []
+      },
+      "schema_version": "compiler-run-v1",
+      "source_refs": []
+    },
+    {
+      "artifact_id": "witness:amount",
+      "artifact_kind": "evidence_witness",
+      "body": {
+        "dependency_id": "witness:amount",
+        "dependency_kind": "evidence_witness",
+        "digest_alg": "sha256",
+        "field": "amount",
+        "fingerprint": "sha256:f61cbbfc0ffe6b3fd13522c8f2277008bf577d375deacdf862eb9abbc2c7bc57",
+        "source": "fixture-invoice.pdf",
+        "span": "p1: electricity amount",
+        "text": "1200",
+        "witness_id": "witness:amount"
+      },
+      "body_digest": "sha256:feae9b3f13384a474f65644d2aab1310a6d0842742f09436315d692c5aa3b0cb",
+      "meta": {
+        "__tuple__": []
+      },
+      "schema_version": "compiler-run-v1",
+      "source_refs": []
+    },
+    {
+      "artifact_id": "witness:unit",
+      "artifact_kind": "evidence_witness",
+      "body": {
+        "dependency_id": "witness:unit",
+        "dependency_kind": "evidence_witness",
+        "digest_alg": "sha256",
+        "field": "unit",
+        "fingerprint": "sha256:7ed5af484e93f6c91c68f70c9a17b036fbd7b3b720d5ac98603a0d3c73bb6e7a",
+        "source": "fixture-invoice.pdf",
+        "span": "p1: electricity unit",
+        "text": "kWh",
+        "witness_id": "witness:unit"
+      },
+      "body_digest": "sha256:c0ccd18d92536de2434b7fbd397153659bc9a68d7a3cfb61d19699d43a26488b",
+      "meta": {
+        "__tuple__": []
+      },
+      "schema_version": "compiler-run-v1",
+      "source_refs": []
+    }
+  ],
+  "bundle_kind": "comp_compatible_verification_input",
+  "explanation_hints": [],
+  "omitted_verification_outputs": [
+    "ProjectionReplayReport",
+    "ProofGraph"
+  ],
+  "product_only_excluded": [
+    "ProductInput",
+    "ProductPolicyPreflightInput",
+    "ProductRun",
+    "ProductPublicRow",
+    "ProductAudit",
+    "touch_log"
+  ],
+  "projection": {
+    "output_fields": [
+      "amount",
+      "unit"
+    ],
+    "projection_id": "public-row"
+  },
+  "public_output_receipt": {
+    "authorized_fields": [
+      "amount",
+      "unit"
+    ],
+    "barrier_snapshot": [
+      [
+        "governance_decision_id",
+        "governance-decision:commit-package:facility-fixture-canonical"
+      ],
+      [
+        "governance_status",
+        "commit"
+      ],
+      [
+        "governance_reasons",
+        [
+          "commit_package_complete"
+        ]
+      ],
+      [
+        "commit_package_id",
+        "commit-package:facility-fixture-canonical"
+      ],
+      [
+        "commit_package_complete",
+        true
+      ],
+      [
+        "subject_id",
+        "facility-fixture-canonical"
+      ],
+      [
+        "projection_id",
+        "public-row"
+      ],
+      [
+        "authorized_fields",
+        [
+          "amount",
+          "unit"
+        ]
+      ],
+      [
+        "profile_id",
+        null
+      ],
+      [
+        "report_status",
+        "accepted"
+      ],
+      [
+        "checked_claim_fields",
+        [
+          "amount",
+          "unit"
+        ]
+      ],
+      [
+        "checked_claim_witness_ids",
+        [
+          "witness:amount",
+          "witness:unit"
+        ]
+      ],
+      [
+        "semantic_judgment_ids",
+        []
+      ],
+      [
+        "reference_binding_ids",
+        []
+      ],
+      [
+        "derived_claim_fields",
+        []
+      ],
+      [
+        "derived_claim_ids",
+        []
+      ],
+      [
+        "calculation_trace_ids",
+        []
+      ],
+      [
+        "formula_ids",
+        []
+      ],
+      [
+        "resolved_obligation_ids",
+        []
+      ],
+      [
+        "open_obligation_ids",
+        []
+      ],
+      [
+        "hazard_ids",
+        []
+      ],
+      [
+        "projection_value_commitments",
+        [
+          {
+            "digest_alg": "sha256",
+            "field": "amount",
+            "source_id": "checked_claim:amount:witness:amount",
+            "source_kind": "checked_claim",
+            "value_digest": "sha256:7aa3fcfca9c3b08fbec22b363aa33f2f23d6dbecf3cb935c06c6900cb24d91bb"
+          },
+          {
+            "digest_alg": "sha256",
+            "field": "unit",
+            "source_id": "checked_claim:unit:witness:unit",
+            "source_kind": "checked_claim",
+            "value_digest": "sha256:2cfbd63a5121d265558a28fe2b7b85adc69b95493b333175893559a43dc8b41a"
+          }
+        ]
+      ],
+      [
+        "dependency_fingerprints",
+        []
+      ]
+    ],
+    "citations": {
+      "authorized_fields": [
+        "amount",
+        "unit"
+      ],
+      "calculation_trace_ids": [],
+      "checked_claim_fields": [
+        "amount",
+        "unit"
+      ],
+      "checked_claim_witness_ids": [
+        "witness:amount",
+        "witness:unit"
+      ],
+      "commit_package_complete": true,
+      "commit_package_id": "commit-package:facility-fixture-canonical",
+      "dependency_fingerprints": [],
+      "derived_claim_fields": [],
+      "derived_claim_ids": [],
+      "formula_ids": [],
+      "governance_decision_id": "governance-decision:commit-package:facility-fixture-canonical",
+      "governance_reasons": [
+        "commit_package_complete"
+      ],
+      "governance_status": "commit",
+      "hazard_ids": [],
+      "open_obligation_ids": [],
+      "profile_id": null,
+      "projection_id": "public-row",
+      "projection_value_commitments": [
+        {
+          "digest_alg": "sha256",
+          "field": "amount",
+          "source_id": "checked_claim:amount:witness:amount",
+          "source_kind": "checked_claim",
+          "value_digest": "sha256:7aa3fcfca9c3b08fbec22b363aa33f2f23d6dbecf3cb935c06c6900cb24d91bb"
+        },
+        {
+          "digest_alg": "sha256",
+          "field": "unit",
+          "source_id": "checked_claim:unit:witness:unit",
+          "source_kind": "checked_claim",
+          "value_digest": "sha256:2cfbd63a5121d265558a28fe2b7b85adc69b95493b333175893559a43dc8b41a"
+        }
+      ],
+      "reference_binding_ids": [],
+      "report_status": "accepted",
+      "resolved_obligation_ids": [],
+      "semantic_judgment_ids": [],
+      "subject_id": "facility-fixture-canonical"
+    },
+    "draft_id": "commit-package:facility-fixture-canonical",
+    "projection_id": "public-row",
+    "public_row_id": "public-row-fixture-canonical",
+    "winner_receipt_ids": [
+      "governance-decision:commit-package:facility-fixture-canonical"
+    ]
+  },
+  "public_row": {
+    "amount": 1200,
+    "unit": "kWh"
+  },
+  "public_row_id": "public-row-fixture-canonical",
+  "receipt_handle": "receipt:commit-package:facility-fixture-canonical",
+  "receipt_signature": {
+    "algorithm": "test-signature",
+    "issuer_id": "product-facade-lab",
+    "key_id": "lab-key-1",
+    "signature": "signature:sha256:9a3cdda09bae7303c5b21629d699ee9c4deac745bf4ef8cc873e2fdf5d69917a",
+    "signed_body_digest": "sha256:9a3cdda09bae7303c5b21629d699ee9c4deac745bf4ef8cc873e2fdf5d69917a"
+  },
+  "schema_version": "product_facade_verification_bundle.v0",
+  "validation_summary": {
+    "calculated_claim_fields": [],
+    "checked_claim_fields": [
+      "amount",
+      "unit"
+    ],
+    "status": "accepted",
+    "validation_requirement_count": 0
+  }
+}
