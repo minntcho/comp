@@ -1,0 +1,18 @@
+{
+  "schema_version": "product_facade_conformance_cases.v0",
+  "cases": [
+    {
+      "case_id": "canonical_fixture_verified",
+      "bundle": "canonical_verification_bundle.json",
+      "expected_replay_status": "verified",
+      "expected_receipt_authenticity_status": "unsigned_legacy"
+    },
+    {
+      "case_id": "missing_artifact_fixture_blocked",
+      "bundle": "missing_artifact_verification_bundle.json",
+      "expected_replay_status": "blocked",
+      "expected_receipt_authenticity_status": "unsigned_legacy",
+      "expected_verification_error_contains": "Projection replay missing artifact"
+    }
+  ]
+}

@@ -32,14 +32,22 @@ fixture runner
   no CLI surface
 
 scenario-style conformance runner
-  next possible layer
-  not implemented by the current lab
+  conformance_cases.json
+  run_case_manifest(...)
+  run_conformance_cases(...)
+  lab-only case manifest
+  not a product export schema
 ```
 
 The current fixture runner proves that comp can read stored product-shaped
 material and produce verification output without constructing a
 `ProductFacadeRuntime`. It does not yet prove that a downstream product app has
 a stable export contract.
+
+The lab-only case manifest is the first step toward a scenario-style runner: it
+lists existing verification bundle fixtures and their expected replay and
+receipt-authenticity outcomes. It is not a new bundle schema and must not be
+read as a product export format.
 
 ## Layer Boundaries
 
@@ -59,9 +67,9 @@ Lab Fixture Runner
   must remain lab-only until promotion criteria are met.
 
 Scenario-Style Conformance Runner
-  would run named product-shaped cases across fixture directories.
-  would compare expected verified/blocked/authenticity outcomes.
-  would still be an observation harness before stable export promotion.
+  runs named product-shaped cases across fixture directories.
+  compares expected verified/blocked/authenticity outcomes.
+  remains an observation harness before stable export promotion.
 
 comp verifier
   produces replay_status, receipt_authenticity_status, verification_errors,
@@ -108,13 +116,16 @@ not a product-generated replay report authority
 
 ## First PR Boundary
 
-The first PR on this axis should be a map or test guard only.
+The first implementation PR on this axis should consume existing fixture
+material only.
 
 ```text
 No new command surface.
 No new bundle schema.
 No movement into `comp.runtime`.
 No trust in product-generated replay reports.
+lab-only case manifest
+not a product export schema
 ```
 
 After that, a small scenario-style runner may be considered only if it consumes

@@ -906,6 +906,9 @@ def test_product_facade_conformance_runner_map_positions_next_layer():
         "product facade lab",
         "fixture runner",
         "scenario-style conformance runner",
+        "conformance_cases.json",
+        "run_case_manifest(...)",
+        "run_conformance_cases(...)",
         "## Layer Boundaries",
         "Production App",
         "Comp-Compatible Verification Input",
@@ -927,6 +930,8 @@ def test_product_facade_conformance_runner_map_positions_next_layer():
         "No new bundle schema.",
         "No movement into `comp.runtime`.",
         "No trust in product-generated replay reports.",
+        "lab-only case manifest",
+        "not a product export schema",
     ):
         assert line in runner_map
 
