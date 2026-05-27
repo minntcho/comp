@@ -378,6 +378,10 @@ verify_verification_bundle_file(...)
 checked-in fixture runner
   canonical fixture verifies from stored material.
   missing artifact fixture blocks replay.
+
+signed bundle authenticity observation
+  signed bundle reports receipt authenticity separately from replay.
+  missing key registry blocks authenticity but not replay.
   product replay reports remain comp verification output.
 ```
 
@@ -385,6 +389,8 @@ Not promoted:
 
 ```text
 stable wire contract
+stable key registry contract
+production cryptography integration
 artifact registry
 native production authority engine
 product runtime CLI
@@ -394,7 +400,8 @@ scenario/conformance runner
 The current lab evidence supports the external-contract shape at the fixture
 level only: a product-shaped exporter can emit replayable material, and comp can
 verify or block that material later. It does not yet justify a stable bundle
-schema, CLI surface, registry, or replacement production authority engine.
+schema, key registry contract, cryptography integration, CLI surface, registry,
+or replacement production authority engine.
 Bundle helper promotion requires a separate active-contract PR.
 
 ## Non-Goals

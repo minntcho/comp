@@ -703,6 +703,8 @@ def test_observation_map_points_to_canonical_lab_without_promoting_runtime():
     assert "Verification bundle lab summary" in lab_readme
     assert "not a product runtime CLI" in lab_readme
     assert "not a scenario/conformance runner" in lab_readme
+    assert "signed bundle authenticity observation" in lab_readme
+    assert "stable key registry contract" in lab_readme
     assert "native production authority engine" in lab_readme
 
 
