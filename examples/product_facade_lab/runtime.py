@@ -105,6 +105,38 @@ class ArtifactTouchLog:
 
 
 @dataclass(frozen=True)
+class ArtifactTouchLogComparison:
+    baseline_flow: str
+    candidate_flow: str
+    operation: str
+    shared_sync_required: tuple[str, ...] = ()
+    baseline_sync_only: tuple[str, ...] = ()
+    candidate_sync_only: tuple[str, ...] = ()
+    baseline_omitted_but_candidate_sync: tuple[str, ...] = ()
+    deferred_in_both: tuple[str, ...] = ()
+    baseline_product_only: tuple[str, ...] = ()
+    candidate_product_only: tuple[str, ...] = ()
+    notes: tuple[str, ...] = ()
+
+    def to_dict(self) -> dict[str, object]:
+        return {
+            "baseline_flow": self.baseline_flow,
+            "candidate_flow": self.candidate_flow,
+            "operation": self.operation,
+            "shared_sync_required": list(self.shared_sync_required),
+            "baseline_sync_only": list(self.baseline_sync_only),
+            "candidate_sync_only": list(self.candidate_sync_only),
+            "baseline_omitted_but_candidate_sync": list(
+                self.baseline_omitted_but_candidate_sync
+            ),
+            "deferred_in_both": list(self.deferred_in_both),
+            "baseline_product_only": list(self.baseline_product_only),
+            "candidate_product_only": list(self.candidate_product_only),
+            "notes": list(self.notes),
+        }
+
+
+@dataclass(frozen=True)
 class ProductRun:
     run_id: str
     public_row_id: str
@@ -489,8 +521,68 @@ def _audit_touch_log(flow: ProductRunFlow) -> ArtifactTouchLog:
     )
 
 
+def compare_touch_logs(
+    baseline: ArtifactTouchLog,
+    candidate: ArtifactTouchLog,
+) -> ArtifactTouchLogComparison:
+    if baseline.operation != candidate.operation:
+        raise ValueError("touch log comparison requires matching operations")
+
+    shared_sync_required = _ordered_intersection(
+        baseline.sync_required,
+        candidate.sync_required,
+    )
+    baseline_sync_only = _ordered_difference(
+        baseline.sync_required,
+        candidate.sync_required,
+    )
+    candidate_sync_only = _ordered_difference(
+        candidate.sync_required,
+        baseline.sync_required,
+    )
+    baseline_omitted_but_candidate_sync = _ordered_intersection(
+        baseline.not_used,
+        candidate.sync_required,
+    )
+    deferred_in_both = _ordered_intersection(baseline.deferred, candidate.deferred)
+    return ArtifactTouchLogComparison(
+        baseline_flow=baseline.flow,
+        candidate_flow=candidate.flow,
+        operation=baseline.operation,
+        shared_sync_required=shared_sync_required,
+        baseline_sync_only=baseline_sync_only,
+        candidate_sync_only=candidate_sync_only,
+        baseline_omitted_but_candidate_sync=baseline_omitted_but_candidate_sync,
+        deferred_in_both=deferred_in_both,
+        baseline_product_only=baseline.product_only,
+        candidate_product_only=candidate.product_only,
+        notes=(
+            "This is a lab observation summary, not an artifact lifecycle "
+            "contract or registry.",
+            "Compare observed ceremony before promoting any lifecycle rule.",
+        ),
+    )
+
+
+def _ordered_intersection(
+    left: tuple[str, ...],
+    right: tuple[str, ...],
+) -> tuple[str, ...]:
+    right_values = set(right)
+    return tuple(value for value in left if value in right_values)
+
+
+def _ordered_difference(
+    left: tuple[str, ...],
+    right: tuple[str, ...],
+) -> tuple[str, ...]:
+    right_values = set(right)
+    return tuple(value for value in left if value not in right_values)
+
+
 __all__ = [
     "ArtifactTouchLog",
+    "ArtifactTouchLogComparison",
     "ProductAudit",
     "ProductFacadeRuntime",
     "ProductInput",
@@ -498,4 +590,5 @@ __all__ = [
     "ProductPublicRow",
     "ProductRun",
     "ProductWitness",
+    "compare_touch_logs",
 ]
