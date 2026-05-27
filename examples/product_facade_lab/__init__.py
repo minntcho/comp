@@ -2,6 +2,7 @@
 
 from examples.product_facade_lab.runtime import (
     ArtifactTouchLog,
+    ArtifactTouchLogComparison,
     ProductAudit,
     ProductFacadeRuntime,
     ProductInput,
@@ -9,10 +10,12 @@ from examples.product_facade_lab.runtime import (
     ProductPublicRow,
     ProductRun,
     ProductWitness,
+    compare_touch_logs,
 )
 
 __all__ = [
     "ArtifactTouchLog",
+    "ArtifactTouchLogComparison",
     "ProductAudit",
     "ProductFacadeRuntime",
     "ProductInput",
@@ -20,4 +23,5 @@ __all__ = [
     "ProductPublicRow",
     "ProductRun",
     "ProductWitness",
+    "compare_touch_logs",
 ]

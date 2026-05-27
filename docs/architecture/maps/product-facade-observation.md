@@ -221,6 +221,11 @@ Example:
 This shape is illustrative. It is not a stable artifact registry or passport schema.
 The lab may change the log shape as observations become clearer.
 
+The lab may also produce a touch log comparison observation summary for two
+logs with the same operation. That summary exists to identify ceremony deltas
+between flows before any lifecycle contract is promoted; it is not an artifact
+registry, passport schema, or final product runtime interface.
+
 ## Non-Goals
 
 This map deliberately avoids:

@@ -33,3 +33,8 @@ policy preflight path
 The policy preflight path is intentionally comp-backed. It measures ceremony
 around pre-validation admission; it does not add a product policy engine or let
 policy artifacts authorize public projection.
+
+`compare_touch_logs` can compare two logs from the same operation, such as
+canonical `submit` and policy preflight `submit`. The comparison is an
+observation summary for spotting ceremony deltas; it is not a lifecycle
+contract, artifact registry, or Artifact Passport.
