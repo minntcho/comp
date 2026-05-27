@@ -2,7 +2,7 @@
 
 Status: implementation-map
 Owner: trust-kernel
-Last checked against code: 2026-05-26
+Last checked against code: 2026-05-27
 Can block PRs: limited
 
 This map defines the first observation boundary for product-shaped facade work
@@ -225,6 +225,39 @@ The lab may also produce a touch log comparison observation summary for two
 logs with the same operation. That summary exists to identify ceremony deltas
 between flows before any lifecycle contract is promoted; it is not an artifact
 registry, passport schema, or final product runtime interface.
+
+## First Lab Observation Summary
+
+This summary is observed evidence, not a lifecycle contract.
+
+The first comp-backed lab runs show a narrow split between canonical and policy
+preflight submit paths:
+
+```text
+Shared submit sync: `InterpretationHypothesis`, `ValidationReport`.
+
+Canonical fast path omits:
+  `DecisionLedger`, `SelectedValidationContract`, `ValidationHandoff`.
+
+Policy preflight submit adds:
+  `MaterialDescriptor`, `PolicyEffect`, `PolicyAssembly`, `DecisionLedger`,
+  `SelectedValidationContract`, `ValidationHandoff`.
+
+Both submit paths defer `ArtifactEnvelope` and `ProjectionReplayReport`.
+```
+
+Publishing still synchronously requires `PublicOutputReceipt`.
+`ArtifactEnvelope` and `ProjectionReplayReport` remain deferred from the publish
+path unless the runtime claims replayable state at publish time.
+
+Audit synchronously requires `ArtifactEnvelope` and `ProjectionReplayReport`.
+ProofGraph remains omitted from the basic audit observation.
+
+The practical reading is limited: canonical input can skip policy preflight
+ceremony when it already has the minimum compiler-facing evidence shape, while
+raw-ish external material currently pays the policy assembly and handoff cost.
+That observation can inform a later artifact lifecycle boundary, but it does not
+promote any artifact into a universal requirement.
 
 ## Non-Goals
 
