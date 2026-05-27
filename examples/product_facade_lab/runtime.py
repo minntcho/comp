@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from dataclasses import dataclass
+from pathlib import Path
 from typing import Any, Literal
 
 from comp import PublicOutputReceipt, PublicOutputSpec, build_public_output
@@ -194,6 +195,10 @@ class CompCompatibleVerificationInput:
     artifact_envelopes: tuple[ArtifactEnvelope, ...]
     validation_summary: Mapping[str, Any]
     explanation_hints: tuple[tuple[str, Any], ...] = ()
+    omitted_verification_outputs: tuple[str, ...] = (
+        "ProjectionReplayReport",
+        "ProofGraph",
+    )
     product_only_excluded: tuple[str, ...] = (
         "ProductInput",
         "ProductPolicyPreflightInput",
@@ -353,6 +358,26 @@ class ProductFacadeRuntime:
             artifact_envelopes=envelopes,
             validation_summary=_validation_summary(record.report),
         )
+
+    def export_verification_bundle(self, public_row_id: str) -> dict[str, object]:
+        from examples.product_facade_lab.bundle import verification_input_to_bundle
+
+        return verification_input_to_bundle(
+            self.export_verification_input(public_row_id)
+        )
+
+    def write_verification_bundle(
+        self,
+        public_row_id: str,
+        path: str | Path,
+    ) -> Path:
+        from examples.product_facade_lab.bundle import write_verification_bundle
+
+        return write_verification_bundle(
+            self.export_verification_input(public_row_id),
+            path,
+        )
+        return bundle_path
 
     def audit(self, public_row_id: str) -> ProductAudit:
         run_id = self._public_row_to_run[public_row_id]

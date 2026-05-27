@@ -296,12 +296,16 @@ The first shape separates product export material from comp verification output:
 
 ```text
 product export material
+  schema_version: product_facade_verification_bundle.v0
   validation_summary
   public_row
+  PublicOutputSpec projection shape
   receipt_handle
   PublicOutputReceipt
   ArtifactEnvelope set
   optional explanation hints
+  omitted_verification_outputs
+  product_only_excluded
 
 comp verification output
   replay_status
@@ -315,6 +319,12 @@ The product side may export replayable material, but it must not export a replay
 
 The first lab shape is intentionally named `CompCompatibleVerificationInput`
 rather than audit bundle or artifact registry. It omits product-only workflow state, `touch_log`, proof graph output, and `ProjectionReplayReport`.
+
+The lab may serialize this shape with `export_verification_bundle(...)` or
+`write_verification_bundle(...)`. That JSON bundle is a fixture-oriented
+observation format, not a stable wire contract. JSON round-trip verification is
+useful because it exercises the future external boundary where a product app
+emits material and comp reconstructs the verification input.
 
 ## Non-Goals
 
