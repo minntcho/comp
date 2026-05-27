@@ -9,8 +9,10 @@ from examples.product_facade_lab.bundle import verification_input_from_bundle
 from examples.product_facade_lab.runner import (
     run_all_fixtures,
     run_case_manifest,
+    run_case_manifest_summary,
     run_conformance_cases,
     run_fixture,
+    summarize_conformance_results,
 )
 
 
@@ -123,6 +125,51 @@ def test_case_manifest_runs_named_fixture_expectations():
     assert all(result.passed for result in results)
     assert "Projection replay missing artifact" in results[1].verification_errors[0]
     assert results[2].receipt_authenticity_errors == ()
+
+
+def test_case_manifest_summary_reports_suite_counts():
+    summary = run_case_manifest_summary(
+        FIXTURE_DIR / "conformance_cases.json",
+        key_registry=ProductFacadeFixtureKeyRegistry(),
+    )
+
+    assert summary.total_cases == 3
+    assert summary.passed_cases == 3
+    assert summary.failed_cases == 0
+    assert summary.failed_case_ids == ()
+    assert summary.passed is True
+    assert dict(summary.replay_status_counts) == {
+        "blocked": 1,
+        "verified": 2,
+    }
+    assert dict(summary.receipt_authenticity_status_counts) == {
+        "unsigned_legacy": 2,
+        "verified": 1,
+    }
+
+
+def test_conformance_summary_reports_failed_case_ids():
+    cases = (
+        {
+            "case_id": "canonical_wrong_expectation",
+            "bundle": "canonical_verification_bundle.json",
+            "expected_replay_status": "blocked",
+            "expected_receipt_authenticity_status": "unsigned_legacy",
+        },
+    )
+    results = run_conformance_cases(cases, fixture_dir=FIXTURE_DIR)
+
+    summary = summarize_conformance_results(results)
+
+    assert summary.total_cases == 1
+    assert summary.passed_cases == 0
+    assert summary.failed_cases == 1
+    assert summary.failed_case_ids == ("canonical_wrong_expectation",)
+    assert summary.passed is False
+    assert dict(summary.replay_status_counts) == {"verified": 1}
+    assert dict(summary.receipt_authenticity_status_counts) == {
+        "unsigned_legacy": 1
+    }
 
 
 def test_signed_fixture_case_observes_missing_key_registry_separately():

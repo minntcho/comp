@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+from collections import Counter
 from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
 from pathlib import Path
@@ -72,6 +73,21 @@ class VerificationBundleCaseResult:
         return verification_error_matches and authenticity_error_matches
 
 
+@dataclass(frozen=True)
+class VerificationBundleSuiteResult:
+    case_results: tuple[VerificationBundleCaseResult, ...]
+    total_cases: int
+    passed_cases: int
+    failed_cases: int
+    failed_case_ids: tuple[str, ...]
+    replay_status_counts: tuple[tuple[str, int], ...]
+    receipt_authenticity_status_counts: tuple[tuple[str, int], ...]
+
+    @property
+    def passed(self) -> bool:
+        return self.failed_cases == 0
+
+
 def run_fixture(
     path: str | Path,
     *,
@@ -124,6 +140,16 @@ def run_case_manifest(
     )
 
 
+def run_case_manifest_summary(
+    path: str | Path,
+    *,
+    key_registry=None,
+) -> VerificationBundleSuiteResult:
+    return summarize_conformance_results(
+        run_case_manifest(path, key_registry=key_registry)
+    )
+
+
 def run_conformance_cases(
     cases: Iterable[Mapping[str, Any]],
     *,
@@ -134,6 +160,28 @@ def run_conformance_cases(
     return tuple(
         _run_conformance_case(case, fixture_dir=root, key_registry=key_registry)
         for case in cases
+    )
+
+
+def summarize_conformance_results(
+    results: Iterable[VerificationBundleCaseResult],
+) -> VerificationBundleSuiteResult:
+    case_results = tuple(results)
+    failed_case_ids = tuple(
+        result.case_id for result in case_results if not result.passed
+    )
+    return VerificationBundleSuiteResult(
+        case_results=case_results,
+        total_cases=len(case_results),
+        passed_cases=len(case_results) - len(failed_case_ids),
+        failed_cases=len(failed_case_ids),
+        failed_case_ids=failed_case_ids,
+        replay_status_counts=_status_counts(
+            result.replay_status for result in case_results
+        ),
+        receipt_authenticity_status_counts=_status_counts(
+            result.receipt_authenticity_status for result in case_results
+        ),
     )
 
 
@@ -198,6 +246,10 @@ def _contains_expected_error(
     return any(expected in error for error in errors)
 
 
+def _status_counts(statuses: Iterable[str]) -> tuple[tuple[str, int], ...]:
+    return tuple(sorted(Counter(statuses).items()))
+
+
 def _reject_product_generated_replay_report(case: Mapping[str, Any]) -> None:
     forbidden = {
         "expected_projection_replay_report",
@@ -215,8 +267,11 @@ __all__ = [
     "CONFORMANCE_CASES_SCHEMA_VERSION",
     "VerificationBundleCaseResult",
     "VerificationBundleFixtureResult",
+    "VerificationBundleSuiteResult",
     "run_all_fixtures",
     "run_case_manifest",
+    "run_case_manifest_summary",
     "run_conformance_cases",
     "run_fixture",
+    "summarize_conformance_results",
 ]
