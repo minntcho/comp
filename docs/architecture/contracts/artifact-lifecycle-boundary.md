@@ -120,6 +120,16 @@ authority artifacts.
 Changes that alter these state-transition requirements must update this
 contract and its smoke coverage in the same PR.
 
+The product facade lab is the current executable conformance guard:
+
+```text
+tests/test_product_facade_lab.py::test_product_facade_lab_conforms_to_artifact_lifecycle_boundary
+```
+
+That guard runs canonical submit, policy preflight submit, publish, and audit
+paths and compares their touch logs against this contract's state-transition
+requirements.
+
 Reviewers should reject changes that:
 
 ```text

@@ -260,6 +260,85 @@ def test_submit_touch_log_comparison_summarizes_observed_ceremony_delta():
     assert any("observation summary" in note for note in comparison.notes)
 
 
+def test_product_facade_lab_conforms_to_artifact_lifecycle_boundary():
+    boundary_doc = _artifact_lifecycle_boundary()
+    observations = _run_lifecycle_lab_observations()
+
+    canonical_submit = observations["canonical_submit"]
+    policy_submit = observations["policy_submit"]
+    canonical_publish = observations["canonical_publish"]
+    policy_publish = observations["policy_publish"]
+    canonical_audit = observations["canonical_audit"]
+    policy_audit = observations["policy_audit"]
+
+    _assert_contract_mentions(
+        boundary_doc,
+        "canonical submit -> validation",
+        canonical_submit.sync_required,
+    )
+    assert canonical_submit.sync_required == (
+        "InterpretationHypothesis",
+        "ValidationReport",
+    )
+    assert canonical_submit.not_used == (
+        "DecisionLedger",
+        "SelectedValidationContract",
+        "ValidationHandoff",
+    )
+    assert "PublicOutputReceipt" in canonical_submit.sync_required_if_publishing
+
+    _assert_contract_mentions(
+        boundary_doc,
+        "policy preflight submit -> validation",
+        policy_submit.sync_required,
+    )
+    assert policy_submit.sync_required == (
+        "MaterialDescriptor",
+        "PolicyEffect",
+        "PolicyAssembly",
+        "DecisionLedger",
+        "SelectedValidationContract",
+        "ValidationHandoff",
+        "InterpretationHypothesis",
+        "ValidationReport",
+    )
+    assert "PublicOutputReceipt" not in policy_submit.sync_required
+
+    expected_publish_sync = (
+        "ValidationReport",
+        "ReviewPackage",
+        "ReviewDecision",
+        "PublicOutputReceipt",
+        "PublicOutputSpec",
+    )
+    _assert_contract_mentions(
+        boundary_doc,
+        "validated -> published",
+        expected_publish_sync,
+    )
+    assert canonical_publish.sync_required == expected_publish_sync
+    assert policy_publish.sync_required == expected_publish_sync
+    assert "ArtifactEnvelope" not in canonical_publish.sync_required
+    assert "ArtifactEnvelope" in canonical_publish.deferred
+    assert "ArtifactEnvelope" not in policy_publish.sync_required
+    assert "ArtifactEnvelope" in policy_publish.deferred
+    assert "DecisionLedger" in canonical_publish.not_used
+    assert any("receipt-gated projection" in note for note in policy_publish.notes)
+
+    expected_audit_sync = ("ArtifactEnvelope", "ProjectionReplayReport")
+    _assert_contract_mentions(
+        boundary_doc,
+        "published -> replayable/auditable",
+        expected_audit_sync,
+    )
+    assert canonical_audit.sync_required == expected_audit_sync
+    assert policy_audit.sync_required == expected_audit_sync
+    assert canonical_audit.not_used == ("ProofGraph",)
+    assert policy_audit.not_used == ("ProofGraph",)
+    assert "ProofGraph" in boundary_doc
+    assert "Product-only state must stay outside `comp` artifacts." in boundary_doc
+
+
 def test_observation_map_points_to_canonical_lab_without_promoting_runtime():
     product_map = Path(
         "docs/architecture/maps/product-facade-observation.md"
@@ -275,3 +354,81 @@ def test_observation_map_points_to_canonical_lab_without_promoting_runtime():
     assert "compare_touch_logs" in lab_readme
     assert "observation summary" in product_map
     assert "native production authority engine" in lab_readme
+
+
+def _artifact_lifecycle_boundary() -> str:
+    return Path("docs/architecture/contracts/artifact-lifecycle-boundary.md").read_text(
+        encoding="utf-8"
+    )
+
+
+def _run_lifecycle_lab_observations():
+    runtime = ProductFacadeRuntime()
+    canonical_run = runtime.submit(
+        ProductInput(
+            run_id="run-lifecycle-canonical",
+            subject_id="facility-1",
+            public_row_id="public-row-lifecycle-canonical",
+            projection_id="public-row",
+            projection_fields=("amount", "unit"),
+            values={"amount": 1200, "unit": "kWh"},
+            witnesses=_product_witnesses(),
+            known_fields=frozenset({"amount", "unit"}),
+            allowed_units=frozenset({"kWh"}),
+        )
+    )
+    policy_run = runtime.submit_policy_preflight(
+        ProductPolicyPreflightInput(
+            run_id="run-lifecycle-policy",
+            subject_id="facility-1",
+            public_row_id="public-row-lifecycle-policy",
+            projection_id="public-row",
+            projection_fields=("amount", "unit"),
+            material_id="material:invoice-lifecycle",
+            source_ref="invoice.pdf",
+            values={"amount": 1200, "unit": "kWh"},
+            witnesses=_product_witnesses(),
+            known_fields=frozenset({"amount", "unit"}),
+            allowed_units=frozenset({"kWh"}),
+        )
+    )
+    canonical_public = runtime.publish(canonical_run.run_id)
+    policy_public = runtime.publish(policy_run.run_id)
+    canonical_audit = runtime.audit(canonical_public.public_row_id)
+    policy_audit = runtime.audit(policy_public.public_row_id)
+
+    return {
+        "canonical_submit": canonical_run.touch_log,
+        "policy_submit": policy_run.touch_log,
+        "canonical_publish": canonical_public.touch_log,
+        "policy_publish": policy_public.touch_log,
+        "canonical_audit": canonical_audit.touch_log,
+        "policy_audit": policy_audit.touch_log,
+    }
+
+
+def _product_witnesses() -> tuple[ProductWitness, ...]:
+    return (
+        ProductWitness(
+            field="amount",
+            source="invoice.pdf",
+            span="p1: electricity amount",
+            text="1200",
+        ),
+        ProductWitness(
+            field="unit",
+            source="invoice.pdf",
+            span="p1: electricity unit",
+            text="kWh",
+        ),
+    )
+
+
+def _assert_contract_mentions(
+    boundary_doc: str,
+    transition: str,
+    artifact_names: tuple[str, ...],
+) -> None:
+    assert transition in boundary_doc
+    for artifact_name in artifact_names:
+        assert f"`{artifact_name}`" in boundary_doc
