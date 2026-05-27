@@ -35,6 +35,7 @@ scenario-style conformance runner
   conformance_cases.json
   run_case_manifest(...)
   run_conformance_cases(...)
+  signed_verification_bundle.json
   lab-only case manifest
   not a product export schema
 ```
@@ -48,6 +49,11 @@ The lab-only case manifest is the first step toward a scenario-style runner: it
 lists existing verification bundle fixtures and their expected replay and
 receipt-authenticity outcomes. It is not a new bundle schema and must not be
 read as a product export format.
+
+signed fixture case verifies receipt authenticity when a lab key registry is supplied.
+signed fixture case can still replay when key registry material is absent.
+That case reports missing authenticity material separately from replay
+verification.
 
 ## Layer Boundaries
 

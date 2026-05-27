@@ -90,7 +90,9 @@ stable bundle runner.
 fixture bundles and their expected `replay_status` and
 `receipt_authenticity_status` values. `run_case_manifest(...)` reads that
 manifest, and `run_conformance_cases(...)` can run the same case shape from
-memory. The manifest is not a product export schema or stable wire contract.
+memory. `signed_verification_bundle.json` observes receipt authenticity with a
+lab key registry while keeping replay verification separate from signature
+status. The manifest is not a product export schema or stable wire contract.
 
 Verification bundle lab summary: the lab has observed export via
 `export_verification_bundle(...)`, file persistence via
