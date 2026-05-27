@@ -353,6 +353,44 @@ The missing artifact fixture is intentionally broken so comp proves it can
 reject replayable-state claims when receipt-cited `ArtifactEnvelope` material is
 absent.
 
+## Verification Bundle Lab Summary
+
+This summary closes the current verification-bundle observation slice. It is
+observed lab evidence, not promotion to a stable product contract.
+
+Observed:
+
+```text
+export_verification_bundle(...)
+  product-shaped material can be exported without including replay reports.
+
+write_verification_bundle(...)
+  the same material can be persisted as fixture JSON.
+
+verify_verification_bundle_file(...)
+  comp can reconstruct verification input from stored material.
+
+checked-in fixture runner
+  canonical fixture verifies from stored material.
+  missing artifact fixture blocks replay.
+  product replay reports remain comp verification output.
+```
+
+Not promoted:
+
+```text
+stable wire contract
+artifact registry
+native production authority engine
+product runtime CLI
+scenario/conformance runner
+```
+
+The current lab evidence supports the external-contract shape at the fixture
+level only: a product-shaped exporter can emit replayable material, and comp can
+verify or block that material later. It does not yet justify a stable bundle
+schema, CLI surface, registry, or replacement production authority engine.
+
 ## Non-Goals
 
 This map deliberately avoids:
