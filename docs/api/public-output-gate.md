@@ -17,6 +17,11 @@ compiler reports, review packages, review decisions, replay reports, or product
 UI state. A public projection must pass through a clean
 `PublicOutputReceipt`.
 
+`docs/architecture/contracts/receipt-authenticity-boundary.md` defines the
+issuer/signature boundary for this gate. A receipt signature can verify issuer
+authenticity for the receipt body, but it does not replace receipt-gated
+projection or replay verification.
+
 ## Stable public API
 
 Use these names for public-output examples and package users:
