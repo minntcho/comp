@@ -90,10 +90,13 @@ Verification bundle lab summary: the lab has observed export via
 `export_verification_bundle(...)`, file persistence via
 `write_verification_bundle(...)`, file verification via
 `verify_verification_bundle_file(...)`, a canonical fixture that verifies from
-stored material, and a missing artifact fixture that blocks replay.
+stored material, a missing artifact fixture that blocks replay, and a
+signed bundle authenticity observation that reports receipt authenticity separately
+from replay.
 This is not a product runtime CLI.
 It is not a scenario/conformance runner, and not promotion to a stable wire
-contract, artifact registry, or native production authority engine.
+contract, stable key registry contract, production cryptography integration,
+artifact registry, or native production authority engine.
 Product replay reports remain comp verification output.
 
 `compare_touch_logs` can compare two logs from the same operation, such as
