@@ -302,12 +302,14 @@ product export material
   PublicOutputSpec projection shape
   receipt_handle
   PublicOutputReceipt
+  optional ReceiptSignature
   ArtifactEnvelope set
   optional explanation hints
   omitted_verification_outputs
   product_only_excluded
 
 comp verification output
+  receipt_authenticity_status
   replay_status
   verification_errors
   ProjectionReplayReport, when verified
@@ -316,6 +318,7 @@ comp verification output
 
 The product side may export replayable material, but it must not export a replay report as if that report were product authority.
 `ProjectionReplayReport` is produced by the comp verifier from `PublicOutputReceipt`, `PublicOutputSpec`, the public row, and receipt-cited `ArtifactEnvelope` material.
+When optional `ReceiptSignature` material is present, comp reports receipt authenticity separately from replay.
 
 The first lab shape is intentionally named `CompCompatibleVerificationInput`
 rather than audit bundle or artifact registry. It omits product-only workflow state, `touch_log`, proof graph output, and `ProjectionReplayReport`.
@@ -328,6 +331,7 @@ emits material and comp reconstructs the verification input.
 
 The lab may read the same fixture shape with `verify_verification_bundle(...)`
 or `verify_verification_bundle_file(...)`. These helpers are a conformance-lab observation path: they return comp verification output from exported material and do not trust a product-generated replay report.
+They may verify optional `ReceiptSignature` material with a caller-provided key registry, but receipt authenticity does not replace receipt-gated projection or replay verification.
 
 ## Bundle Fixture Observations
 

@@ -5,7 +5,7 @@ import json
 from pathlib import Path
 from typing import Any
 
-from comp import PublicOutputReceipt, PublicOutputSpec
+from comp import PublicOutputReceipt, PublicOutputSpec, ReceiptSignature
 from comp.judgment.receipts import (
     DependencyFingerprint,
     PublicOutputReceiptCitations,
@@ -34,13 +34,22 @@ def write_verification_bundle(
 
 def verify_verification_bundle(
     bundle: Mapping[str, Any],
+    *,
+    key_registry=None,
 ) -> CompVerificationOutput:
-    return verify_comp_compatible_input(verification_input_from_bundle(bundle))
+    return verify_comp_compatible_input(
+        verification_input_from_bundle(bundle),
+        key_registry=key_registry,
+    )
 
 
-def verify_verification_bundle_file(path: str | Path) -> CompVerificationOutput:
+def verify_verification_bundle_file(
+    path: str | Path,
+    *,
+    key_registry=None,
+) -> CompVerificationOutput:
     bundle = json.loads(Path(path).read_text(encoding="utf-8"))
-    return verify_verification_bundle(bundle)
+    return verify_verification_bundle(bundle, key_registry=key_registry)
 
 
 def verification_input_to_bundle(
@@ -55,6 +64,9 @@ def verification_input_to_bundle(
         "receipt_handle": verification_input.receipt_handle,
         "public_output_receipt": _public_output_receipt_to_mapping(
             verification_input.public_output_receipt
+        ),
+        "receipt_signature": _receipt_signature_to_mapping(
+            verification_input.receipt_signature
         ),
         "artifact_envelopes": [
             _artifact_envelope_to_mapping(envelope)
@@ -84,6 +96,9 @@ def verification_input_from_bundle(
             bundle["public_output_receipt"]
         ),
         receipt_handle=str(bundle["receipt_handle"]),
+        receipt_signature=_receipt_signature_from_mapping(
+            bundle.get("receipt_signature")
+        ),
         artifact_envelopes=tuple(
             _artifact_envelope_from_mapping(envelope)
             for envelope in bundle["artifact_envelopes"]
@@ -94,6 +109,34 @@ def verification_input_from_bundle(
             bundle.get("omitted_verification_outputs", ())
         ),
         product_only_excluded=tuple(bundle.get("product_only_excluded", ())),
+    )
+
+
+def _receipt_signature_to_mapping(
+    signature: ReceiptSignature | None,
+) -> dict[str, str] | None:
+    if signature is None:
+        return None
+    return {
+        "issuer_id": signature.issuer_id,
+        "key_id": signature.key_id,
+        "algorithm": signature.algorithm,
+        "signed_body_digest": signature.signed_body_digest,
+        "signature": signature.signature,
+    }
+
+
+def _receipt_signature_from_mapping(
+    mapping: Mapping[str, Any] | None,
+) -> ReceiptSignature | None:
+    if mapping is None:
+        return None
+    return ReceiptSignature(
+        issuer_id=str(mapping["issuer_id"]),
+        key_id=str(mapping["key_id"]),
+        algorithm=str(mapping["algorithm"]),
+        signed_body_digest=str(mapping["signed_body_digest"]),
+        signature=str(mapping["signature"]),
     )
 
 
@@ -117,7 +160,7 @@ def _public_output_receipt_to_mapping(
     return {
         "draft_id": receipt.draft_id,
         "winner_receipt_ids": list(receipt.winner_receipt_ids),
-        "barrier_snapshot": _json_value(receipt.barrier_snapshot),
+        "barrier_snapshot": _receipt_value_to_mapping(receipt.barrier_snapshot),
         "public_row_id": receipt.public_row_id,
         "projection_id": receipt.projection_id,
         "authorized_fields": list(receipt.authorized_fields),
@@ -136,7 +179,9 @@ def _public_output_receipt_from_mapping(
     return PublicOutputReceipt(
         draft_id=str(mapping["draft_id"]),
         winner_receipt_ids=tuple(mapping["winner_receipt_ids"]),
-        barrier_snapshot=_tuple_pairs(mapping["barrier_snapshot"]),
+        barrier_snapshot=_tuple_pairs(
+            _receipt_value_from_mapping(mapping["barrier_snapshot"])
+        ),
         public_row_id=str(mapping["public_row_id"]),
         projection_id=str(mapping["projection_id"]),
         authorized_fields=tuple(mapping["authorized_fields"]),
@@ -264,6 +309,45 @@ def _dependency_fingerprint_from_mapping(
         fingerprint=str(mapping["fingerprint"]),
         digest_alg=str(mapping["digest_alg"]),
     )
+
+
+def _receipt_value_to_mapping(value: Any) -> Any:
+    if isinstance(value, PublicOutputValueCommitment):
+        return {
+            "__receipt_type__": "projection_value_commitment",
+            "value": _value_commitment_to_mapping(value),
+        }
+    if isinstance(value, DependencyFingerprint):
+        return {
+            "__receipt_type__": "dependency_fingerprint",
+            "value": _dependency_fingerprint_to_mapping(value),
+        }
+    if isinstance(value, Mapping):
+        return {
+            str(key): _receipt_value_to_mapping(item)
+            for key, item in value.items()
+        }
+    if isinstance(value, tuple):
+        return [_receipt_value_to_mapping(item) for item in value]
+    if isinstance(value, list):
+        return [_receipt_value_to_mapping(item) for item in value]
+    return value
+
+
+def _receipt_value_from_mapping(value: Any) -> Any:
+    if isinstance(value, Mapping):
+        receipt_type = value.get("__receipt_type__")
+        if receipt_type == "projection_value_commitment":
+            return _value_commitment_from_mapping(value["value"])
+        if receipt_type == "dependency_fingerprint":
+            return _dependency_fingerprint_from_mapping(value["value"])
+        return {
+            str(key): _receipt_value_from_mapping(item)
+            for key, item in value.items()
+        }
+    if isinstance(value, list):
+        return [_receipt_value_from_mapping(item) for item in value]
+    return value
 
 
 def _artifact_envelope_to_mapping(envelope: ArtifactEnvelope) -> dict[str, object]:

@@ -5,6 +5,7 @@ import json
 import tomllib
 from pathlib import Path
 
+from comp import ReceiptSignature, public_output_receipt_signed_body_digest
 from examples.product_facade_lab import (
     CompCompatibleVerificationInput,
     CompVerificationOutput,
@@ -18,7 +19,29 @@ from examples.product_facade_lab import (
     verify_verification_bundle,
     verify_verification_bundle_file,
     verification_input_from_bundle,
+    verification_input_to_bundle,
 )
+
+
+class ProductFacadeKeyRegistry:
+    def __init__(self, *, valid_signature: bool = True):
+        self.valid_signature = valid_signature
+        self.calls = []
+
+    def verify_signature(self, signature, *, signed_body_digest):
+        self.calls.append((signature, signed_body_digest))
+        return self.valid_signature
+
+
+def _receipt_signature_for(receipt):
+    digest = public_output_receipt_signed_body_digest(receipt)
+    return ReceiptSignature(
+        issuer_id="product-facade-lab",
+        key_id="lab-key-1",
+        algorithm="test-signature",
+        signed_body_digest=digest,
+        signature=f"signature:{digest}",
+    )
 
 
 def test_canonical_fast_path_submit_publish_audit_records_touch_log():
@@ -273,6 +296,8 @@ def test_comp_verifier_produces_replay_report_from_verification_input():
     assert isinstance(verification_output, CompVerificationOutput)
     assert verification_output.public_row_id == public.public_row_id
     assert verification_output.replay_status == "verified"
+    assert verification_output.receipt_authenticity_status == "unsigned_legacy"
+    assert verification_output.receipt_authenticity_errors == ()
     assert verification_output.verification_errors == ()
     assert verification_output.proof_graph_available is False
     assert verification_output.artifact_count == len(
@@ -323,6 +348,7 @@ def test_comp_compatible_verification_bundle_round_trips_through_json():
         "output_fields": ["amount", "unit"],
     }
     assert bundle["receipt_handle"] == public.receipt_handle
+    assert bundle["receipt_signature"] is None
     assert bundle["validation_summary"]["status"] == "accepted"
     assert bundle["artifact_envelopes"]
     assert "ProjectionReplayReport" in bundle["omitted_verification_outputs"]
@@ -333,8 +359,85 @@ def test_comp_compatible_verification_bundle_round_trips_through_json():
     assert "projection_replay_report" not in bundle
     assert "proof_graph" not in bundle
     assert verification_output.replay_status == "verified"
+    assert verification_output.receipt_authenticity_status == "unsigned_legacy"
     assert verification_output.replay_report is not None
     assert verification_output.replay_report.public_row == public.public_row
+
+
+def test_signed_verification_bundle_reports_receipt_authenticity_status():
+    runtime = ProductFacadeRuntime()
+    public = _publish_canonical_runtime(runtime, "run-signed-verification-bundle")
+    verification_input = runtime.export_verification_input(public.public_row_id)
+    signature = _receipt_signature_for(verification_input.public_output_receipt)
+    signed_input = replace(verification_input, receipt_signature=signature)
+    registry = ProductFacadeKeyRegistry()
+
+    bundle = verification_input_to_bundle(signed_input)
+    loaded_bundle = json.loads(json.dumps(bundle, sort_keys=True))
+    loaded_input = verification_input_from_bundle(loaded_bundle)
+    verification_output = verify_verification_bundle(
+        loaded_bundle,
+        key_registry=registry,
+    )
+
+    assert bundle["receipt_signature"] == {
+        "issuer_id": "product-facade-lab",
+        "key_id": "lab-key-1",
+        "algorithm": "test-signature",
+        "signed_body_digest": signature.signed_body_digest,
+        "signature": signature.signature,
+    }
+    assert loaded_input.receipt_signature == signature
+    assert verification_output.receipt_authenticity_status == "verified"
+    assert verification_output.receipt_authenticity_errors == ()
+    assert verification_output.replay_status == "verified"
+    assert verification_output.replay_report is not None
+    assert registry.calls == [(signature, signature.signed_body_digest)]
+
+
+def test_invalid_receipt_signature_does_not_replace_replay_verification():
+    runtime = ProductFacadeRuntime()
+    public = _publish_canonical_runtime(runtime, "run-invalid-signature-bundle")
+    verification_input = runtime.export_verification_input(public.public_row_id)
+    signed_input = replace(
+        verification_input,
+        receipt_signature=_receipt_signature_for(
+            verification_input.public_output_receipt
+        ),
+    )
+
+    verification_output = verify_comp_compatible_input(
+        signed_input,
+        key_registry=ProductFacadeKeyRegistry(valid_signature=False),
+    )
+
+    assert verification_output.receipt_authenticity_status == "invalid_signature"
+    assert verification_output.receipt_authenticity_errors == (
+        "Receipt signature verification failed.",
+    )
+    assert verification_output.replay_status == "verified"
+    assert verification_output.replay_report is not None
+
+
+def test_signed_verification_input_without_key_registry_still_replays():
+    runtime = ProductFacadeRuntime()
+    public = _publish_canonical_runtime(runtime, "run-signed-without-registry")
+    verification_input = runtime.export_verification_input(public.public_row_id)
+    signed_input = replace(
+        verification_input,
+        receipt_signature=_receipt_signature_for(
+            verification_input.public_output_receipt
+        ),
+    )
+
+    verification_output = verify_comp_compatible_input(signed_input)
+
+    assert verification_output.receipt_authenticity_status == "missing_key_registry"
+    assert verification_output.receipt_authenticity_errors == (
+        "Signed product facade verification input requires a receipt key registry.",
+    )
+    assert verification_output.replay_status == "verified"
+    assert verification_output.replay_report is not None
 
 
 def test_write_verification_bundle_creates_json_file(tmp_path):
@@ -589,6 +692,8 @@ def test_observation_map_points_to_canonical_lab_without_promoting_runtime():
     assert "Product facade response observations" in product_map
     assert "touch_log is lab-only diagnostic" in lab_readme
     assert "product_facade_verification_bundle.v0" in lab_readme
+    assert "optional ReceiptSignature" in lab_readme
+    assert "receipt_authenticity_status" in lab_readme
     assert "verify_verification_bundle_file" in lab_readme
     assert "not a stable wire contract" in lab_readme
     assert "fixtures/" in lab_readme

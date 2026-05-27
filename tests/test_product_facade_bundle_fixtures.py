@@ -16,6 +16,8 @@ def test_canonical_verification_bundle_fixture_is_verified():
     assert result.fixture_name == "canonical_verification_bundle.json"
     assert result.expected_replay_status == "verified"
     assert result.replay_status == "verified"
+    assert result.receipt_authenticity_status == "unsigned_legacy"
+    assert result.receipt_authenticity_errors == ()
     assert result.passed is True
     assert result.verification_errors == ()
     assert result.public_row_id == "public-row-fixture-canonical"
@@ -28,6 +30,8 @@ def test_missing_artifact_verification_bundle_fixture_is_blocked():
     assert result.fixture_name == "missing_artifact_verification_bundle.json"
     assert result.expected_replay_status == "blocked"
     assert result.replay_status == "blocked"
+    assert result.receipt_authenticity_status == "unsigned_legacy"
+    assert result.receipt_authenticity_errors == ()
     assert result.passed is True
     assert result.verification_errors
     assert "Projection replay missing artifact" in result.verification_errors[0]

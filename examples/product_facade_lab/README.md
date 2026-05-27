@@ -50,12 +50,14 @@ export_verification_input(public_row_id)
   -> PublicOutputSpec projection shape
   -> receipt_handle
   -> PublicOutputReceipt
+  -> optional ReceiptSignature
   -> ArtifactEnvelope set
   -> optional explanation hints
   -> omitted_verification_outputs
   -> product_only_excluded
 
 verify_comp_compatible_input(input)
+  -> receipt_authenticity_status
   -> replay_status
   -> verification_errors
   -> ProjectionReplayReport, when verified
@@ -64,7 +66,9 @@ verify_comp_compatible_input(input)
 `CompCompatibleVerificationInput` deliberately omits `ProjectionReplayReport`,
 proof graph output, `touch_log`, and product-only workflow state. The product
 side exports replayable material; the comp verifier produces replay
-verification.
+verification. When a product export carries `ReceiptSignature` material, comp
+verifies issuer authenticity as a separate status; that status does not replace
+replay verification.
 
 `export_verification_bundle(...)` and `write_verification_bundle(...)` serialize
 that material as `product_facade_verification_bundle.v0` JSON for fixture

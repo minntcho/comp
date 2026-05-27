@@ -18,6 +18,8 @@ class VerificationBundleFixtureResult:
     path: Path
     expected_replay_status: str
     replay_status: str
+    receipt_authenticity_status: str
+    receipt_authenticity_errors: tuple[str, ...]
     public_row_id: str
     artifact_count: int
     verification_errors: tuple[str, ...]
@@ -27,15 +29,21 @@ class VerificationBundleFixtureResult:
         return self.replay_status == self.expected_replay_status
 
 
-def run_fixture(path: str | Path) -> VerificationBundleFixtureResult:
+def run_fixture(
+    path: str | Path,
+    *,
+    key_registry=None,
+) -> VerificationBundleFixtureResult:
     fixture_path = Path(path)
     expected_status = _expected_replay_status(fixture_path)
-    output = verify_verification_bundle_file(fixture_path)
+    output = verify_verification_bundle_file(fixture_path, key_registry=key_registry)
     return VerificationBundleFixtureResult(
         fixture_name=fixture_path.name,
         path=fixture_path,
         expected_replay_status=expected_status,
         replay_status=output.replay_status,
+        receipt_authenticity_status=output.receipt_authenticity_status,
+        receipt_authenticity_errors=output.receipt_authenticity_errors,
         public_row_id=output.public_row_id,
         artifact_count=output.artifact_count,
         verification_errors=output.verification_errors,
@@ -44,9 +52,14 @@ def run_fixture(path: str | Path) -> VerificationBundleFixtureResult:
 
 def run_all_fixtures(
     fixture_dir: str | Path = Path(__file__).with_name("fixtures"),
+    *,
+    key_registry=None,
 ) -> tuple[VerificationBundleFixtureResult, ...]:
     root = Path(fixture_dir)
-    return tuple(run_fixture(path) for path in sorted(root.glob("*.json")))
+    return tuple(
+        run_fixture(path, key_registry=key_registry)
+        for path in sorted(root.glob("*.json"))
+    )
 
 
 def _expected_replay_status(path: Path) -> str:
