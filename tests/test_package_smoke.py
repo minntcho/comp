@@ -764,6 +764,18 @@ def test_product_facade_observation_map_defines_lab_without_contracting_lifecycl
         "`verify_verification_bundle_file(...)`",
         "conformance-lab observation path",
         "do not trust a product-generated replay report",
+        "## Bundle Fixture Observations",
+        "Checked-in verification bundle fixtures",
+        "`examples/product_facade_lab/fixtures`",
+        "canonical_verification_bundle.json",
+        "missing_artifact_verification_bundle.json",
+        "`run_fixture(...)`",
+        "`run_all_fixtures(...)`",
+        "compact conformance results",
+        "not a CLI",
+        "stable wire contract",
+        "stable bundle runner",
+        "missing artifact fixture",
         "not a stable wire contract",
         "no artifact registry yet",
         "no Artifact Passport schema yet",
@@ -779,6 +791,8 @@ def test_product_facade_observation_map_defines_lab_without_contracting_lifecycl
 
     assert "product-facade-observation.md" in readme
     assert "does not make `comp.runtime` a production runtime" in readme
+    assert "lab-only verification bundle fixtures" in readme
+    assert "not a CLI or stable wire contract" in readme
 
 
 def test_artifact_lifecycle_boundary_defines_state_transition_requirements():

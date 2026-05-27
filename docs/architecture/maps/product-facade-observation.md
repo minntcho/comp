@@ -329,6 +329,30 @@ emits material and comp reconstructs the verification input.
 The lab may read the same fixture shape with `verify_verification_bundle(...)`
 or `verify_verification_bundle_file(...)`. These helpers are a conformance-lab observation path: they return comp verification output from exported material and do not trust a product-generated replay report.
 
+## Bundle Fixture Observations
+
+Checked-in verification bundle fixtures may live under
+`examples/product_facade_lab/fixtures`. They let comp read stored
+product-shaped material without constructing a product runtime:
+
+```text
+canonical_verification_bundle.json
+  expected replay_status: verified
+
+missing_artifact_verification_bundle.json
+  expected replay_status: blocked
+```
+
+The lab-only fixture runner may expose `run_fixture(...)` and
+`run_all_fixtures(...)` for tests that load those files and return compact conformance results.
+This is not a CLI, production verifier, stable wire contract, or stable bundle runner.
+It exists only to observe that a checked-in bundle can be verified or blocked by
+comp after export.
+
+The missing artifact fixture is intentionally broken so comp proves it can
+reject replayable-state claims when receipt-cited `ArtifactEnvelope` material is
+absent.
+
 ## Non-Goals
 
 This map deliberately avoids:
