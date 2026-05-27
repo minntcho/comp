@@ -591,6 +591,10 @@ def test_observation_map_points_to_canonical_lab_without_promoting_runtime():
     assert "product_facade_verification_bundle.v0" in lab_readme
     assert "verify_verification_bundle_file" in lab_readme
     assert "not a stable wire contract" in lab_readme
+    assert "fixtures/" in lab_readme
+    assert "run_fixture" in lab_readme
+    assert "run_all_fixtures" in lab_readme
+    assert "not a CLI" in lab_readme
     assert "native production authority engine" in lab_readme
 
 

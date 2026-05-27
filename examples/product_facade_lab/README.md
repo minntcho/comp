@@ -73,6 +73,12 @@ observation. The bundle is not a stable wire contract or artifact registry.
 read that fixture shape and return comp verification output; they do not trust
 or import a product-generated replay report.
 
+Checked-in fixture bundles live under `fixtures/`. The lab-only fixture runner
+exposes `run_fixture(...)` and `run_all_fixtures(...)` so tests can verify that
+stored product-shaped material still replays through comp without constructing a
+`ProductFacadeRuntime`. The fixture runner is not a CLI, production verifier, or
+stable bundle runner.
+
 `compare_touch_logs` can compare two logs from the same operation, such as
 canonical `submit` and policy preflight `submit`. The comparison is an
 observation summary for spotting ceremony deltas; it is not a lifecycle

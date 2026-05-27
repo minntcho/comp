@@ -283,6 +283,8 @@ policy-assembled-trust-kernel
 product-facade-observation
   docs/architecture/maps/product-facade-observation.md describes product-shaped
   facade observation outside comp; it does not make `comp.runtime` a production runtime.
+  It also tracks lab-only verification bundle fixtures and a fixture runner,
+  not a CLI or stable wire contract.
 ```
 
 현재 policy 이행축은 broad framework를 한 번에 세우는 것이 아니다.

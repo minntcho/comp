@@ -6,6 +6,11 @@ from examples.product_facade_lab.bundle import (
     verification_input_from_bundle,
     verification_input_to_bundle,
 )
+from examples.product_facade_lab.runner import (
+    VerificationBundleFixtureResult,
+    run_all_fixtures,
+    run_fixture,
+)
 from examples.product_facade_lab.runtime import (
     ArtifactTouchLog,
     ArtifactTouchLogComparison,
@@ -36,7 +41,10 @@ __all__ = [
     "ProductRequiredAction",
     "ProductRun",
     "ProductWitness",
+    "VerificationBundleFixtureResult",
     "compare_touch_logs",
+    "run_all_fixtures",
+    "run_fixture",
     "verify_comp_compatible_input",
     "verify_verification_bundle",
     "verify_verification_bundle_file",
