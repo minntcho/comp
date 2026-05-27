@@ -229,7 +229,10 @@ def _readme_compiler_tool_quickstart():
     quickstart_section = readme.split(start, 1)[1].split(end, 1)[0]
     for block in quickstart_section.split("```python")[1:]:
         code = block.split("```", 1)[0]
-        if "from comp.compiler_tool import" in code:
+        if (
+            "from comp.compiler_tool.stable import" in code
+            or "from comp.compiler_tool import" in code
+        ):
             return code
     raise AssertionError("README quickstart marker does not include a python block.")
 
@@ -269,9 +272,31 @@ def test_compiler_tool_stable_public_surface_is_exported_and_documented():
         assert name in api_doc, name
 
 
+def test_compiler_tool_stable_import_surface_is_narrow_and_documented():
+    import comp.compiler_tool as compiler_tool
+    import comp.compiler_tool.stable as stable
+
+    api_doc = Path("docs/api/compiler-tool.md").read_text(encoding="utf-8")
+
+    assert "comp.compiler_tool.stable.__all__ is the stability contract" in api_doc
+    assert "from comp.compiler_tool.stable import" in api_doc
+    assert set(stable.__all__) == COMPILER_TOOL_STABLE_PUBLIC
+    for name in COMPILER_TOOL_STABLE_PUBLIC:
+        assert hasattr(stable, name), name
+        assert getattr(stable, name) is getattr(compiler_tool, name)
+    for name in (
+        COMPILER_TOOL_ADVANCED_PUBLIC
+        | COMPILER_TOOL_BEHAVIOR_DECLARATION_PUBLIC
+        | COMPILER_TOOL_EXPERIMENTAL_NOT_QUICKSTART
+    ):
+        assert name not in stable.__all__, name
+
+
 def test_readme_compiler_tool_quickstart_uses_required_public_path():
     quickstart = _readme_compiler_tool_quickstart()
 
+    assert "from comp.compiler_tool.stable import" in quickstart
+    assert "from comp.compiler_tool import" not in quickstart
     for name in COMPILER_TOOL_QUICKSTART_PATH:
         assert name in quickstart, name
     for name in TOP_LEVEL_QUICKSTART_GATE:
@@ -350,11 +375,12 @@ def test_compiler_tool_api_surface_boundary_discourages_broad_stability_signal()
         "Broad `comp.compiler_tool` imports are compatibility imports, not stable API signals.",
         "New users should treat this Stable public API section as the only default onboarding surface.",
         "Advanced and experimental names require explicit promotion before they become stable API.",
-        "A future narrow stable import surface may re-export only this section without breaking broad compatibility imports.",
+        "`comp.compiler_tool.stable` re-exports only this section without breaking broad compatibility imports.",
     ):
         assert line in api_doc
 
     assert "The README quickstart is the stable onboarding path." in readme
+    assert "from comp.compiler_tool.stable import" in readme
     assert (
         "`comp.compiler_tool.__all__` remains a broad compatibility surface, not a stable API signal."
         in readme

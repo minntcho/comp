@@ -14,7 +14,8 @@ comp.compiler_tool.__all__ is not the stability contract.
 Broad `comp.compiler_tool` imports are compatibility imports, not stable API signals.
 `comp.compiler_tool` may export advanced or experimental symbols to keep tests,
 examples, and migration code readable. Exported does not mean permanently stable.
-A future narrow stable import surface may re-export only this section without breaking broad compatibility imports.
+`comp.compiler_tool.stable` re-exports only this section without breaking broad compatibility imports.
+comp.compiler_tool.stable.__all__ is the stability contract for the stable onboarding surface.
 
 ## Stable public API
 
@@ -23,11 +24,11 @@ quickstarts.
 New users should treat this Stable public API section as the only default onboarding surface.
 
 ```python
-from comp.compiler_tool import InterpretationHypothesis, ClaimCandidate, EvidenceRef
-from comp.compiler_tool import CompilerTool, ValidationReport
-from comp.compiler_tool import resolver_tasks_from_report
-from comp.compiler_tool import prepare_commit, build_public_output_receipt
-from comp.compiler_tool import compile_report_to_facts
+from comp.compiler_tool.stable import InterpretationHypothesis, ClaimCandidate, EvidenceRef
+from comp.compiler_tool.stable import CompilerTool, ValidationReport
+from comp.compiler_tool.stable import resolver_tasks_from_report
+from comp.compiler_tool.stable import prepare_commit, build_public_output_receipt
+from comp.compiler_tool.stable import compile_report_to_facts
 ```
 
 ### Quickstart input models
@@ -65,8 +66,8 @@ compile_report_to_facts
 
 ### Quickstart companion gate from top-level `comp`
 
-README quickstarts may pair `comp.compiler_tool` with the top-level public-output
-gate:
+README quickstarts may pair `comp.compiler_tool.stable` with the top-level
+public-output gate:
 
 ```python
 from comp import PublicOutputBlocked, PublicOutputReceipt, PublicOutputSpec

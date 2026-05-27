@@ -33,7 +33,7 @@ PublicOutputReceipt == projection gate
 <!-- compiler-tool-quickstart:start -->
 ```python
 from comp import PublicOutputBlocked, PublicOutputSpec, build_public_output
-from comp.compiler_tool import (
+from comp.compiler_tool.stable import (
     ClaimCandidate,
     CompilerTool,
     EvidenceRef,
@@ -132,14 +132,14 @@ from comp import SelectionReceipt, PublicOutputReceipt
 from comp import PublicOutputSpec, build_public_output
 ```
 
-`comp.compiler_tool`은 현재 deterministic publication kernel surface를
-노출한다.
+`comp.compiler_tool.stable`은 현재 deterministic publication kernel의 stable
+onboarding surface를 노출한다.
 
 ```python
-from comp.compiler_tool import CompilerTool, ValidationReport
-from comp.compiler_tool import resolver_tasks_from_report
-from comp.compiler_tool import prepare_commit, build_public_output_receipt
-from comp.compiler_tool import compile_report_to_facts
+from comp.compiler_tool.stable import CompilerTool, ValidationReport
+from comp.compiler_tool.stable import resolver_tasks_from_report
+from comp.compiler_tool.stable import prepare_commit, build_public_output_receipt
+from comp.compiler_tool.stable import compile_report_to_facts
 ```
 
 `docs/api/compiler-tool.md` classifies this stable quickstart surface separately
