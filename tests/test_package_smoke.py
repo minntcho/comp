@@ -790,6 +790,18 @@ def test_artifact_lifecycle_boundary_defines_state_transition_requirements():
         "`ProofGraph` is not required for replay.",
         "Product-only state must stay outside `comp` artifacts.",
         "tests/test_product_facade_lab.py::test_product_facade_lab_conforms_to_artifact_lifecycle_boundary",
+        "## Artifact Registry Promotion Gate",
+        "A machine-readable artifact registry is allowed only when:",
+        "the lifecycle boundary has at least one executable conformance guard",
+        "at least two real consumers need machine-readable artifact metadata",
+        "artifact kinds are stable across canonical, policy preflight, publish, and audit flows",
+        "the registry removes duplication or prevents drift",
+        "the registry does not create new authority",
+        "A registry is not allowed when:",
+        "it only documents imagined future artifacts",
+        "it introduces Artifact Passport metadata before consumers need it",
+        "product-only state is being smuggled into `comp`",
+        "policy artifacts are being upgraded into authority",
     ):
         assert line in boundary_doc
 
