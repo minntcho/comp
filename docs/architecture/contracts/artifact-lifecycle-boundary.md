@@ -143,3 +143,28 @@ claim lifecycle finality through an artifact registry or passport schema here
 
 This contract may later inform an artifact registry or wire contract. That
 promotion requires a separate PR with its own tests and migration rationale.
+
+## Artifact Registry Promotion Gate
+
+A machine-readable artifact registry is allowed only when:
+
+```text
+the lifecycle boundary has at least one executable conformance guard
+at least two real consumers need machine-readable artifact metadata
+artifact kinds are stable across canonical, policy preflight, publish, and audit flows
+the registry removes duplication or prevents drift
+the registry does not create new authority
+```
+
+A registry is not allowed when:
+
+```text
+it only documents imagined future artifacts
+it introduces Artifact Passport metadata before consumers need it
+product-only state is being smuggled into `comp`
+policy artifacts are being upgraded into authority
+```
+
+Registry promotion must preserve the existing authority model: receipts
+authorize projection, replay verifies receipt-cited material, policy shapes
+pre-validation admission, and explanations remain non-authoritative.
