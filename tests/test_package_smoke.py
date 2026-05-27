@@ -789,6 +789,7 @@ def test_artifact_lifecycle_boundary_defines_state_transition_requirements():
         "`ArtifactEnvelope` is not publish-path synchronous unless replayable state is claimed at publish time.",
         "`ProofGraph` is not required for replay.",
         "Product-only state must stay outside `comp` artifacts.",
+        "tests/test_product_facade_lab.py::test_product_facade_lab_conforms_to_artifact_lifecycle_boundary",
     ):
         assert line in boundary_doc
 
