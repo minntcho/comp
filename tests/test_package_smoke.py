@@ -889,6 +889,51 @@ def test_product_facade_observation_map_defines_lab_without_contracting_lifecycl
     assert "not a CLI or stable wire contract" in readme
 
 
+def test_product_facade_conformance_runner_map_positions_next_layer():
+    runner_map = Path(
+        "docs/architecture/maps/product-facade-conformance-runner.md"
+    ).read_text(encoding="utf-8")
+    docs_index = Path("docs/index.md").read_text(encoding="utf-8")
+    readme = Path("README.md").read_text(encoding="utf-8")
+
+    for line in (
+        "Status: implementation-map",
+        "Owner: scenario-lab",
+        "Last checked against code: 2026-05-27",
+        "Can block PRs: limited",
+        "This map is a runner-direction map, not a runner contract.",
+        "## Current Position",
+        "product facade lab",
+        "fixture runner",
+        "scenario-style conformance runner",
+        "## Layer Boundaries",
+        "Production App",
+        "Comp-Compatible Verification Input",
+        "Lab Fixture Runner",
+        "Scenario-Style Conformance Runner",
+        "comp verifier",
+        "## Promotion Path",
+        "Fixture runner -> scenario-style conformance runner",
+        "Scenario-style runner -> shared behavioral contract",
+        "Shared behavioral contract -> stable export contract",
+        "## Non-Promotions",
+        "not a CLI",
+        "not a stable wire contract",
+        "not a product runtime",
+        "not a native authority engine",
+        "not production cryptography integration",
+        "## First PR Boundary",
+        "No new command surface.",
+        "No new bundle schema.",
+        "No movement into `comp.runtime`.",
+        "No trust in product-generated replay reports.",
+    ):
+        assert line in runner_map
+
+    assert "architecture/maps/product-facade-conformance-runner.md" in docs_index
+    assert "product-facade-conformance-runner" in readme
+
+
 def test_artifact_lifecycle_boundary_defines_state_transition_requirements():
     boundary_doc = Path(
         "docs/architecture/contracts/artifact-lifecycle-boundary.md"
@@ -1078,6 +1123,12 @@ def test_architecture_docs_are_classified_by_governance_status():
             "limited",
             "2026-05-27",
         ),
+        "product-facade-conformance-runner.md": (
+            "implementation-map",
+            "scenario-lab",
+            "limited",
+            "2026-05-27",
+        ),
         "persistence-ledger-boundary.md": (
             "active-contract",
             "persistence",
@@ -1214,6 +1265,7 @@ def test_docs_index_groups_architecture_docs_by_governance_authority():
     assert "architecture/contracts/policy-boundary.md" in docs_index
     assert "architecture/maps/policy-assembled-trust-kernel.md" in docs_index
     assert "architecture/maps/product-facade-observation.md" in docs_index
+    assert "architecture/maps/product-facade-conformance-runner.md" in docs_index
     assert "architecture/contracts/friendly-authority-vocabulary.md" in docs_index
     assert "archive/architecture/legacy-archive-cutover-plan.md" in docs_index
     assert "archive/architecture/llm-orchestrated-compiler-tool-loop.md" in docs_index

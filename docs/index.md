@@ -57,6 +57,7 @@ when the PR changes the mapped area but leaves the map stale.
 3. `architecture/maps/internal-execution-design-map.md`
 4. `architecture/maps/policy-assembled-trust-kernel.md`
 5. `architecture/maps/product-facade-observation.md`
+6. `architecture/maps/product-facade-conformance-runner.md`
 
 ### North Stars
 

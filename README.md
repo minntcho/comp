@@ -297,6 +297,11 @@ product-facade-observation
   facade observation outside comp; it does not make `comp.runtime` a production runtime.
   It also tracks lab-only verification bundle fixtures and a fixture runner,
   not a CLI or stable wire contract.
+
+product-facade-conformance-runner
+  docs/architecture/maps/product-facade-conformance-runner.md positions the
+  fixture runner as a lab-only step toward scenario-style conformance, not a
+  product runtime, CLI, stable wire contract, or native authority engine.
 ```
 
 현재 policy 이행축은 broad framework를 한 번에 세우는 것이 아니다.
