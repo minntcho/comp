@@ -69,6 +69,9 @@ verification.
 `export_verification_bundle(...)` and `write_verification_bundle(...)` serialize
 that material as `product_facade_verification_bundle.v0` JSON for fixture
 observation. The bundle is not a stable wire contract or artifact registry.
+`verify_verification_bundle(...)` and `verify_verification_bundle_file(...)`
+read that fixture shape and return comp verification output; they do not trust
+or import a product-generated replay report.
 
 `compare_touch_logs` can compare two logs from the same operation, such as
 canonical `submit` and policy preflight `submit`. The comparison is an

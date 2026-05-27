@@ -377,7 +377,6 @@ class ProductFacadeRuntime:
             self.export_verification_input(public_row_id),
             path,
         )
-        return bundle_path
 
     def audit(self, public_row_id: str) -> ProductAudit:
         run_id = self._public_row_to_run[public_row_id]

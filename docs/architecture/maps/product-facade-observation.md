@@ -326,6 +326,9 @@ observation format, not a stable wire contract. JSON round-trip verification is
 useful because it exercises the future external boundary where a product app
 emits material and comp reconstructs the verification input.
 
+The lab may read the same fixture shape with `verify_verification_bundle(...)`
+or `verify_verification_bundle_file(...)`. These helpers are a conformance-lab observation path: they return comp verification output from exported material and do not trust a product-generated replay report.
+
 ## Non-Goals
 
 This map deliberately avoids:
