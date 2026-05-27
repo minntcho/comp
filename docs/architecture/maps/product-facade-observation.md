@@ -289,6 +289,33 @@ audit
 reason strings. `touch_log` remains lab-only diagnostic material and should not
 be treated as a production response field.
 
+## Comp-Compatible Verification Input Observations
+
+Comp-compatible verification input observations are lab evidence, not a final export bundle format.
+The first shape separates product export material from comp verification output:
+
+```text
+product export material
+  validation_summary
+  public_row
+  receipt_handle
+  PublicOutputReceipt
+  ArtifactEnvelope set
+  optional explanation hints
+
+comp verification output
+  replay_status
+  verification_errors
+  ProjectionReplayReport, when verified
+  proof_graph_available
+```
+
+The product side may export replayable material, but it must not export a replay report as if that report were product authority.
+`ProjectionReplayReport` is produced by the comp verifier from `PublicOutputReceipt`, `PublicOutputSpec`, the public row, and receipt-cited `ArtifactEnvelope` material.
+
+The first lab shape is intentionally named `CompCompatibleVerificationInput`
+rather than audit bundle or artifact registry. It omits product-only workflow state, `touch_log`, proof graph output, and `ProjectionReplayReport`.
+
 ## Non-Goals
 
 This map deliberately avoids:

@@ -4,7 +4,7 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from typing import Any, Literal
 
-from comp import PublicOutputSpec, build_public_output
+from comp import PublicOutputReceipt, PublicOutputSpec, build_public_output
 from comp.compiler_tool import (
     ClaimCandidate,
     CompilerTool,
@@ -24,7 +24,9 @@ from comp.policy import (
     SelectedValidationContract,
 )
 from comp.persistence import (
+    ArtifactEnvelope,
     InMemoryArtifactStore,
+    PersistenceError,
     ProjectionReplayReport,
     build_receipt_envelope_set,
     replay_public_projection,
@@ -38,6 +40,7 @@ from comp.user_messages import UnknownUserMessage, user_message_for_reason
 
 ProductRunStatus = Literal["publishable", "needs_evidence", "blocked"]
 ProductRunFlow = Literal["canonical_fast_path", "policy_preflight_path"]
+CompVerificationStatus = Literal["verified", "blocked"]
 
 
 @dataclass(frozen=True)
@@ -181,6 +184,36 @@ class ProductAudit:
     touch_log: ArtifactTouchLog
 
 
+@dataclass(frozen=True)
+class CompCompatibleVerificationInput:
+    public_row_id: str
+    public_row: Mapping[str, Any]
+    projection: PublicOutputSpec
+    public_output_receipt: PublicOutputReceipt
+    receipt_handle: str
+    artifact_envelopes: tuple[ArtifactEnvelope, ...]
+    validation_summary: Mapping[str, Any]
+    explanation_hints: tuple[tuple[str, Any], ...] = ()
+    product_only_excluded: tuple[str, ...] = (
+        "ProductInput",
+        "ProductPolicyPreflightInput",
+        "ProductRun",
+        "ProductPublicRow",
+        "ProductAudit",
+        "touch_log",
+    )
+
+
+@dataclass(frozen=True)
+class CompVerificationOutput:
+    public_row_id: str
+    replay_status: CompVerificationStatus
+    replay_report: ProjectionReplayReport | None
+    verification_errors: tuple[str, ...]
+    proof_graph_available: bool
+    artifact_count: int
+
+
 @dataclass
 class _RunRecord:
     product_input: ProductInput | ProductPolicyPreflightInput
@@ -289,36 +322,55 @@ class ProductFacadeRuntime:
             touch_log=_publish_touch_log(record.flow),
         )
 
-    def audit(self, public_row_id: str) -> ProductAudit:
+    def export_verification_input(
+        self,
+        public_row_id: str,
+    ) -> CompCompatibleVerificationInput:
         run_id = self._public_row_to_run[public_row_id]
         record = self._runs[run_id]
         if record.preparation is None or record.preparation.receipt is None:
-            raise RuntimeError("Product facade audit requires a published receipt.")
+            raise RuntimeError(
+                "Product facade verification input requires a published receipt."
+            )
         if record.public_row is None:
-            raise RuntimeError("Product facade audit requires a public row.")
+            raise RuntimeError(
+                "Product facade verification input requires a public row."
+            )
         materials = materialize_compiler_run_artifacts(
             record.report,
             record.preparation,
         )
-        artifact_store = InMemoryArtifactStore()
         envelopes = build_receipt_envelope_set(
             record.preparation.receipt,
             materials,
-            record_to=artifact_store,
         )
-        replay_report = replay_public_projection(
-            record.public_row,
-            record.projection,
-            receipt=record.preparation.receipt,
-            artifacts=artifact_store,
+        return CompCompatibleVerificationInput(
+            public_row_id=public_row_id,
+            public_row=dict(record.public_row),
+            projection=record.projection,
+            public_output_receipt=record.preparation.receipt,
+            receipt_handle=_receipt_handle(record.preparation.receipt),
+            artifact_envelopes=envelopes,
+            validation_summary=_validation_summary(record.report),
         )
+
+    def audit(self, public_row_id: str) -> ProductAudit:
+        run_id = self._public_row_to_run[public_row_id]
+        record = self._runs[run_id]
+        verification_input = self.export_verification_input(public_row_id)
+        verification_output = verify_comp_compatible_input(verification_input)
+        if verification_output.replay_report is None:
+            raise RuntimeError(
+                "Product facade audit verification failed: "
+                f"{verification_output.verification_errors}"
+            )
         return ProductAudit(
             public_row_id=public_row_id,
-            replay_report=replay_report,
-            artifact_count=len(envelopes),
-            replay_status="verified",
-            verification_errors=(),
-            proof_graph_available=False,
+            replay_report=verification_output.replay_report,
+            artifact_count=verification_output.artifact_count,
+            replay_status=verification_output.replay_status,
+            verification_errors=verification_output.verification_errors,
+            proof_graph_available=verification_output.proof_graph_available,
             touch_log=_audit_touch_log(record.flow),
         )
 
@@ -486,6 +538,17 @@ def _receipt_handle(receipt) -> str:
     return f"receipt:{receipt.draft_id}"
 
 
+def _validation_summary(report: ValidationReport) -> dict[str, object]:
+    return {
+        "status": report.status,
+        "checked_claim_fields": tuple(claim.field for claim in report.checked_claims),
+        "calculated_claim_fields": tuple(
+            claim.field for claim in report.calculated_claims
+        ),
+        "validation_requirement_count": len(report.validation_requirements),
+    }
+
+
 def _projection_source(report: ValidationReport) -> dict[str, Any]:
     values = {claim.field: claim.value for claim in report.checked_claims}
     values.update({claim.field: claim.value for claim in report.calculated_claims})
@@ -644,9 +707,43 @@ def _ordered_difference(
     return tuple(value for value in left if value not in right_values)
 
 
+def verify_comp_compatible_input(
+    verification_input: CompCompatibleVerificationInput,
+) -> CompVerificationOutput:
+    artifact_store = InMemoryArtifactStore()
+    try:
+        for envelope in verification_input.artifact_envelopes:
+            artifact_store.record(envelope)
+        replay_report = replay_public_projection(
+            verification_input.public_row,
+            verification_input.projection,
+            receipt=verification_input.public_output_receipt,
+            artifacts=artifact_store,
+        )
+    except PersistenceError as exc:
+        return CompVerificationOutput(
+            public_row_id=verification_input.public_row_id,
+            replay_status="blocked",
+            replay_report=None,
+            verification_errors=(str(exc),),
+            proof_graph_available=False,
+            artifact_count=len(verification_input.artifact_envelopes),
+        )
+    return CompVerificationOutput(
+        public_row_id=verification_input.public_row_id,
+        replay_status="verified",
+        replay_report=replay_report,
+        verification_errors=(),
+        proof_graph_available=False,
+        artifact_count=len(verification_input.artifact_envelopes),
+    )
+
+
 __all__ = [
     "ArtifactTouchLog",
     "ArtifactTouchLogComparison",
+    "CompCompatibleVerificationInput",
+    "CompVerificationOutput",
     "ProductAudit",
     "ProductFacadeRuntime",
     "ProductInput",
@@ -656,4 +753,5 @@ __all__ = [
     "ProductRun",
     "ProductWitness",
     "compare_touch_logs",
+    "verify_comp_compatible_input",
 ]

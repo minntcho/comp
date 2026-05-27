@@ -40,6 +40,29 @@ Product facade response observations currently include product-facing status,
 `proof_graph_available`. The touch_log is lab-only diagnostic material; it is not
 intended as a production response field.
 
+The lab also observes the boundary between product export material and comp
+verification output:
+
+```text
+export_verification_input(public_row_id)
+  -> validation_summary
+  -> public_row
+  -> receipt_handle
+  -> PublicOutputReceipt
+  -> ArtifactEnvelope set
+  -> optional explanation hints
+
+verify_comp_compatible_input(input)
+  -> replay_status
+  -> verification_errors
+  -> ProjectionReplayReport, when verified
+```
+
+`CompCompatibleVerificationInput` deliberately omits `ProjectionReplayReport`,
+proof graph output, `touch_log`, and product-only workflow state. The product
+side exports replayable material; the comp verifier produces replay
+verification.
+
 `compare_touch_logs` can compare two logs from the same operation, such as
 canonical `submit` and policy preflight `submit`. The comparison is an
 observation summary for spotting ceremony deltas; it is not a lifecycle
