@@ -342,6 +342,25 @@ def test_compiler_tool_advanced_surface_is_documented():
     assert "__all__ is not the stability contract" in api_doc
 
 
+def test_compiler_tool_api_surface_boundary_discourages_broad_stability_signal():
+    api_doc = Path("docs/api/compiler-tool.md").read_text(encoding="utf-8")
+    readme = Path("README.md").read_text(encoding="utf-8")
+
+    for line in (
+        "Broad `comp.compiler_tool` imports are compatibility imports, not stable API signals.",
+        "New users should treat this Stable public API section as the only default onboarding surface.",
+        "Advanced and experimental names require explicit promotion before they become stable API.",
+        "A future narrow stable import surface may re-export only this section without breaking broad compatibility imports.",
+    ):
+        assert line in api_doc
+
+    assert "The README quickstart is the stable onboarding path." in readme
+    assert (
+        "`comp.compiler_tool.__all__` remains a broad compatibility surface, not a stable API signal."
+        in readme
+    )
+
+
 def test_compiler_tool_behavior_declaration_surface_is_documented():
     import comp.compiler_tool as compiler_tool
 
