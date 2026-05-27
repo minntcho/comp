@@ -93,6 +93,9 @@ manifest, and `run_conformance_cases(...)` can run the same case shape from
 memory. `signed_verification_bundle.json` observes receipt authenticity with a
 lab key registry while keeping replay verification separate from signature
 status. The manifest is not a product export schema or stable wire contract.
+`run_case_manifest_summary(...)` and `summarize_conformance_results(...)`
+return `VerificationBundleSuiteResult` for lab-only reporting. The summary is
+not a CLI output format or stable report schema.
 
 Verification bundle lab summary: the lab has observed export via
 `export_verification_bundle(...)`, file persistence via
