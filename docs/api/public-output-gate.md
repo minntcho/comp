@@ -46,6 +46,26 @@ DependencyFingerprint
 build_public_output
 ```
 
+Receipt authenticity names:
+
+```text
+ReceiptIssuer
+ReceiptSignature
+SignedPublicOutputReceipt
+ReceiptVerificationResult
+ReceiptAuthenticityError
+ReceiptKeyRegistry
+UnknownReceiptIssuer
+UnsupportedReceiptSignatureAlgorithm
+MalformedReceiptSignature
+public_output_receipt_signed_body
+public_output_receipt_signed_body_digest
+verify_public_output_receipt
+```
+
+These names verify issuer authenticity for a receipt body. They do not run the
+projection gate, replace replay, or make a product export bundle authoritative.
+
 ## Authority Roles
 
 `PublicOutputSpec` defines the projection shape. It names the projection and the

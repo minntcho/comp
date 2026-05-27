@@ -132,6 +132,16 @@ from comp import SelectionReceipt, PublicOutputReceipt
 from comp import PublicOutputSpec, build_public_output
 ```
 
+Receipt authenticity helpers also live on the public-output gate surface:
+
+```python
+from comp import ReceiptSignature, SignedPublicOutputReceipt
+from comp import verify_public_output_receipt
+```
+
+These verify issuer authenticity for a receipt body. They do not replace
+receipt-gated projection or replay verification.
+
 `comp.compiler_tool.stable`은 현재 deterministic publication kernel의 stable
 onboarding surface를 노출한다.
 

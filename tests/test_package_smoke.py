@@ -114,6 +114,20 @@ PUBLIC_OUTPUT_GATE_PUBLIC = {
     "DependencyFingerprint",
     "build_public_output",
 }
+PUBLIC_OUTPUT_AUTHENTICITY_PUBLIC = {
+    "ReceiptIssuer",
+    "ReceiptSignature",
+    "SignedPublicOutputReceipt",
+    "ReceiptVerificationResult",
+    "ReceiptAuthenticityError",
+    "ReceiptKeyRegistry",
+    "UnknownReceiptIssuer",
+    "UnsupportedReceiptSignatureAlgorithm",
+    "MalformedReceiptSignature",
+    "public_output_receipt_signed_body",
+    "public_output_receipt_signed_body_digest",
+    "verify_public_output_receipt",
+}
 SCENARIO_CONTRACTS_STABLE_PUBLIC = {
     "InvariantResult",
     "ScenarioManifest",
@@ -335,6 +349,9 @@ def test_public_output_gate_api_reference_is_documented():
     assert "Unsigned legacy receipts remain replayable" in authenticity_doc
     assert "Product exports may carry replayable material, but comp produces replay verification output." in authenticity_doc
     for name in PUBLIC_OUTPUT_GATE_PUBLIC:
+        assert hasattr(comp, name), name
+        assert name in api_doc, name
+    for name in PUBLIC_OUTPUT_AUTHENTICITY_PUBLIC:
         assert hasattr(comp, name), name
         assert name in api_doc, name
 

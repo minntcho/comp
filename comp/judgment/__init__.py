@@ -34,6 +34,20 @@ from comp.judgment.receipts import (
     PublicOutputValueCommitment,
     SelectionReceipt,
 )
+from comp.judgment.receipt_authenticity import (
+    MalformedReceiptSignature,
+    ReceiptAuthenticityError,
+    ReceiptIssuer,
+    ReceiptKeyRegistry,
+    ReceiptSignature,
+    ReceiptVerificationResult,
+    SignedPublicOutputReceipt,
+    UnknownReceiptIssuer,
+    UnsupportedReceiptSignatureAlgorithm,
+    public_output_receipt_signed_body,
+    public_output_receipt_signed_body_digest,
+    verify_public_output_receipt,
+)
 
 __all__ = [
     "SubjectKind",
@@ -66,4 +80,16 @@ __all__ = [
     "DependencyFingerprint",
     "PublicOutputReceipt",
     "PublicOutputReceiptCitations",
+    "ReceiptAuthenticityError",
+    "UnknownReceiptIssuer",
+    "UnsupportedReceiptSignatureAlgorithm",
+    "MalformedReceiptSignature",
+    "ReceiptKeyRegistry",
+    "ReceiptIssuer",
+    "ReceiptSignature",
+    "SignedPublicOutputReceipt",
+    "ReceiptVerificationResult",
+    "public_output_receipt_signed_body",
+    "public_output_receipt_signed_body_digest",
+    "verify_public_output_receipt",
 ]

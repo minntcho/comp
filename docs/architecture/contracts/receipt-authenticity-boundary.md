@@ -69,9 +69,9 @@ ReceiptVerificationResult
   errors
 ```
 
-These names are boundary vocabulary until the code slice promotes them into a
-public API. They reserve the meaning of the layer; they do not require a real
-crypto library in the first implementation PR.
+The current implementation exposes this vocabulary through the top-level
+`comp` package and uses a key-registry protocol. It intentionally does not add
+a real cryptography dependency.
 
 ## Signed Body
 
@@ -123,10 +123,13 @@ unsupported_algorithm
 malformed_signature
 ```
 
-`verify_public_output_receipt(receipt, key_registry)` is the intended shape,
-but the first code slice may use a wrapper or result type if that keeps legacy
-receipts compatible. The API must verify receipt authenticity only. It must not
-call `build_public_output(...)`, run replay, or inspect product bundle state.
+`verify_public_output_receipt(receipt, key_registry)` accepts an unsigned
+legacy `PublicOutputReceipt` or a `SignedPublicOutputReceipt` wrapper. Unsigned
+legacy receipts return `unsigned_legacy`. Signed receipts verify the canonical
+receipt body digest through the key registry.
+
+The API must verify receipt authenticity only. It must not call
+`build_public_output(...)`, run replay, or inspect product bundle state.
 
 ## Legacy Receipt Policy
 
@@ -192,5 +195,5 @@ replay failure remains separate from signature failure
 ```
 
 Real cryptographic verification can arrive after the contract shape exists. The
-first implementation may use a test verifier or key-registry protocol, but it
-must keep the signed body and status model compatible with this boundary.
+current implementation uses a key-registry protocol and must keep the signed
+body and status model compatible with this boundary.
