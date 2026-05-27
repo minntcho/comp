@@ -1,15 +1,19 @@
 from __future__ import annotations
 
+from dataclasses import replace
 import tomllib
 from pathlib import Path
 
 from examples.product_facade_lab import (
+    CompCompatibleVerificationInput,
+    CompVerificationOutput,
     ProductFacadeRuntime,
     ProductInput,
     ProductPolicyPreflightInput,
     ProductRequiredAction,
     ProductWitness,
     compare_touch_logs,
+    verify_comp_compatible_input,
 )
 
 
@@ -220,6 +224,77 @@ def test_needs_evidence_submit_returns_product_facing_required_actions():
     assert "missing_source_witness" not in run.required_actions[0].action
     assert run.touch_log.operation == "submit"
     assert "DecisionLedger" in run.touch_log.not_used
+
+
+def test_comp_compatible_verification_input_exports_material_without_replay_report():
+    runtime = ProductFacadeRuntime()
+    public = _publish_canonical_runtime(runtime, "run-verification-input")
+
+    verification_input = runtime.export_verification_input(public.public_row_id)
+
+    assert isinstance(verification_input, CompCompatibleVerificationInput)
+    assert verification_input.public_row_id == public.public_row_id
+    assert verification_input.public_row == public.public_row
+    assert verification_input.receipt_handle == public.receipt_handle
+    assert verification_input.public_output_receipt.public_row_id == public.public_row_id
+    assert verification_input.validation_summary == {
+        "status": "accepted",
+        "checked_claim_fields": ("amount", "unit"),
+        "calculated_claim_fields": (),
+        "validation_requirement_count": 0,
+    }
+    assert "publishable" not in verification_input.validation_summary
+    assert "can_build_public_output" not in verification_input.validation_summary
+    assert verification_input.artifact_envelopes
+    assert verification_input.explanation_hints == ()
+    assert "ProductInput" in verification_input.product_only_excluded
+    assert "ProductRun" in verification_input.product_only_excluded
+    assert "ProductPublicRow" in verification_input.product_only_excluded
+    assert "touch_log" in verification_input.product_only_excluded
+    assert not hasattr(verification_input, "replay_report")
+    assert not hasattr(verification_input, "proof_graph")
+
+
+def test_comp_verifier_produces_replay_report_from_verification_input():
+    runtime = ProductFacadeRuntime()
+    public = _publish_canonical_runtime(runtime, "run-verification-output")
+    verification_input = runtime.export_verification_input(public.public_row_id)
+
+    verification_output = verify_comp_compatible_input(verification_input)
+
+    assert isinstance(verification_output, CompVerificationOutput)
+    assert verification_output.public_row_id == public.public_row_id
+    assert verification_output.replay_status == "verified"
+    assert verification_output.verification_errors == ()
+    assert verification_output.proof_graph_available is False
+    assert verification_output.artifact_count == len(
+        verification_input.artifact_envelopes
+    )
+    assert verification_output.replay_report is not None
+    assert verification_output.replay_report.public_row == public.public_row
+
+
+def test_comp_verifier_reports_blocked_input_without_trusting_product_claim():
+    runtime = ProductFacadeRuntime()
+    public = _publish_canonical_runtime(runtime, "run-verification-blocked")
+    verification_input = runtime.export_verification_input(public.public_row_id)
+    broken_input = replace(
+        verification_input,
+        artifact_envelopes=verification_input.artifact_envelopes[:-1],
+    )
+
+    verification_output = verify_comp_compatible_input(broken_input)
+
+    assert verification_output.public_row_id == public.public_row_id
+    assert verification_output.replay_status == "blocked"
+    assert verification_output.replay_report is None
+    assert verification_output.proof_graph_available is False
+    assert verification_output.artifact_count == len(broken_input.artifact_envelopes)
+    assert verification_output.verification_errors
+    assert (
+        "Projection replay missing artifact"
+        in verification_output.verification_errors[0]
+    )
 
 
 def test_submit_touch_log_comparison_summarizes_observed_ceremony_delta():
@@ -483,6 +558,23 @@ def _product_witnesses() -> tuple[ProductWitness, ...]:
             text="kWh",
         ),
     )
+
+
+def _publish_canonical_runtime(runtime: ProductFacadeRuntime, run_id: str):
+    run = runtime.submit(
+        ProductInput(
+            run_id=run_id,
+            subject_id="facility-1",
+            public_row_id=f"public-row-{run_id}",
+            projection_id="public-row",
+            projection_fields=("amount", "unit"),
+            values={"amount": 1200, "unit": "kWh"},
+            witnesses=_product_witnesses(),
+            known_fields=frozenset({"amount", "unit"}),
+            allowed_units=frozenset({"kWh"}),
+        )
+    )
+    return runtime.publish(run.run_id)
 
 
 def _assert_contract_mentions(
