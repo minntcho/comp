@@ -314,6 +314,9 @@ def test_readme_compiler_tool_quickstart_executes_receipt_gate_path():
 
 def test_public_output_gate_api_reference_is_documented():
     api_doc = Path("docs/api/public-output-gate.md").read_text(encoding="utf-8")
+    authenticity_doc = Path(
+        "docs/architecture/contracts/receipt-authenticity-boundary.md"
+    ).read_text(encoding="utf-8")
     compiler_tool_doc = Path("docs/api/compiler-tool.md").read_text(
         encoding="utf-8"
     )
@@ -325,6 +328,12 @@ def test_public_output_gate_api_reference_is_documented():
     assert "ValidationReport is not public-output authority" in api_doc
     assert "build_public_output(..., receipt=...)" in api_doc
     assert "materialized view, not authority" in api_doc
+    assert "receipt-authenticity-boundary.md" in api_doc
+    assert "PublicOutputReceipt is projection authority" in authenticity_doc
+    assert "ReceiptSignature is issuer authenticity" in authenticity_doc
+    assert "ProjectionReplayReport is replay verification output" in authenticity_doc
+    assert "Unsigned legacy receipts remain replayable" in authenticity_doc
+    assert "Product exports may carry replayable material, but comp produces replay verification output." in authenticity_doc
     for name in PUBLIC_OUTPUT_GATE_PUBLIC:
         assert hasattr(comp, name), name
         assert name in api_doc, name
@@ -1068,6 +1077,12 @@ def test_architecture_docs_are_classified_by_governance_status():
             "yes",
             "2026-05-22",
         ),
+        "receipt-authenticity-boundary.md": (
+            "active-contract",
+            "trust-kernel",
+            "yes",
+            "2026-05-27",
+        ),
         "retrieval-fabric-north-star.md": (
             "north-star",
             "retrieval",
@@ -1170,6 +1185,7 @@ def test_docs_index_groups_architecture_docs_by_governance_authority():
     assert "archive/architecture/active-surface-cutover.md" in docs_index
     assert "architecture/contracts/compiler-domain-boundary.md" in docs_index
     assert "architecture/contracts/artifact-lifecycle-boundary.md" in docs_index
+    assert "architecture/contracts/receipt-authenticity-boundary.md" in docs_index
     assert "architecture/contracts/policy-boundary.md" in docs_index
     assert "architecture/maps/policy-assembled-trust-kernel.md" in docs_index
     assert "architecture/maps/product-facade-observation.md" in docs_index

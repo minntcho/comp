@@ -41,10 +41,11 @@ without explicitly updating the contract.
 6. `architecture/contracts/extension-port-contracts.md`
 7. `architecture/contracts/artifact-envelope-builder.md`
 8. `architecture/contracts/persistence-ledger-boundary.md`
-9. `architecture/contracts/receipt-proof-graph.md`
-10. `architecture/contracts/trust-kernel-hardening.md`
-11. `architecture/contracts/memory-assisted-compiler-loop.md`
-12. `architecture/contracts/friendly-authority-vocabulary.md`
+9. `architecture/contracts/receipt-authenticity-boundary.md`
+10. `architecture/contracts/receipt-proof-graph.md`
+11. `architecture/contracts/trust-kernel-hardening.md`
+12. `architecture/contracts/memory-assisted-compiler-loop.md`
+13. `architecture/contracts/friendly-authority-vocabulary.md`
 
 ### Implementation Maps
 
