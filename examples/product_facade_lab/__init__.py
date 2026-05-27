@@ -7,8 +7,12 @@ from examples.product_facade_lab.bundle import (
     verification_input_to_bundle,
 )
 from examples.product_facade_lab.runner import (
+    CONFORMANCE_CASES_SCHEMA_VERSION,
+    VerificationBundleCaseResult,
     VerificationBundleFixtureResult,
     run_all_fixtures,
+    run_case_manifest,
+    run_conformance_cases,
     run_fixture,
 )
 from examples.product_facade_lab.runtime import (
@@ -31,6 +35,7 @@ from examples.product_facade_lab.runtime import (
 __all__ = [
     "ArtifactTouchLog",
     "ArtifactTouchLogComparison",
+    "CONFORMANCE_CASES_SCHEMA_VERSION",
     "CompCompatibleVerificationInput",
     "CompVerificationOutput",
     "ProductAudit",
@@ -41,9 +46,12 @@ __all__ = [
     "ProductRequiredAction",
     "ProductRun",
     "ProductWitness",
+    "VerificationBundleCaseResult",
     "VerificationBundleFixtureResult",
     "compare_touch_logs",
     "run_all_fixtures",
+    "run_case_manifest",
+    "run_conformance_cases",
     "run_fixture",
     "verify_comp_compatible_input",
     "verify_verification_bundle",

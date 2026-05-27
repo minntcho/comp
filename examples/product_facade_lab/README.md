@@ -86,6 +86,12 @@ stored product-shaped material still replays through comp without constructing a
 `ProductFacadeRuntime`. The fixture runner is not a CLI, production verifier, or
 stable bundle runner.
 
+`fixtures/conformance_cases.json` is a lab-only case manifest. It lists existing
+fixture bundles and their expected `replay_status` and
+`receipt_authenticity_status` values. `run_case_manifest(...)` reads that
+manifest, and `run_conformance_cases(...)` can run the same case shape from
+memory. The manifest is not a product export schema or stable wire contract.
+
 Verification bundle lab summary: the lab has observed export via
 `export_verification_bundle(...)`, file persistence via
 `write_verification_bundle(...)`, file verification via
