@@ -5,7 +5,17 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Literal
 
-from comp import PublicOutputReceipt, PublicOutputSpec, build_public_output
+from comp import (
+    PublicOutputReceipt,
+    PublicOutputSpec,
+    ReceiptKeyRegistry,
+    ReceiptSignature,
+    ReceiptVerificationResult,
+    SignedPublicOutputReceipt,
+    build_public_output,
+    public_output_receipt_signed_body_digest,
+    verify_public_output_receipt,
+)
 from comp.compiler_tool import (
     ClaimCandidate,
     CompilerTool,
@@ -194,6 +204,7 @@ class CompCompatibleVerificationInput:
     receipt_handle: str
     artifact_envelopes: tuple[ArtifactEnvelope, ...]
     validation_summary: Mapping[str, Any]
+    receipt_signature: ReceiptSignature | None = None
     explanation_hints: tuple[tuple[str, Any], ...] = ()
     omitted_verification_outputs: tuple[str, ...] = (
         "ProjectionReplayReport",
@@ -213,6 +224,8 @@ class CompCompatibleVerificationInput:
 class CompVerificationOutput:
     public_row_id: str
     replay_status: CompVerificationStatus
+    receipt_authenticity_status: str
+    receipt_authenticity_errors: tuple[str, ...]
     replay_report: ProjectionReplayReport | None
     verification_errors: tuple[str, ...]
     proof_graph_available: bool
@@ -733,7 +746,13 @@ def _ordered_difference(
 
 def verify_comp_compatible_input(
     verification_input: CompCompatibleVerificationInput,
+    *,
+    key_registry: ReceiptKeyRegistry | None = None,
 ) -> CompVerificationOutput:
+    authenticity = _verify_receipt_authenticity(
+        verification_input,
+        key_registry=key_registry,
+    )
     artifact_store = InMemoryArtifactStore()
     try:
         for envelope in verification_input.artifact_envelopes:
@@ -748,6 +767,8 @@ def verify_comp_compatible_input(
         return CompVerificationOutput(
             public_row_id=verification_input.public_row_id,
             replay_status="blocked",
+            receipt_authenticity_status=authenticity.status,
+            receipt_authenticity_errors=authenticity.errors,
             replay_report=None,
             verification_errors=(str(exc),),
             proof_graph_available=False,
@@ -756,11 +777,50 @@ def verify_comp_compatible_input(
     return CompVerificationOutput(
         public_row_id=verification_input.public_row_id,
         replay_status="verified",
+        receipt_authenticity_status=authenticity.status,
+        receipt_authenticity_errors=authenticity.errors,
         replay_report=replay_report,
         verification_errors=(),
         proof_graph_available=False,
         artifact_count=len(verification_input.artifact_envelopes),
     )
+
+
+def _verify_receipt_authenticity(
+    verification_input: CompCompatibleVerificationInput,
+    *,
+    key_registry: ReceiptKeyRegistry | None,
+):
+    signature = verification_input.receipt_signature
+    if signature is None:
+        return verify_public_output_receipt(
+            verification_input.public_output_receipt,
+            _UnusedKeyRegistry(),
+        )
+    if key_registry is None:
+        return ReceiptVerificationResult(
+            status="missing_key_registry",
+            issuer_id=signature.issuer_id,
+            key_id=signature.key_id,
+            signed_body_digest=public_output_receipt_signed_body_digest(
+                verification_input.public_output_receipt
+            ),
+            errors=(
+                "Signed product facade verification input requires a receipt key registry.",
+            ),
+        )
+    return verify_public_output_receipt(
+        SignedPublicOutputReceipt(
+            receipt=verification_input.public_output_receipt,
+            signature=signature,
+        ),
+        key_registry,
+    )
+
+
+class _UnusedKeyRegistry:
+    def verify_signature(self, signature, *, signed_body_digest):
+        raise AssertionError("Unsigned legacy receipts must not verify signatures.")
 
 
 __all__ = [
