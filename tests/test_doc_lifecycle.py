@@ -23,6 +23,7 @@ STRICT_CURRENT_HEADINGS = {
     "State Transition Requirements",
 }
 REFRESHED_CURRENT_GUIDANCE_DOCS = {
+    Path("docs/architecture/contracts/extension-port-contracts.md"),
     Path("docs/architecture/contracts/policy-boundary.md"),
     Path("docs/architecture/maps/domain-scenario-pack-generation.md"),
     Path("docs/architecture/maps/obligation-kernel-working-theory.md"),
@@ -177,3 +178,9 @@ def test_doc_refresh_queue_is_non_authoritative():
     assert "refresh" in text
     assert "confirm no drift" in text
     assert "demote/archive" in text
+
+
+def test_extension_port_contract_refresh_queue_item_is_closed():
+    queue = DOC_REFRESH_QUEUE.read_text(encoding="utf-8")
+
+    assert "`docs/architecture/contracts/extension-port-contracts.md`" not in queue

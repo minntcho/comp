@@ -27,7 +27,6 @@ tests.
 | doc | issue | required anchor check | target action |
 |---|---|---|---|
 | `docs/architecture/contracts/trust-kernel-hardening.md` | active contract last checked before the lifecycle ratchet | `tests/test_package_smoke.py` trust-kernel hardening checks and receipt/projection public surfaces | confirm no drift or refresh |
-| `docs/architecture/contracts/extension-port-contracts.md` | active contract has older metadata and no checked anchors yet | `tests/test_authority_import_boundaries.py` and public import/export expectations | confirm no drift or refresh |
 | `docs/architecture/contracts/artifact-envelope-builder.md` | active contract should adopt anchors after materializer cleanup | `tests/test_artifact_envelope_builder.py` and `tests/test_compiler_run_artifact_materializer.py` | confirm no drift or refresh |
 | `docs/architecture/contracts/persistence-ledger-boundary.md` | persistence contract may need checked anchors around MySQL and replay behavior | `tests/test_mysql_persistence_spine.py`, `tests/test_mysql_operating_contract.py`, and replay persistence tests | confirm no drift or refresh |
 | `docs/architecture/contracts/receipt-proof-graph.md` | explanation contract should verify current proof-graph export and render boundaries | `tests/test_receipt_proof_graph.py`, `tests/test_receipt_proof_graph_cli.py`, and `tests/test_receipt_graph_views.py` | confirm no drift or refresh |
