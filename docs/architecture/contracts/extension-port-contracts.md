@@ -2,8 +2,28 @@
 
 Status: active-contract
 Owner: trust-kernel
-Last checked against code: 2026-05-20
+Last checked against code: 2026-05-28
 Can block PRs: yes
+
+Checked anchors:
+- doc: docs/architecture/contracts/trust-kernel-extension-rings.md
+- test: tests/test_authority_import_boundaries.py
+- test: tests/test_package_smoke.py::test_architecture_docs_are_classified_by_governance_status
+- code: comp/compiler_tool/retrieval.py
+- code: comp/persistence/envelope_builder.py
+- code: comp/persistence/ledger.py
+- code: comp/persistence/mysql.py
+- code: comp/runtime/validation_handoff.py
+
+Freshness triggers:
+- packaged authority import-boundary snapshots change
+- candidate-only retrieval or resolver output behavior changes
+- artifact store or receipt ledger persistence behavior changes
+- validation handoff or product-facing adapter behavior changes
+
+Stale-language policy:
+- current-status: strict
+- future-work: allowed only under explicit review or promotion sections
 
 This document defines how outer-ring extensions attach to the `comp` trust
 kernel without gaining authority. It is a companion to
