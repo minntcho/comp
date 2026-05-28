@@ -14,6 +14,13 @@ The first downstream repository is active:
 https://github.com/minntcho/comp-scenario-packs
 ```
 
+Registry sync:
+- external_repo: minntcho/comp-scenario-packs
+- external_ref: main@be97bbecf3991afe0d746baa63f822d1e217ec63
+- observed_pack_count: 15
+- last_sync: 2026-05-28
+- sync_mode: manual
+
 Current checked-in packs:
 
 ```text
@@ -43,6 +50,12 @@ l_energy_l_materials_composition_rollup
 
 l_energy_steel_frame_proxy_assignment
   seeded accepted/projection pack in parallel validation for l_energy.steel_frame_proxy_assignment.v1
+
+l_energy_supplier_evidence_match_acceptance
+  seeded accepted/projection pack in parallel validation for l_energy.supplier_evidence_match_acceptance.v1
+
+l_energy_supplier_evidence_mismatch_rfi
+  seeded blocked/no-projection pack in parallel validation for l_energy.supplier_evidence_mismatch_rfi.v1
 
 l_energy_tier0_physical_allocation
   seeded accepted/projection pack in parallel validation for l_energy.tier0_physical_allocation.v1
