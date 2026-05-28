@@ -2,12 +2,36 @@
 
 Status: active-contract
 Owner: trust-kernel
-Last checked against code: 2026-05-21
+Last checked against code: 2026-05-28
 Can block PRs: yes
 
-This document fixes the implementation standard for the next slice of the
-`comp` rebuild. The goal is to keep `comp` as a small trust kernel rather than
-letting it drift back into an ESG row generator.
+Checked anchors:
+- code: comp/judgment/commit.py
+- code: comp/judgment/receipts.py
+- code: comp/compiler_tool/commit_flow.py
+- code: comp/compiler_tool/receipt_builder.py
+- code: comp/compiler_tool/profile_runner.py
+- code: comp/compiler_tool/profiles.py
+- test: tests/test_receipt_gated_projection.py
+- test: tests/test_commit_receipt_builder.py
+- test: tests/test_tiny_domain_fixture.py::test_compile_with_profile_merges_profile_baseline_and_rule_obligations
+- test: tests/test_package_smoke.py::test_trust_kernel_hardening_documents_projection_numeric_policy
+- test: tests/test_package_smoke.py::test_trust_kernel_hardening_documents_profile_baseline_policy
+
+Freshness triggers:
+- receipt-gated projection behavior changes
+- `PublicOutputReceipt` or `PublicOutputValueCommitment` schema changes
+- commit package, governance decision, or receipt builder behavior changes
+- `CompilerProfile`, `compile_with_profile`, or `run_profile_rules` behavior changes
+- trust-kernel/domain boundary public surface changes
+
+Stale-language policy:
+- current-status: strict
+- future-work: allowed only under explicit non-goal, review, or promotion sections
+
+This document fixes the implementation standard for trust-kernel hardening. The
+goal is to keep `comp` as a small trust kernel rather than letting it drift back
+into an ESG row generator.
 
 This standard sits under the broader
 `trust-kernel-extension-rings.md` architecture frame. In that frame, hardening
@@ -134,9 +158,9 @@ domain-pack compiler baseline known fields and allowed units
 The fingerprint must be canonical and deterministic. Changing any active
 behavior input should change the fingerprint digest.
 
-Current implementation should keep profile declarations, domain-pack
-declarations, formula declarations, reference records, and reference catalog
-snapshots as explicit dependency fingerprints when they influence the receipt.
+Current implementation keeps profile declarations, domain-pack declarations,
+formula declarations, reference records, and reference catalog snapshots as
+explicit dependency fingerprints when they influence the receipt.
 Readable lock manifests are replay substrate; they help explain the behavior
 universe, but they do not become public authority.
 
@@ -181,9 +205,10 @@ rejected candidate ids and reasons
 canonical reference binding id
 ```
 
-The first implementation should keep this small. It is enough for scenario
-receipts and replay reports to expose the relevant profile, domain, formula,
-reference, and catalog fingerprints. A full candidate graph can wait.
+Current implementation keeps this small: scenario receipts and replay reports
+expose the relevant profile, domain, formula, reference, and catalog
+fingerprints. A full candidate graph belongs in a separate provenance contract,
+not in this hardening standard.
 
 ## Canonical Trace Product
 
@@ -219,12 +244,12 @@ large ESG reference ingestion
 quality score scalar
 namespace-wide package relocation
 general candidate graph
-durable production ledger
+durable production ledger policy
 ```
 
-The first durable ledger can be SQLite later. Before that, the receipt and
-replay payloads must know what behavior and reference universe they are
-recording.
+Durable ledger and backend policy belong in
+`persistence-ledger-boundary.md`. This standard only requires that receipt and
+replay payloads know what behavior and reference universe they are recording.
 
 ## Review Checklist
 
