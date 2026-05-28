@@ -2,8 +2,30 @@
 
 Status: north-star
 Owner: retrieval
-Last checked against code: 2026-05-20
+Last checked against code: 2026-05-28
 Can block PRs: limited
+
+Checked anchors:
+- code: comp/compiler_tool/retrieval.py
+- code: comp/compiler_tool/resolver_retrieval.py
+- code: comp/compiler_tool/reference_resolution.py
+- code: comp/compiler_tool/reference_selection_report.py
+- test: tests/test_resolver_retrieval.py
+- test: tests/test_retrieval_resolution.py
+- test: tests/test_reference_search_resolution.py
+- test: tests/test_reference_grounded_calculation_flow.py
+- test: tests/test_package_smoke.py::test_working_theory_status_section_tracks_current_rebuild_state
+
+Freshness triggers:
+- retrieval lens, `ReferenceQuery`, `ReferenceIndexEntry`, or resolver protocol behavior changes
+- `resolve_reference_retrieval_requirements(...)` behavior changes
+- profile-pinned `RetrievalQueryPolicy` behavior changes
+- reference selection or calculation retry behavior changes after candidate retrieval
+- public retrieval authority-boundary text changes in README or API docs
+
+Stale-language policy:
+- current-status: strict
+- future-work: allowed only under explicit future, north-star, or deferred-work sections
 
 This document fixes the long-term direction for retrieval, LLM resolution,
 typed reference authority, compiler gates, and receipt-gated projection.
@@ -233,6 +255,33 @@ PublicOutput
 Core invariant changes
 ```
 
+## Current Implementation Status
+
+The current implementation includes the safe retrieval entry path:
+
+```text
+comp/compiler_tool/retrieval.py
+  defines RetrievalLens, ReferenceQuery, ReferenceIndexEntry,
+  ReferenceResolver, and EmbeddingResolverStub.
+
+comp/compiler_tool/resolver_retrieval.py
+  builds ReferenceQuery values from ResolverTask and profile-active
+  RetrievalQueryPolicy rules.
+
+resolve_reference_retrieval_requirements(...)
+  adds candidate-only ReferenceOption items to ValidationReport and may resolve
+  reference_search_required obligations.
+
+tests/test_resolver_retrieval.py
+tests/test_retrieval_resolution.py
+  verify candidate-only retrieval, profile-pinned policies, inactive policy
+  rejection, deterministic selection, and calculation retry separation.
+```
+
+This status does not make retrieval authority. The implemented bridge must not
+create `CanonicalReference`, `CalculatedClaim`, `ReviewDecision`,
+`PublicOutputReceipt`, or `PublicOutput`.
+
 ## Obligation-Indexed Retrieval
 
 This north star is an obligation-indexed retrieval fabric over typed reference,
@@ -389,8 +438,8 @@ exists.
 
 ## Future Directions
 
-Two larger structures are likely useful later, but they are not part of the next
-implementation slice.
+Two larger structures are likely useful later, but they are not part of the
+implemented retrieval bridge.
 
 ### Retrieval Staging Area
 
@@ -444,18 +493,12 @@ cited_by_receipt
 This is useful for audit and debugging, but it should not be implemented before
 the candidate-only retrieval path is stable.
 
-## Near-Term Implementation Slices
+## Implemented Retrieval Slice
 
-The first code slice should stay small:
-
-```text
-feat: add retrieval lens interface and embedding resolver stub
-```
-
-It should add only the contract needed for embedding-style retrieval to enter
-the system safely:
+The retrieval boundary slice is implemented:
 
 ```text
+RetrievalLens
 ReferenceQuery
 ReferenceIndexEntry
 ReferenceResolver protocol
@@ -463,14 +506,14 @@ EmbeddingResolverStub
 candidate-only invariant tests
 ```
 
-The bridge slice is also intentionally narrow:
+It adds only the contract needed for embedding-style retrieval to enter the
+system safely:
 
 ```text
-feat: add retrieval resolver bridge
+ReferenceQuery -> ReferenceResolver.search(...) -> ReferenceOption[]
 ```
 
-It connects an open retrieval obligation to the resolver interface without
-creating authority:
+The resolver bridge is intentionally narrow:
 
 ```text
 ValidationRequirement(kind="reference_search_required")
@@ -480,7 +523,9 @@ ValidationRequirement(kind="reference_search_required")
 -> ValidationReport.reference_options
 ```
 
-The bridge may discharge the search obligation, but it must not create:
+It connects an open retrieval obligation to the resolver interface without
+creating authority. The bridge may discharge the search obligation, but it must
+not create:
 
 ```text
 CanonicalReference
@@ -502,8 +547,8 @@ Profile-aware query builder turns ResolverTask into ReferenceQuery
 Inactive or unknown policy ids do not run
 ```
 
-Once the bridge exists, the canonical raw-input scenario should use it as the
-standard path:
+The canonical raw-input scenario path can use this bridge without changing the
+authority chain:
 
 ```text
 raw evidence
@@ -522,7 +567,9 @@ raw evidence
 -> receipt-gated projection
 ```
 
-These slices should not add:
+## Deferred Retrieval Work
+
+The remaining retrieval direction still excludes:
 
 ```text
 real embedding providers
@@ -540,7 +587,7 @@ quality can come later.
 ## Relationship To Working Theory
 
 `docs/architecture/maps/obligation-kernel-working-theory.md` remains the
-detailed working theory for the current implementation slice: obligations,
+detailed working theory for the current trust-kernel implementation: obligations,
 semantic judgments, reference-grounded calculation, commit packages, governance
 decisions, and receipts.
 
