@@ -1158,7 +1158,7 @@ def test_architecture_docs_are_classified_by_governance_status():
             "north-star",
             "persistence",
             "limited",
-            "2026-05-21",
+            "2026-05-28",
         ),
         "receipt-proof-graph.md": (
             "active-contract",

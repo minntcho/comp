@@ -32,6 +32,7 @@ REFRESHED_CURRENT_GUIDANCE_DOCS = {
     Path("docs/architecture/maps/domain-scenario-pack-generation.md"),
     Path("docs/architecture/maps/obligation-kernel-working-theory.md"),
     Path("docs/architecture/maps/product-facade-conformance-runner.md"),
+    Path("docs/architecture/north-stars/production-trust-spine-database.md"),
     Path("docs/architecture/north-stars/retrieval-fabric-north-star.md"),
     Path("docs/architecture/north-stars/scenario-trust-runtime-bridge.md"),
 }
@@ -219,3 +220,9 @@ def test_retrieval_fabric_north_star_refresh_queue_item_is_closed():
     queue = DOC_REFRESH_QUEUE.read_text(encoding="utf-8")
 
     assert "`docs/architecture/north-stars/retrieval-fabric-north-star.md`" not in queue
+
+
+def test_production_trust_spine_database_refresh_queue_item_is_closed():
+    queue = DOC_REFRESH_QUEUE.read_text(encoding="utf-8")
+
+    assert "`docs/architecture/north-stars/production-trust-spine-database.md`" not in queue

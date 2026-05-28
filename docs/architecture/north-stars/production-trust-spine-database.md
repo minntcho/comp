@@ -2,8 +2,30 @@
 
 Status: north-star
 Owner: persistence
-Last checked against code: 2026-05-21
+Last checked against code: 2026-05-28
 Can block PRs: limited
+
+Checked anchors:
+- code: comp/persistence/mysql.py
+- code: comp/persistence/ledger.py
+- code: comp/persistence/replay.py
+- code: comp/persistence/codec.py
+- test: tests/test_mysql_persistence_spine.py
+- test: tests/test_mysql_operating_contract.py
+- test: tests/test_package_smoke.py::test_production_database_north_star_tracks_v1_mysql_spine
+- test: tests/test_package_smoke.py::test_persistence_ledger_boundary_documents_mysql_operating_contract
+- doc: docs/architecture/contracts/persistence-ledger-boundary.md
+
+Freshness triggers:
+- MySQL trust-spine schema, store, ledger, or transaction behavior changes
+- `apply_trust_spine_schema(...)` DDL setup behavior changes
+- receipt-derived index table behavior changes
+- replay or proof graph behavior changes when backed by `MySQLArtifactStore`
+- persistence ledger boundary contract changes
+
+Stale-language policy:
+- current-status: strict
+- future-work: allowed only under explicit provisional, non-goal, MVP, or future direction sections
 
 This document sketches the production database direction for `comp`.
 
@@ -390,9 +412,9 @@ Does any schema change explain whether it updates this provisional model?
 
 ## 12. Current Implementation Status
 
-The first durable spine slice is implemented for MySQL. This is still not a
-final product database schema; it is the V1 persistence adapter that proves the
-artifact/receipt authority path can survive outside memory.
+The current durable spine implementation is the MySQL V1 persistence adapter.
+This is still not a final product database schema; it proves the artifact/receipt
+authority path can survive outside memory.
 
 ```text
 comp/persistence/mysql.py
