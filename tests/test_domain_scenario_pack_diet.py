@@ -182,6 +182,14 @@ def test_domain_scenario_docs_explain_residency_tiers():
     assert "public_projection_smoke" in extension_doc
     assert "l_energy_alpha_invalid_allocation_rfi" in extension_doc
     assert "l_energy_alpha_physical_allocation_correction" in extension_doc
+    assert "l_energy_supplier_evidence_match_acceptance" in extension_doc
+    assert "l_energy_supplier_evidence_mismatch_rfi" in extension_doc
+    assert "Registry sync:" in extension_doc
+    assert "- external_repo: minntcho/comp-scenario-packs" in extension_doc
+    assert "- external_ref: main@be97bbecf3991afe0d746baa63f822d1e217ec63" in extension_doc
+    assert "- observed_pack_count: 15" in extension_doc
+    assert "- last_sync: 2026-05-28" in extension_doc
+    assert "- sync_mode: manual" in extension_doc
     for external_pack_id in ROLLUP_EXTERNAL_PACKS.values():
         assert external_pack_id in extension_doc
     for external_pack_id, _contract_id in SYNTHETIC_PCF_EXTERNAL_PACKS.values():
@@ -233,6 +241,13 @@ def test_downstream_registry_records_active_pack_cutover_state():
     assert downstream["dependency_direction"] == "downstream_consumes_comp"
     assert downstream["required_for_comp_pr_ci"] is False
     assert downstream["recommended_for_release_candidate"] is True
+    assert downstream["registry_sync"] == {
+        "external_repo": "minntcho/comp-scenario-packs",
+        "external_ref": "main@be97bbecf3991afe0d746baa63f822d1e217ec63",
+        "observed_pack_count": 15,
+        "last_sync": "2026-05-28",
+        "sync_mode": "manual",
+    }
     assert downstream["current_packs"] == [
         {
             "id": "public_projection_smoke",
@@ -312,6 +327,24 @@ def test_downstream_registry_records_active_pack_cutover_state():
             ],
         },
         {
+            "id": "l_energy_supplier_evidence_match_acceptance",
+            "status": "seed",
+            "scope": "large-domain-and-product-e2e",
+            "cutover_state": "parallel-validation",
+            "covers_comp_scenario_ids": [
+                "l_energy.supplier_evidence_match_acceptance.v1"
+            ],
+        },
+        {
+            "id": "l_energy_supplier_evidence_mismatch_rfi",
+            "status": "seed",
+            "scope": "large-domain-and-product-e2e",
+            "cutover_state": "parallel-validation",
+            "covers_comp_scenario_ids": [
+                "l_energy.supplier_evidence_mismatch_rfi.v1"
+            ],
+        },
+        {
             "id": "l_energy_tier0_physical_allocation",
             "status": "seed",
             "scope": "large-domain-and-product-e2e",
@@ -342,6 +375,9 @@ def test_downstream_registry_records_active_pack_cutover_state():
             "covers_comp_scenario_ids": ["synthetic_pcf.smoke.v1"],
         },
     ]
+    assert downstream["registry_sync"]["observed_pack_count"] == len(
+        downstream["current_packs"]
+    )
 
 
 def test_downstream_registry_records_machine_readable_boundary_policy():
