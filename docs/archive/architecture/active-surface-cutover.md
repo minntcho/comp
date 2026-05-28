@@ -5,6 +5,8 @@ Owner: docs
 Last checked against code: 2026-05-20
 Can block PRs: no
 
+Historical note. This document cannot block PRs and must not be cited as current guidance.
+
 이 문서는 rebuild branch에서 **active package surface**를 legacy pipeline에서 judgment/compiler-tool loop 중심으로 전환하는 첫 번째 cutover 기준을 정의한다.
 
 이 문서의 목적은 legacy 파일을 즉시 삭제하는 것이 아니다. 목적은 다음을 명확히 하는 것이다.
