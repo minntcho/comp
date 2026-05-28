@@ -2,8 +2,26 @@
 
 Status: active-contract
 Owner: persistence
-Last checked against code: 2026-05-22
+Last checked against code: 2026-05-28
 Can block PRs: yes
+
+Checked anchors:
+- code: comp/persistence/envelope.py
+- code: comp/persistence/envelope_builder.py
+- code: comp/runtime/compiler_run_artifacts.py
+- test: tests/test_artifact_envelope_builder.py
+- test: tests/test_compiler_run_artifact_materializer.py
+- test: tests/test_package_smoke.py::test_artifact_envelope_builder_contract_separates_coverage_from_materialization
+
+Freshness triggers:
+- `ArtifactEnvelope` schema, digest, or store behavior changes
+- `ReceiptEnvelopeSetBuilder` coverage behavior changes
+- `CompilerRunArtifactMaterializer` material source behavior changes
+- domain scenario replay materialization boundary changes
+
+Stale-language policy:
+- current-status: strict
+- future-work: allowed only under explicit review or promotion sections
 
 This document defines the contract for producing the `ArtifactEnvelope` set
 needed for receipt replay without letting persistence learn compiler internals.
@@ -464,7 +482,7 @@ is incomplete and should be updated before adding another backend.
 
 ## Current Implementation Status
 
-The first production receipt coverage builder lives in:
+The production receipt coverage builder lives in:
 
 ```text
 comp.persistence.envelope_builder
@@ -490,7 +508,7 @@ through a `record(...)` boundary.
 The implementation does not import `comp.compiler_tool`, does not inspect
 compiler reports, and does not produce compiler-run material.
 
-The first production compiler-run materializer lives in:
+The production compiler-run materializer lives in:
 
 ```text
 comp.runtime.compiler_run_artifacts
@@ -534,7 +552,7 @@ compiler-aware adapter behavior.
 
 ## Testing Expectations
 
-Tests for the first production builder should cover:
+Tests for the production builder should cover:
 
 ```text
 all receipt_artifact_refs have envelopes
