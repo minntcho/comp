@@ -23,6 +23,7 @@ STRICT_CURRENT_HEADINGS = {
     "State Transition Requirements",
 }
 REFRESHED_CURRENT_GUIDANCE_DOCS = {
+    Path("docs/architecture/contracts/artifact-envelope-builder.md"),
     Path("docs/architecture/contracts/extension-port-contracts.md"),
     Path("docs/architecture/contracts/policy-boundary.md"),
     Path("docs/architecture/maps/domain-scenario-pack-generation.md"),
@@ -184,3 +185,9 @@ def test_extension_port_contract_refresh_queue_item_is_closed():
     queue = DOC_REFRESH_QUEUE.read_text(encoding="utf-8")
 
     assert "`docs/architecture/contracts/extension-port-contracts.md`" not in queue
+
+
+def test_artifact_envelope_builder_refresh_queue_item_is_closed():
+    queue = DOC_REFRESH_QUEUE.read_text(encoding="utf-8")
+
+    assert "`docs/architecture/contracts/artifact-envelope-builder.md`" not in queue
