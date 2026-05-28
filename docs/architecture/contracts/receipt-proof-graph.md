@@ -2,13 +2,35 @@
 
 Status: active-contract
 Owner: explanation
-Last checked against code: 2026-05-22
+Last checked against code: 2026-05-28
 Can block PRs: yes
 
-This document fixes the role of receipt-scoped graph export in the active
-`comp` rebuild. The graph is not a trust-kernel feature, a compiler decision,
-or a replacement for receipt replay. It is an explanation-only read model that
-normalizes a successful replay into a graph-friendly form.
+Checked anchors:
+- code: comp/explanation/receipt_graph.py
+- code: comp/explanation/receipt_graph_cli.py
+- code: comp/views/receipt_graph.py
+- code: comp/persistence/replay.py
+- test: tests/test_receipt_proof_graph.py
+- test: tests/test_receipt_proof_graph_cli.py
+- test: tests/test_receipt_graph_views.py
+- test: tests/test_package_smoke.py::test_receipt_proof_graph_contract_names_prework_boundaries
+- test: tests/test_package_smoke.py::test_receipt_graph_renderers_have_non_authority_module_boundary
+
+Freshness triggers:
+- `ReceiptProofGraph`, `GraphNode`, `GraphEdge`, or field explanation behavior changes
+- `export_receipt_proof_graph(...)` input, output, or authority boundary changes
+- `comp-receipt-graph` CLI export/render behavior changes
+- Mermaid, Graphviz, or viewer renderer boundary changes
+- replay report, artifact ref, or dependency fingerprint payload changes
+
+Stale-language policy:
+- current-status: strict
+- future-work: allowed only under explicit deferred graph, non-goal, or future-work sections
+
+This document fixes the role of receipt-scoped graph export in `comp`. The graph
+is not a trust-kernel feature, a compiler decision, or a replacement for receipt
+replay. It is an explanation-only read model that normalizes a successful replay
+into a graph-friendly form.
 
 The short version:
 
@@ -131,9 +153,9 @@ ProjectionReplayReport keeps artifact refs, digests, and dependency fingerprints
 If graph export cannot connect these artifacts, that is evidence of a provenance
 gap in the system design.
 
-## 5. V0 Scope
+## 5. Current Scope
 
-The first implementation slice should stay receipt-scoped:
+The implemented scope stays receipt-scoped:
 
 ```text
 PublicOutputReceipt
@@ -274,8 +296,8 @@ uses_domain_pack
 uses_formula
 ```
 
-The exact node and edge set may evolve, but it should remain derived from
-receipt/replay artifacts in V0.
+The exact node and edge set may evolve, but it must remain derived from
+receipt/replay artifacts in the current receipt-scoped graph.
 
 ## 8. Raw Value Policy
 
@@ -439,7 +461,8 @@ replay, explanation, or rendering authority into the database layer.
 
 ## 12. Deferred Graphs
 
-Candidate and review graphs are important, but they are not V0.
+Candidate and review graphs are important, but they are not part of the current
+receipt-scoped graph contract.
 
 Possible future rings:
 
@@ -457,27 +480,25 @@ ProductAuditGraph
   field-level proof, candidate frontier, and review history
 ```
 
-These should only be added after the receipt-scoped graph is stable and still
-clearly explanation-only.
+These should only be added under an explicit future graph contract that keeps
+the receipt-scoped graph clearly explanation-only.
 
-## 13. Recommended First Slice
+## 13. Current Implementation
 
-Recommended PR title:
-
-```text
-feat: export receipt proof graph
-```
-
-Candidate files:
+The current implementation lives in:
 
 ```text
 comp/explanation/__init__.py
 comp/explanation/receipt_graph.py
-tests/test_receipt_proof_graph.py
+comp/explanation/receipt_graph_cli.py
+comp/views/receipt_graph.py
 tests/domain_scenarios/views.py
+tests/test_receipt_proof_graph.py
+tests/test_receipt_proof_graph_cli.py
+tests/test_receipt_graph_views.py
 ```
 
-Minimum behavior:
+Implemented behavior:
 
 ```text
 successful replay can be normalized into ReceiptProofGraph
@@ -488,6 +509,9 @@ explain_public_field returns existing field paths without replaying
 graph payload hides raw values by default
 graph explicitly cannot authorize public projection
 scenario JSON includes proof_graph
+comp-receipt-graph exports JSON / Mermaid / Graphviz from replay inputs
+comp-receipt-graph renders Mermaid / Graphviz from existing proof_graph payloads
+renderers consume graph payloads without calling replay or projection authority
 ```
 
 Non-goals:

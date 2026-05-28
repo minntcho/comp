@@ -26,7 +26,6 @@ tests.
 
 | doc | issue | required anchor check | target action |
 |---|---|---|---|
-| `docs/architecture/contracts/receipt-proof-graph.md` | explanation contract should verify current proof-graph export and render boundaries | `tests/test_receipt_proof_graph.py`, `tests/test_receipt_proof_graph_cli.py`, and `tests/test_receipt_graph_views.py` | confirm no drift or refresh |
 | `docs/architecture/north-stars/retrieval-fabric-north-star.md` | north-star may contain items that have since landed in retrieval implementation maps | `comp/compiler_tool/retrieval.py`, `comp/compiler_tool/resolver_retrieval.py`, and `tests/test_resolver_retrieval.py` | refresh or demote/archive landed fragments |
 | `docs/architecture/north-stars/production-trust-spine-database.md` | north-star should stay direction-only as MySQL backend behavior grows | `comp/persistence/mysql.py`, `tests/test_mysql_persistence_spine.py`, and `tests/test_mysql_operating_contract.py` | confirm no drift or refresh |
 | `docs/architecture/north-stars/llm-worker-orchestration.md` | north-star should not read like current agent authority | `comp/compiler_tool/resolver_tasks.py` and agent-facing public boundary tests | confirm no drift or demote/archive |
