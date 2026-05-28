@@ -170,6 +170,21 @@ state changes that should cause a reviewer to re-check the document.
 A trigger does not automatically make a PR invalid. It tells reviewers when a
 document may need refresh, confirmation, or demotion.
 
+## Refresh Queue
+
+A refresh queue may live under `docs/archive/plans/` when stale candidates are
+known but should not interrupt the current PR.
+
+Refresh queue entries cannot block PRs. They are a non-authoritative maintenance
+list for follow-up work. A queue entry is not proof that a document is stale and
+must not be cited as current guidance.
+
+Each queue item should name the document, the suspected issue, the anchor check
+needed before changing it, and the target action: refresh, confirm no drift, or
+demote/archive.
+
+The allowed queue outcomes are refresh, confirm no drift, or demote/archive.
+
 ## Body Freshness Rules
 
 Status controls how much current-state evidence a document should carry:
