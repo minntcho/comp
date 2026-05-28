@@ -5,6 +5,8 @@ Owner: docs
 Last checked against code: 2026-05-20
 Can block PRs: no
 
+Historical note. This document cannot block PRs and must not be cited as current guidance.
+
 This document defines the PR sequence for moving `comp` from the legacy
 pass-pipeline surface toward the authority-first compiler-tool architecture.
 

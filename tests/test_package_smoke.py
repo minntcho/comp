@@ -1062,7 +1062,7 @@ def test_architecture_docs_are_classified_by_governance_status():
             "active-contract",
             "trust-kernel",
             "yes",
-            "2026-05-22",
+            "2026-05-28",
         ),
         "compiler-domain-boundary.md": (
             "active-contract",
