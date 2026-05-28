@@ -2,15 +2,31 @@
 
 Status: north-star
 Owner: scenario-lab
-Last checked against code: 2026-05-22
+Last checked against code: 2026-05-28
 Can block PRs: limited
+
+Checked anchors:
+- code: comp/scenario_contracts/runner.py
+- code: comp/runtime/trust_runtime.py
+- code: comp/cli/scenario.py
+- test: tests/test_scenario_contracts.py
+
+Freshness triggers:
+- comp/scenario_contracts public imports or manifest behavior changes
+- comp/runtime/trust_runtime.py accepted input or invariant behavior changes
+- comp/cli/scenario.py command surface changes
+- external scenario packs need new public comp surfaces
+
+Stale-language policy:
+- current-status: strict
+- future-work: allowed only under goal, review, open-question, or promotion sections
 
 This document sketches the public bridge that external scenario packs should use
 when they need to pressure-test `comp` without importing `tests.*` or turning the
 trust kernel into a product workflow engine.
 
-It is a direction document for the scenario-runtime bridge. The first
-implementation slice is intentionally small and should not be treated as a final
+It is a direction document for the scenario-runtime bridge. The implemented
+public bridge is intentionally small and should not be treated as a final
 scenario pack API.
 
 The stable boundary is:
@@ -74,9 +90,9 @@ Those capabilities may exist in downstream products or external scenario packs.
 They may prepare inputs for `comp`, but they must not become responsibilities of
 the trust kernel.
 
-## 3. Proposed Public Surface
+## 3. Current Public Surface
 
-The first public bridge can be small:
+The current public bridge is deliberately small:
 
 ```text
 comp/scenario_contracts/
@@ -94,18 +110,19 @@ comp/cli/
   scenario.py
 ```
 
-The intended user-facing imports are:
+The current user-facing imports are:
 
 ```python
 from comp.scenario_contracts import ScenarioManifest, RuntimeCase
 from comp.scenario_contracts import ScenarioResult, run_scenario
 ```
 
-The intended CLI shape is:
+The current CLI shape is:
 
 ```bash
 comp scenario validate path/to/scenario.yaml
 comp scenario run path/to/scenario.yaml --report reports/latest.json
+comp scenario init path/to/output-dir
 ```
 
 `comp scenario run` should execute the trust path only. It should not execute
@@ -304,8 +321,9 @@ private helper modules
 legacy archived runner modules
 ```
 
-The bridge should eventually be covered by import-boundary smoke tests so a pack
-can consume the same public surface that internal smoke scenarios use.
+The bridge is covered by public API and CLI tests. Import-boundary coverage should
+stay aligned with the public surface that internal smoke scenarios and external
+packs consume.
 
 ## 10. Internal Smoke Path
 
@@ -328,10 +346,10 @@ external packs use comp.scenario_contracts.run_scenario or comp scenario run
 This proves the bridge is real and prevents the public API from becoming a
 documentation-only facade.
 
-## 11. First Slice
+## 11. Implemented Initial Slice
 
-The first implementation slice should avoid benchmarks, raw ingestion, MySQL
-query profiling, and schema migration.
+The implemented bridge slice avoids benchmarks, raw ingestion, MySQL query
+profiling, and schema migration.
 
 Start with:
 
@@ -347,7 +365,7 @@ comp scenario run
 one internal smoke scenario using the public runner
 ```
 
-The first invariants should be small:
+The current invariants are small:
 
 ```text
 receipt_exists
@@ -357,9 +375,9 @@ projection_values_are_committed
 blocking_hazards_absent
 ```
 
-Once the bridge is stable, external scenario packs can add large domain data,
-materialized projection benchmarks, migration rehearsal cases, and agent-produced
-candidate tests without loading that material into the core repository.
+External scenario packs can add large domain data, materialized projection
+benchmarks, migration rehearsal cases, and agent-produced candidate tests without
+loading that material into the core repository.
 
 ## 12. Review Checklist
 
@@ -378,7 +396,7 @@ Does any new scenario code avoid importing tests.* from external packages?
 
 ## 13. Current Implementation Status
 
-The first public bridge slice is implemented:
+The public bridge slice is implemented:
 
 ```text
 comp.scenario_contracts

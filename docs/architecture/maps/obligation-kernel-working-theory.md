@@ -2,8 +2,24 @@
 
 Status: implementation-map
 Owner: trust-kernel
-Last checked against code: 2026-05-20
+Last checked against code: 2026-05-28
 Can block PRs: limited
+
+Checked anchors:
+- code: comp/compiler_tool/retrieval.py
+- code: comp/compiler_tool/resolver_retrieval.py
+- code: comp/compiler_tool/profiles.py
+- test: tests/test_resolver_retrieval.py
+
+Freshness triggers:
+- retrieval lens, ReferenceQuery, or ReferenceResolver behavior changes
+- resolver retrieval policy builder behavior changes
+- CompilerProfile or DomainPack retrieval policy fields change
+- resolver retrieval tests add or remove authority-boundary guarantees
+
+Stale-language policy:
+- current-status: strict
+- future-work: allowed only under open-question, revision, or remaining-work sections
 
 This document captures the current direction for the rebuild branch after the
 receipt-gated projection slice. It is intentionally not an ADR. The goal is to
@@ -926,25 +942,10 @@ domain scenarios
 
 ---
 
-## 14. Retrieval Implementation Slice
+## 14. Retrieval Implementation Status
 
-The retrieval north star should enter the codebase in small slices. The first
-slice is:
-
-```text
-feat: add retrieval lens interface and embedding resolver stub
-```
-
-Purpose:
-
-```text
-Turn the retrieval north star into a small deterministic interface.
-Keep embedding as candidate recall, not authority.
-Let obligations choose a retrieval lens before candidate generation.
-Preserve the ReferenceOption != CanonicalReference boundary.
-```
-
-Candidate deliverables:
+The retrieval north star has entered the codebase as deterministic, candidate-only
+interfaces:
 
 ```text
 ReferenceQuery
@@ -962,73 +963,25 @@ Lens names:
   memory/skill
 ```
 
-Acceptance criteria:
-
-```text
-Retrieval lens interface can return candidate_only artifacts.
-EmbeddingResolverStub can produce deterministic candidates for tests.
-Retrieval score is never enough to create CanonicalReference.
-Top-1 retrieval cannot authorize calculation.
-No vector DB dependency is introduced.
-No real LLM call is introduced.
-```
-
-The bridge slice is:
-
-```text
-feat: add retrieval resolver bridge
-```
-
-Purpose:
-
-```text
-Connect reference_search_required obligations to ReferenceResolver.search.
-Add candidate_only ReferenceOption artifacts to ValidationReport.
-Resolve only the search obligation, not calculation or publication authority.
-Leave CanonicalReference to deterministic reference selection.
-Leave CalculatedClaim to deterministic calculation retry.
-```
-
-Acceptance criteria:
+The retrieval resolver bridge connects `reference_search_required` obligations to
+`ReferenceResolver.search(...)` and records candidate-only `ReferenceOption`
+artifacts on `ValidationReport`. It must resolve only the search obligation; it
+does not create `CanonicalReference`, `CalculatedClaim`, or public projection
+authority.
 
 ```text
 ValidationRequirement(reference_search_required)
 -> ReferenceQuery
 -> ReferenceResolver.search(...)
 -> ValidationReport.reference_options
-
-No CanonicalReference is created by retrieval.
-No CalculatedClaim is created by retrieval.
-No public projection authority is created by retrieval.
-No vector DB dependency is introduced.
-No real LLM call is introduced.
 ```
 
-The profile-pinning slice is:
+Profile-pinned retrieval query policies are part of the current profile behavior
+lock. `DomainPack` declares retrieval query policies, `CompilerProfile` activates
+them by id, unknown active ids are rejected during profile validation, and
+profile-aware query builders reject inactive policy ids.
 
-```text
-feat: pin retrieval query policies in CompilerProfile
-```
-
-Purpose:
-
-```text
-Make RetrievalQueryPolicy part of the active profile behavior lock.
-Reject unknown active retrieval policy ids during profile validation.
-Let resolver query builders use only profile-active retrieval policies.
-Keep retrieved candidates non-authoritative until deterministic selection.
-```
-
-Acceptance criteria:
-
-```text
-DomainPack can declare retrieval query policies.
-CompilerProfile can activate retrieval query policies by id and order.
-Unknown or duplicate retrieval policy ids are rejected.
-Profile-aware query builders reject inactive policy ids.
-```
-
-Non-goals:
+Current non-goals:
 
 ```text
 No production embedding model.
@@ -1039,7 +992,7 @@ No retrieval staging area implementation.
 No UI viewer yet.
 ```
 
-Future retrieval work can then add:
+Remaining retrieval work can add:
 
 ```text
 near-miss / negative retrieval fixtures

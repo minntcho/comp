@@ -2,8 +2,24 @@
 
 Status: active-contract
 Owner: trust-kernel
-Last checked against code: 2026-05-26
+Last checked against code: 2026-05-28
 Can block PRs: yes
+
+Checked anchors:
+- code: comp/policy/boundary.py
+- code: comp/runtime/validation_handoff.py
+- test: tests/test_policy_boundary_vocabulary.py
+- test: tests/test_validation_handoff.py
+
+Freshness triggers:
+- comp.policy boundary vocabulary or digest behavior changes
+- comp.runtime.ValidationHandoff bridge behavior changes
+- selected validation contract target snapshot matching changes
+- policy boundary smoke expectations change
+
+Stale-language policy:
+- current-status: strict
+- future-work: allowed only under explicit future, non-requirement, or promotion sections
 
 This contract defines the security boundary between external material and
 compiler-facing validation input.
@@ -214,12 +230,13 @@ strategies must obey.
 
 ## Current Implementation Status
 
-This document defines a boundary contract for upcoming policy work.
+This document defines the current boundary contract for policy-shaped material
+before compiler validation.
 
 Not every term in this document is currently a public Python API. Until
 implemented, these terms are architectural contract vocabulary.
 
-The first implementation slices live in `comp.policy`. They expose
+The current implementation slices live in `comp.policy`. They expose
 `MaterialDescriptor`, `PolicyEffect`, `ConflictResolver`, `PolicyAssembly`,
 `ScopedGrant`, `SelectionDecision`, `DecisionLedger`,
 `SelectedValidationContract`, and `ShadowPolicyComparison` as pre-validation
@@ -243,6 +260,6 @@ reference-selection, resolver-task, and profile/schema selection-tier surfaces
 remain precursor surfaces. They are not the full policy boundary
 implementation.
 
-New implementation slices should start small. A first slice should prefer
-policy effects, conflict resolution, scoped pipeline grants, decision-ledger
-records, and selected validation contracts over broad policy taxonomies.
+Additional implementation slices should stay small and prefer policy effects,
+conflict resolution, scoped pipeline grants, decision-ledger records, and
+selected validation contracts over broad policy taxonomies.

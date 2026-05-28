@@ -2,8 +2,25 @@
 
 Status: implementation-map
 Owner: scenario-lab
-Last checked against code: 2026-05-21
+Last checked against code: 2026-05-28
 Can block PRs: limited
+
+Checked anchors:
+- code: tests/domain_scenarios/core.py
+- code: tests/domain_scenarios/registry.py
+- code: tests/domain_scenarios/tiny_pcf/scenario.py
+- code: tests/domain_scenarios/l_energy_pcf_governance/scenario.py
+- test: tests/test_domain_scenario_lab.py
+
+Freshness triggers:
+- tests/domain_scenarios registry or ScenarioDefinition shape changes
+- l_energy_pcf_governance scenario coverage changes
+- tiny_pcf scenario residency or registration changes
+- domain scenario contract assertion behavior changes
+
+Stale-language policy:
+- current-status: strict
+- future-work: allowed only under review, known-gap, or promotion sections
 
 This document defines how to add larger domain scenarios without turning them
 into hard-coded golden blobs. A scenario is not a one-off test file. It is a
@@ -83,9 +100,9 @@ tests/domain_scenarios/
     expected.py
 ```
 
-The current `tiny_pcf` module predates the registry layer and can be migrated
-incrementally. New scenarios should be written as if they are packs, even before
-the shared registry exists.
+The current `tiny_pcf` module is registered through the shared scenario registry
+and exposes a `ScenarioDefinition`. New scenarios should keep that explicit,
+reviewable registration shape.
 
 ---
 
@@ -260,7 +277,7 @@ ScenarioDefinition
 -> optional viewer payload
 ```
 
-The tests should eventually look like:
+The shared contract tests follow this shape:
 
 ```python
 @pytest.mark.parametrize("scenario", registered_scenarios())
@@ -277,10 +294,10 @@ should be deliberate, versioned, and reviewable.
 
 ## L-Energy PCF Governance Pack
 
-The next large scenario should use `minntcho/esg-platform` case
-`001-l-energy-pcf-governance` as its source. The first pack should not implement
-a full PCF SaaS workflow. It should prove that the platform case can be
-represented as `comp` authority artifacts.
+The internal L-Energy scenario pack uses `minntcho/esg-platform` case
+`001-l-energy-pcf-governance` as its source. The pack does not implement a full
+PCF SaaS workflow. It proves that the platform case can be represented as
+`comp` authority artifacts.
 
 Recommended first contract:
 
@@ -310,11 +327,10 @@ summary:
   kgco2e_per_kwh = 26.66
 ```
 
-The first implementation may use precomputed derived claims from the platform
-receipt. That is acceptable if the pack clearly labels them as fixture-derived
-claims and still verifies receipt-gated projection.
+The current implementation uses fixture-derived values where needed and keeps
+them labeled as scenario material while still verifying receipt-gated projection.
 
-Non-goals for the first L-Energy pack:
+Non-goals for the current L-Energy pack:
 
 ```text
 No economic allocation engine.
@@ -347,14 +363,15 @@ fixtures.
 
 ---
 
-## Suggested Work Order
+## Implemented Work Order
 
 ```text
-1. Add ScenarioDefinition / ScenarioContract / SourceRef test-support models.
-2. Migrate tiny_pcf to the shared registry without changing its behavior.
-3. Add l_energy_pcf_governance as a source-referenced scenario pack.
-4. Add targeted contract assertions for receipt trace completeness.
-5. Add optional static viewer payload only after contracts are stable.
+1. ScenarioDefinition / ScenarioContract / SourceRef test-support models exist.
+2. tiny_pcf is registered without changing its behavior.
+3. l_energy_pcf_governance is a source-referenced scenario pack.
+4. Registered scenarios run through shared contract assertions.
+5. Optional viewer payloads remain observation material.
 ```
 
-The order matters. First create the slot, then plug in the larger scenario.
+The ordering still matters for new packs: create the explicit slot, then plug in
+the larger scenario.

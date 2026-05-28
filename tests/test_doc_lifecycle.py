@@ -22,6 +22,13 @@ STRICT_CURRENT_HEADINGS = {
     "Authority Boundary",
     "State Transition Requirements",
 }
+REFRESHED_CURRENT_GUIDANCE_DOCS = {
+    Path("docs/architecture/contracts/policy-boundary.md"),
+    Path("docs/architecture/maps/domain-scenario-pack-generation.md"),
+    Path("docs/architecture/maps/obligation-kernel-working-theory.md"),
+    Path("docs/architecture/maps/product-facade-conformance-runner.md"),
+    Path("docs/architecture/north-stars/scenario-trust-runtime-bridge.md"),
+}
 
 
 def _governed_architecture_docs():
@@ -102,6 +109,17 @@ def test_checked_anchors_point_to_existing_paths_when_declared():
             assert Path(anchor_path).exists(), f"{path}: missing anchor {target!r}"
 
     assert Path("docs/architecture/document-governance.md") in docs_with_anchors
+
+
+def test_refreshed_current_guidance_docs_declare_lifecycle_metadata():
+    for path in REFRESHED_CURRENT_GUIDANCE_DOCS:
+        text = path.read_text(encoding="utf-8")
+        header = _doc_header(path)
+
+        assert header["Last checked against code"] == "2026-05-28", path
+        assert _list_block(text, "Checked anchors"), path
+        assert _list_block(text, "Freshness triggers"), path
+        assert "Stale-language policy:" in text, path
 
 
 def test_strict_current_sections_do_not_use_known_stale_phrases_when_policy_declared():
