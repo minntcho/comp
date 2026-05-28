@@ -1238,6 +1238,7 @@ def test_historical_notes_and_plans_live_in_archive_locations():
         "2026-05-21-production-trust-spine-db-v1.md",
         "2026-05-21-raw-claim-promotion-boundary.md",
         "2026-05-22-receipt-proof-graph-boundary-prework.md",
+        "2026-05-28-doc-refresh-queue.md",
     }
 
     assert not [

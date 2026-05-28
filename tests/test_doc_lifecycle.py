@@ -29,6 +29,7 @@ REFRESHED_CURRENT_GUIDANCE_DOCS = {
     Path("docs/architecture/maps/product-facade-conformance-runner.md"),
     Path("docs/architecture/north-stars/scenario-trust-runtime-bridge.md"),
 }
+DOC_REFRESH_QUEUE = Path("docs/archive/plans/2026-05-28-doc-refresh-queue.md")
 
 
 def _governed_architecture_docs():
@@ -151,3 +152,28 @@ def test_historical_notes_declare_they_are_not_current_guidance():
 
         text = path.read_text(encoding="utf-8")
         assert HISTORICAL_NON_CURRENT_GUIDANCE in text, path
+
+
+def test_document_governance_defines_refresh_queue_boundary():
+    governance = Path("docs/architecture/document-governance.md").read_text(
+        encoding="utf-8"
+    )
+
+    assert "## Refresh Queue" in governance
+    assert "`docs/archive/plans/`" in governance
+    assert "Refresh queue entries cannot block PRs." in governance
+    assert "refresh, confirm no drift, or demote" in governance
+
+
+def test_doc_refresh_queue_is_non_authoritative():
+    text = DOC_REFRESH_QUEUE.read_text(encoding="utf-8")
+
+    assert "Authority: none" in text
+    assert "This queue cannot block PRs." in text
+    assert "This queue must not be cited as current guidance." in text
+    assert "Status: active-contract" not in text
+    assert "Can block PRs: yes" not in text
+    assert "| doc | issue | required anchor check | target action |" in text
+    assert "refresh" in text
+    assert "confirm no drift" in text
+    assert "demote/archive" in text
