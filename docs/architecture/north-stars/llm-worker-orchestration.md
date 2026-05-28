@@ -2,11 +2,32 @@
 
 Status: north-star
 Owner: agent-layer
-Last checked against code: 2026-05-20
+Last checked against code: 2026-05-28
 Can block PRs: limited
 
-This document captures the current working hypothesis for LLM orchestration in
-the `comp` rebuild. It builds on the existing authority boundary:
+Checked anchors:
+- code: minchoagnt/work_orders.py
+- code: minchoagnt/comp_adapter.py
+- code: comp/compiler_tool/resolver_tasks.py
+- test: tests/test_minchoagnt_llm_work_orders.py
+- test: tests/test_minchoagnt_comp_adapter.py
+- test: tests/test_authority_import_boundaries.py::test_agent_layer_does_not_call_projection_receipt_or_replay_authority
+- test: tests/test_package_smoke.py::test_architecture_docs_are_classified_by_governance_status
+- doc: docs/architecture/contracts/memory-assisted-compiler-loop.md
+
+Freshness triggers:
+- minchoagnt LLM work-order, worker-result, or abstention models change
+- comp `ResolverTask` payload or task-type behavior changes
+- agent layer gains or loses access to projection, receipt, or replay authority surfaces
+- semantic judgment application behavior changes for worker-submitted artifacts
+- memory-assisted compiler loop boundary contract changes
+
+Stale-language policy:
+- current-status: strict
+- future-work: allowed only under explicit suggested-slice, open-question, or north-star direction sections
+
+This document captures the north-star working hypothesis for LLM orchestration
+in the `comp` rebuild. It builds on the existing authority boundary:
 
 ```text
 LLM proposes.
@@ -21,9 +42,9 @@ LLM tool calling is not an output-format trick.
 It is an orchestration step for submitting typed, non-authoritative artifacts.
 ```
 
-This is not a lockfile for future implementation. It should guide experiments,
-make current assumptions visible, and give future work something concrete to
-revise. If implementation evidence or domain scenarios contradict this note,
+This is not a lockfile or an agent authority contract. It should guide
+experiments, make assumptions visible, and give later work something concrete
+to revise. If implementation evidence or domain scenarios contradict this note,
 the note should change.
 
 ---
@@ -510,31 +531,45 @@ Only ReviewDecision plus PublicOutputReceipt can authorize public projection.
 
 ---
 
-## 14. Suggested Implementation Slices
+## Current Implementation Status
 
-First slice:
-
-```text
-LLMWorkOrder model
-allowed tool menu model
-ReadingCandidate artifact model
-abstain artifact model
-deterministic fake LLM worker for tests
-```
-
-Current implemented subset:
+The current implementation is a semantic-only fixture loop around compiler
+resolver tasks.
 
 ```text
 LLMWorkOrder model
-semantic-judgment work-order creation from ResolverTask
+allowed semantic tool menu model
 AbstentionArtifact
-DeterministicLLMWorker fixture
+deterministic fake LLM worker for tests
+semantic-judgment work-order creation from ResolverTask
 apply_llm_worker_results for submitted SemanticJudgment artifacts
 ```
 
-This subset is intentionally semantic-only. It gives the agent layer a typed
-artifact-submission loop without adding a real LLM provider, a reading candidate
-model, or projection authority.
+This status does not make the agent layer authority. `LLMWorkOrder`,
+`LLMWorkerResult`, and `AbstentionArtifact` cannot authorize public projection,
+and `apply_llm_worker_results(...)` never mints a receipt.
+
+The current implementation does not include:
+
+```text
+real LLM provider integration
+ReadingCandidate artifact model
+profile-generated tool schemas
+SemanticNeighborhoodReport
+batch work orders
+human-question generation
+projection authority
+```
+
+## 14. Suggested Future Slices
+
+Remaining initial direction:
+
+```text
+ReadingCandidate artifact model
+structured slot status preservation
+reading-worker tool menu
+```
 
 Acceptance criteria:
 

@@ -1110,7 +1110,7 @@ def test_architecture_docs_are_classified_by_governance_status():
             "north-star",
             "agent-layer",
             "limited",
-            "2026-05-20",
+            "2026-05-28",
         ),
         "memory-assisted-compiler-loop.md": (
             "active-contract",
