@@ -2,8 +2,24 @@
 
 Status: implementation-map
 Owner: scenario-lab
-Last checked against code: 2026-05-27
+Last checked against code: 2026-05-28
 Can block PRs: limited
+
+Checked anchors:
+- code: examples/product_facade_lab/runner.py
+- code: examples/product_facade_lab/runtime.py
+- code: examples/product_facade_lab/fixtures/conformance_cases.json
+- test: tests/test_product_facade_bundle_fixtures.py
+
+Freshness triggers:
+- examples/product_facade_lab runner behavior changes
+- conformance case manifest shape changes
+- verification bundle suite summary behavior changes
+- receipt authenticity observation behavior changes
+
+Stale-language policy:
+- current-status: strict
+- future-work: allowed only under promotion or non-promotion sections
 
 This map positions the next layer after the product facade verification-bundle
 observations.
@@ -129,10 +145,9 @@ not a comp.runtime workflow shell
 not a product-generated replay report authority
 ```
 
-## First PR Boundary
+## Current Lab Boundary
 
-The first implementation PR on this axis should consume existing fixture
-material only.
+The current lab boundary consumes existing fixture material only.
 
 ```text
 No new command surface.
@@ -143,5 +158,5 @@ lab-only case manifest
 not a product export schema
 ```
 
-After that, a small scenario-style runner may be considered only if it consumes
-existing fixture material and keeps all verification output produced by comp.
+Promotion beyond this lab boundary may proceed only if it consumes existing
+fixture material and keeps all verification output produced by comp.

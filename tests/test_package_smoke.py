@@ -693,7 +693,7 @@ def test_policy_boundary_contract_keeps_policy_non_authoritative():
         "ScopedGrant is not PublicOutputReceipt.",
         "Capabilities may recommend. Policies may issue scoped access.",
         "Not every term in this document is currently a public Python API.",
-        "The first implementation slices live in `comp.policy`.",
+        "The current implementation slices live in `comp.policy`.",
         "`MaterialDescriptor`, `PolicyEffect`, `ConflictResolver`, `PolicyAssembly`,",
         "`PolicyAssembly` groups descriptors, effects, assembly subjects, and resolver",
         "`PolicyAssembly` may also build a matching `SelectedValidationContract`",
@@ -899,7 +899,7 @@ def test_product_facade_conformance_runner_map_positions_next_layer():
     for line in (
         "Status: implementation-map",
         "Owner: scenario-lab",
-        "Last checked against code: 2026-05-27",
+        "Last checked against code: 2026-05-28",
         "Can block PRs: limited",
         "This map is a runner-direction map, not a runner contract.",
         "## Current Position",
@@ -933,7 +933,7 @@ def test_product_facade_conformance_runner_map_positions_next_layer():
         "not a product runtime",
         "not a native authority engine",
         "not production cryptography integration",
-        "## First PR Boundary",
+        "## Current Lab Boundary",
         "No new command surface.",
         "No new bundle schema.",
         "No movement into `comp.runtime`.",
@@ -1074,7 +1074,7 @@ def test_architecture_docs_are_classified_by_governance_status():
             "implementation-map",
             "scenario-lab",
             "limited",
-            "2026-05-21",
+            "2026-05-28",
         ),
         "internal-execution-design-map.md": (
             "implementation-map",
@@ -1122,7 +1122,7 @@ def test_architecture_docs_are_classified_by_governance_status():
             "implementation-map",
             "trust-kernel",
             "limited",
-            "2026-05-20",
+            "2026-05-28",
         ),
         "policy-assembled-trust-kernel.md": (
             "implementation-map",
@@ -1140,7 +1140,7 @@ def test_architecture_docs_are_classified_by_governance_status():
             "implementation-map",
             "scenario-lab",
             "limited",
-            "2026-05-27",
+            "2026-05-28",
         ),
         "persistence-ledger-boundary.md": (
             "active-contract",
@@ -1152,7 +1152,7 @@ def test_architecture_docs_are_classified_by_governance_status():
             "active-contract",
             "trust-kernel",
             "yes",
-            "2026-05-26",
+            "2026-05-28",
         ),
         "production-trust-spine-database.md": (
             "north-star",
@@ -1182,7 +1182,7 @@ def test_architecture_docs_are_classified_by_governance_status():
             "north-star",
             "scenario-lab",
             "limited",
-            "2026-05-22",
+            "2026-05-28",
         ),
         "trust-kernel-extension-rings.md": (
             "active-contract",
