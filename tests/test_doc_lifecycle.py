@@ -27,6 +27,7 @@ REFRESHED_CURRENT_GUIDANCE_DOCS = {
     Path("docs/architecture/contracts/extension-port-contracts.md"),
     Path("docs/architecture/contracts/persistence-ledger-boundary.md"),
     Path("docs/architecture/contracts/policy-boundary.md"),
+    Path("docs/architecture/contracts/receipt-proof-graph.md"),
     Path("docs/architecture/contracts/trust-kernel-hardening.md"),
     Path("docs/architecture/maps/domain-scenario-pack-generation.md"),
     Path("docs/architecture/maps/obligation-kernel-working-theory.md"),
@@ -205,3 +206,9 @@ def test_persistence_ledger_boundary_refresh_queue_item_is_closed():
     queue = DOC_REFRESH_QUEUE.read_text(encoding="utf-8")
 
     assert "`docs/architecture/contracts/persistence-ledger-boundary.md`" not in queue
+
+
+def test_receipt_proof_graph_refresh_queue_item_is_closed():
+    queue = DOC_REFRESH_QUEUE.read_text(encoding="utf-8")
+
+    assert "`docs/architecture/contracts/receipt-proof-graph.md`" not in queue
