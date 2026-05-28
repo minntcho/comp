@@ -25,6 +25,7 @@ STRICT_CURRENT_HEADINGS = {
 REFRESHED_CURRENT_GUIDANCE_DOCS = {
     Path("docs/architecture/contracts/artifact-envelope-builder.md"),
     Path("docs/architecture/contracts/extension-port-contracts.md"),
+    Path("docs/architecture/contracts/persistence-ledger-boundary.md"),
     Path("docs/architecture/contracts/policy-boundary.md"),
     Path("docs/architecture/contracts/trust-kernel-hardening.md"),
     Path("docs/architecture/maps/domain-scenario-pack-generation.md"),
@@ -198,3 +199,9 @@ def test_trust_kernel_hardening_refresh_queue_item_is_closed():
     queue = DOC_REFRESH_QUEUE.read_text(encoding="utf-8")
 
     assert "`docs/architecture/contracts/trust-kernel-hardening.md`" not in queue
+
+
+def test_persistence_ledger_boundary_refresh_queue_item_is_closed():
+    queue = DOC_REFRESH_QUEUE.read_text(encoding="utf-8")
+
+    assert "`docs/architecture/contracts/persistence-ledger-boundary.md`" not in queue

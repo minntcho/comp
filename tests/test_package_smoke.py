@@ -1146,7 +1146,7 @@ def test_architecture_docs_are_classified_by_governance_status():
             "active-contract",
             "persistence",
             "yes",
-            "2026-05-22",
+            "2026-05-28",
         ),
         "policy-boundary.md": (
             "active-contract",

@@ -2,16 +2,38 @@
 
 Status: active-contract
 Owner: persistence
-Last checked against code: 2026-05-22
+Last checked against code: 2026-05-28
 Can block PRs: yes
+
+Checked anchors:
+- code: comp/persistence/ledger.py
+- code: comp/persistence/replay.py
+- code: comp/persistence/mysql.py
+- code: comp/persistence/envelope.py
+- code: comp/persistence/digest.py
+- test: tests/test_persistence_ledger_boundary.py
+- test: tests/test_persistence_projection_replay.py
+- test: tests/test_mysql_persistence_spine.py
+- test: tests/test_mysql_operating_contract.py
+- test: tests/test_package_smoke.py::test_persistence_ledger_boundary_documents_mysql_operating_contract
+
+Freshness triggers:
+- `ArtifactEnvelope`, artifact digest, or artifact store behavior changes
+- `InMemoryReceiptLedger` or `MySQLReceiptLedger` receipt root behavior changes
+- `replay_public_projection(...)` or `receipt_artifact_refs(...)` behavior changes
+- MySQL trust-spine schema, receipt-derived index, or transaction behavior changes
+- public projection, receipt citation, or dependency fingerprint schema changes
+
+Stale-language policy:
+- current-status: strict
+- future-work: allowed only under explicit non-goal, future work, or promotion sections
 
 PublicOutputReceipt as the durable explanation root.
 
-This document fixes the persistence boundary for the active `comp` rebuild. It
-is not a database schema, ORM design, or production retention policy. Its goal
-is to define which artifacts must survive after a run so a public projection can
-be explained later without accidentally turning cached views or resolver output
-into authority.
+This document fixes the persistence boundary for `comp`. It is not a database
+schema, ORM design, or production retention policy. Its goal is to define which
+artifacts must survive after a run so a public projection can be explained later
+without accidentally turning cached views or resolver output into authority.
 
 The short version:
 
@@ -29,7 +51,8 @@ envelope set required by receipt replay.
 production database direction for carrying this boundary into MySQL. It is a
 north-star working model, not a final migration schema.
 
-The current implementation now has the first in-memory replay substrate:
+The current implementation has both an in-memory replay substrate and a small
+MySQL trust spine:
 
 ```text
 PublicOutputReceipt
@@ -249,10 +272,10 @@ Digest references connect the root to the replay graph.
 
 ## 6. Artifact Envelope Contract
 
-The next implementation slice should introduce a small envelope contract before
-choosing a database.
+The active implementation uses a small envelope contract before database-specific
+storage behavior.
 
-Candidate shape:
+Current shape:
 
 ```python
 @dataclass(frozen=True)
@@ -385,7 +408,7 @@ Those are recompute questions.
 
 Reference and profile dependencies should be pinned gradually.
 
-First practical layer:
+Implemented practical layer:
 
 ```text
 CanonicalReference
@@ -416,7 +439,7 @@ ReferenceCatalogSnapshot
   replay coverage check for cited reference records
 ```
 
-Later layers may add:
+Future dependency extensions may add:
 
 ```text
 DomainPackFingerprint
@@ -447,14 +470,14 @@ real embedding index persistence
 LLM trace retention policy
 ```
 
-Those decisions should come after the in-memory replay substrate is exercised by
-the canonical scenario harness.
+Those decisions belong outside this contract until the governed persistence and
+database documents define them explicitly.
 
 ---
 
 ## 11. Current Implementation Status
 
-The first persistence slice is implemented:
+Current persistence implementation:
 
 ```text
 docs/architecture/contracts/persistence-ledger-boundary.md
@@ -601,10 +624,9 @@ same authority rule: receipt authorizes, replay verifies, graph explains.
 
 ---
 
-## 13. Following Slice
+## 13. Future Source Container Work
 
-After dependency graph export, the next likely slice is source container
-fingerprints:
+Source container fingerprints remain future work:
 
 ```text
 source container fingerprints
@@ -612,8 +634,8 @@ source document/version ids
 replay verification for source container digests
 ```
 
-That slice should keep the document's rule: replay explains the old receipt,
-while recompute may produce a new answer under today's catalog and profile.
+That work must keep this document's rule: replay explains the old receipt, while
+recompute may produce a new answer under today's catalog and profile.
 
 ---
 
