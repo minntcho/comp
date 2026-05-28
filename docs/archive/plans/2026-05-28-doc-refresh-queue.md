@@ -26,5 +26,5 @@ tests.
 
 | doc | issue | required anchor check | target action |
 |---|---|---|---|
-| `docs/architecture/north-stars/llm-worker-orchestration.md` | north-star should not read like current agent authority | `comp/compiler_tool/resolver_tasks.py` and agent-facing public boundary tests | confirm no drift or demote/archive |
 
+_No open refresh candidates._
